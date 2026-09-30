@@ -1,0 +1,465 @@
+// -----------------------------------------------------------------------------------------------------------------
+// LÍNEA EVOLUTIVA: el botón "🧬 Evolución" del dorso de cada carta abre una ventana con un árbol:
+//
+//      viene de  ──▶  [este digimon]  ──▶  evoluciona a
+//
+// Los datos salen de digi-api.com (priorEvolutions / nextEvolutions). Para no mostrar cosas raras se filtra:
+//   - solo aparecen los digimons que están en este simulador (en la carta ya tenemos su imagen, nivel y nombre);
+//   - una "evolución" que va para el lado contrario (un nivel más bajo en "evoluciona a", o más alto en "viene de")
+//     se descarta, porque la API también anota las involuciones;
+//   - una variante del mismo digimon del mismo nivel (Agumon → Agumon (X-Antibody)) tampoco cuenta como evolución.
+// Como hay digimons con decenas de evoluciones, de cada lado se ven las primeras TOPE_RAMAS (las de nivel más cercano)
+// y un botón despliega el resto. Al tocar un digimon del árbol, el árbol se centra en él (y hay un botón para volver).
+// -----------------------------------------------------------------------------------------------------------------
+
+Object.assign(DICCIONARIO.es, {
+    'evo.boton': '🧬 Evolución',
+    'evo.boton.ayuda': 'Ver la línea evolutiva',
+    'evo.titulo': '🧬 Línea evolutiva',
+    'evo.cerrar': 'Cerrar',
+    'evo.viene': 'Viene de',
+    'evo.va': 'Evoluciona a',
+    'evo.vacio': 'Sin registros en el simulador',
+    'evo.masN': 'Ver las {n} restantes',
+    'evo.menos': 'Ver menos',
+    'evo.volver': '← Volver',
+    'evo.irCarta': '📍 Ir a la carta',
+    'evo.cargando': 'Buscando evoluciones…',
+    'evo.error': 'No se pudo cargar la línea evolutiva.',
+    'evo.reintentar': 'Reintentar',
+    'evo.condicion': 'Condición (en inglés): {c}',
+    'evo.pie': 'Tocá uno para ver su propia línea.',
+});
+
+Object.assign(DICCIONARIO.en, {
+    'evo.boton': '🧬 Evolution',
+    'evo.boton.ayuda': 'See the evolution line',
+    'evo.titulo': '🧬 Evolution line',
+    'evo.cerrar': 'Close',
+    'evo.viene': 'Evolves from',
+    'evo.va': 'Evolves into',
+    'evo.vacio': 'No records in the simulator',
+    'evo.masN': 'Show the other {n}',
+    'evo.menos': 'Show less',
+    'evo.volver': '← Back',
+    'evo.irCarta': '📍 Go to the card',
+    'evo.cargando': 'Looking up evolutions…',
+    'evo.error': 'The evolution line could not be loaded.',
+    'evo.reintentar': 'Retry',
+    'evo.condicion': 'Condition: {c}',
+    'evo.pie': 'Tap one to see its own line.',
+});
+
+const TOPE_RAMAS = 5;    // cuántas ramas se ven de cada lado antes de tocar "ver las restantes"
+const URL_DETALLE_EVOLUCION = 'https://digi-api.com/api/v1/digimon/';
+
+// ---- Datos ---------------------------------------------------------------------------------------------------------
+const cacheEvolucion = new Map(); // id → promesa con { previas: [{ id, condicion }], siguientes: [{ id, condicion }] }
+
+function cartaPorId(id) {
+    return listaDigimons.querySelector(`:scope > li[data-id="${id}"]`);
+}
+
+function pedirEvolucion(id) {
+    const guardada = cartaPorId(id)?.datosDorso?.evo; // si main.js ya la trajo con la carta, no hace falta pedirla
+    if (guardada) return Promise.resolve(guardada);
+
+    if (!cacheEvolucion.has(id)) {
+        const promesa = fetch(URL_DETALLE_EVOLUCION + id)
+            .then(respuesta => {
+                if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+                return respuesta.json();
+            })
+            .then(datos => {
+                const simplificar = lista => (lista || []).map(item => ({ id: item.id, condicion: item.condition || '' }));
+                return { previas: simplificar(datos.priorEvolutions), siguientes: simplificar(datos.nextEvolutions) };
+            });
+        promesa.catch(() => cacheEvolucion.delete(id)); // si falló, la próxima vez se vuelve a intentar
+        cacheEvolucion.set(id, promesa);
+    }
+    return cacheEvolucion.get(id);
+}
+
+// ---- Qué ramas se muestran -----------------------------------------------------------------------------------------
+const nivelDe = carta => (carta.dataset.nivel === undefined ? undefined : Number(carta.dataset.nivel));
+const nombreDe = carta => carta.querySelector('h4').textContent.trim();
+const sinParentesis = texto => texto.replace(/\s*\(.*$/, '').trim().toLowerCase();
+
+// sentido: -1 = "viene de", +1 = "evoluciona a". Devuelve las cartas del simulador que sirven, las más cercanas primero.
+function armarRamas(lista, carta, sentido) {
+    const nivel = nivelDe(carta);
+    const base = sinParentesis(nombreDe(carta));
+    const vistos = new Set([Number(carta.dataset.id)]);
+    const ramas = [];
+
+    for (const { id, condicion } of lista) {
+        if (vistos.has(id)) continue;
+        vistos.add(id);
+
+        const otra = cartaPorId(id);
+        if (!otra) continue; // no está en el simulador
+
+        const nivelOtra = nivelDe(otra);
+        if (nivel !== undefined && nivelOtra !== undefined) {
+            if ((nivelOtra - nivel) * sentido < 0) continue; // va para el lado contrario
+            if (nivelOtra === nivel && sinParentesis(nombreDe(otra)) === base) continue; // variante del mismo digimon
+        }
+        ramas.push({ carta: otra, nivel: nivelOtra, condicion });
+    }
+
+    // "evoluciona a": de menor a mayor nivel; "viene de": de mayor a menor (el más cercano primero). Sin nivel, al final.
+    const orden = nivelRama => (nivelRama === undefined ? 99 : nivelRama * sentido);
+    ramas.sort((a, b) => orden(a.nivel) - orden(b.nivel) || nombreDe(a.carta).localeCompare(nombreDe(b.carta)));
+    return ramas;
+}
+
+// ---- Piezas de la ventana ------------------------------------------------------------------------------------------
+function colorDelNivel(nivel) {
+    return COLOR_NIVEL[nivel] || COLOR_NIVEL_DESCONOCIDO;
+}
+
+// Nombre con lo que va entre paréntesis en una línea aparte, más chica (igual que en las cartas)
+function crearNombreEvo(nombre) {
+    const elemento = document.createElement('span');
+    elemento.className = 'evo-nombre';
+    const posicion = nombre.indexOf('(');
+    if (posicion > 0) {
+        const aparte = document.createElement('small');
+        aparte.textContent = nombre.slice(posicion);
+        elemento.append(nombre.slice(0, posicion).trim(), aparte);
+    } else {
+        elemento.textContent = nombre;
+    }
+    return elemento;
+}
+
+function crearNivelEvo(carta) {
+    const elemento = document.createElement('span');
+    elemento.className = 'evo-nv';
+    elemento.textContent = nombreNivel(carta.dataset.nivelApi);
+    return elemento;
+}
+
+function imagenDe(carta) {
+    const imagen = document.createElement('img');
+    imagen.src = carta.querySelector('.c-arte img').src; // la misma que ya cargó la carta
+    imagen.alt = '';
+    imagen.draggable = false;
+    return imagen;
+}
+
+function crearNodo({ carta, nivel, condicion }) {
+    const nodo = document.createElement('button');
+    nodo.type = 'button';
+    nodo.className = 'evo-nodo';
+    nodo.dataset.id = carta.dataset.id;
+    nodo.style.setProperty('--c', colorDelNivel(nivel));
+    nodo.title = condicion ? `${nombreDe(carta)}\n${t('evo.condicion', { c: condicion })}` : nombreDe(carta);
+
+    const texto = document.createElement('span');
+    texto.className = 'evo-txt';
+    texto.append(crearNombreEvo(nombreDe(carta)), crearNivelEvo(carta));
+    nodo.append(imagenDe(carta), texto);
+    return nodo;
+}
+
+function crearCentro(carta) {
+    const centro = document.createElement('div');
+    centro.className = 'evo-centro';
+
+    const caja = document.createElement('div');
+    caja.className = 'evo-actual';
+    caja.style.setProperty('--c', colorDelNivel(nivelDe(carta)));
+
+    const { tipo, elemento } = carta.dataset;
+    const datos = document.createElement('span');
+    datos.className = 'evo-datos';
+    datos.textContent = `${nombreTipo(tipo)} ${EMOJIS_TIPO[tipo]} · ${nombreElemento(elemento)} ${EMOJIS_ELEMENTO[elemento]}`;
+
+    caja.append(imagenDe(carta), crearNombreEvo(nombreDe(carta)), crearNivelEvo(carta), datos);
+
+    const ir = document.createElement('button');
+    ir.type = 'button';
+    ir.className = 'evo-ir';
+    ir.dataset.ir = carta.dataset.id;
+    ir.textContent = t('evo.irCarta');
+
+    centro.append(caja, ir);
+    return centro;
+}
+
+function crearColumna(clase, rotulo, ramas) {
+    const columna = document.createElement('section');
+    columna.className = `evo-col ${clase}`;
+
+    const titulo = document.createElement('h5');
+    titulo.textContent = rotulo;
+    columna.append(titulo);
+
+    if (ramas.length === 0) {
+        const vacio = document.createElement('p');
+        vacio.className = 'evo-vacio';
+        vacio.textContent = t('evo.vacio');
+        columna.classList.add('vacia');
+        columna.append(vacio);
+        return columna;
+    }
+
+    const visibles = Math.min(ramas.length, TOPE_RAMAS);
+    const lista = document.createElement('ul');
+    lista.className = 'evo-lista';
+    ramas.forEach((rama, posicion) => {
+        const item = document.createElement('li');
+        item.classList.toggle('extra', posicion >= TOPE_RAMAS);
+        item.classList.toggle('primera', posicion === 0);
+        item.classList.toggle('ultima', posicion === visibles - 1);
+        item.classList.toggle('unica', visibles === 1);
+        item.append(crearNodo(rama));
+        lista.append(item);
+    });
+    columna.append(lista);
+
+    if (ramas.length > TOPE_RAMAS) {
+        const mas = document.createElement('button');
+        mas.type = 'button';
+        mas.className = 'evo-mas';
+        mas.dataset.extras = ramas.length - TOPE_RAMAS;
+        mas.setAttribute('aria-expanded', 'false');
+        mas.textContent = t('evo.masN', { n: ramas.length - TOPE_RAMAS });
+        columna.append(mas);
+    }
+    return columna;
+}
+
+function crearFlechaVertical() {
+    const flecha = document.createElement('div');
+    flecha.className = 'evo-flecha-v';
+    flecha.setAttribute('aria-hidden', 'true');
+    flecha.textContent = '▼';
+    return flecha;
+}
+
+// ---- La ventana ----------------------------------------------------------------------------------------------------
+let estadoEvo = null; // { historial: [ids de los digimons por los que se fue pasando], marca: número de dibujo vigente }
+
+const contenedorEvo = () => document.querySelector('.swal2-html-container .evo');
+
+function crearBarraVolver() {
+    const barra = document.createElement('div');
+    barra.className = 'evo-barra';
+    const volver = document.createElement('button');
+    volver.type = 'button';
+    volver.className = 'evo-volver';
+    volver.textContent = t('evo.volver');
+    barra.append(volver);
+    return barra;
+}
+
+function crearPieEvo() {
+    const pie = document.createElement('p');
+    pie.className = 'info-pie';
+    pie.textContent = t('evo.pie');
+    return pie;
+}
+
+async function pintarEvolucion() {
+    const contenedor = contenedorEvo();
+    if (!contenedor || !estadoEvo) return;
+
+    const marca = ++estadoEvo.marca;
+    const id = estadoEvo.historial[estadoEvo.historial.length - 1];
+    const carta = cartaPorId(id);
+    const barra = estadoEvo.historial.length > 1 ? [crearBarraVolver()] : [];
+
+    // Primero se ve el digimon al que pertenece la línea; las ramas aparecen cuando llegan los datos
+    const arbolCargando = document.createElement('div');
+    arbolCargando.className = 'evo-arbol';
+    arbolCargando.append(crearCentro(carta));
+    const aviso = document.createElement('p');
+    aviso.className = 'evo-aviso';
+    aviso.textContent = t('evo.cargando');
+    contenedor.replaceChildren(...barra, arbolCargando, aviso);
+
+    let datos;
+    try {
+        datos = await pedirEvolucion(id);
+    } catch (error) {
+        if (!estadoEvo || marca !== estadoEvo.marca) return;
+        aviso.textContent = t('evo.error');
+        aviso.classList.add('evo-error');
+        const reintentar = document.createElement('button');
+        reintentar.type = 'button';
+        reintentar.className = 'evo-reintentar';
+        reintentar.textContent = t('evo.reintentar');
+        aviso.append(' ', reintentar);
+        return;
+    }
+    if (!estadoEvo || marca !== estadoEvo.marca) return; // mientras tanto se cerró o se pasó a otro digimon
+
+    const previas = armarRamas(datos.previas, carta, -1);
+    const siguientes = armarRamas(datos.siguientes, carta, +1);
+
+    const arbol = document.createElement('div');
+    arbol.className = 'evo-arbol';
+    const centro = crearCentro(carta);
+    centro.classList.toggle('con-previas', previas.length > 0);
+    centro.classList.toggle('con-siguientes', siguientes.length > 0);
+
+    arbol.append(crearColumna('evo-prev', t('evo.viene'), previas));
+    if (previas.length) arbol.append(crearFlechaVertical());
+    arbol.append(centro);
+    if (siguientes.length) arbol.append(crearFlechaVertical());
+    arbol.append(crearColumna('evo-sig', t('evo.va'), siguientes));
+
+    contenedor.replaceChildren(...barra, arbol, crearPieEvo());
+}
+
+// ---- Ir a la carta: se cierra la ventana, se centra la carta en la parte visible de la pantalla y se la resalta ----
+const DURACION_DESTELLO_MS = 2300; // un poco más que la animación del CSS (2,1 s), para sacar la clase cuando ya terminó
+
+const esperar = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// SweetAlert2 restaura la página (scroll y ancho de la barra de desplazamiento) recién cuando termina de cerrarse.
+// Si se scrollea antes, el layout se mueve después y la carta queda mal ubicada.
+async function esperarQueCierreLaVentana() {
+    for (let intentos = 0; intentos < 40 && document.querySelector('.swal2-container'); intentos++) {
+        await esperar(25);
+    }
+    await esperar(60);
+}
+
+// Cuánto falta scrollear para que la carta quede centrada en la parte de la pantalla que no tapa la barra fija de arriba
+function desvioParaCentrar(carta) {
+    const barra = document.getElementById('navbar');
+    const tapado = barra ? Math.max(0, barra.getBoundingClientRect().bottom) : 0;
+    const visible = window.innerHeight - tapado;
+    const caja = carta.getBoundingClientRect();
+    return caja.top - tapado - (visible - caja.height) / 2;
+}
+
+// Scroll animado hecho a mano: a diferencia del scroll suave del navegador, siempre termina en el lugar pedido,
+// aunque la página esté ocupada (las cartas siguen cargando) o el usuario mueva el mouse en el medio.
+function scrollAnimado(destino, duracion) {
+    return new Promise(resolve => {
+        const origen = window.scrollY;
+        const inicio = performance.now();
+        const paso = () => {
+            const avance = duracion > 0 ? Math.min(1, (performance.now() - inicio) / duracion) : 1;
+            const suave = 1 - (1 - avance) ** 3; // arranca rápido y frena al llegar
+            window.scrollTo({ top: origen + (destino - origen) * suave, behavior: 'instant' });
+            if (avance < 1) setTimeout(paso, 16);
+            else resolve();
+        };
+        paso();
+    });
+}
+
+// Las últimas filas no se pueden centrar si la página termina justo debajo de ellas: se agrega al final el espacio que falta
+function asegurarEspacioAbajo(faltante) {
+    if (faltante <= 0) return;
+    const actual = parseFloat(getComputedStyle(listaDigimons).paddingBottom) || 0;
+    listaDigimons.style.paddingBottom = `${Math.ceil(actual + faltante)}px`;
+}
+
+// Lleva la carta al centro y después revisa si el layout se movió por el camino, y corrige (hasta 4 veces)
+async function centrarCarta(carta) {
+    for (let intento = 0; intento < 4; intento++) {
+        const desvio = desvioParaCentrar(carta);
+        if (Math.abs(desvio) <= 2) return;
+        const antes = window.scrollY;
+        const ideal = antes + desvio;
+        asegurarEspacioAbajo(ideal - (document.documentElement.scrollHeight - window.innerHeight));
+        const maximo = document.documentElement.scrollHeight - window.innerHeight;
+        const destino = Math.max(0, Math.min(ideal, maximo));
+        if (Math.abs(destino - antes) < 1) return; // ya está arriba de todo (las primeras filas no se pueden bajar más)
+        const duracion = intento === 0 && !reducirMovimiento ? Math.min(900, 350 + Math.abs(destino - antes) / 6) : 0;
+        await scrollAnimado(destino, duracion);
+    }
+}
+
+function resaltarCarta(carta) {
+    clearTimeout(carta.temporizadorDestello);
+    carta.classList.remove('evo-resaltada');
+    void carta.offsetWidth; // reinicia la animación si ya la tenía
+    carta.classList.add('evo-resaltada');
+    carta.temporizadorDestello = setTimeout(() => carta.classList.remove('evo-resaltada'), DURACION_DESTELLO_MS);
+}
+
+async function irALaCarta(id) {
+    const carta = cartaPorId(id);
+    Swal.close();
+    if (!carta) return;
+    await esperarQueCierreLaVentana();
+    if (carta.classList.contains('filtrada')) limpiarTodo(); // si los filtros la estaban escondiendo, se sacan
+    await centrarCarta(carta);
+    resaltarCarta(carta); // el destello empieza cuando la carta ya está en el centro, así se ve completo
+}
+
+function alTocarEnEvolucion(evento) {
+    const objetivo = evento.target;
+    const nodo = objetivo.closest('.evo-nodo');
+    if (nodo) {
+        estadoEvo.historial.push(Number(nodo.dataset.id));
+        return pintarEvolucion();
+    }
+    if (objetivo.closest('.evo-volver')) {
+        estadoEvo.historial.pop();
+        return pintarEvolucion();
+    }
+    if (objetivo.closest('.evo-reintentar')) {
+        return pintarEvolucion();
+    }
+    const ir = objetivo.closest('.evo-ir');
+    if (ir) {
+        return irALaCarta(ir.dataset.ir);
+    }
+    const mas = objetivo.closest('.evo-mas');
+    if (mas) {
+        const columna = mas.closest('.evo-col');
+        const abierta = columna.classList.toggle('abierta');
+        mas.setAttribute('aria-expanded', String(abierta));
+        mas.textContent = abierta ? t('evo.menos') : t('evo.masN', { n: mas.dataset.extras });
+    }
+}
+
+function abrirEvolucion(carta) {
+    estadoEvo = { historial: [Number(carta.dataset.id)], marca: 0 };
+    Swal.fire({
+        title: t('evo.titulo'),
+        html: '<div class="evo"></div>',
+        showConfirmButton: false,
+        showCloseButton: true,
+        closeButtonAriaLabel: t('evo.cerrar'),
+        width: 'min(96vw, 920px)',
+        customClass: { popup: 'popup-evo' },
+        didOpen: () => {
+            contenedorEvo().addEventListener('click', alTocarEnEvolucion);
+            pintarEvolucion();
+        },
+        willClose: () => {
+            estadoEvo = null;
+        },
+    });
+}
+
+// Si se cambia de idioma con la ventana abierta, se vuelve a escribir en el idioma nuevo
+document.addEventListener('idioma-cambiado', () => {
+    if (!estadoEvo) return;
+    const titulo = Swal.getTitle();
+    if (titulo) titulo.textContent = t('evo.titulo');
+    pintarEvolucion();
+});
+
+// ---- El botón del dorso --------------------------------------------------------------------------------------------
+function crearBotonEvolucion(carta) {
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'c-evo';
+    boton.textContent = t('evo.boton');
+    boton.title = t('evo.boton.ayuda');
+    boton.addEventListener('click', evento => {
+        evento.stopPropagation(); // que no cuente como elegir la carta para el combate
+        abrirEvolucion(carta);
+    });
+    return boton;
+}
