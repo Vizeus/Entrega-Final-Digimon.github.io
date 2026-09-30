@@ -594,26 +594,34 @@ body {
             font-size: 14px;
         }
 
-        // Las listas de información se abren dentro del panel, debajo de su botón
+        // Las listas de información se abren dentro del panel, debajo de su botón.
+        // "visibility: inherit": si el panel está cerrado (oculto), las listas también, y no reciben toques.
         .menu-info ul {
             position: static;
             display: none;
             min-width: 0;
             margin-top: 6px;
-            visibility: visible;
+            visibility: inherit;
             opacity: 1;
             translate: none;
             transition: none;
             box-shadow: inset 0 1px 3px rgba(0, 40, 90, 0.18);
         }
 
+        // La lista de elementos tiene su propia regla con id (la grilla de dos columnas de escritorio), que le gana en
+        // prioridad a ".menu-info ul": sin esta línea quedaba siempre desplegada en el celular.
+        #lista-elementos {
+            display: none;
+            min-width: 0;
+        }
+
         .menu-info.abierto ul {
             display: block;
+            visibility: inherit;
         }
 
         .menu-info.abierto #lista-elementos {
             display: grid;
-            min-width: 0;
         }
 
         // Carga: solo una línea finita en el borde de abajo de la barra (el rótulo queda para los lectores de pantalla)

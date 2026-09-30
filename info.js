@@ -175,6 +175,13 @@ function activarMenuMovil() {
     const abrir = (abierto) => {
         barra.classList.toggle('menu-abierto', abierto);
         boton.setAttribute('aria-expanded', String(abierto));
+        // Al cerrar el panel también se recogen las listas de información: al volver a abrirlo están cerradas
+        if (!abierto) {
+            panel.querySelectorAll('.menu-info.abierto').forEach(menu => {
+                menu.classList.remove('abierto');
+                menu.querySelector('.menu-desplegable').setAttribute('aria-expanded', 'false');
+            });
+        }
     };
 
     boton.addEventListener('click', () => abrir(!estaAbierto()));
