@@ -175,11 +175,11 @@ function activarMenuMovil() {
     const abrir = (abierto) => {
         barra.classList.toggle('menu-abierto', abierto);
         boton.setAttribute('aria-expanded', String(abierto));
-        // Al cerrar el panel también se recogen las listas de información: al volver a abrirlo están cerradas
+        // Al cerrar el panel también se recogen las listas de información y de filtros: al volver a abrirlo están cerradas
         if (!abierto) {
-            panel.querySelectorAll('.menu-info.abierto').forEach(menu => {
+            panel.querySelectorAll('.menu-info.abierto, .f-grupo.abierto').forEach(menu => {
                 menu.classList.remove('abierto');
-                menu.querySelector('.menu-desplegable').setAttribute('aria-expanded', 'false');
+                menu.querySelector('.menu-desplegable, .f-btn').setAttribute('aria-expanded', 'false');
             });
         }
     };
@@ -196,8 +196,8 @@ function activarMenuMovil() {
     });
 
     document.addEventListener('keydown', (evento) => {
-        // Si hay una lista de información abierta, Esc primero cierra esa lista (lo hace activarMenusInfo)
-        if (evento.key !== 'Escape' || !estaAbierto() || panel.querySelector('.menu-info.abierto')) return;
+        // Si hay una lista de información o de filtros abierta, Esc primero cierra esa lista (lo hacen activarMenusInfo y filtros.js)
+        if (evento.key !== 'Escape' || !estaAbierto() || panel.querySelector('.menu-info.abierto, .f-grupo.abierto')) return;
         abrir(false);
         boton.focus();
     }, true); // en captura: se decide antes de que Esc cierre la lista de información
@@ -212,3 +212,4 @@ escribirMenus();
 activarMenusInfo();
 activarMenuMovil();
 document.addEventListener('idioma-cambiado', escribirMenus);
+document.addEventListener('niveles-cambiados', escribirMenus); // la lista de niveles usa los nombres del sistema vigente

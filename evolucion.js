@@ -8,6 +8,8 @@
 //   - una "evolución" que va para el lado contrario (un nivel más bajo en "evoluciona a", o más alto en "viene de")
 //     se descarta, porque la API también anota las involuciones;
 //   - una variante del mismo digimon del mismo nivel (Agumon → Agumon (X-Antibody)) tampoco cuenta como evolución.
+// La API no trae huevos: a los Baby I no les anota de quién vienen. Para que igual tengan su "viene de", en esa columna se
+// dibuja un Digitama (huevo); cuál de los cuatro diseños le toca a cada digimon es al azar, no es un dato de la API.
 // Como hay digimons con decenas de evoluciones, de cada lado se ven las primeras TOPE_RAMAS (las de nivel más cercano)
 // y un botón despliega el resto. Al tocar un digimon del árbol, el árbol se centra en él (y hay un botón para volver).
 // -----------------------------------------------------------------------------------------------------------------
@@ -20,6 +22,9 @@ Object.assign(DICCIONARIO.es, {
     'evo.viene': 'Viene de',
     'evo.va': 'Evoluciona a',
     'evo.vacio': 'Sin registros en el simulador',
+    'evo.huevo': 'Digitama',
+    'evo.huevo.tipo': 'Huevo',
+    'evo.huevo.ayuda': 'Digitama (huevo)',
     'evo.masN': 'Ver las {n} restantes',
     'evo.menos': 'Ver menos',
     'evo.volver': '← Volver',
@@ -39,6 +44,9 @@ Object.assign(DICCIONARIO.en, {
     'evo.viene': 'Evolves from',
     'evo.va': 'Evolves into',
     'evo.vacio': 'No records in the simulator',
+    'evo.huevo': 'Digitama',
+    'evo.huevo.tipo': 'Egg',
+    'evo.huevo.ayuda': 'Digitama (egg)',
     'evo.masN': 'Show the other {n}',
     'evo.menos': 'Show less',
     'evo.volver': '← Back',
@@ -148,7 +156,56 @@ function imagenDe(carta) {
     return imagen;
 }
 
-function crearNodo({ carta, nivel, condicion }) {
+// Huevos: cuatro diseños, cada uno con su color (manchas verdes, rayas azules, rayas naranjas y manchas rosas).
+// A cada digimon le toca uno "al azar", pero siempre el mismo: sale de un número mezclado a partir de su ID.
+const FORMA_HUEVO = 'M20 4 C27 4 33 16 33 25 C33 32 27 37 20 37 C13 37 7 32 7 25 C7 16 13 4 20 4 Z';
+const DISENOS_HUEVO = [
+    { color: '#34b868', dibujo: '<circle cx="15" cy="15" r="3"/><circle cx="23" cy="23" r="3.6"/><circle cx="13" cy="28" r="3.4"/><circle cx="25" cy="32" r="2.4"/><circle cx="27" cy="14" r="1.8"/>' },
+    { color: '#3a93e0', dibujo: '<path d="M6 14 Q20 20 34 14 V21 Q20 27 6 21 Z"/><path d="M6 26 Q20 32 34 26 V28.6 Q20 34.6 6 28.6 Z"/>' },
+    { color: '#f0952b', dibujo: '<path d="M6 10 Q20 14 34 10 V16 Q20 20 6 16 Z"/><path d="M6 23 Q20 27 34 23 V30 Q20 34 6 30 Z"/>' },
+    { color: '#ee5f9f', dibujo: '<circle cx="24" cy="17" r="4.6"/><circle cx="14" cy="27" r="5.2"/><circle cx="26" cy="31" r="1.9"/><circle cx="13" cy="14" r="1.7"/>' },
+];
+
+function disenoDeHuevo(carta) {
+    const id = Number(carta.dataset.id);
+    return DISENOS_HUEVO[Math.imul(id ^ (id >>> 3), 2246822519) >>> 30]; // mezcla los bits del ID: queda parejo y sin patrón
+}
+
+function crearHuevo(diseno) {
+    const caja = document.createElement('span');
+    caja.className = 'evo-huevo-img';
+    caja.innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true">
+        <defs><clipPath id="huevo-forma"><path d="${FORMA_HUEVO}"/></clipPath></defs>
+        <path class="h-cuerpo" d="${FORMA_HUEVO}"/>
+        <g clip-path="url(#huevo-forma)">
+            <g class="h-dibujo">${diseno.dibujo}</g>
+            <ellipse class="h-sombra" cx="28" cy="31" rx="10" ry="11"/>
+        </g>
+        <ellipse class="h-brillo" cx="15" cy="13" rx="3" ry="5" transform="rotate(25 15 13)"/>
+    </svg>`;
+    return caja;
+}
+
+// El Digitama del "viene de" de un Baby I: no se toca (no hay línea evolutiva para un huevo)
+function crearNodoHuevo(carta) {
+    const diseno = disenoDeHuevo(carta);
+    const nodo = document.createElement('div');
+    nodo.className = 'evo-nodo evo-huevo';
+    nodo.style.setProperty('--c', diseno.color); // el borde de la cajita toma el color del huevo
+    nodo.title = t('evo.huevo.ayuda');
+
+    const texto = document.createElement('span');
+    texto.className = 'evo-txt';
+    const nivel = document.createElement('span');
+    nivel.className = 'evo-nv';
+    nivel.textContent = t('evo.huevo.tipo');
+    texto.append(crearNombreEvo(t('evo.huevo')), nivel);
+    nodo.append(crearHuevo(diseno), texto);
+    return nodo;
+}
+
+function crearNodo({ carta, nivel, condicion, huevo }) {
+    if (huevo) return crearNodoHuevo(carta);
     const nodo = document.createElement('button');
     nodo.type = 'button';
     nodo.className = 'evo-nodo';
@@ -297,6 +354,7 @@ async function pintarEvolucion() {
     if (!estadoEvo || marca !== estadoEvo.marca) return; // mientras tanto se cerró o se pasó a otro digimon
 
     const previas = armarRamas(datos.previas, carta, -1);
+    if (previas.length === 0 && carta.dataset.nivelApi === 'Baby I') previas.push({ huevo: true, carta });
     const siguientes = armarRamas(datos.siguientes, carta, +1);
 
     const arbol = document.createElement('div');
@@ -397,7 +455,7 @@ async function irALaCarta(id) {
 
 function alTocarEnEvolucion(evento) {
     const objetivo = evento.target;
-    const nodo = objetivo.closest('.evo-nodo');
+    const nodo = objetivo.closest('.evo-nodo[data-id]'); // el huevo no tiene data-id: no lleva a ningún lado
     if (nodo) {
         estadoEvo.historial.push(Number(nodo.dataset.id));
         return pintarEvolucion();
@@ -448,6 +506,11 @@ document.addEventListener('idioma-cambiado', () => {
     const titulo = Swal.getTitle();
     if (titulo) titulo.textContent = t('evo.titulo');
     pintarEvolucion();
+});
+
+// Lo mismo si se cambia el sistema de niveles: los niveles del árbol se escriben con los nombres del sistema nuevo
+document.addEventListener('niveles-cambiados', () => {
+    if (estadoEvo) pintarEvolucion();
 });
 
 // ---- El botón del dorso --------------------------------------------------------------------------------------------

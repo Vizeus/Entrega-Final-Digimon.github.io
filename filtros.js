@@ -240,6 +240,12 @@ function refrescar() {
     const hayFiltros = busqueda !== '' || GRUPOS.some(grupo => elegidos[grupo].size > 0);
     botonLimpiar.hidden = !hayFiltros;
     avisoVacio.hidden = !(total > 0 && visibles === 0);
+
+    // En celular los filtros están dentro del menú ☰: con el menú cerrado, un globito en el botón avisa cuántos hay activos
+    const activos = (busqueda !== '' ? 1 : 0) + GRUPOS.reduce((suma, grupo) => suma + elegidos[grupo].size, 0);
+    const botonMenu = document.getElementById('abrir-menu');
+    if (activos > 0) botonMenu.dataset.filtros = activos;
+    else delete botonMenu.dataset.filtros;
 }
 
 // Las cartas llegan de a poco: si llegan varias juntas, se hacen las cuentas una sola vez por cuadro
@@ -342,10 +348,13 @@ function activarFiltros() {
     avisoVacio.querySelector('.f-limpiar').addEventListener('click', limpiarTodo);
 
     document.addEventListener('carta-agregada', programarRefresco);
-    document.addEventListener('idioma-cambiado', () => {
-        etiquetarChips();
-        refrescar();
-    });
+    // Si cambia el idioma o el sistema de niveles, los nombres de las opciones y de las etiquetas activas se escriben de nuevo
+    for (const aviso of ['idioma-cambiado', 'niveles-cambiados']) {
+        document.addEventListener(aviso, () => {
+            etiquetarChips();
+            refrescar();
+        });
+    }
 }
 
 crearChips();

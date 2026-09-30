@@ -17,10 +17,10 @@ const botonIniciarCombate = document.getElementById('iniciar-combate');
 const contadorSeleccion = document.getElementById('contador-seleccion');
 
 // Número total de Digimons 
-const totalDigimons = 860;
+const totalDigimons = 1488; // todos los que tiene la API (digi-api.com)
 
 // Número de páginas a recuperar
-const totalPaginas = 172; // 5 digimons por página: 860 digimons en total
+const totalPaginas = 298; // 5 digimons por página: 1488 digimons en total (la última página trae solo 3)
 
 // Tipo (atributo) de cada Digimon: la API lo trae en inglés y por dentro lo guardamos con estos nombres en español.
 // Lo que se ve en pantalla ("Datos" o "Data") lo decide i18n.js según el idioma, ver nombreTipo().
@@ -254,18 +254,26 @@ function actualizarBarraProgreso(contador) {
     document.getElementById('navbar').classList.toggle('carga-completa', totalDigimons > 0 && contador >= totalDigimons);
 }
 
-// Mostrar en la banderita el sistema de clasificación vigente (se recuperó desde sessionStorage arriba)
+// Selector de niveles: resalta el sistema vigente (Japón o EE.UU.) y escribe su ayuda (título y aria-label) en el idioma actual.
+// El sistema vigente se recuperó de sessionStorage más arriba.
+function mostrarSistemaDeNiveles() {
+    const sistema = clasificacionAlternativa ? 'eeuu' : 'japon';
+    botonCambiarNiveles.querySelectorAll('.sn-opcion').forEach(opcion => {
+        opcion.classList.toggle('activo', opcion.dataset.sistema === sistema);
+    });
+    const ayuda = t(`niveles.ayuda.${sistema}`);
+    botonCambiarNiveles.title = ayuda;
+    botonCambiarNiveles.setAttribute('aria-label', ayuda);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    if (clasificacionAlternativa) {
-        botonCambiarNiveles.classList.add('nivel-eeuu');
-        botonCambiarNiveles.classList.remove('nivel-japon');
-    } else {
-        botonCambiarNiveles.classList.add('nivel-japon');
-        botonCambiarNiveles.classList.remove('nivel-eeuu');
-    }
+    mostrarSistemaDeNiveles();
     // Llamar a la función para cargar los Digimons después de inicializar la configuración
     crearListaDeDigimons();
 });
+
+// Si se cambia el idioma, la ayuda del selector se vuelve a escribir en el idioma nuevo
+document.addEventListener('idioma-cambiado', mostrarSistemaDeNiveles);
 
 let contadorDigimons = 0; // Contador de Digimons cargados
 
@@ -1010,11 +1018,23 @@ async function crearListaDeDigimons() {
     }
 }
 
-// Agregar evento al botón de cambiar niveles
+// Cambiar de sistema de niveles NO recarga la página: se escribe de nuevo el nombre de cada nivel donde aparece.
+// Las cartas lo hacen acá; los filtros (filtros.js), los menús (info.js) y la línea evolutiva (evolucion.js) escuchan el mismo aviso.
 botonCambiarNiveles.addEventListener('click', () => {
-    clasificacionAlternativa = sessionStorage.getItem('clasificacionAlternativa') === 'true';
-    sessionStorage.setItem('clasificacionAlternativa', !clasificacionAlternativa);
-    window.location.reload();
+    clasificacionAlternativa = !clasificacionAlternativa;
+    try {
+        sessionStorage.setItem('clasificacionAlternativa', String(clasificacionAlternativa));
+    } catch (error) {
+        // si no se puede guardar, igual cambia mientras la página esté abierta
+    }
+    mostrarSistemaDeNiveles();
+    document.dispatchEvent(new CustomEvent('niveles-cambiados'));
+});
+
+document.addEventListener('niveles-cambiados', () => {
+    listaDigimons.querySelectorAll(':scope > li').forEach(carta => {
+        carta.querySelector('.c-nivel').textContent = nombreNivel(carta.dataset.nivelApi);
+    });
 });
 
 // -----------------------------------------------------------------------------------------------------------------

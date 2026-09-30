@@ -200,18 +200,54 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -2px 3px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0, 30, 80, 0.25);
 }
 #navbar #cambiar-niveles {
-  --c: #5b7893;
-  width: 46px;
+  --c: #cfdde9;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   height: 34px;
-  padding: 0;
+  padding: 0 4px 0 10px;
+  border-color: rgba(0, 40, 90, 0.4);
   border-radius: 11px;
-  border-color: rgba(0, 40, 90, 0.55);
 }
-#navbar #cambiar-niveles.nivel-japon {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.14) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.08) 100%), url("../img/Japon.png") center/cover;
+#navbar #cambiar-niveles .sn-rotulo {
+  margin-right: 5px;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #24476a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
 }
-#navbar #cambiar-niveles.nivel-eeuu {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.14) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.08) 100%), url("../img/EEUU.png") center/cover;
+#navbar #cambiar-niveles .sn-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 8px;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+#navbar #cambiar-niveles .sn-opcion img {
+  display: block;
+  width: auto;
+  height: 14px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 30, 80, 0.4);
+}
+#navbar #cambiar-niveles .sn-opcion small {
+  display: none;
+  font-size: 13px;
+  color: #24476a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+#navbar #cambiar-niveles .sn-opcion.activo {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%), linear-gradient(180deg, #7cc4f5 0%, #3f97e8 55%, #2a75cf 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 40, 110, 0.4);
+}
+#navbar #cambiar-niveles .sn-opcion.activo small {
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 40, 110, 0.6);
 }
 #navbar #cambiar-idioma {
   --c: #cfdde9;
@@ -281,6 +317,7 @@ body {
   border-radius: 14px;
   background: linear-gradient(180deg, #ffffff, #eaf4ff);
   box-shadow: 0 10px 24px rgba(0, 30, 80, 0.4), inset 0 1px 0 #fff;
+  z-index: 950;
   visibility: hidden;
   opacity: 0;
   translate: 0 -6px;
@@ -478,8 +515,32 @@ body {
     color: #1d4468;
   }
   #navbar .ajustes {
+    flex-wrap: wrap;
     justify-content: center;
     margin: 0;
+  }
+  #navbar #cambiar-niveles {
+    flex: 1 1 100%;
+    justify-content: space-between;
+    min-width: 0;
+    height: 44px;
+    padding: 0 5px 0 12px;
+  }
+  #navbar #cambiar-niveles .sn-rotulo {
+    font-size: 13px;
+  }
+  #navbar #cambiar-niveles .sn-opcion {
+    height: 34px;
+    padding: 0 11px;
+    gap: 7px;
+    border-radius: 10px;
+  }
+  #navbar #cambiar-niveles .sn-opcion img {
+    height: 16px;
+  }
+  #navbar #cambiar-niveles .sn-opcion small {
+    display: inline;
+    font-size: 14px;
   }
   #navbar .herramientas {
     flex-direction: column;
@@ -574,6 +635,18 @@ body {
   #navbar #iniciar-combate::before {
     display: none;
   }
+  #navbar #cambiar-niveles {
+    padding: 0 4px 0 9px;
+  }
+  #navbar #cambiar-niveles .sn-rotulo {
+    margin-right: 3px;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+  #navbar #cambiar-niveles .sn-opcion {
+    gap: 5px;
+    padding: 0 7px;
+  }
 }
 @media (min-width: 1650px) {
   #navbar .carga label br {
@@ -621,18 +694,15 @@ body {
 #filtros {
   position: relative;
   z-index: 900;
+  order: 20;
+  flex: 1 1 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 12px;
-  margin: 14px 26px 0;
-  padding: 10px 16px;
-  border-radius: 18px;
-  background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(210, 235, 252, 0.62));
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 18px rgba(0, 30, 90, 0.28);
-  -webkit-backdrop-filter: blur(10px) saturate(1.3);
-  backdrop-filter: blur(10px) saturate(1.3);
+  gap: 8px 12px;
+  padding: 9px 0 0;
+  border-top: 1px solid rgba(0, 70, 130, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
   font-family: var(--f-cuerpo), sans-serif;
   color: #24476a;
 }
@@ -652,7 +722,7 @@ body {
   align-items: center;
   flex: 0 1 260px;
   min-width: 160px;
-  height: 38px;
+  height: 34px;
   border-radius: 13px;
   border: 1px solid rgba(0, 40, 90, 0.35);
   cursor: text;
@@ -713,13 +783,13 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 38px;
+  height: 34px;
   padding: 0 14px;
-  border-radius: 13px;
+  border-radius: 12px;
   border: 1px solid rgba(0, 40, 90, 0.4);
   cursor: pointer;
   color: #24476a;
-  font: 600 15px var(--f-boton), sans-serif;
+  font: 600 14px var(--f-boton), sans-serif;
   background: linear-gradient(rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 100%), linear-gradient(#dae5ee 0%, #cfdde9 55%, #aab5bf 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 7px rgba(0, 30, 80, 0.35);
   transition: filter 0.15s, transform 0.1s, box-shadow 0.15s;
@@ -908,7 +978,7 @@ body {
 
 #filtros .f-limpiar,
 #f-vacio .f-limpiar {
-  height: 32px;
+  height: 30px;
   padding: 0 12px;
   border-radius: 11px;
   cursor: pointer;
@@ -965,25 +1035,73 @@ body {
   }
 }
 @media (max-width: 700px) {
-  #filtros {
-    margin: 10px 12px 0;
+  #navbar #filtros {
+    order: 0;
+    flex: none;
+    width: 100%;
+    gap: 8px;
+    padding: 0;
+    border-top: 0;
+    box-shadow: none;
   }
-  #filtros .f-buscar {
+  #navbar #filtros .f-titulo {
+    display: none;
+  }
+  #navbar #filtros .f-buscar {
+    order: 0;
     flex: 1 1 100%;
+    height: 40px;
   }
-  #filtros .f-grupo {
+  #navbar #filtros .f-buscar input {
+    font-size: 16px;
+  }
+  #navbar #filtros .f-grupo {
+    display: contents;
+  }
+  #navbar #filtros .f-btn {
+    order: 1;
+    flex: 1 1 0;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 8px;
+  }
+  #navbar #filtros .f-panel {
+    order: 2;
     position: static;
-  }
-  #filtros .f-panel {
-    left: 0;
-    right: 0;
+    flex: 1 1 100%;
     width: auto;
     max-width: none;
+    padding: 10px;
+    animation: none;
+    box-shadow: inset 0 1px 3px rgba(0, 40, 90, 0.18);
   }
-  #filtros .f-resumen {
+  #navbar #filtros .f-activos {
+    order: 3;
+    flex: 1 1 100%;
+  }
+  #navbar #filtros .f-resumen {
+    order: 4;
     margin-left: 0;
     width: 100%;
     justify-content: space-between;
+  }
+  #navbar #abrir-menu[data-filtros]::after {
+    content: attr(data-filtros);
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    display: grid;
+    place-items: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    border-radius: 10px;
+    font: 700 12px var(--f-boton), sans-serif;
+    color: #fff;
+    background: linear-gradient(#7cc4f5, #2a75cf);
+    border: 1px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 30, 90, 0.5);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -997,12 +1115,15 @@ body {
   justify-content: center;
   flex-wrap: wrap;
   padding: 0;
-  margin: 0;
+  margin: 14px 0 0;
 }
 #listado-digimons li {
-  --base: #59616d;
-  --f: calc((var(--nivel, 4) - 1) / 6);
-  --tinte: color-mix(in srgb, var(--base) calc(6% + 26% * var(--f)), white);
+  --tipo: #59616d;
+  --claro: 12%;
+  --oscuro: 0%;
+  --fuerza: 64%;
+  --base: color-mix(in srgb, color-mix(in srgb, var(--tipo), white var(--claro)), black var(--oscuro));
+  --tinte: color-mix(in srgb, var(--base) var(--fuerza), white);
   --borde-base: 2px;
   --borde: max(var(--borde-base), var(--borde-sel, 0px));
   --aro: linear-gradient(var(--base), var(--base));
@@ -1024,24 +1145,44 @@ body {
   transition: translate 0.3s ease, box-shadow 0.3s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), --mx 0.12s ease-out, --my 0.12s ease-out;
 }
 #listado-digimons li[data-tipo=Vacuna] {
-  --base: #3a8dde;
+  --tipo: #3a8dde;
 }
 #listado-digimons li[data-tipo=Virus] {
-  --base: #8a4fc7;
+  --tipo: #8a4fc7;
 }
 #listado-digimons li[data-tipo=Datos] {
-  --base: #3fae5a;
+  --tipo: #3fae5a;
 }
 #listado-digimons li[data-tipo=Libre] {
-  --base: #1fa79f;
+  --tipo: #1fa79f;
 }
 #listado-digimons li[data-tipo=Variable] {
-  --base: #e2803a;
+  --tipo: #e2803a;
 }
 #listado-digimons li[data-tipo=Desconocido] {
-  --base: #59616d;
+  --tipo: #59616d;
+}
+#listado-digimons li[data-nivel="1"] {
+  --claro: 58%;
+  --fuerza: 45%;
+}
+#listado-digimons li[data-nivel="3"] {
+  --claro: 34%;
+  --fuerza: 55%;
+}
+#listado-digimons li[data-nivel="4"] {
+  --claro: 12%;
+  --fuerza: 64%;
+}
+#listado-digimons li[data-nivel="5"] {
+  --claro: 0%;
+  --oscuro: 6%;
+  --fuerza: 72%;
 }
 #listado-digimons li[data-nivel="6"] {
+  --claro: 0%;
+  --oscuro: 20%;
+  --fuerza: 80%;
   --borde-base: 7px;
   --aro: linear-gradient(135deg, #f3fdff 0%, #7fd0f5 28%, #ffffff 48%, #5cb3e6 72%, #d6f3ff 100%);
   --anillo: inset 0 0 0 4px var(--base);
@@ -1059,6 +1200,9 @@ body {
   text-shadow: 0 0 5px #7fc8ff, 0 0 10px #4aa8ff;
 }
 #listado-digimons li[data-nivel="7"] {
+  --claro: 0%;
+  --oscuro: 34%;
+  --fuerza: 88%;
   --borde-base: 7px;
   --aro: linear-gradient(135deg, #fff4b8 0%, #e8b52a 28%, #fff1a3 48%, #c98f10 72%, #ffe27a 100%);
   --anillo: inset 0 0 0 4px var(--base);
@@ -1147,7 +1291,7 @@ body {
   justify-content: center;
   border: 1px solid rgba(0, 0, 0, 0.28);
   border-radius: 6px;
-  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--base) 18%, #e6e9ed) 52%, color-mix(in srgb, var(--base) 32%, #bfc6ce) 100%);
+  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.55), #e6e9ed) 52%, color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.9), #bfc6ce) 100%);
   box-shadow: inset 0 1px 0 #ffffff, 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 #listado-digimons li .c-cab h4,
@@ -1207,7 +1351,7 @@ body {
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--base) 45%, white) 0%, var(--base) 55%, color-mix(in srgb, var(--base) 65%, black) 100%);
+  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--tipo) 45%, white) 0%, var(--tipo) 55%, color-mix(in srgb, var(--tipo) 65%, black) 100%);
   box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.7);
 }
 #listado-digimons li .c-gema small {
@@ -1230,7 +1374,7 @@ body {
   gap: 5px;
 }
 #listado-digimons li .chip {
-  --c: var(--base);
+  --c: var(--tipo);
   flex: 1;
   min-width: 0;
   padding: 3px 4px;
@@ -1266,7 +1410,7 @@ body {
 }
 #listado-digimons li .c-cuerpo .dato b {
   font-weight: 700;
-  color: color-mix(in srgb, var(--base) 70%, black);
+  color: color-mix(in srgb, var(--tipo) 70%, black);
 }
 #listado-digimons li .c-cuerpo .c-desc {
   margin: 8px 0 4px;
@@ -1430,7 +1574,8 @@ body {
   #navbar .menu-desplegable,
   #navbar .menu-info ul,
   #navbar .contador,
-  #navbar #cambiar-idioma span {
+  #navbar #cambiar-idioma span,
+  #navbar #cambiar-niveles .sn-opcion {
     transition: none;
   }
   #listado-digimons li,
@@ -1472,7 +1617,7 @@ body {
   cursor: pointer;
   border: 1px solid rgba(0, 0, 0, 0.35);
   border-radius: 8px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--base) 55%, white) 0%, var(--base) 50%, color-mix(in srgb, var(--base) 82%, black) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tipo) 55%, white) 0%, var(--tipo) 50%, color-mix(in srgb, var(--tipo) 82%, black) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -1715,6 +1860,50 @@ body {
   margin-top: 2px;
   font: 600 10px var(--f-boton), sans-serif;
   color: color-mix(in srgb, var(--c) 65%, black);
+}
+
+/* Digitama (huevo) del "viene de" de los Baby I: una cajita igual a las demás, pero que no se toca */
+.evo-huevo,
+.evo-huevo:hover {
+  cursor: default;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+}
+
+.evo-huevo-img {
+  flex: none;
+  display: flex;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--c) 12%, white);
+}
+
+.evo-huevo-img svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.evo-huevo .h-cuerpo {
+  fill: #fdf7e6;
+  stroke: color-mix(in srgb, var(--c) 55%, black);
+  stroke-width: 1.2;
+}
+
+.evo-huevo .h-dibujo {
+  fill: var(--c);
+}
+
+.evo-huevo .h-sombra {
+  fill: #000000;
+  opacity: 0.07;
+}
+
+.evo-huevo .h-brillo {
+  fill: #ffffff;
+  opacity: 0.75;
 }
 
 /* El digimon del medio: más grande */

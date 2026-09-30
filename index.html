@@ -61,11 +61,60 @@
     <div id="menu-movil" class="menu-movil">
     <p class="menu-consigna" data-i18n="combate.consigna">Elige 2 digimons con los que quieras simular un combate</p>
 
-    <!-- Ajustes: sistema de clasificación de niveles (la banderita) e idioma. Van juntos, en el centro de la barra -->
+    <!-- Filtros y buscador: van en la barra, así acompañan al bajar por la lista. En computadora son la segunda fila de la barra;
+             en celular, parte del panel que se despliega con ☰. Los botones con las opciones (los "chips") los arma filtros.js -->
+    <section id="filtros" aria-label="Filtros y buscador de digimons" data-i18n-attr="aria-label:filtros.region">
+        <span class="f-titulo"><span aria-hidden="true">🔎</span> <span data-i18n="filtros.titulo">Filtros</span></span>
+
+        <label class="f-buscar">
+            <span class="f-lupa" aria-hidden="true">🔍</span>
+            <input type="text" role="searchbox" autocomplete="off" spellcheck="false"
+                   placeholder="Buscar digimon por nombre o número" aria-label="Buscar digimon por nombre o número"
+                   data-i18n-attr="placeholder:filtros.buscar;aria-label:filtros.buscar">
+            <button type="button" class="f-x" hidden title="Borrar búsqueda" aria-label="Borrar búsqueda"
+                    data-i18n-attr="title:filtros.borrarBusqueda;aria-label:filtros.borrarBusqueda">✕</button>
+        </label>
+
+        <div class="f-grupo" data-g="tipo">
+            <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                <span data-i18n="filtros.tipo">Tipo</span><b class="f-n" hidden>0</b>
+            </button>
+            <div class="f-panel" role="group" aria-label="Filtrar por tipo" data-i18n-attr="aria-label:filtros.porTipo"></div>
+        </div>
+
+        <div class="f-grupo" data-g="nivel">
+            <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                <span data-i18n="filtros.nivel">Nivel</span><b class="f-n" hidden>0</b>
+            </button>
+            <div class="f-panel" role="group" aria-label="Filtrar por nivel" data-i18n-attr="aria-label:filtros.porNivel"></div>
+        </div>
+
+        <div class="f-grupo" data-g="elemento">
+            <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                <span data-i18n="filtros.elemento">Elemento</span><b class="f-n" hidden>0</b>
+            </button>
+            <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
+        </div>
+
+        <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
+        <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
+
+        <div class="f-resumen">
+            <span class="f-cuenta" aria-live="polite"></span>
+            <button type="button" class="f-limpiar" hidden data-i18n="filtros.limpiar">Limpiar ✕</button>
+        </div>
+    </section>
+
+    <!-- Ajustes: sistema de clasificación de niveles (Japón / EE.UU.) e idioma. Van juntos, en el centro de la barra.
+         El selector de niveles muestra las dos opciones a la vista, con el rótulo "Niveles" y la activa resaltada (como el de idioma).
+         Cada opción lleva un ejemplo del nombre que usa ese sistema, que en celular se ve (ahí no hay "hover" para leer la ayuda).
+         El título y el aria-label (el sistema actual y cómo cambiarlo) los escribe main.js -->
     <div class="ajustes">
-        <button id="cambiar-niveles" class="nivel-japon botones" title="Cambiar sist. de clasificación de niveles"
-                aria-label="Cambiar sist. de clasificación de niveles"
-                data-i18n-attr="title:niveles.cambiar;aria-label:niveles.cambiar"></button>
+        <button type="button" id="cambiar-niveles" class="botones">
+            <span class="sn-rotulo" data-i18n="niveles.rotulo">Niveles</span>
+            <span class="sn-opcion" data-sistema="japon"><img src="./img/Japon.png" alt="" width="21" height="14"><small>Adult</small></span>
+            <span class="sn-opcion" data-sistema="eeuu"><img src="./img/EEUU.png" alt="" width="27" height="14"><small>Champion</small></span>
+        </button>
 
         <!-- Idioma: muestra los dos y resalta el que está activo. Al inicio se elige solo, según el idioma del navegador -->
         <button type="button" id="cambiar-idioma" title="Cambiar idioma (Español / English)"
@@ -104,48 +153,7 @@
     </div>
 </nav>
 
-<!-- Filtros y buscador. Los botones con las opciones (los "chips") los arma filtros.js -->
-<section id="filtros" aria-label="Filtros y buscador de digimons" data-i18n-attr="aria-label:filtros.region">
-    <span class="f-titulo"><span aria-hidden="true">🔎</span> <span data-i18n="filtros.titulo">Filtros</span></span>
 
-    <label class="f-buscar">
-        <span class="f-lupa" aria-hidden="true">🔍</span>
-        <input type="text" role="searchbox" autocomplete="off" spellcheck="false"
-               placeholder="Buscar digimon por nombre o número" aria-label="Buscar digimon por nombre o número"
-               data-i18n-attr="placeholder:filtros.buscar;aria-label:filtros.buscar">
-        <button type="button" class="f-x" hidden title="Borrar búsqueda" aria-label="Borrar búsqueda"
-                data-i18n-attr="title:filtros.borrarBusqueda;aria-label:filtros.borrarBusqueda">✕</button>
-    </label>
-
-    <div class="f-grupo" data-g="tipo">
-        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-            <span data-i18n="filtros.tipo">Tipo</span><b class="f-n" hidden>0</b>
-        </button>
-        <div class="f-panel" role="group" aria-label="Filtrar por tipo" data-i18n-attr="aria-label:filtros.porTipo"></div>
-    </div>
-
-    <div class="f-grupo" data-g="nivel">
-        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-            <span data-i18n="filtros.nivel">Nivel</span><b class="f-n" hidden>0</b>
-        </button>
-        <div class="f-panel" role="group" aria-label="Filtrar por nivel" data-i18n-attr="aria-label:filtros.porNivel"></div>
-    </div>
-
-    <div class="f-grupo" data-g="elemento">
-        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-            <span data-i18n="filtros.elemento">Elemento</span><b class="f-n" hidden>0</b>
-        </button>
-        <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
-    </div>
-
-    <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
-    <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
-
-    <div class="f-resumen">
-        <span class="f-cuenta" aria-live="polite"></span>
-        <button type="button" class="f-limpiar" hidden data-i18n="filtros.limpiar">Limpiar ✕</button>
-    </div>
-</section>
 
 <!-- Aviso cuando ningún digimon cumple los filtros -->
 <div id="f-vacio" hidden>

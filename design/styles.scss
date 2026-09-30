@@ -235,25 +235,66 @@ body {
         }
     }
 
-    // Cambio de sistema de niveles (herramienta secundaria): la bandera es la cara del botón, con el mismo brillo de gel
+    // Cambio de sistema de niveles (herramienta secundaria): selector de dos posiciones, igual que el de idioma.
+    // Lleva el rótulo "Niveles" y las dos banderas a la vista (Japón / EE.UU.), con la vigente resaltada en azul,
+    // así se entiende qué es sin tener que esperar a que aparezca la ayuda. Los ejemplos de nombre ("Adult" / "Champion")
+    // quedan ocultos en escritorio y se muestran en el menú del celular.
     #cambiar-niveles {
-        --c: #5b7893;
-        width: 46px;
+        --c: #cfdde9;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
         height: 34px;
-        padding: 0;
+        padding: 0 4px 0 10px;
+        border-color: rgba(0, 40, 90, 0.4);
         border-radius: 11px;
-        border-color: rgba(0, 40, 90, 0.55);
 
-        &.nivel-japon {
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.14) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.08) 100%),
-                url('../img/Japon.png') center / cover;
+        .sn-rotulo {
+            margin-right: 5px;
+            font-size: 12px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: #24476a;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
         }
 
-        &.nivel-eeuu {
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.14) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.08) 100%),
-                url('../img/EEUU.png') center / cover;
+        .sn-opcion {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 24px;
+            padding: 0 6px;
+            border-radius: 8px;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+
+            img {
+                display: block;
+                width: auto;
+                height: 14px;
+                border-radius: 2px;
+                box-shadow: 0 0 0 1px rgba(0, 30, 80, 0.4);
+            }
+
+            small {
+                display: none;
+                font-size: 13px;
+                color: #24476a;
+                text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+            }
+
+            &.activo {
+                opacity: 1;
+                background:
+                    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%),
+                    linear-gradient(180deg, #7cc4f5 0%, #3f97e8 55%, #2a75cf 100%);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 40, 110, 0.4);
+
+                small {
+                    color: #fff;
+                    text-shadow: 0 1px 1px rgba(0, 40, 110, 0.6);
+                }
+            }
         }
     }
 
@@ -337,6 +378,7 @@ body {
         border-radius: 14px;
         background: linear-gradient(180deg, #ffffff, #eaf4ff);
         box-shadow: 0 10px 24px rgba(0, 30, 80, 0.4), inset 0 1px 0 #fff;
+        z-index: 950; // por encima de la fila de filtros (900): su línea divisora tiene que quedar debajo de la lista
         visibility: hidden;
         opacity: 0;
         translate: 0 -6px;
@@ -577,9 +619,40 @@ body {
             color: #1d4468;
         }
 
+        // Los ajustes se apilan: el selector de niveles ocupa toda la fila y el de idioma queda centrado debajo
         .ajustes {
+            flex-wrap: wrap;
             justify-content: center;
             margin: 0;
+        }
+
+        // Acá no hay "hover" para leer la ayuda: cada opción muestra su bandera y un ejemplo del nombre que usa ese sistema
+        #cambiar-niveles {
+            flex: 1 1 100%;
+            justify-content: space-between;
+            min-width: 0;
+            height: 44px;
+            padding: 0 5px 0 12px;
+
+            .sn-rotulo {
+                font-size: 13px;
+            }
+
+            .sn-opcion {
+                height: 34px;
+                padding: 0 11px;
+                gap: 7px;
+                border-radius: 10px;
+
+                img {
+                    height: 16px;
+                }
+
+                small {
+                    display: inline;
+                    font-size: 14px;
+                }
+            }
         }
 
         .herramientas {
@@ -700,6 +773,22 @@ body {
             display: none;
         }
     }
+
+    // El selector de niveles del menú ☰ también se achica un poco para que entre en una fila
+    #navbar #cambiar-niveles {
+        padding: 0 4px 0 9px;
+
+        .sn-rotulo {
+            margin-right: 3px;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .sn-opcion {
+            gap: 5px;
+            padding: 0 7px;
+        }
+    }
 }
 
 // Cuando el ancho alcanza, el rótulo de la carga va en una sola línea (se saca el salto de línea del HTML).
@@ -757,7 +846,8 @@ body {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-// FILTROS Y BUSCADOR: una tarjeta de vidrio debajo de la barra, con el mismo estilo de gel
+// FILTROS Y BUSCADOR: van dentro de la barra (#navbar), así acompañan al bajar por la lista.
+//   En computadora son la segunda fila de la barra; en celular, parte del panel que se despliega con ☰.
 //   Estructura (el HTML tiene el esqueleto y filtros.js arma las opciones):
 //     #filtros → .f-titulo · .f-buscar · .f-grupo (.f-btn + .f-panel con los .f-chip) ×3 · .f-activos (.f-tag) · .f-resumen
 //     #f-vacio → aviso cuando ningún digimon cumple los filtros
@@ -766,18 +856,15 @@ body {
 #filtros {
     position: relative;
     z-index: 900;
+    order: 20; // siempre es la última fila de la barra
+    flex: 1 1 100%;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px 12px;
-    margin: 14px 26px 0;
-    padding: 10px 16px;
-    border-radius: 18px;
-    background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(210, 235, 252, 0.62));
-    border: 1px solid rgba(255, 255, 255, 0.85);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 18px rgba(0, 30, 90, 0.28);
-    -webkit-backdrop-filter: blur(10px) saturate(1.3);
-    backdrop-filter: blur(10px) saturate(1.3);
+    gap: 8px 12px;
+    padding: 9px 0 0;
+    border-top: 1px solid rgba(0, 70, 130, 0.2); // una línea fina la separa de las herramientas de arriba
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
     font-family: var(--f-cuerpo), sans-serif;
     color: #24476a;
 
@@ -800,7 +887,7 @@ body {
         align-items: center;
         flex: 0 1 260px;
         min-width: 160px;
-        height: 38px;
+        height: 34px;
         border-radius: 13px;
         border: 1px solid rgba(0, 40, 90, 0.35);
         cursor: text;
@@ -872,13 +959,13 @@ body {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        height: 38px;
+        height: 34px;
         padding: 0 14px;
-        border-radius: 13px;
+        border-radius: 12px;
         border: 1px solid rgba(0, 40, 90, 0.4);
         cursor: pointer;
         color: #24476a;
-        font: 600 15px var(--f-boton), sans-serif;
+        font: 600 14px var(--f-boton), sans-serif;
         background:
             linear-gradient(rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 100%),
             linear-gradient(#dae5ee 0%, #cfdde9 55%, #aab5bf 100%);
@@ -1107,7 +1194,7 @@ body {
 // Botón rojo de "limpiar" (en la tarjeta de filtros y en el aviso de sin resultados)
 #filtros .f-limpiar,
 #f-vacio .f-limpiar {
-    height: 32px;
+    height: 30px;
     padding: 0 12px;
     border-radius: 11px;
     cursor: pointer;
@@ -1170,31 +1257,87 @@ body {
     }
 }
 
-// En celular: el buscador ocupa toda la fila y los paneles se abren a lo ancho de la tarjeta
+// En celular los filtros van dentro del panel del menú ☰: el buscador ocupa toda la fila, los tres botones comparten la
+// siguiente y las opciones del filtro que se abre se despliegan debajo, dentro del panel (como las listas de información).
+// Los grupos dejan de ser cajas ("display: contents") para que sus botones y sus paneles se ordenen en el mismo renglón.
 @media (max-width: 700px) {
-    #filtros {
-        margin: 10px 12px 0;
+    #navbar #filtros {
+        order: 0;
+        flex: none;
+        width: 100%;
+        gap: 8px;
+        padding: 0;
+        border-top: 0;
+        box-shadow: none;
+
+        .f-titulo {
+            display: none;
+        }
 
         .f-buscar {
+            order: 0;
             flex: 1 1 100%;
+            height: 40px;
+
+            input {
+                font-size: 16px; // con menos, iPhone agranda la pantalla al tocar la caja
+            }
         }
 
         .f-grupo {
-            position: static;
+            display: contents;
+        }
+
+        .f-btn {
+            order: 1;
+            flex: 1 1 0;
+            justify-content: center;
+            gap: 6px;
+            height: 40px;
+            padding: 0 8px;
         }
 
         .f-panel {
-            left: 0;
-            right: 0;
+            order: 2;
+            position: static;
+            flex: 1 1 100%;
             width: auto;
             max-width: none;
+            padding: 10px;
+            animation: none;
+            box-shadow: inset 0 1px 3px rgba(0, 40, 90, 0.18);
+        }
+
+        .f-activos {
+            order: 3;
+            flex: 1 1 100%;
         }
 
         .f-resumen {
+            order: 4;
             margin-left: 0;
             width: 100%;
             justify-content: space-between;
         }
+    }
+
+    // Con el menú cerrado, un globito en el botón ☰ dice cuántos filtros hay activos
+    #navbar #abrir-menu[data-filtros]::after {
+        content: attr(data-filtros);
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        display: grid;
+        place-items: center;
+        min-width: 19px;
+        height: 19px;
+        padding: 0 5px;
+        border-radius: 10px;
+        font: 700 12px var(--f-boton), sans-serif;
+        color: #fff;
+        background: linear-gradient(#7cc4f5, #2a75cf);
+        border: 1px solid #fff;
+        box-shadow: 0 1px 3px rgba(0, 30, 90, 0.5);
     }
 }
 
@@ -1207,7 +1350,9 @@ body {
 
 // -----------------------------------------------------------------------------------------------------------------
 // CARTAS
-//   El tipo define el color (--base), el nivel la intensidad (--nivel, de 1 a 7) y el elemento el color de su etiqueta.
+//   El tipo define el color (--tipo) y el nivel lo aclara o lo oscurece: los bebés son pastel y cada nivel es un poco más
+//   profundo que el anterior (--base es el color del tipo ya ajustado al nivel). El elemento define el color de su etiqueta.
+//   Las etiquetas chicas (tipo, gema, botón Evolución) usan el color puro del tipo para que el texto blanco se lea bien.
 //   Los Perfect (nivel 6) tienen marco de cromo helado y los Ultimate (nivel 7) marco dorado; el anillo y el aura
 //   interiores conservan el color del tipo, así se distingue el tipo sin perder que es Perfect o Ultimate.
 //
@@ -1224,12 +1369,15 @@ body {
     justify-content: center;
     flex-wrap: wrap;
     padding: 0;
-    margin: 0;
+    margin: 14px 0 0; // un respiro debajo de la barra
 
     li {
-      --base: #59616d;                                   // Desconocido / sin tipo: gris oscuro
-      --f: calc((var(--nivel, 4) - 1) / 6);              // 0 = bebé, 1 = nivel máximo
-      --tinte: color-mix(in srgb, var(--base) calc(6% + 26% * var(--f)), white);
+      --tipo: #59616d;                                   // Desconocido / sin tipo: gris oscuro
+      --claro: 12%;                                      // cuánto se aclara hacia blanco (bebés); sin nivel conocido: como un Child
+      --oscuro: 0%;                                      // cuánto se oscurece hacia negro (niveles altos)
+      --fuerza: 64%;                                     // cuánto color lleva el fondo y la placa del nombre (crece con el nivel)
+      --base: color-mix(in srgb, color-mix(in srgb, var(--tipo), white var(--claro)), black var(--oscuro));
+      --tinte: color-mix(in srgb, var(--base) var(--fuerza), white);
 
       // Marco: un degradé que se pinta detrás del borde transparente. Entre borde y relleno siempre suman 14px,
       // por eso todas las cartas miden lo mismo aunque el marco sea más grueso.
@@ -1258,15 +1406,25 @@ body {
                   --mx 0.12s ease-out, --my 0.12s ease-out;
 
       // Un color distinto para cada tipo
-      &[data-tipo="Vacuna"] { --base: #3a8dde; }
-      &[data-tipo="Virus"] { --base: #8a4fc7; }
-      &[data-tipo="Datos"] { --base: #3fae5a; }
-      &[data-tipo="Libre"] { --base: #1fa79f; }
-      &[data-tipo="Variable"] { --base: #e2803a; }
-      &[data-tipo="Desconocido"] { --base: #59616d; }
+      &[data-tipo="Vacuna"] { --tipo: #3a8dde; }
+      &[data-tipo="Virus"] { --tipo: #8a4fc7; }
+      &[data-tipo="Datos"] { --tipo: #3fae5a; }
+      &[data-tipo="Libre"] { --tipo: #1fa79f; }
+      &[data-tipo="Variable"] { --tipo: #e2803a; }
+      &[data-tipo="Desconocido"] { --tipo: #59616d; }
+
+      // Un tono por nivel: Baby I es pastel, Baby II y Child van subiendo hasta el color del tipo,
+      // y Adult, Perfect y Ultimate pasan a tonos cada vez más profundos
+      &[data-nivel="1"] { --claro: 58%; --fuerza: 45%; }
+      &[data-nivel="3"] { --claro: 34%; --fuerza: 55%; }
+      &[data-nivel="4"] { --claro: 12%; --fuerza: 64%; }
+      &[data-nivel="5"] { --claro: 0%; --oscuro: 6%; --fuerza: 72%; }
 
       // PERFECT: marco de cromo helado + un rombo en la esquina
       &[data-nivel="6"] {
+        --claro: 0%;
+        --oscuro: 20%;
+        --fuerza: 80%;
         --borde-base: 7px;
         --aro: linear-gradient(135deg, #f3fdff 0%, #7fd0f5 28%, #ffffff 48%, #5cb3e6 72%, #d6f3ff 100%);
         --anillo: inset 0 0 0 4px var(--base);
@@ -1287,6 +1445,9 @@ body {
 
       // ULTIMATE: marco dorado + una estrella en la esquina + reflejo de arcoíris en la imagen
       &[data-nivel="7"] {
+        --claro: 0%;
+        --oscuro: 34%;
+        --fuerza: 88%;
         --borde-base: 7px;
         --aro: linear-gradient(135deg, #fff4b8 0%, #e8b52a 28%, #fff1a3 48%, #c98f10 72%, #ffe27a 100%);
         --anillo: inset 0 0 0 4px var(--base);
@@ -1358,8 +1519,8 @@ body {
         border: 1px solid rgba(0, 0, 0, 0.28);
         border-radius: 6px;
         background: linear-gradient(180deg, #ffffff 0%,
-                                    color-mix(in srgb, var(--base) 18%, #e6e9ed) 52%,
-                                    color-mix(in srgb, var(--base) 32%, #bfc6ce) 100%);
+                                    color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.55), #e6e9ed) 52%,
+                                    color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.9), #bfc6ce) 100%);
         box-shadow: inset 0 1px 0 #ffffff, 0 1px 2px rgba(0, 0, 0, 0.25);
       }
 
@@ -1431,9 +1592,9 @@ body {
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
         border-radius: 50%;
         background: radial-gradient(circle at 30% 25%,
-                                    color-mix(in srgb, var(--base) 45%, white) 0%,
-                                    var(--base) 55%,
-                                    color-mix(in srgb, var(--base) 65%, black) 100%);
+                                    color-mix(in srgb, var(--tipo) 45%, white) 0%,
+                                    var(--tipo) 55%,
+                                    color-mix(in srgb, var(--tipo) 65%, black) 100%);
         box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4),
                     inset 0 1px 2px rgba(255, 255, 255, 0.7);
 
@@ -1463,7 +1624,7 @@ body {
       }
 
       .chip {
-        --c: var(--base);
+        --c: var(--tipo);
         flex: 1;
         min-width: 0;
         padding: 3px 4px;
@@ -1504,7 +1665,7 @@ body {
 
           b {
             font-weight: 700;
-            color: color-mix(in srgb, var(--base) 70%, black);
+            color: color-mix(in srgb, var(--tipo) 70%, black);
           }
         }
 
@@ -1707,7 +1868,7 @@ body {
 }
 
 // CELULAR: una vez cargadas todas, el navegador solo dibuja el frente de las cartas que están cerca de la pantalla
-// (las demás guardan su lugar con la altura que tenían). Así el celular no trabaja con 860 cartas a la vez.
+// (las demás guardan su lugar con la altura que tenían). Así el celular no trabaja con más de mil cartas a la vez.
 @media (max-width: 700px) {
   #listado-digimons.lista-completa > li > .c-frente {
     content-visibility: auto;
@@ -1725,7 +1886,8 @@ body {
   #navbar .menu-desplegable,
   #navbar .menu-info ul,
   #navbar .contador,
-  #navbar #cambiar-idioma span {
+  #navbar #cambiar-idioma span,
+  #navbar #cambiar-niveles .sn-opcion {
     transition: none;
   }
 
@@ -1777,9 +1939,9 @@ body {
     border: 1px solid rgba(0, 0, 0, 0.35);
     border-radius: 8px;
     background: linear-gradient(180deg,
-        color-mix(in srgb, var(--base) 55%, white) 0%,
-        var(--base) 50%,
-        color-mix(in srgb, var(--base) 82%, black) 100%);
+        color-mix(in srgb, var(--tipo) 55%, white) 0%,
+        var(--tipo) 50%,
+        color-mix(in srgb, var(--tipo) 82%, black) 100%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -2014,6 +2176,50 @@ body {
     margin-top: 2px;
     font: 600 10px var(--f-boton), sans-serif;
     color: color-mix(in srgb, var(--c) 65%, black);
+}
+
+/* Digitama (huevo) del "viene de" de los Baby I: una cajita igual a las demás, pero que no se toca */
+.evo-huevo,
+.evo-huevo:hover {
+    cursor: default;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+}
+
+.evo-huevo-img {
+    flex: none;
+    display: flex;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--c) 12%, white);
+}
+
+.evo-huevo-img svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.evo-huevo .h-cuerpo {
+    fill: #fdf7e6;
+    stroke: color-mix(in srgb, var(--c) 55%, black);
+    stroke-width: 1.2;
+}
+
+.evo-huevo .h-dibujo {
+    fill: var(--c);
+}
+
+.evo-huevo .h-sombra {
+    fill: #000000;
+    opacity: 0.07;
+}
+
+.evo-huevo .h-brillo {
+    fill: #ffffff;
+    opacity: 0.75;
 }
 
 /* El digimon del medio: más grande */
