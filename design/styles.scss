@@ -2,7 +2,7 @@
 // TIPOGRAFÍAS (se cargan desde Google Fonts en el index.html)
 //   Orbitron       → nombres de los Digimons y número de nivel
 //   Pixelify Sans  → etiquetas (nivel, ID, tipo, elemento) y botones de la barra
-//   Exo 2          → textos generales (barra de arriba y ventanas emergentes)
+//   Exo 2          → textos generales (ventanas emergentes y resto de la página; la barra de arriba va toda en Pixelify Sans)
 //   DotGothic16    → descripción del dorso de las cartas
 // Los tamaños viven en variables porque el main.js también los lee para ajustar el largo de los nombres.
 // -----------------------------------------------------------------------------------------------------------------
@@ -29,6 +29,20 @@
     syntax: '<number>';
     inherits: false;
     initial-value: 0;
+}
+
+// Ángulo del marco giratorio de las cartas de nivel 8 y 9
+@property --giro {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+
+// El color del marco (--aro) cambia en cada cuadro cuando gira (--giro) o cambia de matiz (--h). Si se hereda, cada cambio
+// obliga al navegador a recalcular todos los elementos de adentro de la carta; registrado así solo se recalcula el marco.
+@property --aro {
+    syntax: '*';
+    inherits: false;
 }
 
 @property --mx {
@@ -72,6 +86,7 @@ body {
     backdrop-filter: blur(14px) saturate(1.5);
     border-bottom: 1px solid rgba(0, 70, 130, 0.35);
     box-shadow: inset 0 1px 0 #fff, 0 8px 22px rgba(0, 25, 90, 0.38);
+    font-family: var(--f-boton), sans-serif; // toda la barra va con la fuente pixelada (Pixelify Sans)
 
     // Brillo de vidrio en la mitad de arriba
     &::before {
@@ -112,7 +127,7 @@ body {
         text-align: center;
         text-wrap: balance;
         line-height: 1.25;
-        font-family: var(--f-cuerpo), sans-serif;
+        font-family: var(--f-boton), sans-serif;
         font-size: 15px;
         font-weight: 600;
         color: #1d4468;
@@ -391,7 +406,7 @@ body {
             padding: 7px 14px;
             white-space: nowrap;
             text-align: left;
-            font-family: var(--f-cuerpo), sans-serif;
+            font-family: var(--f-boton), sans-serif;
             font-size: var(--t-nav);
             font-weight: 600;
             color: #24313f;
@@ -613,7 +628,7 @@ body {
             text-align: center;
             text-wrap: balance;
             line-height: 1.3;
-            font-family: var(--f-cuerpo), sans-serif;
+            font-family: var(--f-boton), sans-serif;
             font-size: 15px;
             font-weight: 600;
             color: #1d4468;
@@ -813,8 +828,15 @@ body {
     font-family: var(--f-boton), sans-serif;
 }
 
-// Ventanas de información (tipos, elementos y niveles): las tres tienen el mismo formato
+// Ventanas de información (tipos, elementos y niveles): las tres tienen el mismo formato.
+// Sus textos (descripción, datos y pie) llevan la misma tipografía que la descripción del dorso de las cartas
 .swal2-html-container {
+    .info-desc,
+    .info-datos,
+    .info-pie {
+        font-family: var(--f-descripcion), sans-serif;
+    }
+
     .info-desc {
         margin: 0 0 12px;
         font-size: 1.05em;
@@ -846,6 +868,331 @@ body {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
+// CARTELES DEL COMBATE (main.js, iniciarCombate): preparando → peleando → ganador.
+//   Ventana de vidrio con barra de título brillante, "pantallita" tipo Digivice con el GIF, el VS con las dos cartas
+//   y el botón de gel de la barra de arriba. El ganador lleva corona y confeti.
+// -----------------------------------------------------------------------------------------------------------------
+.combate-contenedor.swal2-backdrop-show {
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.combate-popup {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff 0%, #e8f5ff 55%, #cfe8ff 100%);
+    box-shadow: 0 24px 60px rgba(0, 20, 80, 0.55), inset 0 1px 0 #fff;
+
+    // Barra de título brillante, como una ventana de Frutiger Aero
+    .combate-titulo {
+        margin: 0;
+        padding: 14px 18px 12px;
+        font-family: var(--f-boton), sans-serif;
+        font-size: 23px;
+        font-weight: 700;
+        line-height: 1.2;
+        text-wrap: balance;
+        color: #fff;
+        text-shadow: 0 2px 0 rgba(0, 40, 100, 0.55), 0 0 12px rgba(0, 60, 140, 0.45);
+        background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 48%, #1479d1 52%, #3eb0f5 100%);
+        border-bottom: 1px solid rgba(0, 60, 130, 0.6);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .combate-cuerpo {
+        margin: 0;
+        padding: 16px 18px 2px;
+        font-size: 1rem;
+        overflow: visible;
+    }
+
+    // La pantallita: marco oscuro, el GIF con líneas de pantalla y un reflejo
+    .combate-pantalla {
+        position: relative;
+        padding: 9px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #4a5a6b, #1f2a36);
+        box-shadow: 0 6px 14px rgba(0, 30, 80, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+
+        img {
+            display: block;
+            width: 100%;
+            aspect-ratio: var(--proporcion, 16 / 9); // la del GIF de cada fase (la pone main.js): así no se recorta nada
+            object-fit: cover;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 9px;
+            border-radius: 10px;
+            pointer-events: none;
+            background:
+                repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 3px),
+                linear-gradient(125deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 36%);
+        }
+    }
+
+    // El VS: las dos cartas que pelean, cada una con el color de su carta
+    .combate-vs {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 18px;
+    }
+
+    .vs-luchador {
+        position: relative;
+        flex: 0 1 138px;
+        min-width: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+
+        img {
+            box-sizing: border-box;
+            width: 90px;
+            height: 90px;
+            padding: 4px;
+            object-fit: contain;
+            border: 3px solid var(--c, #3a8dde);
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 6px 12px rgba(0, 30, 80, 0.3);
+        }
+
+        figcaption {
+            font-family: var(--f-boton), sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.2;
+            text-wrap: balance;
+            overflow-wrap: anywhere;
+            color: #1d4468;
+        }
+    }
+
+    .vs-centro {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 90px;
+        font-family: var(--f-boton), sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+        color: #ff3b3b;
+        text-shadow: 0 2px 0 #fff, 0 3px 7px rgba(120, 0, 0, 0.45);
+    }
+
+    // Ganador: marco dorado, brillo y corona. Perdedor: se apaga y se achica un poco
+    .vs-luchador.ganador {
+        img {
+            border-color: #ffc928;
+            box-shadow: 0 0 0 3px rgba(255, 201, 40, 0.5), 0 0 22px 6px rgba(255, 201, 40, 0.75);
+            scale: 1.14;
+        }
+
+        figcaption {
+            font-weight: 700;
+            color: #a86500;
+        }
+
+        &::before {
+            content: "👑";
+            position: absolute;
+            top: -22px;
+            z-index: 1;
+            font-size: 28px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+        }
+    }
+
+    .vs-luchador.perdedor {
+        img {
+            filter: grayscale(0.9) brightness(0.92);
+            opacity: 0.6;
+            scale: 0.86;
+            rotate: -5deg;
+        }
+
+        figcaption {
+            opacity: 0.6;
+        }
+    }
+
+    // El botón respira abajo (sin esto queda pegado al borde de la ventana)
+    .swal2-actions {
+        margin: 0;
+        padding: 16px 0 22px;
+    }
+
+    // Botón de gel (el mismo aire que los de la barra)
+    .combate-boton {
+        margin: 0;
+        padding: 10px 30px;
+        font-family: var(--f-boton), sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 1px 0 rgba(0, 40, 100, 0.7);
+        border: 1px solid rgba(0, 70, 140, 0.8);
+        border-radius: 14px;
+        cursor: pointer;
+        background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 50%, #1479d1 54%, #3eb0f5 100%);
+        box-shadow: 0 4px 10px rgba(0, 50, 120, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition: filter 0.15s ease, translate 0.1s ease;
+
+        &:hover {
+            filter: brightness(1.08);
+        }
+
+        &:active {
+            filter: brightness(0.95);
+            translate: 0 1px;
+        }
+
+        &:focus-visible {
+            outline: 3px solid #fff;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 5px rgba(20, 121, 209, 0.6), 0 4px 10px rgba(0, 50, 120, 0.4);
+        }
+    }
+
+    // Confeti (lo arma main.js al abrir la ventana del ganador)
+    .combate-confeti {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+
+        i {
+            position: absolute;
+            top: 0;
+            width: 8px;
+            height: 13px;
+            border-radius: 2px;
+            opacity: 0;
+        }
+    }
+}
+
+// Movimiento de los carteles (con "reducir movimiento" quedan quietos)
+@media (prefers-reduced-motion: no-preference) {
+    .combate-popup {
+        .fase-preparando .vs-1,
+        .fase-ganador .vs-1 {
+            animation: vs-entra-izq 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+        }
+
+        .fase-preparando .vs-2,
+        .fase-ganador .vs-2 {
+            animation: vs-entra-der 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+        }
+
+        .fase-preparando .vs-centro,
+        .fase-ganador .vs-centro {
+            animation: vs-pop 0.5s 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+        }
+
+        // Peleando: las dos cartas se chocan sin parar y entre ellas salta la chispa
+        .fase-peleando .vs-1 img {
+            animation: choque-izq 0.55s ease-in-out infinite;
+        }
+
+        .fase-peleando .vs-2 img {
+            animation: choque-der 0.55s ease-in-out infinite;
+        }
+
+        .fase-peleando .vs-centro {
+            animation: chispa 0.55s ease-in-out infinite;
+        }
+
+        .vs-luchador.ganador::before {
+            animation: corona-cae 0.7s 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+        }
+    }
+}
+
+@keyframes vs-entra-izq {
+    from {
+        translate: -80px 0;
+        opacity: 0;
+    }
+}
+
+@keyframes vs-entra-der {
+    from {
+        translate: 80px 0;
+        opacity: 0;
+    }
+}
+
+@keyframes vs-pop {
+    from {
+        scale: 0;
+        rotate: -40deg;
+    }
+
+    60% {
+        scale: 1.4;
+    }
+}
+
+@keyframes choque-izq {
+    0%, 100% {
+        translate: 0 0;
+        rotate: 0deg;
+    }
+
+    45%, 55% {
+        translate: 18px -2px;
+        rotate: 7deg;
+    }
+}
+
+@keyframes choque-der {
+    0%, 100% {
+        translate: 0 0;
+        rotate: 0deg;
+    }
+
+    45%, 55% {
+        translate: -18px -2px;
+        rotate: -7deg;
+    }
+}
+
+@keyframes chispa {
+    0%, 100% {
+        scale: 0.8;
+        rotate: -12deg;
+    }
+
+    50% {
+        scale: 1.35;
+        rotate: 12deg;
+    }
+}
+
+@keyframes corona-cae {
+    from {
+        translate: 0 -34px;
+        rotate: -25deg;
+        opacity: 0;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------------
 // FILTROS Y BUSCADOR: van dentro de la barra (#navbar), así acompañan al bajar por la lista.
 //   En computadora son la segunda fila de la barra; en celular, parte del panel que se despliega con ☰.
 //   Estructura (el HTML tiene el esqueleto y filtros.js arma las opciones):
@@ -865,7 +1212,7 @@ body {
     padding: 9px 0 0;
     border-top: 1px solid rgba(0, 70, 130, 0.2); // una línea fina la separa de las herramientas de arriba
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-    font-family: var(--f-cuerpo), sans-serif;
+    font-family: var(--f-boton), sans-serif;
     color: #24476a;
 
     [hidden] {
@@ -910,13 +1257,13 @@ body {
             background: none;
             text-overflow: ellipsis;
             color: #1d4468;
-            font: 600 14px var(--f-cuerpo), sans-serif;
+            font: 600 14px var(--f-boton), sans-serif;
 
             // El texto de ayuda es más chico para que se lea completo en la caja
             &::placeholder {
                 color: #6f8aa3;
-                font-size: 11px;
-                font-weight: 500;
+                font-size: 12px;
+                font-weight: 400;
                 text-overflow: ellipsis;
             }
         }
@@ -1014,6 +1361,59 @@ body {
         font: 700 12px var(--f-boton), sans-serif;
         text-shadow: none;
         box-shadow: inset 0 -1px 2px rgba(0, 40, 100, 0.25);
+    }
+
+    // Botón de X-Antibody: tres estados (indistinto, solo con, solo sin). No abre ningún panel, así que no lleva la flechita
+    .f-xa {
+        &::after {
+            content: none;
+        }
+
+        .f-xa-gema {
+            display: grid;
+            place-items: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font: 900 12px/1 var(--f-titulo), sans-serif;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            background: radial-gradient(circle at 30% 25%, #ffd1dc 0%, #e0245e 52%, #7a0b2f 100%);
+            box-shadow: 0 0 0 1px #7e8791, inset 0 1px 1px rgba(255, 255, 255, 0.7);
+        }
+
+        // Solo con X-Antibody: rojo
+        &[data-estado="con"] {
+            color: #fff;
+            text-shadow: 0 1px 1px rgba(90, 0, 30, 0.6);
+            border-color: rgba(120, 10, 45, 0.7);
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%),
+                linear-gradient(#ff8fb0 0%, #e0245e 55%, #b01245 100%);
+
+            .f-xa-gema {
+                background: #ffffff;
+                color: #c4164f;
+                text-shadow: none;
+            }
+        }
+
+        // Solo sin X-Antibody: gris oscuro, con la X tachada
+        &[data-estado="sin"] {
+            color: #fff;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+            border-color: rgba(20, 30, 40, 0.7);
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.08) 100%),
+                linear-gradient(#8996a3 0%, #55616d 55%, #3b4651 100%);
+
+            .f-xa-gema {
+                background: #d9dee3;
+                color: #55616d;
+                text-shadow: none;
+                text-decoration: line-through;
+            }
+        }
     }
 
     // Panel con las opciones de un filtro: se abre debajo del botón
@@ -1175,7 +1575,7 @@ body {
     }
 
     .f-cuenta {
-        font: 500 14px var(--f-cuerpo), sans-serif;
+        font: 400 14px var(--f-boton), sans-serif;
         white-space: nowrap;
 
         b {
@@ -1257,12 +1657,12 @@ body {
     }
 }
 
-// En celular los filtros van dentro del panel del menú ☰: el buscador ocupa toda la fila, los tres botones comparten la
+// En celular los filtros van dentro del panel del menú ☰, al final (debajo de los ajustes y de los menús de información): el buscador ocupa toda la fila, los tres botones comparten la
 // siguiente y las opciones del filtro que se abre se despliegan debajo, dentro del panel (como las listas de información).
 // Los grupos dejan de ser cajas ("display: contents") para que sus botones y sus paneles se ordenen en el mismo renglón.
 @media (max-width: 700px) {
     #navbar #filtros {
-        order: 0;
+        order: 1; // los demás hijos del panel (consigna, ajustes y menús de información) quedan en 0: los filtros van abajo de todo
         flex: none;
         width: 100%;
         gap: 8px;
@@ -1295,6 +1695,11 @@ body {
             gap: 6px;
             height: 40px;
             padding: 0 8px;
+        }
+
+        // Con cuatro botones en la fila no entra el texto: el de X-Antibody va en un renglón propio
+        .f-xa {
+            flex: 1 1 100%;
         }
 
         .f-panel {
@@ -1348,6 +1753,13 @@ body {
     }
 }
 
+// Marco giratorio de las cartas de nivel 8 y 9
+@keyframes giro-marco {
+    to {
+        --giro: 360deg;
+    }
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 // CARTAS
 //   El tipo define el color (--tipo) y el nivel lo aclara o lo oscurece: los bebés son pastel y cada nivel es un poco más
@@ -1355,6 +1767,8 @@ body {
 //   Las etiquetas chicas (tipo, gema, botón Evolución) usan el color puro del tipo para que el texto blanco se lea bien.
 //   Los Perfect (nivel 6) tienen marco de cromo helado y los Ultimate (nivel 7) marco dorado; el anillo y el aura
 //   interiores conservan el color del tipo, así se distingue el tipo sin perder que es Perfect o Ultimate.
+//   Los niveles 8 (Super Ultimate) y 9 (Absolute) son inventados para el simulador y tienen un marco que gira:
+//   arcoíris holográfico con corona el 8, y estrellado en violeta y oro con un sol el 9.
 //
 //   Estructura de cada carta (la arma el main.js):
 //     li
@@ -1370,6 +1784,9 @@ body {
     flex-wrap: wrap;
     padding: 0;
     margin: 14px 0 0; // un respiro debajo de la barra
+    // Con el zoom, la carta que sale (o la que entra) pasa por afuera de la pantalla un instante: sin esto la página se hacía
+    // más ancha y aparecía por un momento la barra de desplazamiento horizontal. "clip" no deja una barra y no toca el vertical.
+    overflow-x: clip;
 
     li {
       --tipo: #59616d;                                   // Desconocido / sin tipo: gris oscuro
@@ -1382,7 +1799,7 @@ body {
       // Marco: un degradé que se pinta detrás del borde transparente. Entre borde y relleno siempre suman 14px,
       // por eso todas las cartas miden lo mismo aunque el marco sea más grueso.
       --borde-base: 2px;
-      --borde: max(var(--borde-base), var(--borde-sel, 0px));
+      --borde: var(--borde-base);
       --aro: linear-gradient(var(--base), var(--base));
       --fondo: linear-gradient(160deg, var(--tinte) 0%, #ffffff 85%);
 
@@ -1390,6 +1807,9 @@ body {
       --anillo: inset 0 0 0 0 transparent;
       --aura: 0 0 0 0 transparent;
       --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+      // El contenido (placa del nombre, imagen, chips) empieza a 14px del borde de la carta y el marco blanco de la imagen
+      // sobresale --halo-arte. El anillo de adentro (borde + --anillo) tiene que terminar antes que eso, si no se mete debajo
+      --halo-arte: 2px;
 
       position: relative;
       width: 194px;
@@ -1402,8 +1822,9 @@ body {
       box-shadow: var(--anillo), var(--aura), var(--caida);
       text-align: center;
       list-style-type: none;
-      transition: translate 0.3s ease, box-shadow 0.3s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
-                  --mx 0.12s ease-out, --my 0.12s ease-out;
+      // La inclinación (transform, --mx y --my) NO lleva transición CSS: main.js la suaviza cuadro a cuadro. Una transición
+      // sobre un transform con perspective() hace que el navegador dibuje la carta a menor resolución mientras se mueve.
+      transition: translate 0.3s ease, box-shadow 0.3s ease;
 
       // Un color distinto para cada tipo
       &[data-tipo="Vacuna"] { --tipo: #3a8dde; }
@@ -1414,7 +1835,8 @@ body {
       &[data-tipo="Desconocido"] { --tipo: #59616d; }
 
       // Un tono por nivel: Baby I es pastel, Baby II y Child van subiendo hasta el color del tipo,
-      // y Adult, Perfect y Ultimate pasan a tonos cada vez más profundos
+      // y de Adult en adelante pasan a tonos cada vez más profundos (cada nivel un escalón más oscuro que el anterior,
+      // hasta el nivel 9, el más intenso)
       &[data-nivel="1"] { --claro: 58%; --fuerza: 45%; }
       &[data-nivel="3"] { --claro: 34%; --fuerza: 55%; }
       &[data-nivel="4"] { --claro: 12%; --fuerza: 64%; }
@@ -1474,6 +1896,101 @@ body {
           mix-blend-mode: multiply;
           opacity: 0.16;
           background: linear-gradient(115deg, #ff5fa2, #ffd85f 25%, #5fffb0 50%, #5fc8ff 75%, #b55fff);
+        }
+      }
+
+      // SUPER ULTIMATE (nivel 8): marco holográfico de arcoíris que gira + corona + aura violeta + reflejo de prisma fuerte
+      &[data-nivel="8"] {
+        --claro: 0%;
+        --oscuro: 46%;
+        --fuerza: 95%;
+        --borde-base: 8px;
+        --aro: conic-gradient(from var(--giro), #ff5fa2, #ffd85f, #5fffb0, #5fc8ff, #b55fff, #ff5fa2);
+        --anillo: inset 0 0 0 3px var(--base), inset 0 0 0 4px rgba(255, 255, 255, 0.85); // borde 8 + anillo 4 = 12px
+        --halo-arte: 1px;
+        --aura: 0 0 16px 3px rgba(190, 110, 255, 0.75), 0 0 34px 8px color-mix(in srgb, var(--base) 55%, transparent);
+
+        // Solo gira mientras se ve en pantalla (la clase la pone main.js) y si la persona no pidió menos movimiento.
+        // Con las 50 cartas girando a la vez, la página bajaba a 18 cuadros por segundo.
+        @media (prefers-reduced-motion: no-preference) {
+          &:where(.en-pantalla) {
+            animation: giro-marco 6s linear infinite;
+          }
+        }
+
+        &::before {
+          content: "♛";
+          position: absolute;
+          z-index: 3;
+          top: -1px;
+          left: 5px;
+          font-size: 19px;
+          line-height: 1;
+          color: #ffffff;
+          text-shadow: 0 0 5px #e39bff, 0 0 11px #a24dff;
+        }
+
+        .c-arte::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+          mix-blend-mode: multiply;
+          opacity: 0.28;
+          background: linear-gradient(115deg, #ff5fa2, #ffd85f 25%, #5fffb0 50%, #5fc8ff 75%, #b55fff);
+        }
+
+        .c-gema {
+          background: radial-gradient(circle at 30% 25%, #ffe3f4 0%, #e0489b 52%, #5e1d86 100%);
+        }
+      }
+
+      // ABSOLUTE (nivel 9): marco estrellado en violeta y oro que gira + sol + aura dorada + velo cósmico en la imagen
+      &[data-nivel="9"] {
+        --claro: 0%;
+        --oscuro: 58%;
+        --fuerza: 100%;
+        --borde-base: 9px;
+        --aro: conic-gradient(from var(--giro), #12082e, #6a3dff 16%, #fff7c9 28%, #ffd24a 38%, #12082e 52%, #6a3dff 68%, #fff7c9 80%, #ffd24a 90%, #12082e);
+        --anillo: inset 0 0 0 2px var(--base), inset 0 0 0 3px rgba(255, 233, 150, 0.95); // borde 9 + anillo 3 = 12px
+        --halo-arte: 1px;
+        --aura: 0 0 18px 4px rgba(255, 218, 110, 0.9), 0 0 40px 10px rgba(120, 80, 255, 0.6);
+
+        // Solo gira mientras se ve en pantalla (la clase la pone main.js) y si la persona no pidió menos movimiento.
+        // Con las 50 cartas girando a la vez, la página bajaba a 18 cuadros por segundo.
+        @media (prefers-reduced-motion: no-preference) {
+          &:where(.en-pantalla) {
+            animation: giro-marco 5s linear infinite;
+          }
+        }
+
+        &::before {
+          content: "✺";
+          position: absolute;
+          z-index: 3;
+          top: -2px;
+          left: 4px;
+          font-size: 21px;
+          line-height: 1;
+          color: #fff7c9;
+          text-shadow: 0 0 5px #ffd24a, 0 0 12px #ffb400, 0 0 18px #8a5cff;
+        }
+
+        .c-arte::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+          mix-blend-mode: multiply;
+          opacity: 0.3;
+          background: radial-gradient(circle at 72% 18%, #ffe27a 0%, transparent 55%),
+                      linear-gradient(115deg, #7b52ff, #ffd24a 55%, #7b52ff);
+        }
+
+        .c-gema {
+          background: radial-gradient(circle at 30% 25%, #fff7c9 0%, #f0b400 50%, #5a3a00 100%);
         }
       }
 
@@ -1556,7 +2073,7 @@ body {
         background: #ffffff;
         border: 2px solid var(--base);
         border-radius: 6px;
-        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 2px 5px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 0 0 var(--halo-arte) rgba(255, 255, 255, 0.85), 0 2px 5px rgba(0, 0, 0, 0.25);
 
         img {
           display: block;
@@ -1604,6 +2121,27 @@ body {
         }
       }
 
+      // Gema de la X-Antibody (solo en las cartas que la tienen): del lado opuesto a la del nivel
+      .c-x {
+        position: absolute;
+        z-index: 2;
+        top: 6px;
+        left: 6px;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 900 16px/1 var(--f-titulo), sans-serif;
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 25%, #ffd1dc 0%, #e0245e 52%, #7a0b2f 100%);
+        box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.7);
+        cursor: help;
+      }
+
       // Nivel (izquierda) e ID (derecha)
       .c-sub {
         display: flex;
@@ -1648,6 +2186,7 @@ body {
         min-height: 0;
         box-sizing: border-box;
         overflow: auto;
+        overscroll-behavior: contain; // al llegar al final de la descripción no arrastra a la página
         padding: 8px 9px;
         text-align: left;
         font-family: var(--f-descripcion), sans-serif;
@@ -1721,9 +2260,12 @@ body {
 
       // Reflejo que cruza la carta al pasar el mouse.
       // (Si hay inclinación con el mouse, se reemplaza por el reflejo que sigue al puntero: ver más abajo.)
+      // Va por encima de las gemas (nivel y X-Antibody) y de los símbolos de las esquinas: el reflejo cruza toda la carta.
+      // (Queda debajo del botón de dar vuelta, que tiene z-index 10, y no frena los clics: pointer-events none.)
       &::after {
         content: "";
         position: absolute;
+        z-index: 4;
         inset: 0;
         border-radius: calc(10px - var(--borde));
         pointer-events: none;
@@ -1746,12 +2288,23 @@ body {
         }
       }
 
-      // Carta seleccionada para el combate: flota y el marco cambia de matiz de forma pareja (una vuelta cada 6 s)
-      &.seleccionado {
-        --borde-sel: 4px;
-        --aro: linear-gradient(hsl(var(--h) 95% 52%), hsl(var(--h) 95% 52%));
+      // Carta seleccionada para el combate: flota y el halo de afuera cambia de matiz de forma pareja (una vuelta cada 6 s).
+      // El marco queda como es, así no se confunde con el marco multicolor de las cartas de nivel 8.
+      // Con el zoom (doble clic) la carta se ve como una común, sin el halo: eso es solo para cuando está chica.
+      &.seleccionado:not(.zoom-activa) {
         translate: 0 -2px;
         animation: matiz 6s linear infinite, flota-brilla 1.5s ease-in-out infinite;
+
+        // Las de nivel 8 y 9 siguen girando su marco mientras flotan (el animation de arriba lo reemplaza, hay que sumarlo)
+        @media (prefers-reduced-motion: no-preference) {
+          &[data-nivel="8"] {
+            animation: matiz 6s linear infinite, flota-brilla 1.5s ease-in-out infinite, giro-marco 6s linear infinite;
+          }
+
+          &[data-nivel="9"] {
+            animation: matiz 6s linear infinite, flota-brilla 1.5s ease-in-out infinite, giro-marco 5s linear infinite;
+          }
+        }
       }
     }
 
@@ -1774,17 +2327,94 @@ body {
         background-position: 0 0, calc(75% - var(--mx) / 2) 0;
         transition: opacity 0.25s ease;
       }
-
-      // Mientras la carta sigue al mouse, la inclinación es corta y ágil (al soltarla vuelve despacio)
-      &.tilt-activo {
-        transition: translate 0.3s ease, box-shadow 0.3s ease, transform 0.12s ease-out,
-                    --mx 0.12s ease-out, --my 0.12s ease-out;
-      }
     }
 
     // Del lado del dorso no hay reflejo, para poder leer tranquilo
     li.de-dorso::after {
       opacity: 0 !important;
+    }
+
+    // TEXTURA HOLOGRÁFICA (como en las cartas de colección con foil). Se suma al reflejo de arriba: el brillo es la luz que
+    // rebota y esto es el relieve grabado en el foil. Con la inclinación del mouse aparecen, cerca de donde apunta:
+    //   · signos grabados (una especie de jeroglíficos) que se iluminan con los colores del arcoíris,
+    //   · un tramado de líneas finas que irisa.
+    // Los colores corren al mover el mouse y los signos se quedan fijos en la carta, como en la realidad.
+    // Solo las cartas de nivel 7, 8 y 9 llevan esta textura; el resto queda solo con el reflejo.
+    // Van en el frente (el dorso no lleva) y SIN transición de opacidad a propósito: una capa que aparece con fundido sobre una
+    // carta inclinada se dibuja un instante a baja resolución.
+    $holo-signos: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(0 0)'%3E%3Cpath d='M6 14Q14 5 22 14Q14 23 6 14Z'/%3E%3Ccircle cx='14' cy='14' r='2.4' fill='white'/%3E%3C/g%3E%3Cg transform='translate(28 0)'%3E%3Ccircle cx='14' cy='8.5' r='4'/%3E%3Cpath d='M14 12.5V24M9 17.5H19'/%3E%3C/g%3E%3Cg transform='translate(56 0)'%3E%3Cpath d='M4 17L9 9L14 19L19 9L24 17'/%3E%3C/g%3E%3Cg transform='translate(0 28)'%3E%3Cpath d='M14 4L24 22H4Z'/%3E%3Ccircle cx='14' cy='16.5' r='1.7' fill='white'/%3E%3C/g%3E%3Cg transform='translate(28 28)'%3E%3Cpath d='M6 19a8 8 0 0 1 16 0M10 19a4 4 0 0 1 8 0M14 19v4'/%3E%3C/g%3E%3Cg transform='translate(56 28)'%3E%3Cpath d='M3 14q3.5-7 7 0t7 0 7 0'/%3E%3Cpath d='M3 20q3.5-7 7 0t7 0 7 0' opacity='.6'/%3E%3C/g%3E%3Cg transform='translate(0 56)'%3E%3Cpath d='M14 3L25 14L14 25L3 14Z'/%3E%3Cpath d='M14 9V19M9 14H19'/%3E%3C/g%3E%3Cg transform='translate(28 56)'%3E%3Cpath d='M4 22L14 5L24 22M9 16H19'/%3E%3Ccircle cx='14' cy='5' r='1.4' fill='white'/%3E%3C/g%3E%3Cg transform='translate(56 56)'%3E%3Cpath d='M9 4V24M9 9L19 4M9 15L19 10'/%3E%3Ccircle cx='20' cy='20' r='1.6' fill='white'/%3E%3C/g%3E%3C/svg%3E");
+
+    $holo-niveles: '[data-nivel="7"], [data-nivel="8"], [data-nivel="9"]';
+
+    li:is(#{$holo-niveles}) .c-frente {
+      position: relative;
+    }
+
+    &.tilt-on li:is(#{$holo-niveles}) .c-frente {
+      &::before,
+      &::after {
+        content: "";
+        position: absolute;
+        z-index: 3;
+        // Mismo recuadro que el reflejo (li::after): así la franja del foil cae justo sobre la franja del brillo
+        inset: calc(var(--borde) - 14px);
+        border-radius: calc(10px - var(--borde));
+        pointer-events: none;
+        opacity: 0;
+      }
+
+      // La zona iluminada es la franja diagonal del reflejo (misma inclinación y mismo desplazamiento), más angosta, y se apaga
+      // hacia arriba y abajo del puntero. El centro del óvalo corre sobre la diagonal: la franja se inclina ~0.67 puntos de ancho
+      // por cada punto de alto (115°, carta de 218 × 314).
+      // Tramado de líneas finas con un velo de arcoíris
+      &::before {
+        background:
+          repeating-linear-gradient(115deg, rgba(255, 255, 255, 0) 0 3px, rgba(255, 255, 255, 0.3) 3px 4px),
+          linear-gradient(115deg, rgba(255, 95, 162, 0.4), rgba(255, 216, 95, 0.4) 25%, rgba(95, 255, 176, 0.4) 50%,
+                          rgba(95, 200, 255, 0.4) 75%, rgba(181, 95, 255, 0.4)) var(--mx) var(--my) / 200% 200%;
+        $franja: linear-gradient(115deg, transparent 43%, #000 50%, transparent 57%);
+        $punta: radial-gradient(ellipse 100% 30% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                                #000 0, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+        -webkit-mask-image: $franja, $punta;
+        mask-image: $franja, $punta;
+        -webkit-mask-size: 300% 100%, 100% 100%;
+        mask-size: 300% 100%, 100% 100%;
+        -webkit-mask-position: calc(75% - var(--mx) / 2) 0, 0 0;
+        mask-position: calc(75% - var(--mx) / 2) 0, 0 0;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-composite: source-in;
+        mask-composite: intersect;
+      }
+
+      // Signos grabados diminutos (baldosa de 30px, cada signo de ~9px), pintados con los colores del arcoíris
+      &::after {
+        background: linear-gradient(115deg, #ff5fa2, #ffd85f 20%, #5fffb0 40%, #5fc8ff 60%, #b55fff 80%, #ff5fa2) var(--mx) var(--my) / 170% 170%;
+        $franja-fina: linear-gradient(115deg, transparent 44.5%, #000 50%, transparent 55.5%);
+        $punta-fina: radial-gradient(ellipse 100% 28% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                                     #000 0, rgba(0, 0, 0, 0.6) 45%, transparent 100%);
+        -webkit-mask-image: $holo-signos, $franja-fina, $punta-fina;
+        mask-image: $holo-signos, $franja-fina, $punta-fina;
+        -webkit-mask-size: 30px 30px, 300% 100%, 100% 100%;
+        mask-size: 30px 30px, 300% 100%, 100% 100%;
+        -webkit-mask-position: 0 0, calc(75% - var(--mx) / 2) 0, 0 0;
+        mask-position: 0 0, calc(75% - var(--mx) / 2) 0, 0 0;
+        -webkit-mask-repeat: repeat, no-repeat, no-repeat;
+        mask-repeat: repeat, no-repeat, no-repeat;
+        -webkit-mask-composite: source-in;
+        mask-composite: intersect;
+      }
+    }
+
+    &.tilt-on li:is(#{$holo-niveles}):hover .c-frente,
+    &.tilt-on li:is(#{$holo-niveles}).tilt-activo .c-frente {
+      &::before {
+        opacity: 0.75;
+      }
+
+      &::after {
+        opacity: 0.85;
+      }
     }
   }
 
@@ -1819,7 +2449,9 @@ body {
   }
 
   #listado-digimons > li:hover:not(.tilt-activo)::after,
-  #listado-digimons.tilt-on > li:hover:not(.tilt-activo)::after {
+  #listado-digimons.tilt-on > li:hover:not(.tilt-activo)::after,
+  #listado-digimons.tilt-on > li:hover:not(.tilt-activo) .c-frente::before,
+  #listado-digimons.tilt-on > li:hover:not(.tilt-activo) .c-frente::after {
     opacity: 0;
   }
 }
@@ -1898,7 +2530,7 @@ body {
   }
 
   // La carta seleccionada queda quieta, con un marco fijo
-  #listado-digimons li.seleccionado {
+  #listado-digimons li.seleccionado:not(.zoom-activa) {
     animation: none;
     --h: 200;
     translate: 0 -6px;
@@ -1925,6 +2557,237 @@ body {
     }
 }
 
+
+// -----------------------------------------------------------------------------------------------------------------
+// ZOOM DE LA CARTA (doble clic): el fondo se oscurece con un resplandor del color de la carta y la carta queda por encima.
+//   La carta no sale del <ul>: main.js la traslada y la agranda (translate y scale), por eso en su lugar queda un hueco.
+// -----------------------------------------------------------------------------------------------------------------
+// Aviso de ayuda del inicio (main.js, activarAvisoZoom): cartelito discreto arriba a la derecha, debajo de la barra.
+// No frena los clics ni el mouse (pointer-events: none) y queda por debajo de la barra (1000) y del zoom (1500).
+#aviso-zoom {
+  position: fixed;
+  right: 16px;
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  box-sizing: border-box;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 9px 14px;
+  font: 600 14px/1.3 var(--f-boton), sans-serif;
+  color: #1d4468;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 241, 255, 0.94));
+  border: 1px solid rgba(0, 80, 140, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 30, 80, 0.35), inset 0 1px 0 #fff;
+  pointer-events: none;
+  opacity: 0;
+  translate: 14px 0;
+  transition: opacity 0.35s ease, translate 0.35s ease;
+
+  &.visible {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  .aviso-linea {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .aviso-icono {
+    flex: none;
+    font-size: 18px;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  #aviso-zoom {
+    right: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #aviso-zoom {
+    translate: none;
+    transition: none;
+  }
+}
+
+// En celulares el zoom de la carta es el gesto de pellizco (dos dedos): sobre las cartas se puede desplazar hacia arriba y abajo,
+// pero el navegador no amplía la página con ese gesto, así que le llega a main.js. El fondo del zoom no se desplaza ni se amplía.
+#listado-digimons li {
+  touch-action: pan-y;
+}
+
+#zoom-fondo {
+  touch-action: none;
+}
+
+#listado-digimons li.zoom-activa {
+  z-index: 1600; // por encima del fondo del zoom (1500) y de la barra de arriba (1000)
+}
+
+// Con el zoom la sombra no cambia con el hover y no corren las transiciones de sombra ni de levante: la carta grande no se
+// vuelve a dibujar entera cada vez que el mouse entra o sale.
+#listado-digimons li.zoom-activa,
+#listado-digimons li.zoom-activa:hover {
+  --caida: 0 6px 14px rgba(0, 0, 0, 0.5);
+  transition: none;
+}
+
+// El reflejo y el botón de dar vuelta de la carta grande aparecen y se van sin transición: una transición de opacidad los
+// convierte un instante en capas aparte, y con la carta inclinada esas capas se dibujaban a baja resolución (pixeladas).
+#listado-digimons li.zoom-activa::after,
+#listado-digimons li.zoom-activa .c-flip {
+  transition: none !important;
+}
+
+// Solo para medir dónde está la carta en la grilla, sin el levante del hover ni la inclinación (dura un instante)
+#listado-digimons li.zoom-midiendo {
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#zoom-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background:
+    radial-gradient(ellipse 44% 58% at 50% 50%, color-mix(in srgb, var(--zc, #3a8dde) 62%, transparent) 0%, transparent 74%),
+    radial-gradient(ellipse at 50% 50%, rgba(8, 14, 44, 0.8) 0%, rgba(1, 3, 14, 0.94) 100%);
+
+  &.abierto {
+    opacity: 1;
+  }
+
+  // ✕ de vidrio arriba a la derecha
+  .zoom-cerrar {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    font: 700 19px/1 var(--f-boton), sans-serif;
+    color: #0b3a66;
+    cursor: pointer;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 #fff;
+    transition: scale 0.15s ease, filter 0.15s ease;
+
+    &:hover {
+      scale: 1.08;
+      filter: brightness(1.06);
+    }
+
+    &:active {
+      scale: 0.95;
+    }
+  }
+
+  .zoom-ayuda {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    translate: -50% 0;
+    margin: 0;
+    padding: 5px 14px;
+    font: 600 13px var(--f-boton), sans-serif;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  }
+}
+
+// Flechas para pasar a la carta anterior / siguiente sin salir del zoom.
+// Viven fuera del fondo (que tiene su propio apilamiento, por debajo de la carta) para quedar por encima.
+#zoom-flechas {
+  position: fixed;
+  inset: 0;
+  z-index: 1700;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+
+  &.abierto {
+    opacity: 1;
+  }
+
+  .zoom-flecha {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    display: grid;
+    place-items: center;
+    width: var(--flecha, 48px);
+    height: var(--flecha, 48px);
+    padding: 0;
+    color: #0b3a66;
+    cursor: pointer;
+    pointer-events: auto;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 #fff;
+    transition: scale 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+
+    svg {
+      width: 55%;
+      height: 55%;
+    }
+
+    &:hover:not(:disabled) {
+      scale: 1.08;
+      filter: brightness(1.06);
+    }
+
+    &:active:not(:disabled) {
+      scale: 0.95;
+    }
+
+    &:disabled {
+      opacity: 0.28;
+      cursor: default;
+    }
+
+    &.zoom-anterior {
+      left: var(--fl-izq, 8px);
+    }
+
+    &.zoom-siguiente {
+      right: var(--fl-der, 8px);
+    }
+  }
+}
+
+// En pantallas táctiles no hay tecla Esc
+@media (hover: none) {
+  #zoom-fondo .zoom-ayuda {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #zoom-fondo,
+  #zoom-flechas {
+    transition: none;
+  }
+}
 
 /* Botón "🧬 Evolución" en el dorso de la carta: debajo del cuadro con los datos, del color del tipo */
 #listado-digimons li .c-evo {
@@ -1989,11 +2852,22 @@ body {
 
 .popup-evo .swal2-title {
     padding: 0 1.6em;
+    font-family: var(--f-boton), sans-serif; // el título de esta ventana va con la fuente pixelada
     font-size: 1.4em;
+    font-weight: 700;
 }
 
 .popup-evo .swal2-html-container {
     margin: 0.4em 0.4em 0.2em;
+}
+
+/* En pantallas grandes la ventana se ve más grande, todo en proporción (el ancho se divide por lo mismo que se agranda,
+   así sigue entrando en la pantalla). En pantallas más chicas queda como estaba. */
+@media (min-width: 1000px) {
+    .popup-evo {
+        zoom: 1.3;
+        width: min(calc(96vw / 1.3), 920px) !important;
+    }
 }
 
 .evo {

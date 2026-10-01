@@ -34,9 +34,10 @@ const COLOR_ELEMENTO = {
     'Veneno': '#a24fc4',
     'Neutro': '#aab2bb',
 };
-const COLOR_NIVEL = { 1: '#a9b8c9', 3: '#7fb3e6', 4: '#4f9be0', 5: '#2f7fd0', 6: '#6a5fd8', 7: '#d9a520' }; // según el poder del nivel
+const COLOR_NIVEL = { 1: '#a9b8c9', 3: '#7fb3e6', 4: '#4f9be0', 5: '#2f7fd0', 6: '#6a5fd8', 7: '#d9a520', 8: '#d6409a', 9: '#3a2f9e' }; // según el poder del nivel
 const COLOR_NIVEL_DESCONOCIDO = '#59616d';
 const COLOR_BUSQUEDA = '#2f7fd0';
+const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas
 
 // Cada filtro: qué opciones tiene (con el nombre interno), cómo se llama cada una y qué lleva de ícono
 const GRUPOS_FILTRO = {
@@ -58,6 +59,15 @@ const GRUPOS_FILTRO = {
         color: clave => COLOR_ELEMENTO[clave],
         icono: clave => ({ clase: 'f-e', texto: EMOJIS_ELEMENTO[clave] }),
     },
+    // X-Antibody: no tiene panel de opciones; se maneja con un solo botón (.f-xa) que rota entre "indistinto" (nada elegido),
+    // "con" y "sin"
+    x: {
+        claves: ['con', 'sin'],
+        soloBoton: true,
+        nombre: clave => t(`filtros.x.${clave}`),
+        color: () => COLOR_X,
+        icono: () => ({ clase: 'f-e', texto: 'X' }),
+    },
 };
 const GRUPOS = Object.keys(GRUPOS_FILTRO);
 
@@ -75,13 +85,14 @@ function colorDelTexto(hex) {
 const seccionFiltros = document.getElementById('filtros');
 const cajaBusqueda = seccionFiltros.querySelector('.f-buscar input');
 const botonBorrarBusqueda = seccionFiltros.querySelector('.f-x');
+const botonX = seccionFiltros.querySelector('.f-xa');
 const zonaActivos = seccionFiltros.querySelector('.f-activos');
 const textoCuenta = seccionFiltros.querySelector('.f-cuenta');
 const botonLimpiar = seccionFiltros.querySelector('.f-resumen .f-limpiar');
 const avisoVacio = document.getElementById('f-vacio');
 
 // ---- Qué está elegido ----------------------------------------------------------------------------------------------
-const elegidos = { tipo: new Set(), nivel: new Set(), elemento: new Set() };
+const elegidos = { tipo: new Set(), nivel: new Set(), elemento: new Set(), x: new Set() };
 let busqueda = '';        // lo que se escribió, ya normalizado (para comparar)
 let busquedaEscrita = ''; // lo que se escribió, tal cual (para mostrar en la etiqueta)
 
@@ -93,11 +104,12 @@ const compactar = texto => texto.replace(/[^a-z0-9]/g, ''); // "v-mon (black)" -
 // Lo que se necesita saber de cada carta para filtrarla (se calcula una sola vez)
 function datosDeFiltro(carta) {
     if (!carta.datosFiltro) {
-        const nombre = normalizar(carta.querySelector('h4').textContent);
+        const nombre = normalizar(nombreCompleto(carta)); // con el "(X-Antibody)", así se puede buscar
         carta.datosFiltro = {
             tipo: carta.dataset.tipo,
             nivel: carta.dataset.nivelApi,
             elemento: carta.dataset.elemento,
+            x: carta.dataset.xAntibody ? 'con' : 'sin', // si tiene X-Antibody
             id: Number(carta.dataset.id),
             nombre,
             compacto: compactar(nombre),
@@ -122,6 +134,7 @@ function coincideBusqueda(datos, consulta) {
 // ---- Opciones (chips) ----------------------------------------------------------------------------------------------
 function crearChips() {
     for (const [grupo, definicion] of Object.entries(GRUPOS_FILTRO)) {
+        if (definicion.soloBoton) continue; // sin panel de opciones
         const panel = seccionFiltros.querySelector(`.f-grupo[data-g="${grupo}"] .f-panel`);
         for (const clave of definicion.claves) {
             const color = definicion.color(clave);
@@ -189,7 +202,7 @@ function escribirEtiquetas() {
 // ---- Filtrar y contar ----------------------------------------------------------------------------------------------
 // Muestra u oculta cada carta y actualiza cuentas, botones, etiquetas y avisos
 function refrescar() {
-    const conteo = { tipo: {}, nivel: {}, elemento: {} };
+    const conteo = { tipo: {}, nivel: {}, elemento: {}, x: {} };
     let total = 0;
     let visibles = 0;
 
@@ -225,6 +238,12 @@ function refrescar() {
         chip.querySelector('i').textContent = cantidad;
         chip.classList.toggle('vacio', total > 0 && cantidad === 0 && !elegido); // sin cartas: se ve apagada
     });
+
+    // Botón de X-Antibody: su estado (indistinto, con o sin) y su texto en el idioma actual
+    const estadoX = [...elegidos.x][0] ?? 'indistinto';
+    botonX.dataset.estado = estadoX;
+    botonX.querySelector('.f-xa-texto').textContent = t(`filtros.x.boton.${estadoX}`);
+    botonX.title = t(`filtros.x.ayuda.${estadoX}`);
 
     seccionFiltros.querySelectorAll('.f-grupo').forEach(grupo => {
         const cuantos = elegidos[grupo.dataset.g].size;
@@ -298,6 +317,14 @@ function activarFiltros() {
     const abrir = (grupo, abierto) => {
         grupo.classList.toggle('abierto', abierto);
         grupo.querySelector('.f-btn').setAttribute('aria-expanded', String(abierto));
+        // En celular los filtros están al final del panel del menú: si las opciones quedan más abajo de lo que se ve, se las acerca
+        // (se mueve solo el panel del menú, no la página: por eso no se usa scrollIntoView)
+        const menu = grupo.closest('.menu-movil');
+        if (abierto && menu && window.matchMedia('(max-width: 700px)').matches) {
+            const limite = Math.min(menu.getBoundingClientRect().bottom, window.innerHeight) - 14;
+            const falta = grupo.querySelector('.f-panel').getBoundingClientRect().bottom - limite;
+            if (falta > 0) menu.scrollBy({ top: falta, behavior: 'smooth' });
+        }
     };
     grupos.forEach(grupo => {
         grupo.querySelector('.f-btn').addEventListener('click', () => abrir(grupo, !grupo.classList.contains('abierto')));
@@ -340,6 +367,18 @@ function activarFiltros() {
             leerBusqueda();
         } else {
             elegidos[grupo].delete(clave);
+        }
+        refrescar();
+    });
+
+    // Botón de X-Antibody: cada clic pasa al siguiente estado (indistinto → con → sin → indistinto)
+    botonX.addEventListener('click', () => {
+        const actual = [...elegidos.x][0];
+        elegidos.x.clear();
+        if (actual === undefined) {
+            elegidos.x.add('con');
+        } else if (actual === 'con') {
+            elegidos.x.add('sin');
         }
         refrescar();
     });

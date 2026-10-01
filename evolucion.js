@@ -21,7 +21,7 @@ Object.assign(DICCIONARIO.es, {
     'evo.cerrar': 'Cerrar',
     'evo.viene': 'Viene de',
     'evo.va': 'Evoluciona a',
-    'evo.vacio': 'Sin registros en el simulador',
+    'evo.vacio': 'Sin registros',
     'evo.huevo': 'Digitama',
     'evo.huevo.tipo': 'Huevo',
     'evo.huevo.ayuda': 'Digitama (huevo)',
@@ -43,7 +43,7 @@ Object.assign(DICCIONARIO.en, {
     'evo.cerrar': 'Close',
     'evo.viene': 'Evolves from',
     'evo.va': 'Evolves into',
-    'evo.vacio': 'No records in the simulator',
+    'evo.vacio': 'No records',
     'evo.huevo': 'Digitama',
     'evo.huevo.tipo': 'Egg',
     'evo.huevo.ayuda': 'Digitama (egg)',
@@ -90,7 +90,7 @@ function pedirEvolucion(id) {
 
 // ---- Qué ramas se muestran -----------------------------------------------------------------------------------------
 const nivelDe = carta => (carta.dataset.nivel === undefined ? undefined : Number(carta.dataset.nivel));
-const nombreDe = carta => carta.querySelector('h4').textContent.trim();
+const nombreDe = nombreCompleto;
 const sinParentesis = texto => texto.replace(/\s*\(.*$/, '').trim().toLowerCase();
 
 // sentido: -1 = "viene de", +1 = "evoluciona a". Devuelve las cartas del simulador que sirven, las más cercanas primero.

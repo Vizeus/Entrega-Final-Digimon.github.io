@@ -96,6 +96,12 @@
             <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
         </div>
 
+        <!-- X-Antibody: un solo botón con tres estados. Cada clic pasa al siguiente (indistinto → solo con X-Antibody → solo sin X-Antibody).
+             El texto y el estado los escribe filtros.js -->
+        <button type="button" class="f-btn f-xa" data-estado="indistinto" aria-label="X-Antibody">
+            <span class="f-xa-gema" aria-hidden="true">X</span><span class="f-xa-texto">X-Antibody</span>
+        </button>
+
         <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
         <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
 

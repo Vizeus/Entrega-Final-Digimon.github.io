@@ -77,6 +77,12 @@ function infoNivel(nivelApi) {
         [t('info.clasificacion'), t(clasificacionAlternativa ? 'info.eeuu' : 'info.japon')],
     ];
 
+    // Los niveles que rompen la escala (8 y 9) pesan más en el combate de lo que dice su número
+    const poderCombate = PODER_EN_COMBATE[poder];
+    if (poderCombate !== undefined) {
+        datos.push([t('info.poderCombate'), poderCombate]);
+    }
+
     // Cómo se llama en el otro sistema (solo si el nombre es distinto)
     if (poder !== undefined) {
         const otroNombre = (clasificacionAlternativa ? nivelApi : nivelesAlternativos[nivelApi] || nivelApi).trim();
@@ -89,7 +95,9 @@ function infoNivel(nivelApi) {
         poder === undefined ? nombre : t('info.nivelTitulo', { nombre, n: poder }),
         t(`nivel.desc.${nivelApi}`),
         datos,
-        poder === undefined ? t('nivel.pieSin') : t('nivel.pie', { p: porcentaje(PESO_NIVEL) })
+        poder === undefined ? t('nivel.pieSin')
+            : poderCombate !== undefined ? t('nivel.pieAlto', { n: poderCombate, p: porcentaje(PESO_NIVEL) })
+            : t('nivel.pie', { p: porcentaje(PESO_NIVEL) })
     );
 }
 
