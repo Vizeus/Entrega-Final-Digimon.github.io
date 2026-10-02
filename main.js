@@ -211,8 +211,10 @@ const CARTAS_PROPIAS = [
         nivelOriginal: 'Absolute',
         datosDorso: {
             especie: 'Host Computer',
+            campos: '–',
             estreno: '–',
             ataques: '–',
+            habilidades: [],
             descripcion: 'The host computer that rules over the Digital World, treated in many adaptations as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
             evo: { previas: [], siguientes: [] },
         },
@@ -227,8 +229,10 @@ const CARTAS_PROPIAS = [
         nivelOriginal: 'Absolute',
         datosDorso: {
             especie: 'Security System',
+            campos: '–',
             estreno: '–',
             ataques: '–',
+            habilidades: [],
             descripcion: 'The security system of the Digital World, which keeps the balance between good and evil. In some stories it takes the place of Yggdrasil as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
             evo: { previas: [], siguientes: [] },
         },
@@ -394,8 +398,40 @@ async function crearArrayDeDatos() {
 function actualizarBarraProgreso(contador) {
     barraProgreso.value = contador;
     barraProgreso.max = totalDigimons;
-    // En celular la carga es una línea finita en la barra: cuando se completa, se apaga
-    document.getElementById('navbar').classList.toggle('carga-completa', totalDigimons > 0 && contador >= totalDigimons);
+    const completa = totalDigimons > 0 && contador >= totalDigimons;
+    // En celular la carga es una línea finita en la barra: cuando se completa, se apaga.
+    // En computadora el bloque (rótulo + barra) se desvanece y se retira (ver retirarBloqueDeCarga)
+    document.getElementById('navbar').classList.toggle('carga-completa', completa);
+    if (completa) retirarBloqueDeCarga();
+    else document.querySelector('#navbar .carga')?.removeAttribute('hidden');
+}
+
+// En computadora el bloque de carga (rótulo + barra) ocupa lugar en la barra de arriba. Cuando la carga termina, el CSS lo
+// desvanece (medio segundo después de llegar al 100 % y en 0,4 s) y acá se lo saca de la barra. Las demás piezas de la barra se
+// reparten el lugar que queda, y para que no salten de golpe se las desliza de donde estaban a donde quedan (se miden antes y
+// después de sacarlo y se anima la diferencia).
+let retirandoCarga = false;
+function retirarBloqueDeCarga() {
+    const barra = document.getElementById('navbar');
+    const bloque = barra.querySelector('.carga');
+    // En celular la carga es una línea finita que solo se apaga (CSS): ahí no hay nada que retirar
+    if (retirandoCarga || !bloque || bloque.hidden || window.matchMedia('(max-width: 700px)').matches) return;
+    retirandoCarga = true;
+    setTimeout(() => {
+        retirandoCarga = false;
+        if (!barra.classList.contains('carga-completa') || window.matchMedia('(max-width: 700px)').matches) return;
+        const piezas = [...barra.querySelectorAll(':scope > img, .combate, .ajustes, .herramientas')];
+        const antes = piezas.map(pieza => pieza.getBoundingClientRect());
+        bloque.hidden = true;
+        if (reducirMovimiento) return;
+        piezas.forEach((pieza, i) => {
+            const ahora = pieza.getBoundingClientRect();
+            const dx = antes[i].left - ahora.left;
+            const dy = antes[i].top - ahora.top;
+            if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+            pieza.animate([{ translate: `${dx}px ${dy}px` }, { translate: '0px 0px' }], { duration: 450, easing: 'cubic-bezier(0.2, 0.8, 0.25, 1)' });
+        });
+    }, 1000);
 }
 
 // Selector de niveles: resalta el sistema vigente (Japón o EE.UU.) y escribe su ayuda (título y aria-label) en el idioma actual.
@@ -420,6 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('idioma-cambiado', mostrarSistemaDeNiveles);
 
 let contadorDigimons = 0; // Contador de Digimons cargados
+const PEDIDOS_A_LA_VEZ = 6; // detalles que se piden a la API al mismo tiempo mientras carga la página
 
 // Array para almacenar los elementos seleccionados
 const seleccionados = [];
@@ -437,6 +474,7 @@ function verificarSeleccion() {
         botonIniciarCombate.disabled = true;
     }
     // El color del botón (verde si se puede pelear, gris si no) lo pone el CSS según :disabled
+    document.dispatchEvent(new CustomEvent('seleccion-cambio')); // el aviso de ayuda del inicio se va cuando ya eligió las 2
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -549,7 +587,7 @@ function construirDorso(carta) {
     ponerNombre(dorso.querySelector('.c-nombre'), nombreCompleto(carta));
 
     const cuerpo = dorso.querySelector('.c-cuerpo');
-    for (const [etiqueta, valor] of [['carta.especie', datos.especie], ['carta.estreno', datos.estreno], ['carta.ataques', datos.ataques]]) {
+    for (const [etiqueta, valor] of [['carta.especie', datos.especie], ['carta.campos', datos.campos ?? '–'], ['carta.estreno', datos.estreno], ['carta.ataques', datos.ataques]]) {
         const linea = document.createElement('p');
         linea.className = 'dato';
         const negrita = document.createElement('b');
@@ -572,8 +610,13 @@ function construirDorso(carta) {
         cuerpo.append(nota);
     }
 
-    // Botón "🧬 Evolución" (evolucion.js): abre el árbol con de quién viene y a qué evoluciona
-    dorso.append(crearBotonEvolucion(carta));
+    // Botones del pie: "⚔️ Ataques" (info.js; solo si tiene ataques), con todos sus ataques y qué hace cada uno, y
+    // "🧬 Evolución" (evolucion.js), con el árbol de de quién viene y a qué evoluciona
+    const botones = document.createElement('div');
+    botones.className = 'c-botones';
+    if (datos.habilidades?.length) botones.append(crearBotonAtaques(carta));
+    botones.append(crearBotonEvolucion(carta));
+    dorso.append(botones);
 
     return dorso;
 }
@@ -660,6 +703,7 @@ async function voltearCarta(carta, direccion = 1) {
 let cartaEnZoom = null;          // la carta que está en el centro (o volviendo a su lugar)
 let zoomOcupado = false;         // mientras vuela, no se inclina, no se da vuelta y no se cierra
 let cierrePendiente = false;     // pidieron cerrar mientras todavía estaba llegando
+let zoomCerrando = false;        // la carta ya está volviendo a su lugar: pedir cerrar otra vez no hace falta (ver cerrarZoom)
 let seleccionAntesDelClic = { carta: null, estado: [] }; // cómo estaba la selección antes del primer clic de un doble clic
 
 const ZOOM_ANCHO = 0.9;          // la carta ocupa hasta el 90 % del ancho de la ventana (80 % en celular, para dejar lugar a las flechas)...
@@ -956,6 +1000,7 @@ async function abrirZoom(carta) {
     if (cartaEnZoom || zoomOcupado) return;
     cartaEnZoom = carta;
     zoomOcupado = true;
+    cierrePendiente = false; // un pedido de cierre viejo no tiene que cerrar este zoom nuevo apenas llegue
     document.activeElement?.blur?.();
     document.dispatchEvent(new CustomEvent('zoom-cambio')); // la inclinación suelta la carta
 
@@ -998,12 +1043,17 @@ async function abrirZoom(carta) {
 async function cerrarZoom({ rapido = false } = {}) {
     const carta = cartaEnZoom;
     if (!carta) return;
+    // Si ya se está cerrando (un segundo clic afuera, o Esc de nuevo, mientras la carta vuelve) no hay nada más que hacer. Antes ese
+    // segundo pedido quedaba anotado como "cierre pendiente" y, como nadie lo atendía, se cumplía en el PRÓXIMO zoom: la carta
+    // llegaba al centro y se volvía a ir sola.
+    if (zoomCerrando) return;
     if (zoomOcupado) {
         cierrePendiente = true;
         return;
     }
     cierrePendiente = false;
     zoomOcupado = true;
+    zoomCerrando = true;
     document.dispatchEvent(new CustomEvent('zoom-cambio'));
 
     const { escala, dx, dy } = carta.datosZoom;
@@ -1034,6 +1084,8 @@ async function cerrarZoom({ rapido = false } = {}) {
     document.getElementById('zoom-flechas')?.remove();
     bloquearDesplazamiento(false);
     zoomOcupado = false;
+    zoomCerrando = false;
+    cierrePendiente = false;
     document.dispatchEvent(new CustomEvent('zoom-cambio'));
 }
 
@@ -1062,10 +1114,10 @@ function activarZoom() {
         }
     });
 
-    // La ventana de evolución se abre sobre la página, por detrás de la carta en grande: primero la carta vuelve a su lugar
-    // y recién ahí se abre la ventana (se repite el clic en el botón cuando el zoom ya se cerró)
+    // Las ventanas de evolución y de ataques se abren sobre la página, por detrás de la carta en grande: primero la carta vuelve
+    // a su lugar y recién ahí se abre la ventana (se repite el clic en el botón cuando el zoom ya se cerró)
     document.addEventListener('click', async (evento) => {
-        const boton = cartaEnZoom && evento.target.closest('.c-evo');
+        const boton = cartaEnZoom && evento.target.closest('.c-evo, .c-ataques');
         if (!boton) return;
         evento.stopPropagation();
         evento.preventDefault();
@@ -1078,67 +1130,276 @@ function activarZoom() {
     activarZoomConDobleToque();
 }
 
-// AVISO DE AYUDA: no es obvio que las cartas se pueden agrandar, así que al abrir la página aparece un cartelito discreto
-// (arriba a la derecha, debajo de la barra) que lo cuenta. No tapa nada (deja pasar el mouse y los toques), se va solo a los
-// pocos segundos y también si la persona ya amplió una carta. Con mouse habla del doble clic; en pantallas táctiles, del doble
-// toque y el pellizco, y de que si se mantiene apretada la carta y se mueve el dedo, brilla y se inclina (dicho sin palabras técnicas).
-const AVISO_ZOOM_ESPERA = 700;           // ms desde que aparece la primera carta
-const AVISO_ZOOM_DURACION = 7000;        // ms que queda a la vista con el mouse
-const AVISO_ZOOM_DURACION_DEDO = 10000;  // en el celular lleva dos consejos: más tiempo para leerlos
+// AVISOS DE AYUDA: cartelitos discretos (arriba a la derecha, debajo de la barra) que aparecen unos segundos después de abrir la
+// página. Si entraran junto con el resto de la carga parecerían parte de la página y pasarían desapercibidos. No tapan nada (dejan
+// pasar el mouse y los toques) y se van solos a los pocos segundos. Los tiempos se cuentan desde que aparece la primera carta:
+//   - 2 s: (solo celular) qué hay que hacer, "Elige 2 digimons...". En computadora la consigna ya está a la vista en la barra;
+//          en celular está dentro del menú ☰.
+//   - 5 s: cómo ampliar una carta y, en pantallas táctiles, cómo inclinarla. Con mouse habla del doble clic; en pantallas táctiles
+//          lleva dos consejos: el doble toque o pellizco, y que si se mantiene apretada la carta y se mueve el dedo, brilla y se
+//          inclina (dicho sin palabras técnicas).
+//   - 2 s después de ampliar la primera carta: (solo pantallas táctiles) cómo cerrarla y cómo pasar a otra deslizando el dedo. Sale una
+//          sola vez por visita, y no si se cierra la carta antes de que entre.
+// Si hay más de uno a la vez, se apilan (el primero arriba). Cada consejo es independiente: se va apenas la persona hace lo que
+// cuenta (y ni aparece si ya lo hizo antes de que entre). Si ya hizo todo, el aviso no aparece. Mientras hay una carta ampliada
+// los avisos pasan por encima del zoom, para que se lean.
+// MEMORIA DE LOS AVISOS: se guarda en el navegador de cada persona (localStorage), como un JSON, así los avisos no se repiten
+// cada vez que vuelve a entrar:
+//   { "visitas": 3, "hecho": { "combate": true, "zoom": true, "inclinar": false, "gestos": true } }
+//   - "hecho": lo que la persona ya hizo (eligió las 2 cartas, amplió una, inclinó una con el dedo) o ya vio ("gestos", que se
+//     muestra una sola vez). Un aviso que ya no hace falta no vuelve a salir.
+//   - "visitas": cuántas veces entró. Entrar una sexta vez todavía los muestra; desde la séptima no sale ninguno (ya los conoce).
+//     Cuenta una por sesión del navegador: recargar la página con la pestaña abierta no suma.
+// Si el navegador no deja guardar (modo privado, datos bloqueados), todo sigue andando como si fuera la primera vez.
+// Para empezar de cero (por ejemplo, para probarlos): localStorage.removeItem('digimon-avisos')
+const AVISOS_ALMACEN = 'digimon-avisos';
+const AVISOS_VISITAS_MAXIMAS = 6;
+let memoriaAvisos = { visitas: 0, hecho: {} };
 
-function activarAvisoZoom() {
-    const conDedo = window.matchMedia('(hover: none)').matches;
-    // [ícono, clave del texto]
-    const consejos = conDedo
-        ? [['👆', 'aviso.zoom.dedos'], ['✨', 'aviso.inclinar.dedo']]
-        : [['💡', 'aviso.zoom.mouse']];
+function guardarMemoriaAvisos() {
+    try {
+        localStorage.setItem(AVISOS_ALMACEN, JSON.stringify(memoriaAvisos));
+    } catch (error) {
+        // Sin almacenamiento no se recuerda nada, pero no pasa nada más
+    }
+}
+
+// Lee lo guardado y suma la visita. Devuelve true si todavía hay que mostrar avisos
+function registrarVisitaDeAvisos() {
+    try {
+        const guardado = JSON.parse(localStorage.getItem(AVISOS_ALMACEN));
+        if (guardado && typeof guardado === 'object') {
+            memoriaAvisos.visitas = Number.isFinite(guardado.visitas) ? guardado.visitas : 0;
+            if (guardado.hecho && typeof guardado.hecho === 'object') memoriaAvisos.hecho = guardado.hecho;
+        }
+    } catch (error) {
+        // Si no se puede leer (o está dañado), se empieza de cero
+    }
+    let visitaNueva = true;
+    try {
+        visitaNueva = !sessionStorage.getItem(AVISOS_ALMACEN); // una por sesión: recargar no cuenta
+        sessionStorage.setItem(AVISOS_ALMACEN, '1');
+    } catch (error) {
+        // Sin sessionStorage cuenta cada carga
+    }
+    if (visitaNueva) {
+        memoriaAvisos.visitas += 1;
+        guardarMemoriaAvisos();
+    }
+    return memoriaAvisos.visitas <= AVISOS_VISITAS_MAXIMAS;
+}
+
+const avisoHecho = clave => memoriaAvisos.hecho[clave] === true;
+
+function marcarAvisoHecho(clave) {
+    if (avisoHecho(clave)) return;
+    memoriaAvisos.hecho[clave] = true;
+    guardarMemoriaAvisos();
+}
+
+const AVISO_COMBATE_ESPERA = 2000;       // ms desde que aparece la primera carta
+const AVISO_COMBATE_DURACION = 7000;     // ms que queda a la vista
+const AVISO_ZOOM_ESPERA = 5000;          // ms desde que aparece la primera carta (3 s después del de combate, para que se lean de a uno)
+const AVISO_ZOOM_DURACION = 7000;        // ms que queda a la vista con un solo consejo
+const AVISO_ZOOM_DURACION_DEDO = 10000;  // con dos consejos (celular): más tiempo para leerlos
+const AVISO_GESTOS_ESPERA = 2000;        // ms desde que se amplía la carta (solo celular)
+const AVISO_GESTOS_DURACION = 9000;      // ms que queda a la vista (lleva dos consejos)
+
+let cajaDeAvisos = null; // el contenedor donde se apilan los avisos (se crea con el primero)
+
+function ubicarAvisos() {
+    if (!cajaDeAvisos) return;
+    // Debajo de la barra, que cambia de alto según el ancho de la pantalla. Se cuenta con el alto de la barra y no con dónde está
+    // en este momento: en celular la barra se esconde al bajar y, si el aviso entra en ese momento, quedaría fuera de la pantalla
+    cajaDeAvisos.style.top = `${Math.round(document.getElementById('navbar').getBoundingClientRect().height) + 12}px`;
+}
+
+// Con una carta ampliada el fondo del zoom tapa todo: los avisos pasan por encima mientras dura
+function avisosSobreElZoom() {
+    cajaDeAvisos?.classList.toggle('sobre-zoom', !!cartaEnZoom);
+}
+
+function ponerAviso(aviso) {
+    if (!cajaDeAvisos) {
+        cajaDeAvisos = document.createElement('div');
+        cajaDeAvisos.id = 'avisos-ayuda';
+        document.body.appendChild(cajaDeAvisos);
+    }
+    cajaDeAvisos.appendChild(aviso);
+    ubicarAvisos();
+    avisosSobreElZoom();
+    void aviso.offsetWidth; // para que la entrada se anime
+    aviso.classList.add('visible');
+}
+
+// Se desvanece y se achica (así los que quedan abajo suben sin saltar) y después se saca
+function quitarAviso(aviso) {
+    aviso.classList.remove('visible');
+    aviso.classList.add('saliendo');
+    setTimeout(() => aviso.remove(), 600); // cuando termina de achicarse
+}
+
+function crearAviso(id, lineas) {
+    const aviso = document.createElement('div');
+    aviso.id = id;
+    aviso.className = 'aviso-ayuda';
+    aviso.setAttribute('role', 'status');
+    aviso.innerHTML = lineas
+        .map(({ clave, icono, texto }) => `<p class="aviso-linea" data-clave="${clave}" data-texto="${texto}"><span class="aviso-icono" aria-hidden="true">${icono}</span><span class="aviso-texto"></span></p>`)
+        .join('');
+    return aviso;
+}
+
+function escribirAviso(aviso) {
+    aviso?.querySelectorAll('.aviso-linea').forEach((linea) => {
+        linea.querySelector('.aviso-texto').textContent = t(linea.dataset.texto);
+    });
+}
+
+function activarAvisosDeAyuda() {
+    if (!registrarVisitaDeAvisos()) return; // ya entró más de 6 veces: no hace falta ningún aviso
+    activarAvisoCombate();
+    activarAvisoZoom();
+    activarAvisoGestosDelZoom();
+    document.addEventListener('zoom-cambio', avisosSobreElZoom);
+    window.addEventListener('resize', ubicarAvisos);
+    // La barra también cambia de alto sin que cambie la ventana (por ejemplo, cuando el bloque de carga desaparece)
+    if ('ResizeObserver' in window) new ResizeObserver(ubicarAvisos).observe(document.getElementById('navbar'));
+}
+
+// Con la carta ya ampliada: cómo cerrarla y cómo pasar a otra (los gestos de los que no hay ninguna pista a la vista, porque en pantallas
+// táctiles el textito de "Esc para cerrar" no se muestra). Solo pantallas táctiles, y una sola vez por visita: si la persona cierra la
+// carta antes de que entre, todavía no lo vio y sale con la próxima que amplíe.
+function activarAvisoGestosDelZoom() {
+    if (!window.matchMedia('(hover: none)').matches) return;
+    let yaSeMostro = avisoHecho('gestos'); // también si salió en una visita anterior
+    let enZoom = false;    // hay una carta ampliada (y no se está cerrando)
+    let espera = 0;
+    let temporizador = 0;
+    let aviso = null;
+
+    const cerrar = () => {
+        clearTimeout(espera);
+        clearTimeout(temporizador);
+        if (aviso) quitarAviso(aviso);
+        aviso = null;
+    };
+
+    document.addEventListener('zoom-cambio', () => {
+        const abierto = !!cartaEnZoom && !zoomCerrando;
+        if (abierto === enZoom) return; // también sale al pasar de una carta a otra o al girar el celular: no es un zoom nuevo
+        enZoom = abierto;
+        if (!abierto) { // se cerró la carta: lo que cuenta ya no sirve
+            cerrar();
+            return;
+        }
+        if (yaSeMostro) return;
+        espera = setTimeout(() => {
+            if (!enZoom || yaSeMostro) return;
+            yaSeMostro = true;
+            marcarAvisoHecho('gestos');
+            aviso = crearAviso('aviso-gestos-zoom', [
+                { clave: 'cerrar', icono: '👆', texto: 'aviso.zoom.cerrar' },
+                { clave: 'deslizar', icono: '↔️', texto: 'aviso.zoom.deslizar' },
+            ]);
+            escribirAviso(aviso);
+            ponerAviso(aviso);
+            temporizador = setTimeout(cerrar, AVISO_GESTOS_DURACION);
+        }, AVISO_GESTOS_ESPERA);
+    });
+    document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
+}
+
+// Primero: qué hay que hacer. Solo en celular (hasta 700px, donde la consigna queda escondida dentro del menú ☰)
+function activarAvisoCombate() {
+    const celular = window.matchMedia('(max-width: 700px)');
     let aviso = null;
     let temporizador = 0;
     let cerrado = false;
-
-    const escribir = () => {
-        if (!aviso) return;
-        aviso.querySelectorAll('.aviso-texto').forEach((texto, i) => { texto.textContent = t(consejos[i][1]); });
-    };
-
-    // Debajo de la barra, que cambia de alto según el ancho de la pantalla
-    const ubicar = () => {
-        if (!aviso) return;
-        aviso.style.top = `${Math.round(document.getElementById('navbar').getBoundingClientRect().bottom) + 12}px`;
-    };
 
     const cerrar = () => {
         if (cerrado) return;
         cerrado = true;
         clearTimeout(temporizador);
-        if (!aviso) return;
-        const cartel = aviso;
-        cartel.classList.remove('visible');
-        setTimeout(() => cartel.remove(), 500); // cuando termina el fundido
+        if (aviso) quitarAviso(aviso);
         aviso = null;
     };
 
     const mostrar = () => {
         if (cerrado || aviso) return;
-        aviso = document.createElement('div');
-        aviso.id = 'aviso-zoom';
-        aviso.setAttribute('role', 'status');
-        aviso.innerHTML = consejos
-            .map(([icono]) => `<p class="aviso-linea"><span class="aviso-icono" aria-hidden="true">${icono}</span><span class="aviso-texto"></span></p>`)
-            .join('');
-        escribir();
-        document.body.appendChild(aviso);
-        ubicar();
-        void aviso.offsetWidth; // para que la entrada se anime
-        aviso.classList.add('visible');
-        temporizador = setTimeout(cerrar, conDedo ? AVISO_ZOOM_DURACION_DEDO : AVISO_ZOOM_DURACION);
+        if (!celular.matches || avisoHecho('combate') || seleccionados.length >= 2) { // en computadora ya se ve en la barra; si ya eligió las 2 (ahora o en otra visita), no hay nada que pedirle
+            cerrado = true;
+            return;
+        }
+        aviso = crearAviso('aviso-combate', [{ clave: 'combate', icono: '⚔️', texto: 'combate.consigna' }]);
+        escribirAviso(aviso);
+        ponerAviso(aviso);
+        temporizador = setTimeout(cerrar, AVISO_COMBATE_DURACION);
     };
 
-    // Aparece con la primera carta: antes no tiene sentido hablar de cartas que todavía no están
+    document.addEventListener('carta-agregada', () => setTimeout(mostrar, AVISO_COMBATE_ESPERA), { once: true });
+    document.addEventListener('seleccion-cambio', () => {
+        if (seleccionados.length < 2) return;
+        marcarAvisoHecho('combate'); // ya eligió las 2
+        cerrar();
+    });
+    document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
+}
+
+// Después: cómo ampliar una carta (y en pantallas táctiles, cómo inclinarla)
+function activarAvisoZoom() {
+    const conDedo = window.matchMedia('(hover: none)').matches;
+    // "clave" es lo que la persona tiene que hacer; "texto" es la clave de la traducción
+    const consejos = conDedo
+        ? [{ clave: 'zoom', icono: '👆', texto: 'aviso.zoom.dedos' }, { clave: 'inclinar', icono: '✨', texto: 'aviso.inclinar.dedo' }]
+        : [{ clave: 'zoom', icono: '💡', texto: 'aviso.zoom.mouse' }];
+    const hecho = new Set(consejos.map(consejo => consejo.clave).filter(avisoHecho)); // lo que la persona ya hizo (también en visitas anteriores)
+    let aviso = null;
+    let temporizador = 0;
+    let cerrado = false;
+
+    const cerrar = () => {
+        if (cerrado) return;
+        cerrado = true;
+        clearTimeout(temporizador);
+        if (aviso) quitarAviso(aviso);
+        aviso = null;
+    };
+
+    // La persona hizo lo que cuenta ese consejo: se va (los otros se quedan). Si era el único que quedaba, se va todo el aviso
+    const yaLoHizo = (clave) => {
+        hecho.add(clave);
+        marcarAvisoHecho(clave);
+        const linea = aviso?.querySelector(`.aviso-linea[data-clave="${clave}"]`);
+        if (!linea || linea.classList.contains('se-va')) return;
+        if (aviso.querySelectorAll('.aviso-linea:not(.se-va)').length <= 1) {
+            cerrar();
+            return;
+        }
+        linea.classList.add('se-va');
+        setTimeout(() => linea.remove(), 400); // cuando termina de achicarse
+    };
+
+    const mostrar = () => {
+        if (cerrado || aviso) return;
+        const pendientes = consejos.filter(consejo => !hecho.has(consejo.clave));
+        if (!pendientes.length) {
+            cerrado = true; // ya hizo todo: no hay nada que contarle
+            return;
+        }
+        aviso = crearAviso('aviso-zoom', pendientes);
+        escribirAviso(aviso);
+        ponerAviso(aviso);
+        temporizador = setTimeout(cerrar, pendientes.length > 1 ? AVISO_ZOOM_DURACION_DEDO : AVISO_ZOOM_DURACION);
+    };
+
+    // Aparece unos segundos después de la primera carta: antes no tiene sentido hablar de cartas que todavía no están
     document.addEventListener('carta-agregada', () => setTimeout(mostrar, AVISO_ZOOM_ESPERA), { once: true });
-    document.addEventListener('zoom-cambio', cerrar); // ya sabe cómo hacerlo
-    document.addEventListener('idioma-cambiado', escribir);
-    window.addEventListener('resize', ubicar);
+    document.addEventListener('zoom-cambio', () => {
+        if (cartaEnZoom) yaLoHizo('zoom'); // hay una carta ampliada (o cerrándose): ya sabe cómo hacerlo
+    });
+    document.addEventListener('inclinacion-con-dedo', () => yaLoHizo('inclinar')); // lo avisa activarInclinacionConDedo
+    document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
 }
 
 // En celulares la carta también se amplía con doble toque (dos toques cortos seguidos sobre la misma carta). Igual que con el
@@ -1268,11 +1529,17 @@ function activarZoomConPellizco() {
 }
 
 // En celulares la carta también se da vuelta con un barrido rápido de un dedo hacia un costado (además del botón de la
-// esquina). Sirve igual si antes se mantuvo apretada para inclinarla: la inclinación es lenta y el barrido es veloz.
+// esquina). Si antes se mantuvo apretada para inclinarla, el barrido tiene que ser mucho más rápido (ver más abajo).
 // La carta gira hacia donde va el dedo.
 const BARRIDO_DISTANCIA = 40;  // px que tiene que recorrer el dedo hacia el costado en los últimos instantes
 const BARRIDO_VELOCIDAD = 0.7; // px por milisegundo: tiene que ser un movimiento rápido
 const BARRIDO_VENTANA = 90;    // ms que se miran para calcular la distancia y la velocidad
+// Mientras la carta se está inclinando con el dedo (mantenida apretada), se mueve el dedo de un lado a otro para ver el
+// brillo, y sin querer se daba vuelta. Entonces, en ese caso, el barrido tiene que ser muchísimo más rápido y más largo
+// (si se da vuelta sin querer: subir estos números; si cuesta darla vuelta a propósito: bajarlos)
+const BARRIDO_DISTANCIA_INCLINANDO = 70;  // px
+const BARRIDO_VELOCIDAD_INCLINANDO = 1.8; // px por milisegundo (más de 2 veces la normal)
+let inclinandoConDedo = false;            // true mientras hay una carta inclinándose con el dedo (lo maneja activarInclinacionConDedo)
 
 function activarVoltearConDedo() {
     if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
@@ -1315,7 +1582,9 @@ function activarVoltearConDedo() {
         const dx = ultima.x - primera.x;
         const dy = ultima.y - primera.y;
         const ms = Math.max(1, ultima.t - primera.t);
-        if (Math.abs(dx) >= BARRIDO_DISTANCIA && Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) / ms >= BARRIDO_VELOCIDAD) {
+        const distanciaMinima = inclinandoConDedo ? BARRIDO_DISTANCIA_INCLINANDO : BARRIDO_DISTANCIA;
+        const velocidadMinima = inclinandoConDedo ? BARRIDO_VELOCIDAD_INCLINANDO : BARRIDO_VELOCIDAD;
+        if (Math.abs(dx) >= distanciaMinima && Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) / ms >= velocidadMinima) {
             gesto.resuelto = true;
             evitarClic = true;
             setTimeout(() => { evitarClic = false; }, 450);
@@ -1430,6 +1699,7 @@ function activarInclinacion() {
     }
 
     function seguir(clienteX, clienteY) {
+        if (!caja) return; // la carta está dándose vuelta y ya no sigue al dedo
         const limitar = valor => Math.max(-1, Math.min(1, valor));
         x = limitar(((clienteX + scrollX) - caja.x) / caja.ancho * 2 - 1);
         y = limitar(((clienteY + scrollY) - caja.y) / caja.alto * 2 - 1);
@@ -1496,6 +1766,7 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
     function cancelar() {
         clearTimeout(espera);
         inicio = null;
+        inclinandoConDedo = false;
         if (inclinando) {
             inclinando = false;
             soltar();
@@ -1515,9 +1786,11 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
         espera = setTimeout(() => {
             if (!inicio || carta.girando) return;
             inclinando = true;
+            inclinandoConDedo = true;
             tomar(carta);
             seguir(inicio.x, inicio.y);
             vibrar(10);
+            document.dispatchEvent(new CustomEvent('inclinacion-con-dedo')); // el cartel de ayuda ya no tiene que contar cómo se hace
         }, ESPERA_DEDO);
     }, { passive: true });
 
@@ -1582,8 +1855,78 @@ function activarVibracion() {
 // -----------------------------------------------------------------------------------------------------------------
 let contextoAudio;
 
+// ---- Silencio general ---------------------------------------------------------------------------------------------
+// Un botón chiquito de la barra (#silenciar) apaga todo el sonido de la página: los sonidos sintetizados (teclas, giro,
+// zoom, sorbo) y los archivos de audio del combate. Por defecto suena todo. La elección se guarda en el navegador de cada
+// persona (localStorage), como un JSON, así la próxima vez que entre sigue como la dejó.
+// Para volver a empezar (por ejemplo, para probarlo): localStorage.removeItem('digimon-audio')
+const AUDIO_ALMACEN = 'digimon-audio';
+
+function leerAudioGuardado() {
+    try {
+        return JSON.parse(localStorage.getItem(AUDIO_ALMACEN))?.silenciado === true;
+    } catch (error) {
+        return false; // sin memoria (o con un dato roto) se queda con el sonido activado
+    }
+}
+
+function guardarAudio() {
+    try {
+        localStorage.setItem(AUDIO_ALMACEN, JSON.stringify({ silenciado }));
+    } catch (error) {
+        // Si el navegador no deja guardar, el silencio vale solo mientras la página siga abierta
+    }
+}
+
+let silenciado = leerAudioGuardado();
+let salidaGeneral = null; // el "volumen maestro" de Web Audio: todos los sonidos sintetizados pasan por acá antes de salir
+
+// A dónde se conecta cada sonido sintetizado (en vez de directo a los parlantes): así un solo control los silencia a todos
+function destinoDeAudio(contexto) {
+    if (!salidaGeneral || salidaGeneral.context !== contexto) {
+        salidaGeneral = contexto.createGain();
+        salidaGeneral.gain.value = silenciado ? 0 : 1;
+        salidaGeneral.connect(contexto.destination);
+    }
+    return salidaGeneral;
+}
+
+// Deja todo el audio como corresponde: Web Audio por el volumen maestro y los archivos de audio con "muted", que sigue
+// reproduciéndolos (en silencio) y así los tiempos del combate no cambian
+function aplicarSilencio() {
+    if (salidaGeneral) {
+        // Bajada rapidísima en vez de un corte seco, para que no suene un "clic" al silenciar
+        salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : 1, salidaGeneral.context.currentTime, 0.01);
+    }
+    [audioMouse, winMusic, battleMusic, winSound, audioPajita].forEach(audio => { audio.muted = silenciado; });
+}
+
+function mostrarEstadoDelAudio() {
+    const boton = document.getElementById('silenciar');
+    if (!boton) return;
+    const ayuda = t(silenciado ? 'audio.activar' : 'audio.silenciar');
+    boton.classList.toggle('silenciado', silenciado);
+    boton.title = ayuda;
+    boton.setAttribute('aria-label', ayuda);
+}
+
+function activarBotonDeAudio() {
+    const boton = document.getElementById('silenciar');
+    if (!boton) return;
+    mostrarEstadoDelAudio();
+    boton.addEventListener('click', () => {
+        silenciado = !silenciado;
+        guardarAudio();
+        aplicarSilencio();
+        mostrarEstadoDelAudio();
+    });
+    // Si se cambia el idioma, la ayuda del botón se vuelve a escribir en el idioma nuevo
+    document.addEventListener('idioma-cambiado', mostrarEstadoDelAudio);
+}
+
 function obtenerContextoAudio() {
     contextoAudio = contextoAudio || new (window.AudioContext || window.webkitAudioContext)();
+    destinoDeAudio(contextoAudio);
     if (contextoAudio.state === 'suspended') {
         contextoAudio.resume();
     }
@@ -1643,7 +1986,7 @@ function crearSalidaTeclas(contexto) {
     compresor.connect(ganancia);
     ganancia.connect(saturador);
     saturador.connect(volumen);
-    volumen.connect(contexto.destination);
+    volumen.connect(destinoDeAudio(contexto));
     return compresor;
 }
 
@@ -1727,7 +2070,7 @@ function toqueDeCarta(contexto, llegada) {
     volumenToque.gain.exponentialRampToValueAtTime(0.0001, llegada + 0.04);
     toque.connect(filtroToque);
     filtroToque.connect(volumenToque);
-    volumenToque.connect(contexto.destination);
+    volumenToque.connect(destinoDeAudio(contexto));
     toque.start(llegada, Math.random() * 0.05);
     toque.stop(llegada + 0.06);
 
@@ -1740,7 +2083,7 @@ function toqueDeCarta(contexto, llegada) {
     volumenCuerpo.gain.exponentialRampToValueAtTime(0.035, llegada + 0.003);
     volumenCuerpo.gain.exponentialRampToValueAtTime(0.0001, llegada + 0.06);
     cuerpo.connect(volumenCuerpo);
-    volumenCuerpo.connect(contexto.destination);
+    volumenCuerpo.connect(destinoDeAudio(contexto));
     cuerpo.start(llegada);
     cuerpo.stop(llegada + 0.07);
 }
@@ -1782,7 +2125,7 @@ function sonidoVuelta() {
         ruido.connect(banda);
         banda.connect(agudos);
         agudos.connect(volumenRuido);
-        volumenRuido.connect(contexto.destination);
+        volumenRuido.connect(destinoDeAudio(contexto));
         ruido.start(t);
         ruido.stop(t + 0.55);
 
@@ -1837,7 +2180,7 @@ function sonidoZoom(abrir) {
         agudos.connect(banda);
         banda.connect(aleteo);
         aleteo.connect(volumen);
-        volumen.connect(contexto.destination);
+        volumen.connect(destinoDeAudio(contexto));
         ruido.start(ahora);
         oscilador.start(ahora);
         ruido.stop(ahora + duracion + 0.02);
@@ -1889,9 +2232,10 @@ function activarSonidoBotones() {
 
 activarInclinacion();
 activarZoom();
-activarAvisoZoom();
+activarAvisosDeAyuda();
 activarVoltearConDedo();
 activarSonidoBotones();
+activarBotonDeAudio();
 activarVibracion();
 
 // Las cartas de nivel 8 y 9 tienen un marco que gira. Si giran todas a la vez (hasta las que están lejos), la página se
@@ -1929,10 +2273,11 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
     // Creamos la "carta" del digimon. Los textos que cambian con el idioma (nivel, tipo, elemento, "NV"...) los pone
     // traducirCarta(); el nombre lo pone ponerNombre para separar lo que va entre paréntesis.
     elementoLista.innerHTML = `
+        ${nivelNumerico >= 8 ? '<span class="c-marco" aria-hidden="true"></span>' : ''}
         <div class="c-frente">
             <div class="c-cab"><h4></h4></div>
             <div class="c-arte">
-                <img src="${imagen}" alt="${nombre}">
+                <img src="${imagen}" alt="${nombre}" loading="lazy" decoding="async">
                 ${xAntibody ? '<span class="c-x" title="X-Antibody">X</span>' : ''}
                 <span class="c-gema"><small></small>${nivelNumerico ?? '?'}</span>
             </div>
@@ -1980,13 +2325,34 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
         verificarSeleccion();
     });
 
-    // Agregamos el <li> a la lista de Digimons (<ul>)
-    listaDigimons.appendChild(elementoLista);
-    ajustarNombre(elementoLista); // ya está en la página: ahora se puede medir su nombre
-    if (nivelNumerico >= 8) observadorDeMarcos?.observe(elementoLista); // su marco gira solo mientras se ve
+    // La carta espera un ratito y entra a la lista junto con las que lleguen mientras tanto (ver colocarCartas)
+    cartasEnEspera.push({ carta: elementoLista, conMarco: nivelNumerico >= 8 });
+    if (!colocacionPendiente) colocacionPendiente = setTimeout(colocarCartas, COLOCAR_CADA);
+}
 
-    // Avisamos que hay una carta nueva (los filtros la cuentan y, si corresponde, la esconden)
-    document.dispatchEvent(new CustomEvent('carta-agregada', { detail: { carta: elementoLista } }));
+// Mientras carga la página, las cartas no entran a la lista de a una: cada carta nueva obligaba a redibujar la lista,
+// los filtros y la barra de progreso, y en el celular eso tenía el procesador siempre ocupado (los botones tardaban en
+// responder o se perdían toques). Ahora se juntan y entran todas juntas unas pocas veces por segundo.
+const COLOCAR_CADA = 300; // ms entre tandas
+const cartasEnEspera = [];
+let colocacionPendiente = 0;
+
+function colocarCartas() {
+    clearTimeout(colocacionPendiente);
+    colocacionPendiente = 0;
+    if (!cartasEnEspera.length) return;
+    const tanda = cartasEnEspera.splice(0);
+
+    // Agregamos los <li> a la lista de Digimons (<ul>), todos de una vez
+    listaDigimons.append(...tanda.map(({ carta }) => carta));
+    for (const { carta, conMarco } of tanda) {
+        ajustarNombre(carta); // ya está en la página: ahora se puede medir su nombre
+        if (conMarco) observadorDeMarcos?.observe(carta); // su marco gira solo mientras se ve
+
+        // Avisamos que hay una carta nueva (los filtros la cuentan y, si corresponde, la esconden)
+        document.dispatchEvent(new CustomEvent('carta-agregada', { detail: { carta } }));
+    }
+    actualizarBarraProgreso(contadorDigimons);
 }
 
 // Función para crear la lista de Digimons
@@ -1998,10 +2364,27 @@ async function crearListaDeDigimons() {
         // Las cartas miden sus nombres con las tipografías nuevas: esperamos a que carguen
         await esperarTipografias();
 
+        // Pedimos los detalles de a varios a la vez (antes era de a uno y la carga duraba muchísimo, sobre todo en el
+        // celular), pero las cartas se agregan siempre en orden
+        const pedidos = [];
+        let proximoPedido = 0;
+        const pedirMas = () => {
+            while (proximoPedido < digimons.length && proximoPedido - contadorDigimons < PEDIDOS_A_LA_VEZ) {
+                pedidos[proximoPedido] = obtenerDetallesDigimon(digimons[proximoPedido].href);
+                proximoPedido++;
+            }
+        };
+
         // Recorremos toda la lista de Digimons
-        for (const digimon of digimons) {
+        for (const [indice, digimon] of digimons.entries()) {
             // Obtenemos los detalles de cada Digimon
-            const detalles = await obtenerDetallesDigimon(digimon.href);
+            pedirMas();
+            const detalles = await pedidos[indice];
+            pedidos[indice] = null;
+            if (!detalles) { // si la API falló con este, seguimos con los demás (antes se cortaba toda la carga)
+                contadorDigimons++;
+                continue;
+            }
 
             // Extraemos el tipo (atributo) o, sino tiene, le ponemos "Desconocido"
             const tipo = tipoDeLaApi[detalles.attributes[0]?.attribute] || 'Desconocido';
@@ -2020,19 +2403,24 @@ async function crearListaDeDigimons() {
                 elemento: deducirElemento(digimon.id, detalles),
                 datosDorso: {
                     especie: (detalles.types || []).map(especie => especie.type).join(', ') || '–',
+                    campos: (detalles.fields || []).map(campo => campo.field).join(', ') || '–', // los "Fields" de la API: familias o temáticas (Deep Savers, Metal Empire...). Un digimon puede tener varios o ninguno
                     estreno: detalles.releaseDate || '–',
                     ataques: (detalles.skills || []).slice(0, 4).map(habilidad => habilidad.skill).join(' - ') || '–',
+                    // Todos los ataques con su descripción (en inglés): para el botón "⚔️ Ataques" del dorso y para la pelea
+                    habilidades: (detalles.skills || [])
+                        .filter(habilidad => habilidad.skill)
+                        .map(habilidad => ({ nombre: habilidad.skill, traduccion: habilidad.translation || '', descripcion: habilidad.description || '' })),
                     descripcion: (detalles.descriptions || []).find(texto => texto.language === 'en_us')?.description || '',
                 },
             });
 
-            // Actualizamos el contador y la barra de progreso
+            // Actualizamos el contador (la barra de progreso se actualiza con cada tanda de cartas)
             contadorDigimons++;
-            actualizarBarraProgreso(contadorDigimons);
         }
 
         // Las cartas que no están en la API (Yggdrasil y Homeostasis) van al final
         CARTAS_PROPIAS.forEach(agregarCarta);
+        colocarCartas(); // entra la última tanda
 
         // Ya están todas las cartas (y sus nombres medidos): en celular, el navegador puede dejar de dibujar las que no se ven
         listaDigimons.classList.add('lista-completa');
@@ -2092,10 +2480,44 @@ const FASES_COMBATE = {
     ganador: { icono: '🏆', gif: './img/Festejando.gif', proporcion: '474 / 290', centro: '🎉' },
 };
 
+// Un ataque al azar de la carta (o null si no tiene). Si algunos traen descripción, se elige entre esos, para que se pueda contar qué hace
+function elegirAtaque(carta) {
+    const todos = carta.datosDorso?.habilidades || [];
+    const conTexto = todos.filter(habilidad => habilidad.descripcion);
+    const opciones = conTexto.length ? conTexto : todos;
+    return opciones.length ? opciones[Math.floor(Math.random() * opciones.length)] : null;
+}
+
+// El recuadro de un luchador en la pelea: "⚔️ Agumon usa Baby Flame" y, debajo, qué hace ese ataque
+function crearAtaqueEnPelea(carta, ataque, i) {
+    const caja = document.createElement('div');
+    caja.className = `vs-ataque vs-${i + 1}`;
+    caja.style.setProperty('--c', getComputedStyle(carta.querySelector('.c-arte')).borderTopColor); // el color de su carta
+
+    const linea = document.createElement('p');
+    linea.className = 'vs-ataque-linea';
+    const luchador = document.createElement('b');
+    luchador.textContent = nombreCompleto(carta);
+    const nombre = document.createElement('em');
+    nombre.textContent = ataque.nombre;
+    linea.append('⚔️ ', luchador, ` ${t('combate.usa')} `, nombre);
+    caja.append(linea);
+
+    if (ataque.descripcion) {
+        const descripcion = document.createElement('p');
+        descripcion.className = 'vs-ataque-desc';
+        descripcion.textContent = ataque.descripcion;
+        descripcion.title = ataque.descripcion; // por si es tan larga que se corta
+        caja.append(descripcion);
+    }
+    return caja;
+}
+
 // El cuerpo de la ventana: la pantallita con el GIF y el VS. "indiceGanador" (0 o 1) solo se usa en la última fase.
+// "ataques" (uno por carta, o null) solo se usa en la pelea: debajo del VS se cuenta qué ataque usa cada una.
 // Se arma con nodos (y no con texto HTML) porque los nombres vienen de la API.
 // "conGif" en false deja la pantallita sin imagen: el GIF lo pone después arrancarGifConSorbo, justo con el sonido
-function crearCuerpoCartel(fase, cartas, indiceGanador = -1, conGif = true) {
+function crearCuerpoCartel(fase, cartas, indiceGanador = -1, conGif = true, ataques = null) {
     const datos = FASES_COMBATE[fase];
     const escena = document.createElement('div');
     escena.className = `combate-escena fase-${fase}`;
@@ -2135,6 +2557,15 @@ function crearCuerpoCartel(fase, cartas, indiceGanador = -1, conGif = true) {
 
     vs.append(luchadores[0], centro, luchadores[1]);
     escena.append(pantalla, vs);
+
+    if (fase === 'peleando' && ataques?.some(Boolean)) {
+        const recuadros = document.createElement('div');
+        recuadros.className = 'combate-ataques';
+        ataques.forEach((ataque, i) => {
+            if (ataque) recuadros.append(crearAtaqueEnPelea(cartas[i], ataque, i));
+        });
+        escena.append(recuadros);
+    }
     return escena;
 }
 
@@ -2196,6 +2627,7 @@ async function iniciarCombate() {
 
     const ganador = determinarGanador(luchador1, luchador2);
     const cartas = [seleccionados[0], seleccionados[1]]; // las dos cartas que pelean (para mostrarlas en los carteles)
+    const ataques = cartas.map(elegirAtaque); // el ataque que usa cada una en la pelea (es solo ambientación: el resultado ya está decidido)
     const indiceGanador = ganador === luchador1.nombre ? 0 : 1;
 
     // Cuadros de animación
@@ -2225,7 +2657,7 @@ async function iniciarCombate() {
         await Swal.fire({
             ...CARTEL_COMBATE,
             title: `${FASES_COMBATE.peleando.icono} ${t('combate.peleando')}`,
-            html: crearCuerpoCartel('peleando', cartas),
+            html: crearCuerpoCartel('peleando', cartas, -1, true, ataques),
             confirmButtonText: t('aceptar'),
             didOpen: (ventana) => { cancelarSonido = cuandoAparece(ventana, () => reproducirSonido(battleMusic)); }
         });
@@ -2358,6 +2790,8 @@ const winSound = new Audio('audio/Digimon World - PSX Battle Win.mp3');
 const audioPajita = new Audio('audio/Pajita.mp3');
 let intervaloSonido;
 
+aplicarSilencio(); // si la persona había dejado el sonido apagado, los archivos de audio arrancan en silencio
+
 function reproducirSonido(audio) {
     audio.play();
 }
@@ -2459,7 +2893,7 @@ function sonarSorbo(cuando) {
     volumen.gain.linearRampToValueAtTime(1, inicio + 0.01);
     volumen.gain.setValueAtTime(1, inicio + duracion - 0.06);
     volumen.gain.linearRampToValueAtTime(0, inicio + duracion);
-    fuente.connect(volumen).connect(ctx.destination);
+    fuente.connect(volumen).connect(destinoDeAudio(ctx));
     fuente.start(inicio, 0, duracion);
     sorbosSonando.add(fuente);
     fuente.onended = () => sorbosSonando.delete(fuente);

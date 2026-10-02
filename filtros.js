@@ -185,6 +185,8 @@ function crearEtiqueta(grupo, clave, color, icono, texto, nombreGrupo) {
     return etiqueta;
 }
 
+let firmaEtiquetas = ''; // las etiquetas que hay ahora (para no rehacerlas si no cambiaron)
+
 function escribirEtiquetas() {
     const etiquetas = [];
     if (busquedaEscrita) {
@@ -196,7 +198,20 @@ function escribirEtiquetas() {
             etiquetas.push(crearEtiqueta(grupo, clave, definicion.color(clave), definicion.icono(clave), definicion.nombre(clave), t(`filtros.${grupo}`)));
         }
     }
+    // Si las etiquetas son las mismas que ya están, no se rehacen (si no, un toque sobre una podía perderse)
+    const firma = etiquetas.map(etiqueta => etiqueta.outerHTML).join('');
+    if (firma === firmaEtiquetas) return;
+    firmaEtiquetas = firma;
     zonaActivos.replaceChildren(...etiquetas);
+}
+
+// Cambian un texto o un atributo solo si de verdad es distinto
+function cambiarTexto(elemento, texto) {
+    if (elemento.textContent !== texto) elemento.textContent = texto;
+}
+
+function cambiarAtributo(elemento, nombre, valor) {
+    if (elemento.getAttribute(nombre) !== valor) elemento.setAttribute(nombre, valor);
 }
 
 // ---- Filtrar y contar ----------------------------------------------------------------------------------------------
@@ -230,31 +245,34 @@ function refrescar() {
         }
     }
 
+    // Solo se toca lo que cambió: mientras cargan las cartas esto se repite muchas veces, y reescribir textos iguales
+    // hacía que el navegador redibujara la barra a cada rato (en el celular, los botones tardaban en responder)
     seccionFiltros.querySelectorAll('.f-chip').forEach(chip => {
         const { g: grupo, k: clave } = chip.dataset;
         const elegido = elegidos[grupo].has(clave);
         const cantidad = conteo[grupo][clave] || 0;
-        chip.setAttribute('aria-pressed', String(elegido));
-        chip.querySelector('i').textContent = cantidad;
+        cambiarAtributo(chip, 'aria-pressed', String(elegido));
+        cambiarTexto(chip.querySelector('i'), String(cantidad));
         chip.classList.toggle('vacio', total > 0 && cantidad === 0 && !elegido); // sin cartas: se ve apagada
     });
 
     // Botón de X-Antibody: su estado (indistinto, con o sin) y su texto en el idioma actual
     const estadoX = [...elegidos.x][0] ?? 'indistinto';
-    botonX.dataset.estado = estadoX;
-    botonX.querySelector('.f-xa-texto').textContent = t(`filtros.x.boton.${estadoX}`);
-    botonX.title = t(`filtros.x.ayuda.${estadoX}`);
+    if (botonX.dataset.estado !== estadoX) botonX.dataset.estado = estadoX;
+    cambiarTexto(botonX.querySelector('.f-xa-texto'), t(`filtros.x.boton.${estadoX}`));
+    cambiarAtributo(botonX, 'title', t(`filtros.x.ayuda.${estadoX}`));
 
     seccionFiltros.querySelectorAll('.f-grupo').forEach(grupo => {
         const cuantos = elegidos[grupo.dataset.g].size;
         const contador = grupo.querySelector('.f-n');
         grupo.querySelector('.f-btn').classList.toggle('tiene', cuantos > 0);
-        contador.textContent = cuantos;
-        contador.hidden = cuantos === 0;
+        cambiarTexto(contador, String(cuantos));
+        if (contador.hidden !== (cuantos === 0)) contador.hidden = cuantos === 0;
     });
 
     escribirEtiquetas();
-    textoCuenta.innerHTML = t('filtros.cuenta', { v: `<b>${visibles}</b>`, n: total });
+    const cuenta = t('filtros.cuenta', { v: `<b>${visibles}</b>`, n: total });
+    if (textoCuenta.innerHTML !== cuenta) textoCuenta.innerHTML = cuenta;
 
     const hayFiltros = busqueda !== '' || GRUPOS.some(grupo => elegidos[grupo].size > 0);
     botonLimpiar.hidden = !hayFiltros;
