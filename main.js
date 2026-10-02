@@ -214,7 +214,6 @@ const CARTAS_PROPIAS = [
             especie: 'Host Computer',
             campos: '–',
             estreno: '–',
-            ataques: '–',
             habilidades: [],
             descripcion: 'The host computer that rules over the Digital World, treated in many adaptations as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
             evo: { previas: [], siguientes: [] },
@@ -232,7 +231,6 @@ const CARTAS_PROPIAS = [
             especie: 'Security System',
             campos: '–',
             estreno: '–',
-            ataques: '–',
             habilidades: [],
             descripcion: 'The security system of the Digital World, which keeps the balance between good and evil. In some stories it takes the place of Yggdrasil as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
             evo: { previas: [], siguientes: [] },
@@ -467,6 +465,7 @@ function verificarSeleccion() {
     if (seleccionados.length > 0) precargarPajita(); // el GIF y el sonido del primer cartel de combate se bajan mientras eligen
     contadorSeleccion.textContent = `${seleccionados.length}/2`;
     contadorSeleccion.classList.toggle('completo', seleccionados.length === 2);
+    mostrarAyudaDelContador();
     if (seleccionados.length === 2) {
         botonIniciarCombate.classList.add("animate__animated", "animate__pulse");
         botonIniciarCombate.disabled = false;
@@ -477,6 +476,125 @@ function verificarSeleccion() {
     // El color del botón (verde si se puede pelear, gris si no) lo pone el CSS según :disabled
     document.dispatchEvent(new CustomEvent('seleccion-cambio')); // el aviso de ayuda del inicio se va cuando ya eligió las 2
 }
+
+// El contador de elegidos también es un botón: sin ninguno elegido está apagado; con 1 o 2 se puede tocar para quitar la selección
+function mostrarAyudaDelContador() {
+    const hayElegidos = seleccionados.length > 0;
+    const ayuda = t(hayElegidos ? 'combate.contador.limpiar' : 'combate.contador');
+    contadorSeleccion.disabled = !hayElegidos;
+    contadorSeleccion.title = ayuda;
+    contadorSeleccion.setAttribute('aria-label', `${seleccionados.length}/2 · ${ayuda}`);
+}
+
+function quitarSeleccion() {
+    if (seleccionados.length === 0) return;
+    seleccionados.forEach(carta => carta.classList.remove('seleccionado'));
+    seleccionados.length = 0;
+    verificarSeleccion();
+}
+
+contadorSeleccion.addEventListener('click', quitarSeleccion);
+document.addEventListener('idioma-cambiado', mostrarAyudaDelContador);
+mostrarAyudaDelContador();
+
+// -----------------------------------------------------------------------------------------------------------------
+// AVISO DEL CONTADOR: una sola vez por sesión del navegador, cuando termina el primer combate (o se lo cierra a medio camino), de
+// la bolita "2/2" de la barra sale un minicartel con una flechita que cuenta que ahí se puede tocar para quitar la selección de las
+// cartas, o tocar las cartas de a una para soltarlas. Se va solo a los pocos segundos y antes si la persona cambia la selección,
+// empieza otro combate, amplía una carta o (en celular) la barra se esconde al bajar por la lista.
+// Solo en las primeras 3 visitas (se usa el mismo contador de visitas de los avisos de ayuda, ver registrarVisitaDeAvisos): desde la
+// cuarta vez que entra a la página ya no sale.
+// -----------------------------------------------------------------------------------------------------------------
+const AVISO_CONTADOR_SESION = 'digimon-aviso-contador'; // sessionStorage: recargar la página no lo vuelve a mostrar, abrirla de nuevo sí
+const AVISO_CONTADOR_ESPERA = 300;     // ms después de que se cierra el último cartel del combate (además de lo que tarde en irse)
+const AVISO_CONTADOR_DURACION = 9000;  // ms que queda a la vista
+const AVISO_CONTADOR_VISITAS_MAXIMAS = 3; // desde la cuarta visita ya no sale
+let avisoContadorVisto = false;
+let avisoDelContador = null;
+let temporizadorAvisoContador = 0;
+let vigilanteDeLaBarra = null;
+
+try {
+    avisoContadorVisto = sessionStorage.getItem(AVISO_CONTADOR_SESION) === '1';
+} catch (error) {
+    // Sin sessionStorage solo se recuerda mientras la página siga abierta
+}
+
+function escribirAvisoDelContador() {
+    if (!avisoDelContador) return;
+    const conDedo = window.matchMedia('(hover: none)').matches;
+    avisoDelContador.querySelector('.aviso-texto').textContent = t(conDedo ? 'aviso.contador.dedos' : 'aviso.contador.mouse');
+}
+
+// Debajo del contador, con la flechita justo debajo de él (el cartel se corre para no salirse de la pantalla)
+function ubicarAvisoDelContador() {
+    if (!avisoDelContador) return;
+    const margen = 8;
+    const boton = contadorSeleccion.getBoundingClientRect();
+    const ancho = avisoDelContador.offsetWidth;
+    const centro = boton.left + boton.width / 2;
+    const izquierda = Math.max(margen, Math.min(centro - ancho / 2, window.innerWidth - ancho - margen));
+    avisoDelContador.style.left = `${Math.round(izquierda)}px`;
+    avisoDelContador.style.top = `${Math.round(boton.bottom + 12)}px`;
+    avisoDelContador.style.setProperty('--punta', `${Math.round(centro - izquierda)}px`);
+}
+
+function quitarAvisoDelContador() {
+    if (!avisoDelContador) return;
+    const aviso = avisoDelContador;
+    avisoDelContador = null;
+    clearTimeout(temporizadorAvisoContador);
+    vigilanteDeLaBarra?.disconnect();
+    vigilanteDeLaBarra = null;
+    aviso.classList.remove('visible'); // se vuelve a achicar hacia el contador
+    setTimeout(() => aviso.remove(), 500);
+}
+
+function mostrarAvisoDelContador(reintentos = 15) {
+    if (memoriaAvisos.visitas > AVISO_CONTADOR_VISITAS_MAXIMAS) return; // ya entró 4 veces o más: no hace falta
+    if (avisoContadorVisto || avisoDelContador || seleccionados.length === 0) return;
+    if (document.querySelector('.combate-contenedor')) { // el último cartel todavía se está desvaneciendo: se espera a que se vaya del todo
+        if (reintentos > 0) setTimeout(() => mostrarAvisoDelContador(reintentos - 1), 150);
+        return;
+    }
+    const barra = document.getElementById('navbar');
+    if (barra.classList.contains('barra-escondida')) return; // el contador no se ve: queda para el próximo combate
+    avisoContadorVisto = true;
+    try {
+        sessionStorage.setItem(AVISO_CONTADOR_SESION, '1');
+    } catch (error) {
+        // Sin sessionStorage solo se recuerda mientras la página siga abierta
+    }
+
+    avisoDelContador = document.createElement('div');
+    avisoDelContador.id = 'aviso-contador';
+    avisoDelContador.className = 'aviso-contador';
+    avisoDelContador.setAttribute('role', 'status');
+    avisoDelContador.innerHTML = '<span class="aviso-icono" aria-hidden="true">👆</span><span class="aviso-texto"></span>';
+    escribirAvisoDelContador();
+    document.body.appendChild(avisoDelContador);
+    ubicarAvisoDelContador();
+    void avisoDelContador.offsetWidth; // para que la entrada se anime
+    avisoDelContador.classList.add('visible');
+    temporizadorAvisoContador = setTimeout(quitarAvisoDelContador, AVISO_CONTADOR_DURACION);
+
+    // En celular, si la barra se esconde el contador sale de la pantalla y el cartel quedaría colgando
+    vigilanteDeLaBarra = new MutationObserver(() => {
+        if (barra.classList.contains('barra-escondida')) quitarAvisoDelContador();
+    });
+    vigilanteDeLaBarra.observe(barra, { attributes: true, attributeFilter: ['class'] });
+}
+
+document.addEventListener('seleccion-cambio', quitarAvisoDelContador); // tocó el contador o una carta: ya sabe cómo hacerlo
+botonIniciarCombate.addEventListener('click', quitarAvisoDelContador);
+document.addEventListener('zoom-cambio', () => { if (cartaEnZoom) quitarAvisoDelContador(); });
+document.addEventListener('idioma-cambiado', () => {
+    escribirAvisoDelContador();
+    ubicarAvisoDelContador();
+});
+window.addEventListener('resize', ubicarAvisoDelContador);
+// La barra también cambia de alto sin que cambie la ventana (por ejemplo, cuando el bloque de carga desaparece)
+if ('ResizeObserver' in window) new ResizeObserver(ubicarAvisoDelContador).observe(document.getElementById('navbar'));
 
 // -----------------------------------------------------------------------------------------------------------------
 // DISEÑO DE LAS CARTAS: nombre ajustado al largo, dorso con la descripción, giro 3D, inclinación con reflejo y sonidos
@@ -492,12 +610,18 @@ function separarXAntibody(nombre) {
     return { nombre: limpio, xAntibody: limpio !== nombre.trim() };
 }
 
-// Nombre completo de una carta, con su "(X-Antibody)" si lo tiene. Lo usan el combate, el buscador, la evolución y el dorso,
-// para que no se confunda con la versión normal del mismo digimon.
+// Nombre completo de una carta, con su "(X-Antibody)" si lo tiene. Lo usan el combate, la evolución y el dorso,
+// para que no se confunda con la versión normal del mismo digimon. Es el que se ve, o sea, el del idioma actual (ver nombres.js).
+const conXAntibody = (carta, nombre) => carta.dataset.xAntibody ? `${nombre} (X-Antibody)` : nombre;
+
 function nombreCompleto(carta) {
-    const nombre = carta.querySelector('h4').textContent.trim();
-    return carta.dataset.xAntibody ? `${nombre} (X-Antibody)` : nombre;
+    return conXAntibody(carta, carta.querySelector('h4').textContent.trim());
 }
+
+// Los dos nombres de un digimon, también con su "(X-Antibody)": el original (el que trae la API) y el occidental.
+// El buscador usa los dos, así se lo encuentra por cualquiera.
+const nombreApiCompleto = carta => conXAntibody(carta, carta.dataset.nombreApi);
+const nombreOccidentalCompleto = carta => conXAntibody(carta, nombreOccidental(carta.dataset.nombreApi));
 
 // Nombre en la carta: lo que va entre paréntesis pasa a una segunda línea, más chica.
 // El texto completo del <h4> no cambia (el combate lo lee con textContent).
@@ -511,6 +635,20 @@ function ponerNombre(elemento, nombre) {
     aparte.className = 'c-aparte';
     aparte.textContent = nombre.slice(posicion);
     elemento.append(nombre.slice(0, posicion), aparte);
+}
+
+// Escribe el nombre de la carta (en el idioma actual) en el frente, en el dorso si ya se armó y en el texto de su imagen
+function escribirNombre(carta) {
+    const titulo = carta.querySelector('h4');
+    titulo.textContent = '';
+    ponerNombre(titulo, nombreParaMostrar(carta.dataset.nombreApi));
+    carta.querySelector('.c-arte img').alt = nombreCompleto(carta);
+
+    const nombreDorso = carta.querySelector('.c-dorso .c-nombre');
+    if (nombreDorso) {
+        nombreDorso.textContent = '';
+        ponerNombre(nombreDorso, nombreCompleto(carta));
+    }
 }
 
 // Tamaño del nombre según su largo: los cortos se agrandan hasta llenar la placa y los largos quedan chicos
@@ -588,7 +726,7 @@ function construirDorso(carta) {
     ponerNombre(dorso.querySelector('.c-nombre'), nombreCompleto(carta));
 
     const cuerpo = dorso.querySelector('.c-cuerpo');
-    for (const [etiqueta, valor] of [['carta.especie', datos.especie], ['carta.campos', datos.campos ?? '–'], ['carta.estreno', datos.estreno], ['carta.ataques', datos.ataques]]) {
+    for (const [etiqueta, valor] of [['carta.especie', datos.especie], ['carta.campos', datos.campos ?? '–'], ['carta.estreno', datos.estreno]]) {
         const linea = document.createElement('p');
         linea.className = 'dato';
         const negrita = document.createElement('b');
@@ -779,8 +917,8 @@ function soltarZoom(carta) {
 
 // El scroll de la página queda quieto mientras hay zoom (sin tocar el overflow del body, que haría saltar la grilla).
 // Solo se puede desplazar la descripción del dorso, que tiene su propio scroll.
-function zonaConScroll(destino, delta = 0) {
-    const zona = destino.closest?.('.c-cuerpo');
+function zonaConScroll(destino, delta = 0, selector = '.c-cuerpo') {
+    const zona = destino.closest?.(selector);
     if (!zona || zona.scrollHeight <= zona.clientHeight) return false;
     if (delta === 0) return true;
     return delta < 0 ? zona.scrollTop > 0 : zona.scrollTop + zona.clientHeight < zona.scrollHeight - 1;
@@ -1136,9 +1274,9 @@ function activarZoom() {
 // pasar el mouse y los toques) y se van solos a los pocos segundos. Los tiempos se cuentan desde que aparece la primera carta:
 //   - 2 s: (solo celular) qué hay que hacer, "Elige 2 digimons...". En computadora la consigna ya está a la vista en la barra;
 //          en celular está dentro del menú ☰.
-//   - 5 s: cómo ampliar una carta y, en pantallas táctiles, cómo inclinarla. Con mouse habla del doble clic; en pantallas táctiles
-//          lleva dos consejos: el doble toque o pellizco, y que si se mantiene apretada la carta y se mueve el dedo, brilla y se
-//          inclina (dicho sin palabras técnicas).
+//   - 5 s: cómo ampliar una carta y, en pantallas táctiles, cómo inclinarla y darla vuelta. Con mouse habla del doble clic; en
+//          pantallas táctiles son dos cartelitos separados: el doble toque o pellizco, y que si se mantiene apretada la carta y se mueve
+//          el dedo, brilla y se inclina, y con un barrido rápido se da vuelta (dicho sin palabras técnicas).
 //   - 2 s después de ampliar la primera carta: (solo pantallas táctiles) cómo cerrarla y cómo pasar a otra deslizando el dedo. Sale una
 //          sola vez por visita, y no si se cierra la carta antes de que entre.
 // Si hay más de uno a la vez, se apilan (el primero arriba). Cada consejo es independiente: se va apenas la persona hace lo que
@@ -1201,8 +1339,8 @@ function marcarAvisoHecho(clave) {
 const AVISO_COMBATE_ESPERA = 2000;       // ms desde que aparece la primera carta
 const AVISO_COMBATE_DURACION = 7000;     // ms que queda a la vista
 const AVISO_ZOOM_ESPERA = 5000;          // ms desde que aparece la primera carta (3 s después del de combate, para que se lean de a uno)
-const AVISO_ZOOM_DURACION = 7000;        // ms que queda a la vista con un solo consejo
-const AVISO_ZOOM_DURACION_DEDO = 10000;  // con dos consejos (celular): más tiempo para leerlos
+const AVISO_ZOOM_DURACION = 7000;        // ms que queda a la vista el consejo (computadora: uno solo)
+const AVISO_ZOOM_DURACION_DEDO = 14000;  // en celular, los dos cartelitos (el segundo tiene más texto): más tiempo para leerlos
 const AVISO_GESTOS_ESPERA = 2000;        // ms desde que se amplía la carta (solo celular)
 const AVISO_GESTOS_DURACION = 9000;      // ms que queda a la vista (lleva dos consejos)
 
@@ -1347,7 +1485,8 @@ function activarAvisoCombate() {
     document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
 }
 
-// Después: cómo ampliar una carta (y en pantallas táctiles, cómo inclinarla)
+// Después: cómo ampliar una carta (y en pantallas táctiles, cómo inclinarla y darla vuelta). Cada consejo es un cartelito aparte:
+// se apilan (el primero arriba) y cada uno se va cuando la persona ya hizo lo que cuenta.
 function activarAvisoZoom() {
     const conDedo = window.matchMedia('(hover: none)').matches;
     // "clave" es lo que la persona tiene que hacer; "texto" es la clave de la traducción
@@ -1355,43 +1494,45 @@ function activarAvisoZoom() {
         ? [{ clave: 'zoom', icono: '👆', texto: 'aviso.zoom.dedos' }, { clave: 'inclinar', icono: '✨', texto: 'aviso.inclinar.dedo' }]
         : [{ clave: 'zoom', icono: '💡', texto: 'aviso.zoom.mouse' }];
     const hecho = new Set(consejos.map(consejo => consejo.clave).filter(avisoHecho)); // lo que la persona ya hizo (también en visitas anteriores)
-    let aviso = null;
+    const avisos = new Map(); // clave del consejo -> su cartelito (los que están a la vista)
     let temporizador = 0;
     let cerrado = false;
+
+    const quitar = (clave) => {
+        const aviso = avisos.get(clave);
+        if (!aviso) return;
+        avisos.delete(clave);
+        quitarAviso(aviso);
+    };
 
     const cerrar = () => {
         if (cerrado) return;
         cerrado = true;
         clearTimeout(temporizador);
-        if (aviso) quitarAviso(aviso);
-        aviso = null;
+        [...avisos.keys()].forEach(quitar);
     };
 
-    // La persona hizo lo que cuenta ese consejo: se va (los otros se quedan). Si era el único que quedaba, se va todo el aviso
+    // La persona hizo lo que cuenta ese consejo: su cartelito se va (el otro se queda)
     const yaLoHizo = (clave) => {
         hecho.add(clave);
         marcarAvisoHecho(clave);
-        const linea = aviso?.querySelector(`.aviso-linea[data-clave="${clave}"]`);
-        if (!linea || linea.classList.contains('se-va')) return;
-        if (aviso.querySelectorAll('.aviso-linea:not(.se-va)').length <= 1) {
-            cerrar();
-            return;
-        }
-        linea.classList.add('se-va');
-        setTimeout(() => linea.remove(), 400); // cuando termina de achicarse
+        quitar(clave);
     };
 
     const mostrar = () => {
-        if (cerrado || aviso) return;
+        if (cerrado || avisos.size) return;
         const pendientes = consejos.filter(consejo => !hecho.has(consejo.clave));
         if (!pendientes.length) {
             cerrado = true; // ya hizo todo: no hay nada que contarle
             return;
         }
-        aviso = crearAviso('aviso-zoom', pendientes);
-        escribirAviso(aviso);
-        ponerAviso(aviso);
-        temporizador = setTimeout(cerrar, pendientes.length > 1 ? AVISO_ZOOM_DURACION_DEDO : AVISO_ZOOM_DURACION);
+        pendientes.forEach((consejo) => {
+            const aviso = crearAviso(`aviso-zoom-${consejo.clave}`, [consejo]);
+            escribirAviso(aviso);
+            ponerAviso(aviso);
+            avisos.set(consejo.clave, aviso);
+        });
+        temporizador = setTimeout(cerrar, conDedo ? AVISO_ZOOM_DURACION_DEDO : AVISO_ZOOM_DURACION);
     };
 
     // Aparece unos segundos después de la primera carta: antes no tiene sentido hablar de cartas que todavía no están
@@ -1400,7 +1541,7 @@ function activarAvisoZoom() {
         if (cartaEnZoom) yaLoHizo('zoom'); // hay una carta ampliada (o cerrándose): ya sabe cómo hacerlo
     });
     document.addEventListener('inclinacion-con-dedo', () => yaLoHizo('inclinar')); // lo avisa activarInclinacionConDedo
-    document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
+    document.addEventListener('idioma-cambiado', () => avisos.forEach(escribirAviso));
 }
 
 // En celulares la carta también se amplía con doble toque (dos toques cortos seguidos sobre la misma carta). Igual que con el
@@ -1832,8 +1973,8 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
 
 // Vibración corta al tocar botones con el dedo, como una tecla física. Solo en los celulares que la permiten
 // (Android; en iPhone el navegador no deja vibrar). El navegador solo la permite después del primer toque en la página.
-function vibrar(duracion = 8) {
-    if (!navigator.vibrate || vibracionApagada) return; // vibracionApagada: la persona la quitó con el botón de sonido (#silenciar)
+function vibrar(duracion = 8, forzar = false) {
+    if (!navigator.vibrate || (vibracionApagada && !forzar)) return; // vibracionApagada: la persona la quitó con el botón de sonido (#silenciar)
     if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
     try {
         navigator.vibrate(duracion);
@@ -1847,7 +1988,15 @@ function activarVibracion() {
     document.addEventListener('pointerdown', (evento) => {
         if (evento.pointerType !== 'touch') return;
         const boton = evento.target.closest('button');
-        if (boton && !boton.disabled) vibrar(8);
+        if (!boton || boton.disabled) return;
+        if (boton.id === 'silenciar') {
+            // El botón de sonido vibra según a dónde lleva el toque y no según cómo está ahora: al pasar a "solo vibración" y al volver a
+            // activar todo vibra; al pasar a "nada" (donde ya no hay vibración) ese toque no vibra. Cuando vuelve a "todo" la vibración
+            // todavía figura apagada, por eso se fuerza.
+            if (modoSiguienteDelAudio() !== 'nada') vibrar(8, true);
+            return;
+        }
+        vibrar(8);
     });
 }
 
@@ -1927,6 +2076,13 @@ function modoDelAudio() {
     return VIBRACION_DISPONIBLE && !vibracionApagada ? 'vibracion' : 'nada';
 }
 
+// El paso al que lleva el próximo toque (sin cambiar nada todavía): el toque da el aviso de ese paso, no del actual
+function modoSiguienteDelAudio() {
+    const modo = modoDelAudio();
+    if (modo === 'todo') return VIBRACION_DISPONIBLE ? 'vibracion' : 'nada';
+    return modo === 'vibracion' ? 'nada' : 'todo';
+}
+
 // Cada toque pasa al paso siguiente
 function pasarAlSiguienteModoDelAudio() {
     const modo = modoDelAudio();
@@ -1974,7 +2130,9 @@ function ubicarBotonDeAudio() {
 
 // Aviso del botón (en celular y en computadora, una única vez por sesión): cuando suena el primer sonido de la visita —una tecla, el giro de una
 // carta, el zoom, lo que sea— el botón salta y lanza ondas, para que la persona vea que ahí puede apagar el sonido.
-// No se repite al recargar (la marca queda en sessionStorage) y no se hace si ya tocó el botón o si el sonido ya estaba apagado.
+// No se repite al recargar (la marca queda en sessionStorage). Solo cuenta un sonido que de verdad se oye: si el sonido está apagado (porque la
+// persona lo apagó con el botón antes del primer sonido, o ya lo traía apagado), no se hace en ningún momento mientras siga apagado; si lo
+// vuelve a activar, el primer sonido que suene sí lo hace (y desde ahí, ya no se repite), sin contar la tecla del propio toque que lo activó.
 const AUDIO_AVISO_SESION = 'digimon-audio-aviso';
 const AUDIO_AVISO_DURACION = 2600; // ms: un poco más que la animación del CSS (2,4 s)
 
@@ -1997,15 +2155,68 @@ function marcarBotonDeAudioMostrado() {
     }
 }
 
+// En computadora el botón vive dentro de la barra, que queda por debajo de la cortina oscura (y desenfocada) del zoom y de los carteles
+// del combate. Si el primer sonido de la sesión es el del zoom o el de "Iniciar Combate", durante el aviso el botón sale un momento de
+// la barra y queda por encima de la cortina, en el mismo lugar de la pantalla (en la barra se deja un hueco del mismo tamaño para que
+// nada se corra). Devuelve la función que lo vuelve a su lugar. En celular no hace falta: el botón ya flota por encima de todo.
+let combateEnCurso = false; // desde que se aprieta "Iniciar Combate" hasta que se cierra el último cartel (lo maneja iniciarCombate)
+
+function subirBotonDeAudioSobreLaCortina(boton) {
+    const caja = boton.getBoundingClientRect();
+    const hueco = document.createElement('span');
+    hueco.setAttribute('aria-hidden', 'true');
+    hueco.style.cssText = `flex: none; width: ${caja.width}px; height: ${caja.height}px; margin: ${getComputedStyle(boton).margin};`;
+    boton.parentElement.insertBefore(hueco, boton);
+    document.body.append(boton);
+    // Mientras está afuera acompaña al hueco cuadro a cuadro: si la barra se acomoda (por ejemplo, termina de cargar), no se despega
+    let cuadro;
+    const acompañar = () => {
+        if (!hueco.isConnected) return;
+        const lugar = hueco.getBoundingClientRect();
+        boton.style.top = `${lugar.top}px`;
+        boton.style.left = `${lugar.left}px`;
+        cuadro = requestAnimationFrame(acompañar);
+    };
+    acompañar();
+    return () => {
+        cancelAnimationFrame(cuadro);
+        if (hueco.isConnected) hueco.replaceWith(boton);
+        boton.style.removeProperty('top');
+        boton.style.removeProperty('left');
+        ubicarBotonDeAudio();
+    };
+}
+
+let devolverBotonDeAudio = null; // deshace lo de subirBotonDeAudioSobreLaCortina cuando termina el aviso
+
+// El aviso ya empezó con el botón en la barra y justo después aparece una cortina (el combate: el primer sonido es el clic de la tecla
+// de "Iniciar Combate", que suena al apretar, un instante antes de que arranque el combate): se lo sube en ese momento
+function subirBotonDeAudioSiLoTapa() {
+    const boton = document.getElementById('silenciar');
+    if (!boton || !boton.classList.contains('llamando') || devolverBotonDeAudio || boton.parentElement === document.body) return;
+    devolverBotonDeAudio = subirBotonDeAudioSobreLaCortina(boton);
+}
+
+function terminarElAvisoDelBotonDeAudio() {
+    document.getElementById('silenciar')?.classList.remove('llamando');
+    devolverBotonDeAudio?.();
+    devolverBotonDeAudio = null;
+}
+
+let teclaDelBotonDeAudio = false; // true mientras suena la tecla del propio botón al volver a activar el sonido (no cuenta como primer sonido)
+
 function llamarLaAtencionDelBotonDeAudio() {
-    if (botonDeAudioYaMostrado || silenciado) return;
+    if (botonDeAudioYaMostrado || silenciado || teclaDelBotonDeAudio) return;
     const boton = document.getElementById('silenciar');
     if (!boton) return;
     marcarBotonDeAudioMostrado();
+    // Si el sonido es el del zoom o el de "Iniciar Combate" y el botón está en la barra (computadora), la cortina lo taparía: se sube por
+    // encima. En el combate el aviso arranca justo al apretar el botón, un instante antes de que se abra el primer cartel
+    if ((cartaEnZoom || combateEnCurso) && boton.parentElement !== document.body) devolverBotonDeAudio = subirBotonDeAudioSobreLaCortina(boton);
     boton.classList.remove('llamando');
     void boton.offsetWidth; // para que la animación arranque de cero
     boton.classList.add('llamando');
-    setTimeout(() => boton.classList.remove('llamando'), AUDIO_AVISO_DURACION);
+    setTimeout(terminarElAvisoDelBotonDeAudio, AUDIO_AVISO_DURACION);
 }
 
 function activarBotonDeAudio() {
@@ -2014,15 +2225,25 @@ function activarBotonDeAudio() {
     ubicarBotonDeAudio();
     PANTALLA_DE_CELULAR.addEventListener('change', ubicarBotonDeAudio);
     mostrarEstadoDelAudio();
-    // Si la persona ya lo tocó, sabe que está ahí: no hace falta avisarle (el "pointerdown" llega antes que el sonido de la tecla)
-    boton.addEventListener('pointerdown', marcarBotonDeAudioMostrado);
     boton.addEventListener('click', () => {
-        marcarBotonDeAudioMostrado();
-        boton.classList.remove('llamando');
+        terminarElAvisoDelBotonDeAudio();
         pasarAlSiguienteModoDelAudio();
         guardarAudio();
         aplicarSilencio();
         mostrarEstadoDelAudio();
+        // Este botón no suena al apretarlo (activarSonidoBotones lo deja afuera): quien lo toca para apagar el sonido no quiere oír nada.
+        // Solo cuando el toque vuelve a activar el sonido suena la tecla, un instante después, cuando el volumen ya subió
+        // Esa tecla no cuenta como el primer sonido del aviso del botón (no tiene sentido avisarle a quien lo está tocando): el aviso queda
+        // para el primer sonido que suene después
+        if (modoDelAudio() === 'todo') {
+            const tecla = (bajada) => {
+                teclaDelBotonDeAudio = true;
+                sonidoTecla(bajada);
+                teclaDelBotonDeAudio = false;
+            };
+            setTimeout(() => tecla(true), 30);
+            setTimeout(() => tecla(false), 110);
+        }
     });
     // Si se cambia el idioma, la ayuda del botón se vuelve a escribir en el idioma nuevo
     document.addEventListener('idioma-cambiado', mostrarEstadoDelAudio);
@@ -2095,11 +2316,16 @@ function crearSalidaTeclas(contexto) {
     return compresor;
 }
 
+// Las dos "teclas": la de siempre (barra, filtros y menús) y la de los botones del reverso de las cartas ("⚔️ Ataques" y "🧬 Evolución"),
+// que es la misma pero un poco más bajita de volumen y más aguda de tono (fuerza: multiplica el volumen; tono: multiplica la afinación)
+const TECLA_NORMAL = { fuerza: 1, tono: 1 };
+const TECLA_DE_CARTA = { fuerza: 0.8, tono: 1.15 };
+
 // Arma una pulsación (bajada = true) o el soltar la tecla (bajada = false) en el instante t
-function armarTecla(contexto, destino, t, bajada) {
-    const fuerza = bajada ? 1 : 0.45;
+function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
+    const fuerza = (bajada ? 1 : 0.45) * tecla.fuerza;
     // Cada pulsación suena apenas distinta, como pasa con una tecla de verdad
-    const afinacion = 0.94 + Math.random() * 0.12;
+    const afinacion = (0.94 + Math.random() * 0.12) * tecla.tono;
 
     // Ráfaga corta de ruido filtrado: es el "clic"
     const chasquido = (retraso, frecuencia, q, pico, duracion) => {
@@ -2150,11 +2376,11 @@ function armarTecla(contexto, destino, t, bajada) {
 }
 
 // Suena la tecla apretada (bajada = true) o soltada (bajada = false)
-function sonidoTecla(bajada = true) {
+function sonidoTecla(bajada = true, tecla = TECLA_NORMAL) {
     try {
         const contexto = obtenerContextoAudio();
         salidaTeclas = salidaTeclas || crearSalidaTeclas(contexto);
-        armarTecla(contexto, salidaTeclas, contexto.currentTime, bajada);
+        armarTecla(contexto, salidaTeclas, contexto.currentTime, bajada, tecla);
     } catch (error) {
         // Si el navegador no permite audio, simplemente no suena
     }
@@ -2299,40 +2525,54 @@ function sonidoZoom(abrir) {
     }
 }
 
-// Sonido de tecla al tocar los botones de la barra de arriba, los menús de información y los filtros.
+// Sonido de tecla al tocar los botones de la barra de arriba, los menús de información y los filtros. Los botones "⚔️ Ataques" y
+// "🧬 Evolución" del reverso de las cartas suenan igual, pero con la tecla de las cartas (un poco más bajita y más aguda).
 // Suena al apretar (se siente inmediato y no lo corta el reload del botón de niveles) y, si se llegó a apretar, también al soltar.
 // El teclado dispara solo 'click': ahí suenan las dos cosas seguidas.
-const ZONAS_CON_SONIDO = '#navbar, #filtros, #f-vacio, #silenciar'; // (#silenciar: en celular ya no está dentro de la barra)
+// (La vibración en el celular la maneja activarVibracion: vale para todos los botones, también los del reverso de las cartas.)
+// El botón de sonido (#silenciar) es la excepción en las dos cosas: no suena ni vibra al apretarlo sino según a dónde lleva el toque
+// (ver activarBotonDeAudio y activarVibracion): apagar el sonido no hace ruido y apagar la vibración no vibra.
+const ZONAS_CON_SONIDO = '#navbar, #filtros, #f-vacio'; // (#silenciar queda afuera aunque esté dentro de la barra)
+const BOTONES_DE_CARTA = '#listado-digimons .c-botones';
 
 function activarSonidoBotones() {
-    let apretado = false;
-    const sonar = (evento) => {
+    let apretado = null; // la tecla que está apretada (para soltarla igual), o null
+    // Qué tecla suena al tocar este botón (null: ninguna)
+    const teclaDe = (evento) => {
         const boton = evento.target.closest('button');
-        return Boolean(boton && boton.closest(ZONAS_CON_SONIDO) && !boton.disabled);
+        if (!boton || boton.disabled) return null;
+        if (boton.id === 'silenciar') return null; // el botón de sonido tiene su propio criterio (ver activarBotonDeAudio)
+        if (boton.closest(ZONAS_CON_SONIDO)) return TECLA_NORMAL;
+        if (boton.closest(BOTONES_DE_CARTA)) return TECLA_DE_CARTA;
+        return null;
     };
     document.addEventListener('pointerdown', (evento) => {
         if (evento.pointerType === 'mouse' && evento.button !== 0) return; // solo el botón izquierdo
-        if (sonar(evento)) {
-            apretado = true;
-            sonidoTecla(true);
+        const tecla = teclaDe(evento);
+        if (tecla) {
+            apretado = tecla;
+            sonidoTecla(true, tecla);
         }
     });
     // Se escucha en toda la página: se puede soltar el mouse fuera del botón
     document.addEventListener('pointerup', () => {
         if (apretado) {
-            apretado = false;
-            sonidoTecla(false);
+            const tecla = apretado;
+            apretado = null;
+            sonidoTecla(false, tecla);
         }
     });
     document.addEventListener('pointercancel', () => {
-        apretado = false;
+        apretado = null;
     });
+    // (En la fase de captura: los botones del reverso de las cartas cortan la propagación del clic y, si no, no se llegaría a oír)
     document.addEventListener('click', (evento) => {
-        if (evento.detail === 0 && sonar(evento)) { // clic hecho con el teclado (Enter o Espacio)
-            sonidoTecla(true);
-            setTimeout(() => sonidoTecla(false), 80);
+        const tecla = evento.detail === 0 ? teclaDe(evento) : null; // clic hecho con el teclado (Enter o Espacio)
+        if (tecla) {
+            sonidoTecla(true, tecla);
+            setTimeout(() => sonidoTecla(false, tecla), 80);
         }
-    });
+    }, true);
 }
 
 activarInclinacion();
@@ -2367,6 +2607,7 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
     elementoLista.dataset.tipo = tipo;
     elementoLista.dataset.elemento = elemento;
     elementoLista.dataset.nivelApi = nivelOriginal;
+    elementoLista.dataset.nombreApi = nombreEnCarta; // el nombre original; el que se ve sale de acá según el idioma (escribirNombre)
     if (xAntibody) {
         elementoLista.dataset.xAntibody = 'true';
     }
@@ -2382,7 +2623,7 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
         <div class="c-frente">
             <div class="c-cab"><h4></h4></div>
             <div class="c-arte">
-                <img src="${imagen}" alt="${nombre}" loading="lazy" decoding="async">
+                <img src="${imagen}" alt="" loading="lazy" decoding="async">
                 ${xAntibody ? '<span class="c-x" title="X-Antibody">X</span>' : ''}
                 <span class="c-gema"><small></small>${nivelNumerico ?? '?'}</span>
             </div>
@@ -2393,7 +2634,7 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
             </div>
         </div>
         <button class="c-flip" type="button">↻</button>`;
-    ponerNombre(elementoLista.querySelector('h4'), nombreEnCarta);
+    escribirNombre(elementoLista);
     traducirCarta(elementoLista);
 
     // Datos para el dorso de la carta (ya los tenemos, no hace falta volver a pedirlos a la API)
@@ -2460,6 +2701,17 @@ function colocarCartas() {
     actualizarBarraProgreso(contadorDigimons);
 }
 
+// Si cambia el idioma, cada carta vuelve a escribir su nombre si le toca uno distinto. Hoy el español y el inglés muestran
+// los mismos nombres, así que no se toca ninguna; es lo que hará falta con el japonés (ver nombres.js).
+document.addEventListener('idioma-cambiado', () => {
+    const cartas = [...listaDigimons.querySelectorAll(':scope > li'), ...cartasEnEspera.map(({ carta }) => carta)];
+    for (const carta of cartas) {
+        if (carta.querySelector('h4').textContent.trim() === nombreParaMostrar(carta.dataset.nombreApi)) continue;
+        escribirNombre(carta);
+        if (carta.isConnected) ajustarNombre(carta); // ya está en la página: el nombre nuevo puede medir distinto
+    }
+});
+
 // Función para crear la lista de Digimons
 async function crearListaDeDigimons() {
     try {
@@ -2510,7 +2762,6 @@ async function crearListaDeDigimons() {
                     especie: (detalles.types || []).map(especie => especie.type).join(', ') || '–',
                     campos: (detalles.fields || []).map(campo => campo.field).join(', ') || '–', // los "Fields" de la API: familias o temáticas (Deep Savers, Metal Empire...). Un digimon puede tener varios o ninguno
                     estreno: detalles.releaseDate || '–',
-                    ataques: (detalles.skills || []).slice(0, 4).map(habilidad => habilidad.skill).join(' - ') || '–',
                     // Todos los ataques con su descripción (en inglés): para el botón "⚔️ Ataques" del dorso y para la pelea
                     habilidades: (detalles.skills || [])
                         .filter(habilidad => habilidad.skill)
@@ -2571,6 +2822,7 @@ const CARTEL_COMBATE = {
         title: 'combate-titulo',
         htmlContainer: 'combate-cuerpo',
         confirmButton: 'combate-boton',
+        closeButton: 'combate-cerrar',
     },
     showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
     hideClass: { popup: 'animate__animated animate__fadeOut animate__faster' },
@@ -2719,7 +2971,65 @@ function cuandoAparece(ventana, accion) {
     return cancelar;
 }
 
+// Mientras dura el combate la página de atrás queda quieta (igual que con el zoom de una carta): ni rueda, ni dedo, ni teclas.
+// Lo único que se puede mover es el propio cartel cuando no entra entero en la pantalla (por ejemplo, un celular acostado).
+const frenarRuedaDelCombate = (evento) => {
+    if (!zonaConScroll(evento.target, evento.deltaY, '.combate-contenedor')) evento.preventDefault();
+};
+
+const frenarToqueDelCombate = (evento) => {
+    if (!zonaConScroll(evento.target, 0, '.combate-contenedor') && evento.cancelable) evento.preventDefault();
+};
+
+const frenarTeclasDelCombate = (evento) => {
+    if (!TECLAS_DE_DESPLAZAMIENTO.includes(evento.key)) return;
+    if (evento.key === ' ' && evento.target.closest?.('button, a, input, textarea, select')) return; // el espacio sobre un botón lo aprieta, no desplaza
+    const contenedor = document.querySelector('.combate-contenedor');
+    if (contenedor && contenedor.scrollHeight > contenedor.clientHeight) return; // el cartel no entra entero: las teclas lo desplazan a él
+    evento.preventDefault();
+};
+
+function bloquearFondoDelCombate(bloquear) {
+    const accion = bloquear ? 'addEventListener' : 'removeEventListener';
+    window[accion]('wheel', frenarRuedaDelCombate, { passive: false });
+    window[accion]('touchmove', frenarToqueDelCombate, { passive: false });
+    window[accion]('keydown', frenarTeclasDelCombate, true);
+}
+
+// Abre uno de los carteles del combate. Devuelve true si tocaron "Aceptar" (se sigue con el próximo cartel) y false si lo anularon:
+// con la cruz de arriba a la derecha, tocando afuera o con Esc (ahí el combate se corta y no se muestran los que faltan)
+const CRUZ_ANULAR = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg>';
+
+async function abrirCartelDeCombate({ didOpen, ...opciones }) {
+    const respuesta = await Swal.fire({
+        ...CARTEL_COMBATE,
+        showCloseButton: true,
+        closeButtonHtml: CRUZ_ANULAR,
+        closeButtonAriaLabel: t('combate.anular'),
+        confirmButtonText: t('aceptar'),
+        ...opciones,
+        didOpen: (ventana) => {
+            bloquearFondoDelCombate(true); // queda activo hasta que termina todo el combate (así no hay hueco entre un cartel y el siguiente)
+            ventana.querySelector('.swal2-close')?.setAttribute('title', t('combate.anular'));
+            didOpen?.(ventana);
+        }
+    });
+    return respuesta.isConfirmed;
+}
+
 async function iniciarCombate() {
+    combateEnCurso = true; // (el botón de sonido lo mira: si este es el primer sonido, su aviso tiene que verse por encima del cartel)
+    subirBotonDeAudioSiLoTapa(); // si el aviso del botón ya arrancó con el clic de la tecla, se lo sube ahora
+    try {
+        await correrCombate();
+    } finally {
+        combateEnCurso = false;
+        bloquearFondoDelCombate(false); // el combate terminó (o se anuló): la página vuelve a poder desplazarse
+        setTimeout(() => mostrarAvisoDelContador(), AVISO_CONTADOR_ESPERA); // la primera vez de la sesión, cuenta para qué sirve el contador
+    }
+}
+
+async function correrCombate() {
 
     console.log("--- Variables de los digimons seleccionados para el combate 👇 ---")
 
@@ -2736,50 +3046,49 @@ async function iniciarCombate() {
     const indiceGanador = ganador === luchador1.nombre ? 0 : 1;
 
     // Cuadros de animación
+    let anulado = false; // true si en un cartel tocaron la cruz, afuera o Esc: el combate se corta ahí
     try {
         reproducirSonido(audioMouse)
         // El sorbo de la pajita arranca junto con el GIF (ver sincronizarPajita). Si no se puede (por ejemplo, abriendo el
         // archivo sin servidor), queda el plan B: el sonido se repite al mismo ritmo, pero sin alinearlo con el GIF
         const pajita = await prepararPajita();
         if (!pajita) reproducirPajita();
-        await Swal.fire({
-            ...CARTEL_COMBATE,
+        const aceptado = await abrirCartelDeCombate({
             title: `${FASES_COMBATE.preparando.icono} ${t('combate.preparando')}`,
             html: crearCuerpoCartel('preparando', cartas, -1, !pajita),
-            confirmButtonText: t('aceptar'),
             didOpen: (ventana) => { if (pajita) arrancarGifConSorbo(ventana, pajita); }
         });
+        anulado = !aceptado;
         detenerSonido(audioMouse); // Detiene el sonido después de que se cierra la primera ventana
         detenerSonidoPajita();
     } catch (error) {
         detenerSonido(audioMouse); // Asegura que el sonido se detenga en caso de error
         detenerSonidoPajita();
     }
+    if (anulado) return;
 
     // La música de la pelea y la del ganador salen recién cuando su cartel terminó de aparecer (ver cuandoAparece)
     let cancelarSonido = () => {};
     try {
-        await Swal.fire({
-            ...CARTEL_COMBATE,
+        const aceptado = await abrirCartelDeCombate({
             title: `${FASES_COMBATE.peleando.icono} ${t('combate.peleando')}`,
             html: crearCuerpoCartel('peleando', cartas, -1, true, ataques),
-            confirmButtonText: t('aceptar'),
             didOpen: (ventana) => { cancelarSonido = cuandoAparece(ventana, () => reproducirSonido(battleMusic)); }
         });
+        anulado = !aceptado;
         cancelarSonido();
         detenerSonido(battleMusic);
     } catch (error) {
         cancelarSonido();
         detenerSonido(battleMusic);
     }
+    if (anulado) return;
 
     try {
         dialogoAbierto = true; // Marca que el diálogo está abierto
-        await Swal.fire({
-            ...CARTEL_COMBATE,
+        await abrirCartelDeCombate({
             title: `${FASES_COMBATE.ganador.icono} ${t('combate.ganador', { nombre: ganador })}`,
             html: crearCuerpoCartel('ganador', cartas, indiceGanador),
-            confirmButtonText: t('aceptar'),
             didOpen: (ventana) => {
                 cancelarSonido = cuandoAparece(ventana, () => {
                     reproducirSonido(winSound);

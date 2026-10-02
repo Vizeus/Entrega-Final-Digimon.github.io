@@ -308,11 +308,46 @@ body::before {
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.7);
         box-shadow: inset 0 1px 3px rgba(0, 50, 100, 0.3), 0 1px 0 rgba(255, 255, 255, 0.8);
-        transition: color 0.2s ease, background-color 0.2s ease;
+        transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.15s ease, translate 0.15s ease;
+        // También es un botón (quita la selección): se le sacan los estilos del navegador y, con 1 o 2 elegidos, se nota que se puede tocar
+        appearance: none;
+        box-sizing: content-box; // (los botones miden con el borde incluido; así conserva el tamaño que tenía)
+        border: 0;
+        margin-block: 0;
+        line-height: normal;
+        text-shadow: none;
+        cursor: default;
 
         &.completo {
             color: #0d6a2c;
             background: #c9f5d6;
+        }
+
+        &:not(:disabled) {
+            cursor: pointer;
+            box-shadow: inset 0 1px 3px rgba(0, 50, 100, 0.3), 0 0 0 1.5px rgba(44, 90, 128, 0.5), 0 1px 0 rgba(255, 255, 255, 0.8);
+
+            &.completo {
+                box-shadow: inset 0 1px 3px rgba(0, 70, 30, 0.3), 0 0 0 1.5px rgba(13, 106, 44, 0.55), 0 1px 0 rgba(255, 255, 255, 0.8);
+            }
+
+            &:hover {
+                background-color: #fff;
+            }
+
+            &.completo:hover {
+                background-color: #dcfae6;
+            }
+
+            &:active {
+                translate: 0 1px;
+                box-shadow: inset 0 2px 4px rgba(0, 50, 100, 0.45), 0 0 0 1.5px rgba(44, 90, 128, 0.5);
+            }
+        }
+
+        &:focus-visible {
+            outline: 3px solid #1f7fd6;
+            outline-offset: 2px;
         }
     }
 
@@ -483,6 +518,12 @@ body::before {
     // En celular main.js lo saca de la barra y lo deja flotando en la esquina de abajo a la derecha (más abajo)
     #silenciar {
         @include boton-de-sonido;
+
+        // Queda centrado entre el idioma y los menús de información: a su izquierda hay 8 px (el espacio entre botones de este grupo)
+        // y a su derecha 16 (el espacio entre grupos de la barra). Con 4 px más de un lado y 4 menos del otro quedan 12 y 12.
+        @media (min-width: 701px) {
+            margin-inline: 4px -4px;
+        }
     }
 
     // Menús de información (herramientas secundarias): botón de vidrio claro que abre un panel con las opciones
@@ -682,6 +723,29 @@ body::before {
             width: 25px;
             height: 25px;
         }
+    }
+
+    // Con el zoom de una carta abierto pasa a la esquina de arriba a la izquierda: abajo a la derecha queda el pulgar, que es
+    // el que desliza las cartas (al empezar a cerrarse el zoom vuelve a su lugar de siempre)
+    body:has(#zoom-fondo.abierto) > #silenciar {
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        right: auto;
+        bottom: auto;
+        left: 12px;
+    }
+}
+
+// En computadora el botón vive en la barra. Solo cuando el primer sonido de la sesión es el del zoom o el de "Iniciar Combate", main.js
+// lo saca un momento de la barra (con top y left puestos en el mismo lugar de la pantalla) para que el aviso se vea por encima de la
+// cortina oscura y desenfocada.
+@media (min-width: 701px) {
+    body > #silenciar {
+        @include boton-de-gel;
+        @include boton-de-sonido;
+        position: fixed;
+        z-index: 1800;
+        margin: 0;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(255, 255, 255, 0.85), 0 5px 14px rgba(0, 20, 70, 0.55);
     }
 }
 
@@ -1167,9 +1231,16 @@ body::before {
     }
 }
 
+// Cuánto se desenfoca la página de atrás cuando hay un cartel encima: lo usan los carteles del combate y el fondo del zoom de la carta
+$desenfoque-del-fondo: 10px;
+
+.combate-contenedor {
+    overscroll-behavior: contain; // si el cartel se desplaza (pantalla baja), al llegar al final no arrastra a la página de atrás
+}
+
 .combate-contenedor.swal2-backdrop-show {
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur($desenfoque-del-fondo);
+    -webkit-backdrop-filter: blur($desenfoque-del-fondo);
 }
 
 .combate-popup {
@@ -1183,7 +1254,7 @@ body::before {
     // Barra de título brillante, como una ventana de Frutiger Aero
     .combate-titulo {
         margin: 0;
-        padding: 14px 18px 12px;
+        padding: 14px 52px 12px; // a los dos lados lo mismo: deja lugar a la cruz de la derecha y el texto sigue centrado
         font-family: var(--f-boton), sans-serif;
         font-size: 23px;
         font-weight: 700;
@@ -1194,6 +1265,64 @@ body::before {
         background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 48%, #1479d1 52%, #3eb0f5 100%);
         border-bottom: 1px solid rgba(0, 60, 130, 0.6);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    // La cruz de arriba a la derecha: anula el combate (lo mismo que tocar afuera o apretar Esc). Botón de gel rojo,
+    // redondo, sobre la barra de título
+    .combate-cerrar {
+        position: absolute; // SweetAlert la deja en el flujo del cartel; así queda flotando sobre la barra
+        inset: 10px 12px auto auto;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin: 0;
+        padding: 0;
+        font-size: 1rem;
+        color: #fff;
+        border: 1px solid rgba(110, 10, 0, 0.75);
+        border-radius: 50%;
+        cursor: pointer;
+        background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
+        box-shadow: 0 2px 6px rgba(0, 30, 80, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition: filter 0.15s ease, translate 0.1s ease;
+
+        svg {
+            display: block;
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            filter: drop-shadow(0 1px 0 rgba(90, 0, 0, 0.6));
+        }
+
+        // Estos estados repiten el fondo y la sombra porque los de SweetAlert (:hover y :focus) los pisarían
+        &:hover,
+        &:focus {
+            color: #fff;
+            background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
+            box-shadow: 0 2px 6px rgba(0, 30, 80, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            transform: none;
+        }
+
+        &:hover {
+            filter: brightness(1.1);
+        }
+
+        &:active {
+            filter: brightness(0.95);
+            translate: 0 1px;
+        }
+
+        &:focus-visible {
+            outline: 3px solid #fff;
+            outline-offset: 1px;
+            box-shadow: 0 0 0 5px rgba(20, 121, 209, 0.6), 0 2px 6px rgba(0, 30, 80, 0.4);
+        }
     }
 
     .combate-cuerpo {
@@ -2123,7 +2252,7 @@ body::before {
 //   Estructura de cada carta (la arma el main.js):
 //     li
 //      ├─ .c-frente  → .c-cab (nombre) · .c-arte (imagen + .c-gema con el nivel) · .c-sub · .c-chips
-//      ├─ .c-dorso   → .c-cab (nombre) · .c-cuerpo (especie, estreno, ataques y descripción). Se crea al girar la carta.
+//      ├─ .c-dorso   → .c-cab (nombre) · .c-cuerpo (especie, campos, estreno y descripción). Se crea al girar la carta.
 //      └─ .c-flip    → botón para dar vuelta la carta (aparece al pasar el mouse)
 //   El levantado (hover / seleccionada) usa la propiedad "translate" y la inclinación/giro usan "transform",
 //   así no se pisan entre sí.
@@ -2570,7 +2699,11 @@ body::before {
         min-height: 0;
         box-sizing: border-box;
         overflow: auto;
-        overscroll-behavior: contain; // al llegar al final de la descripción no arrastra a la página
+        // La descripción se comporta como cualquier lista con scroll, con el dedo y con la rueda del mouse: el gesto que la lleva hasta el
+        // fondo (o el tope) se queda en ella y no mueve la página, pero el gesto siguiente en esa dirección, con la descripción ya en el
+        // borde, sí mueve la página (con la rueda, el gesto siguiente es volver a girarla después de una pausa de un instante).
+        // Con "contain" ese segundo gesto no hacía nada y la carta se volvía una trampa para el dedo y para el mouse.
+        overscroll-behavior: auto;
         padding: 8px 9px;
         text-align: left;
         font-family: var(--f-descripcion), sans-serif;
@@ -2601,6 +2734,11 @@ body::before {
           font-size: 9.5px;
           color: #7a848f;
         }
+      }
+
+      // Con el zoom abierto la página no se mueve: la descripción siempre se queda con el scroll
+      &.zoom-activa .c-cuerpo {
+        overscroll-behavior: contain !important;
       }
 
       // Botón de dar vuelta la carta: aparece solo al pasar el mouse, asomando por la esquina superior izquierda
@@ -2967,7 +3105,7 @@ body::before {
 // dentro de un contenedor (#avisos-ayuda) que los apila, así que si coinciden se ven uno debajo del otro.
 // No frenan los clics ni el mouse (pointer-events: none) y quedan por debajo de la barra (1000) y del zoom (1500), salvo mientras
 // hay una carta ampliada (clase "sobre-zoom"): ahí pasan por encima para que se lean. Al irse, el aviso se achica ("saliendo") y
-// los de abajo suben sin saltar; y cada consejo (línea) se achica y se va cuando la persona ya hizo lo que cuenta ("se-va").
+// los de abajo suben sin saltar (cada consejo es un cartelito aparte y se va cuando la persona ya hizo lo que cuenta).
 #avisos-ayuda {
   position: fixed;
   right: 16px;
@@ -3033,20 +3171,6 @@ body::before {
     max-height: 80px;
     overflow: hidden;
     transition: opacity 0.3s ease, max-height 0.35s ease, margin 0.35s ease;
-
-    // Se va achicándose y tapando; el margen negativo se come el espacio (gap) que la separa de la otra línea
-    &.se-va {
-      max-height: 0;
-      opacity: 0;
-    }
-
-    &.se-va:first-child {
-      margin-bottom: -7px;
-    }
-
-    &.se-va:last-child {
-      margin-top: -7px;
-    }
   }
 
   .aviso-icono {
@@ -3062,6 +3186,59 @@ body::before {
   }
 }
 
+// Aviso del contador (main.js, mostrarAvisoDelContador): un minicartel con una flechita que sale de la bolita "2/2" de la barra. Arranca
+// chiquito, desde la punta de la flecha (--punta, que pone main.js), y crece hasta su tamaño; al irse vuelve a achicarse hacia el contador.
+// No frena los clics (pointer-events: none) y queda por encima de la barra (1000).
+.aviso-contador {
+  position: fixed;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(290px, calc(100vw - 16px));
+  padding: 9px 14px;
+  font: 600 14px/1.3 var(--f-boton), sans-serif;
+  color: #1d4468;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(226, 241, 255, 0.96));
+  border: 1px solid rgba(0, 80, 140, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 30, 80, 0.35), inset 0 1px 0 #fff;
+  pointer-events: none;
+  opacity: 0;
+  scale: 0.2;
+  transform-origin: var(--punta, 50%) -8px;
+  transition: opacity 0.3s ease, scale 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+
+  // La flechita que apunta al contador
+  &::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    left: var(--punta, 50%);
+    width: 12px;
+    height: 12px;
+    margin-left: -6px;
+    rotate: 45deg;
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid rgba(0, 80, 140, 0.35);
+    border-left: 1px solid rgba(0, 80, 140, 0.35);
+    border-top-left-radius: 3px;
+  }
+
+  &.visible {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .aviso-icono {
+    flex: none;
+    font-size: 18px;
+    line-height: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aviso-ayuda {
     translate: none;
@@ -3070,6 +3247,11 @@ body::before {
     .aviso-linea {
       transition: none;
     }
+  }
+
+  .aviso-contador {
+    scale: 1;
+    transition: opacity 0.3s ease; // sin movimiento: solo aparece y se va con un desvanecido
   }
 }
 
@@ -3120,6 +3302,8 @@ body::before {
   background:
     radial-gradient(ellipse 44% 58% at 50% 50%, color-mix(in srgb, var(--zc, #3a8dde) 62%, transparent) 0%, transparent 74%),
     radial-gradient(ellipse at 50% 50%, rgba(8, 14, 44, 0.8) 0%, rgba(1, 3, 14, 0.94) 100%);
+  backdrop-filter: blur($desenfoque-del-fondo); // el mismo desenfoque que los carteles del combate; el color oscuro queda igual
+  -webkit-backdrop-filter: blur($desenfoque-del-fondo);
 
   &.abierto {
     opacity: 1;

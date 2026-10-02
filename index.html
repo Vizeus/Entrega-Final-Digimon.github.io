@@ -16,6 +16,7 @@
     <!-- Enlaces a los scripts. El orden importa: primero los idiomas (i18n.js), después la página (main.js) y por último
          los filtros y las ventanas de información, que usan lo que definen los anteriores -->
     <script defer src="./i18n.js"></script>
+    <script defer src="./nombres.js"></script>
     <script defer src="./main.js"></script>
     <script defer src="./filtros.js"></script>
     <script defer src="./info.js"></script>
@@ -43,8 +44,9 @@
     <!-- Panel de combate: la consigna, cuántos digimons van elegidos y el botón principal, todo junto -->
     <div class="combate">
         <p class="consigna" data-i18n="combate.consigna">Elige 2 digimons con los que quieras simular un combate</p>
-        <span id="contador-seleccion" class="contador" title="Digimons elegidos" aria-live="polite"
-              data-i18n-attr="title:combate.contador">0/2</span>
+        <!-- Es un botón: con 1 o 2 digimons elegidos se puede tocar para quitar la selección (la ayuda la escribe main.js) -->
+        <button type="button" id="contador-seleccion" class="contador" disabled title="Digimons elegidos"
+                aria-label="0/2 · Digimons elegidos">0/2</button>
         <!-- Empieza deshabilitado: se activa al elegir 2 digimons -->
         <button id="iniciar-combate" class="botones" disabled title="Elige 2 digimons para poder iniciar el combate"
                 data-i18n="combate.iniciar" data-i18n-attr="title:combate.iniciar.ayuda">Iniciar Combate</button>
@@ -147,9 +149,12 @@
         <button type="button" id="silenciar" data-modo="todo" title="Silenciar el sonido" aria-label="Silenciar el sonido">
             <svg class="audio-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path class="audio-parlante" d="M10.5 5.2 6.4 8.8H3.2a.7.7 0 0 0-.7.7v5a.7.7 0 0 0 .7.7h3.2l4.1 3.6a.5.5 0 0 0 .8-.4V5.6a.5.5 0 0 0-.8-.4z"/>
-                <path class="audio-ondas" d="M15.2 9a4.2 4.2 0 0 1 0 6M18 6.4a8 8 0 0 1 0 11.2"/>
-                <path class="audio-cruz" d="m15.6 9.4 5.2 5.2m0-5.2-5.2 5.2"/>
+                <!-- El parlante con sus ondas se dibuja medio punto corrido a la derecha: así el dibujo queda centrado en el círculo -->
+                <g transform="translate(.5 0)">
+                    <path class="audio-parlante" d="M10.5 5.2 6.4 8.8H3.2a.7.7 0 0 0-.7.7v5a.7.7 0 0 0 .7.7h3.2l4.1 3.6a.5.5 0 0 0 .8-.4V5.6a.5.5 0 0 0-.8-.4z"/>
+                    <path class="audio-ondas" d="M15.2 9a4.2 4.2 0 0 1 0 6M18 6.4a8 8 0 0 1 0 11.2"/>
+                    <path class="audio-cruz" d="m15.6 9.4 5.2 5.2m0-5.2-5.2 5.2"/>
+                </g>
                 <g class="audio-movil"><rect x="8" y="3.5" width="8" height="17" rx="2"/><path d="M11 17.4h2M4.8 9.2v5.6M2.2 10.8v2.4M19.2 9.2v5.6M21.8 10.8v2.4"/></g>
             </svg>
         </button>

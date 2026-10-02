@@ -104,15 +104,17 @@ const compactar = texto => texto.replace(/[^a-z0-9]/g, ''); // "v-mon (black)" -
 // Lo que se necesita saber de cada carta para filtrarla (se calcula una sola vez)
 function datosDeFiltro(carta) {
     if (!carta.datosFiltro) {
-        const nombre = normalizar(nombreCompleto(carta)); // con el "(X-Antibody)", así se puede buscar
+        // Se busca por los dos nombres del digimon (el original de la API y el occidental), con el "(X-Antibody)" si lo tiene.
+        // El que se ve es siempre uno de los dos, así que no hace falta volver a calcularlo si cambia el idioma.
+        const nombres = [...new Set([nombreCompleto(carta), nombreApiCompleto(carta), nombreOccidentalCompleto(carta)].map(normalizar))]
+            .map(nombre => ({ nombre, compacto: compactar(nombre) }));
         carta.datosFiltro = {
             tipo: carta.dataset.tipo,
             nivel: carta.dataset.nivelApi,
             elemento: carta.dataset.elemento,
             x: carta.dataset.xAntibody ? 'con' : 'sin', // si tiene X-Antibody
             id: Number(carta.dataset.id),
-            nombre,
-            compacto: compactar(nombre),
+            nombres,
         };
     }
     return carta.datosFiltro;
@@ -125,10 +127,12 @@ function coincideBusqueda(datos, consulta) {
     const numero = consulta.match(/^#?(\d+)$/);
     if (numero && datos.id === Number(numero[1])) return true;
 
-    // Cada palabra tiene que estar en el nombre (en cualquier orden). Las que no llevan signos también se buscan sin signos: "vmon"
-    return consulta.split(' ').every(palabra =>
-        datos.nombre.includes(palabra) || (/^[a-z0-9]+$/.test(palabra) && datos.compacto.includes(palabra))
-    );
+    // Cada palabra tiene que estar en el mismo nombre (en cualquier orden): en el original o en el occidental, pero sin mezclarlos.
+    // Las que no llevan signos también se buscan sin signos: "vmon", "wargreymon"
+    const palabras = consulta.split(' ');
+    return datos.nombres.some(({ nombre, compacto }) => palabras.every(palabra =>
+        nombre.includes(palabra) || (/^[a-z0-9]+$/.test(palabra) && compacto.includes(palabra))
+    ));
 }
 
 // ---- Opciones (chips) ----------------------------------------------------------------------------------------------
