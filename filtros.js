@@ -34,7 +34,7 @@ const COLOR_ELEMENTO = {
     'Veneno': '#a24fc4',
     'Neutro': '#aab2bb',
 };
-const COLOR_NIVEL = { 1: '#a9b8c9', 3: '#7fb3e6', 4: '#4f9be0', 5: '#2f7fd0', 6: '#6a5fd8', 7: '#d9a520', 8: '#d6409a', 9: '#3a2f9e' }; // según el poder del nivel
+const COLOR_NIVEL = { 1: '#a9b8c9', 2: '#7fb3e6', 3: '#4f9be0', 4: '#2f7fd0', 5: '#6a5fd8', 6: '#d9a520', 7: '#d6409a', 8: '#3a2f9e' }; // según el poder del nivel
 const COLOR_NIVEL_DESCONOCIDO = '#59616d';
 const COLOR_BUSQUEDA = '#2f7fd0';
 const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas

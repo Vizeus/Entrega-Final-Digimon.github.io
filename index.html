@@ -138,16 +138,19 @@
             <span data-idioma="es" class="activo">ES</span><span data-idioma="en">EN</span>
         </button>
 
-        <!-- Sonido: botón chiquito y redondo que apaga (o vuelve a prender) todo el sonido de la página. Es un ajuste más, así que va
-             con los otros dos: en computadora queda siempre a la vista en la barra y en celular dentro del menú ☰ (la barra finita
-             de arriba ya no tiene lugar). La ayuda (apagar / prender) y su estado los escribe main.js; la elección queda guardada en el
-             navegador. El ícono es un parlante con ondas (suena) o con una cruz (silenciado) -->
-        <button type="button" id="silenciar" title="Silenciar el sonido" aria-label="Silenciar el sonido">
+        <!-- Sonido: botón chiquito y redondo que apaga (o vuelve a prender) el sonido de la página. En computadora queda en la barra,
+             junto al selector de idioma. En celular main.js lo saca de acá y lo deja suelto en el <body>: flota siempre en la
+             esquina de abajo a la derecha (lo dibuja el CSS) y la primera vez que suena algo en la sesión hace una animación para
+             que se vea. En celular da tres vueltas (sonido y vibración → solo vibración → nada → todo); en computadora, dos.
+             La ayuda y el paso en que está (data-modo) los escribe main.js; la elección queda guardada en el navegador.
+             El ícono cambia con el paso: parlante con ondas (suena), celular que vibra (solo vibración) o parlante con una cruz (nada) -->
+        <button type="button" id="silenciar" data-modo="todo" title="Silenciar el sonido" aria-label="Silenciar el sonido">
             <svg class="audio-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path class="audio-parlante" d="M10.5 5.2 6.4 8.8H3.2a.7.7 0 0 0-.7.7v5a.7.7 0 0 0 .7.7h3.2l4.1 3.6a.5.5 0 0 0 .8-.4V5.6a.5.5 0 0 0-.8-.4z"/>
                 <path class="audio-ondas" d="M15.2 9a4.2 4.2 0 0 1 0 6M18 6.4a8 8 0 0 1 0 11.2"/>
                 <path class="audio-cruz" d="m15.6 9.4 5.2 5.2m0-5.2-5.2 5.2"/>
+                <g class="audio-movil"><rect x="8" y="3.5" width="8" height="17" rx="2"/><path d="M11 17.4h2M4.8 9.2v5.6M2.2 10.8v2.4M19.2 9.2v5.6M21.8 10.8v2.4"/></g>
             </svg>
         </button>
     </div>

@@ -78,6 +78,9 @@ const DICCIONARIO = {
         'combate.usa': 'usa',
         'audio.silenciar': 'Silenciar el sonido',
         'audio.activar': 'Activar el sonido',
+        'audio.todo': 'Sonido y vibración activados. Tocá para quitar solo el sonido',
+        'audio.vibracion': 'Solo vibración, sin sonido. Tocá para quitar también la vibración',
+        'audio.nada': 'Sin sonido ni vibración. Tocá para activar todo',
         'carta.sinDescripcion': 'Sin descripción disponible.',
         'carta.idiomaOriginal': 'Descripción original en inglés',
 
@@ -229,6 +232,9 @@ const DICCIONARIO = {
         'combate.usa': 'uses',
         'audio.silenciar': 'Mute the sound',
         'audio.activar': 'Turn the sound on',
+        'audio.todo': 'Sound and vibration on. Tap to turn off just the sound',
+        'audio.vibracion': 'Vibration only, no sound. Tap to turn off the vibration too',
+        'audio.nada': 'No sound or vibration. Tap to turn everything on',
         'carta.sinDescripcion': 'No description available.',
         'carta.idiomaOriginal': '',
 

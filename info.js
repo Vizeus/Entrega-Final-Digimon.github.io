@@ -78,7 +78,7 @@ function infoNivel(nivelApi) {
         [t('info.clasificacion'), t(clasificacionAlternativa ? 'info.eeuu' : 'info.japon')],
     ];
 
-    // Los niveles que rompen la escala (8 y 9) pesan más en el combate de lo que dice su número
+    // Los niveles que rompen la escala (7 y 8) pesan más en el combate de lo que dice su número
     const poderCombate = PODER_EN_COMBATE[poder];
     if (poderCombate !== undefined) {
         datos.push([t('info.poderCombate'), poderCombate]);

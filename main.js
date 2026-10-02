@@ -51,8 +51,8 @@ const nivelesAlternativos = {
     'Adult': 'Champion',
     'Perfect': 'Ultimate ',
     'Ultimate': 'Mega',
-    'Super Ultimate': 'Ultra', // nivel 8 (inventado para este simulador): por encima del Mega
-    'Absolute': 'Apex'         // nivel 9 (inventado para este simulador): lo más alto
+    'Super Ultimate': 'Ultra', // nivel 7 (inventado para este simulador): por encima del Mega
+    'Absolute': 'Apex'         // nivel 8 (inventado para este simulador): lo más alto
 };
 
 // Qué sistema de clasificación de niveles se está mostrando (lo guarda el botón de la banderita)
@@ -73,7 +73,7 @@ function nombreNivel(nivelApi) {
 //   probabilidad = 50% + (ventaja de tipo × 20%) + (diferencia de nivel × 15%) + (ventaja de elemento × 10%)
 //
 // Con esto, una doble ventaja (tipo + elemento = +30%) compensa justo 2 niveles de diferencia (2 × 15%).
-// Los niveles 8 y 9 rompen esa escala: pesan mucho más (PODER_EN_COMBATE) y contra ellos casi no sirve el tipo ni el elemento.
+// Los niveles 7 y 8 rompen esa escala: pesan mucho más (PODER_EN_COMBATE) y contra ellos casi no sirve el tipo ni el elemento.
 // -----------------------------------------------------------------------------------------------------------------
 
 // Cuánto pesa cada factor
@@ -82,27 +82,28 @@ const PESO_NIVEL = 0.15;
 const PESO_ELEMENTO = 0.10;
 
 // Fuerza de cada nivel, usando el nombre original de la API (así no importa qué sistema de clasificación se muestre).
-// Armor tiene el poder de un Adult (5). Hybrid queda en un punto medio (6): según la forma van de Adult a Ultimate.
+// Son 8 niveles, del 1 al 8, sin saltos. Armor tiene el poder de un Adult (4). Hybrid queda en un punto medio (5): según la
+// forma van de Adult a Ultimate.
 const numeracionNiveles = {
     'Baby I': 1,
-    'Baby II': 3,
-    'Child': 4,
-    'Adult': 5,
-    'Armor': 5,
-    'Perfect': 6,
-    'Hybrid': 6,
-    'Ultimate': 7,
-    'Super Ultimate': 8,
-    'Absolute': 9,
+    'Baby II': 2,
+    'Child': 3,
+    'Adult': 4,
+    'Armor': 4,
+    'Perfect': 5,
+    'Hybrid': 5,
+    'Ultimate': 6,
+    'Super Ultimate': 7,
+    'Absolute': 8,
 };
 
-// Poder en combate: del 1 al 7 es el mismo número que se ve en la carta, pero los niveles 8 y 9 rompen la escala.
-// Del 7 al 8 y del 8 al 9 hay 3 niveles de distancia (7 → 10 → 13): un Mega apenas le puede hacer cosquillas a un Ultra
+// Poder en combate: del 1 al 6 es el mismo número que se ve en la carta, pero los niveles 7 y 8 rompen la escala.
+// Del 6 al 7 y del 7 al 8 hay 3 niveles de distancia (6 → 9 → 12): un Mega apenas le puede hacer cosquillas a un Ultra
 // (lo mismo que un Ultra a un Apex), y entre un Mega y un Apex la diferencia es tan grande que no tiene forma de ganar.
-const PODER_EN_COMBATE = { 8: 10, 9: 13 };
+const PODER_EN_COMBATE = { 7: 9, 8: 12 };
 const poderEnCombate = nivel => PODER_EN_COMBATE[nivel] ?? nivel;
 
-// Si uno de los dos es nivel 8 o 9 y el otro está muy por debajo, el tipo y el elemento valen cada vez menos:
+// Si uno de los dos es nivel 7 u 8 y el otro está muy por debajo, el tipo y el elemento valen cada vez menos:
 // hasta 1,5 niveles de diferencia valen todo; más allá valen 1,5 ÷ diferencia (con 3 niveles de diferencia, la mitad).
 const ALCANCE_VENTAJAS = 1.5;
 
@@ -115,10 +116,10 @@ const NIVELES_CORREGIDOS = {
 
 // Niveles inventados para este simulador. La API pone a todos estos digimons como "Ultimate" (el Mega), pero por su lore
 // están por encima: acá se los sube de nivel. La clave es el ID de la API; el nombre va en el comentario.
-// El 8 son Reyes Reales, Soberanos, Lores Demonio y otros seres excepcionales; el 9 es lo más alto de todo.
+// El 7 son Reyes Reales, Soberanos, Lores Demonio y otros seres excepcionales; el 8 es lo más alto de todo.
 // (Los X-Antibody y algunos más solo aparecen cuando se carga la API completa.)
 const ASCENSOS = {
-    // Nivel 8 (Super Ultimate) · Reyes Reales
+    // Nivel 7 (Super Ultimate) · Reyes Reales
     183: 'Super Ultimate',  // Omegamon
     636: 'Super Ultimate',  // Alphamon
     637: 'Super Ultimate',  // Alphamon (Ouryuken)
@@ -156,14 +157,14 @@ const ASCENSOS = {
     1197: 'Super Ultimate', // Omegamon Zwart Defeat
     1209: 'Super Ultimate', // Omegamon Alter-S
     1235: 'Super Ultimate', // Omegamon (Merciful Mode)
-    // Nivel 8 · Los 5 Soberanos
+    // Nivel 7 · Los 5 Soberanos
     272: 'Super Ultimate',  // Baihumon
     361: 'Super Ultimate',  // Zhuqiaomon
     357: 'Super Ultimate',  // Xuanwumon
     374: 'Super Ultimate',  // Qinglongmon
     620: 'Super Ultimate',  // Huanglongmon
     1428: 'Super Ultimate', // Huanglongmon (Ruin Mode)
-    // Nivel 8 · Los 7 Lores Demonio
+    // Nivel 7 · Los 7 Lores Demonio
     667: 'Super Ultimate',  // Leviamon
     1264: 'Super Ultimate', // Leviamon (X-Antibody)
     640: 'Super Ultimate',  // Barbamon
@@ -180,7 +181,7 @@ const ASCENSOS = {
     1265: 'Super Ultimate', // Lilithmon (X-Antibody)
     556: 'Super Ultimate',  // Lucemon (Falldown Mode): el más fuerte de los 7 Lores Demonio
     1267: 'Super Ultimate', // Lucemon (X-Antibody)
-    // Nivel 8 · Excepcionales
+    // Nivel 7 · Excepcionales
     576: 'Super Ultimate',  // Susanoomon
     132: 'Super Ultimate',  // Apocalymon
     384: 'Super Ultimate',  // Seraphimon
@@ -192,8 +193,8 @@ const ASCENSOS = {
     288: 'Super Ultimate',  // Cherubimon (Virtue)
     1256: 'Super Ultimate', // Cherubimon (Vice) (X-Antibody)
     1257: 'Super Ultimate', // Cherubimon (Virtue) (X-Antibody)
-    904: 'Super Ultimate',  // Ogudomon (la versión X-Antibody queda en el nivel 9)
-    // Nivel 9 (Absolute)
+    904: 'Super Ultimate',  // Ogudomon (la versión X-Antibody queda en el nivel 8)
+    // Nivel 8 (Absolute)
     457: 'Absolute',        // Zeed Millenniumon
     1277: 'Absolute',       // Ogudomon (X-Antibody)
     557: 'Absolute',        // Lucemon (Satan Mode)
@@ -1832,7 +1833,7 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
 // Vibración corta al tocar botones con el dedo, como una tecla física. Solo en los celulares que la permiten
 // (Android; en iPhone el navegador no deja vibrar). El navegador solo la permite después del primer toque en la página.
 function vibrar(duracion = 8) {
-    if (!navigator.vibrate) return;
+    if (!navigator.vibrate || vibracionApagada) return; // vibracionApagada: la persona la quitó con el botón de sonido (#silenciar)
     if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
     try {
         navigator.vibrate(duracion);
@@ -1856,66 +1857,169 @@ function activarVibracion() {
 let contextoAudio;
 
 // ---- Silencio general ---------------------------------------------------------------------------------------------
-// Un botón chiquito de la barra (#silenciar) apaga todo el sonido de la página: los sonidos sintetizados (teclas, giro,
-// zoom, sorbo) y los archivos de audio del combate. Por defecto suena todo. La elección se guarda en el navegador de cada
-// persona (localStorage), como un JSON, así la próxima vez que entre sigue como la dejó.
+// Un botón chiquito (#silenciar) maneja el sonido y la vibración de la página. En el celular da tres vueltas:
+//   1) sonido + vibración (por defecto)  →  2) solo vibración (sin sonido)  →  3) nada de nada  →  vuelve a 1)
+// Donde no hay vibración (computadora, iPhone) son solo dos: suena / silenciado.
+// Apagar el sonido apaga los sonidos sintetizados (teclas, giro, zoom, sorbo) y los archivos de audio del combate.
+// La elección se guarda en el navegador de cada persona (localStorage), como un JSON {"sonido": true, "vibracion": true},
+// así la próxima vez que entre sigue como la dejó. (Antes se guardaba {"silenciado": true}: se sigue entendiendo.)
 // Para volver a empezar (por ejemplo, para probarlo): localStorage.removeItem('digimon-audio')
 const AUDIO_ALMACEN = 'digimon-audio';
 
+// Mismo criterio que usa la página para lo que es solo del celular: pantalla táctil sin "hover" y con navigator.vibrate
+// (Android; en iPhone el navegador no deja vibrar y en computadora no hay con qué)
+const VIBRACION_DISPONIBLE = Boolean(navigator.vibrate) && window.matchMedia('(hover: none)').matches;
+
 function leerAudioGuardado() {
     try {
-        return JSON.parse(localStorage.getItem(AUDIO_ALMACEN))?.silenciado === true;
+        const guardado = JSON.parse(localStorage.getItem(AUDIO_ALMACEN));
+        const sinSonido = guardado?.sonido === false || guardado?.silenciado === true;
+        // "Sin vibración" solo tiene sentido con el sonido apagado (es el paso 3); con sonido, todo está activado
+        return { sinSonido, sinVibracion: sinSonido && guardado?.vibracion === false };
     } catch (error) {
-        return false; // sin memoria (o con un dato roto) se queda con el sonido activado
+        return { sinSonido: false, sinVibracion: false }; // sin memoria (o con un dato roto) queda todo activado
     }
 }
 
 function guardarAudio() {
     try {
-        localStorage.setItem(AUDIO_ALMACEN, JSON.stringify({ silenciado }));
+        localStorage.setItem(AUDIO_ALMACEN, JSON.stringify({ sonido: !silenciado, vibracion: !vibracionApagada }));
     } catch (error) {
-        // Si el navegador no deja guardar, el silencio vale solo mientras la página siga abierta
+        // Si el navegador no deja guardar, la elección vale solo mientras la página siga abierta
     }
 }
 
-let silenciado = leerAudioGuardado();
+const audioGuardado = leerAudioGuardado();
+let silenciado = audioGuardado.sinSonido;
+let vibracionApagada = audioGuardado.sinVibracion;
 let salidaGeneral = null; // el "volumen maestro" de Web Audio: todos los sonidos sintetizados pasan por acá antes de salir
+
+// Volumen general de toda la página (1 = como venía antes). Se bajó bastante: con el volumen del celular a la mitad sonaba
+// demasiado fuerte. Cada archivo de audio lleva además su propio nivel relativo (ver más abajo, en "Audios").
+const VOLUMEN_GENERAL = 0.4;
 
 // A dónde se conecta cada sonido sintetizado (en vez de directo a los parlantes): así un solo control los silencia a todos
 function destinoDeAudio(contexto) {
     if (!salidaGeneral || salidaGeneral.context !== contexto) {
         salidaGeneral = contexto.createGain();
-        salidaGeneral.gain.value = silenciado ? 0 : 1;
+        salidaGeneral.gain.value = silenciado ? 0 : VOLUMEN_GENERAL;
         salidaGeneral.connect(contexto.destination);
     }
     return salidaGeneral;
 }
 
-// Deja todo el audio como corresponde: Web Audio por el volumen maestro y los archivos de audio con "muted", que sigue
-// reproduciéndolos (en silencio) y así los tiempos del combate no cambian
+// Deja todo como corresponde: Web Audio por el volumen maestro y los archivos de audio con "muted", que sigue
+// reproduciéndolos (en silencio) y así los tiempos del combate no cambian. Si se quitó la vibración, corta la que esté en marcha
 function aplicarSilencio() {
     if (salidaGeneral) {
         // Bajada rapidísima en vez de un corte seco, para que no suene un "clic" al silenciar
-        salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : 1, salidaGeneral.context.currentTime, 0.01);
+        salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : VOLUMEN_GENERAL, salidaGeneral.context.currentTime, 0.01);
     }
     [audioMouse, winMusic, battleMusic, winSound, audioPajita].forEach(audio => { audio.muted = silenciado; });
+    if (vibracionApagada) {
+        try { navigator.vibrate?.(0); } catch (error) { /* nada que cortar */ }
+    }
 }
+
+// En qué paso está el botón: "todo" (sonido y vibración), "vibracion" (solo vibración) o "nada"
+function modoDelAudio() {
+    if (!silenciado) return 'todo';
+    return VIBRACION_DISPONIBLE && !vibracionApagada ? 'vibracion' : 'nada';
+}
+
+// Cada toque pasa al paso siguiente
+function pasarAlSiguienteModoDelAudio() {
+    const modo = modoDelAudio();
+    if (modo === 'todo') {
+        silenciado = true;               // 1 → 2: se va el sonido, la vibración sigue
+    } else if (modo === 'vibracion') {
+        vibracionApagada = true;         // 2 → 3: se va también la vibración
+    } else {
+        silenciado = false;              // 3 → 1 (o, sin vibración, de silenciado a sonando): vuelve todo
+        vibracionApagada = false;
+    }
+}
+
+// La ayuda de cada paso (título y aria-label): dice cómo está y qué pasa al tocar
+const AYUDA_DEL_AUDIO = VIBRACION_DISPONIBLE
+    ? { todo: 'audio.todo', vibracion: 'audio.vibracion', nada: 'audio.nada' }
+    : { todo: 'audio.silenciar', nada: 'audio.activar' };
 
 function mostrarEstadoDelAudio() {
     const boton = document.getElementById('silenciar');
     if (!boton) return;
-    const ayuda = t(silenciado ? 'audio.activar' : 'audio.silenciar');
-    boton.classList.toggle('silenciado', silenciado);
+    const modo = modoDelAudio();
+    const ayuda = t(AYUDA_DEL_AUDIO[modo]);
+    boton.dataset.modo = modo;                       // el ícono: parlante con ondas, celular que vibra o parlante con cruz
+    boton.classList.toggle('silenciado', silenciado); // el botón "hundido" mientras no suena
     boton.title = ayuda;
     boton.setAttribute('aria-label', ayuda);
+}
+
+// En celular el botón no vive en la barra ni en el menú ☰: flota en la esquina de abajo a la derecha (lo dibuja el CSS cuando el botón
+// es hijo directo del <body>). Acá se lo cambia de lugar según el ancho de la pantalla: en celular al <body>, en computadora
+// de vuelta junto al selector de idioma. Es el mismo botón siempre, así que conserva su estado y sus eventos.
+const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
+
+function ubicarBotonDeAudio() {
+    const boton = document.getElementById('silenciar');
+    const ajustes = document.querySelector('#navbar .ajustes');
+    if (!boton || !ajustes) return;
+    const destino = PANTALLA_DE_CELULAR.matches ? document.body : ajustes;
+    if (boton.parentElement === destino) return;
+    const teniaElFoco = document.activeElement === boton;
+    destino.append(boton);
+    if (teniaElFoco) boton.focus({ preventScroll: true });
+}
+
+// Aviso del botón (en celular y en computadora, una única vez por sesión): cuando suena el primer sonido de la visita —una tecla, el giro de una
+// carta, el zoom, lo que sea— el botón salta y lanza ondas, para que la persona vea que ahí puede apagar el sonido.
+// No se repite al recargar (la marca queda en sessionStorage) y no se hace si ya tocó el botón o si el sonido ya estaba apagado.
+const AUDIO_AVISO_SESION = 'digimon-audio-aviso';
+const AUDIO_AVISO_DURACION = 2600; // ms: un poco más que la animación del CSS (2,4 s)
+
+function leerMarcaDelAviso() {
+    try {
+        return sessionStorage.getItem(AUDIO_AVISO_SESION) === '1';
+    } catch (error) {
+        return false;
+    }
+}
+
+let botonDeAudioYaMostrado = leerMarcaDelAviso();
+
+function marcarBotonDeAudioMostrado() {
+    botonDeAudioYaMostrado = true;
+    try {
+        sessionStorage.setItem(AUDIO_AVISO_SESION, '1');
+    } catch (error) {
+        // Sin sessionStorage la marca vale solo mientras no se recargue la página
+    }
+}
+
+function llamarLaAtencionDelBotonDeAudio() {
+    if (botonDeAudioYaMostrado || silenciado) return;
+    const boton = document.getElementById('silenciar');
+    if (!boton) return;
+    marcarBotonDeAudioMostrado();
+    boton.classList.remove('llamando');
+    void boton.offsetWidth; // para que la animación arranque de cero
+    boton.classList.add('llamando');
+    setTimeout(() => boton.classList.remove('llamando'), AUDIO_AVISO_DURACION);
 }
 
 function activarBotonDeAudio() {
     const boton = document.getElementById('silenciar');
     if (!boton) return;
+    ubicarBotonDeAudio();
+    PANTALLA_DE_CELULAR.addEventListener('change', ubicarBotonDeAudio);
     mostrarEstadoDelAudio();
+    // Si la persona ya lo tocó, sabe que está ahí: no hace falta avisarle (el "pointerdown" llega antes que el sonido de la tecla)
+    boton.addEventListener('pointerdown', marcarBotonDeAudioMostrado);
     boton.addEventListener('click', () => {
-        silenciado = !silenciado;
+        marcarBotonDeAudioMostrado();
+        boton.classList.remove('llamando');
+        pasarAlSiguienteModoDelAudio();
         guardarAudio();
         aplicarSilencio();
         mostrarEstadoDelAudio();
@@ -1930,6 +2034,7 @@ function obtenerContextoAudio() {
     if (contextoAudio.state === 'suspended') {
         contextoAudio.resume();
     }
+    llamarLaAtencionDelBotonDeAudio(); // el primer sonido de la visita (si no hay silencio) le llama la atención al botón de sonido
     return contextoAudio;
 }
 
@@ -2197,7 +2302,7 @@ function sonidoZoom(abrir) {
 // Sonido de tecla al tocar los botones de la barra de arriba, los menús de información y los filtros.
 // Suena al apretar (se siente inmediato y no lo corta el reload del botón de niveles) y, si se llegó a apretar, también al soltar.
 // El teclado dispara solo 'click': ahí suenan las dos cosas seguidas.
-const ZONAS_CON_SONIDO = '#navbar, #filtros, #f-vacio';
+const ZONAS_CON_SONIDO = '#navbar, #filtros, #f-vacio, #silenciar'; // (#silenciar: en celular ya no está dentro de la barra)
 
 function activarSonidoBotones() {
     let apretado = false;
@@ -2238,7 +2343,7 @@ activarSonidoBotones();
 activarBotonDeAudio();
 activarVibracion();
 
-// Las cartas de nivel 8 y 9 tienen un marco que gira. Si giran todas a la vez (hasta las que están lejos), la página se
+// Las cartas de nivel 7 y 8 tienen un marco que gira. Si giran todas a la vez (hasta las que están lejos), la página se
 // pone lenta: por eso solo giran las que están en pantalla. Esto les pone o les saca la clase "en-pantalla" (la usa el CSS).
 const observadorDeMarcos = 'IntersectionObserver' in window
     ? new IntersectionObserver(entradas => {
@@ -2273,7 +2378,7 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
     // Creamos la "carta" del digimon. Los textos que cambian con el idioma (nivel, tipo, elemento, "NV"...) los pone
     // traducirCarta(); el nombre lo pone ponerNombre para separar lo que va entre paréntesis.
     elementoLista.innerHTML = `
-        ${nivelNumerico >= 8 ? '<span class="c-marco" aria-hidden="true"></span>' : ''}
+        ${nivelNumerico >= 7 ? '<span class="c-marco" aria-hidden="true"></span>' : ''}
         <div class="c-frente">
             <div class="c-cab"><h4></h4></div>
             <div class="c-arte">
@@ -2326,7 +2431,7 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
     });
 
     // La carta espera un ratito y entra a la lista junto con las que lleguen mientras tanto (ver colocarCartas)
-    cartasEnEspera.push({ carta: elementoLista, conMarco: nivelNumerico >= 8 });
+    cartasEnEspera.push({ carta: elementoLista, conMarco: nivelNumerico >= 7 });
     if (!colocacionPendiente) colocacionPendiente = setTimeout(colocarCartas, COLOCAR_CADA);
 }
 
@@ -2722,9 +2827,9 @@ function calcularProbabilidad(luchador1, luchador2) {
     console.log("Ajuste por nivel 👇")
     console.log(ajusteNivel)
 
-    // Contra un nivel 8 o 9 con el rival muy por debajo, el tipo y el elemento valen menos (1 = valen todo)
+    // Contra un nivel 7 u 8 con el rival muy por debajo, el tipo y el elemento valen menos (1 = valen todo)
     const brecha = Math.abs(diferenciaDeNivel);
-    const hayNivelAlto = hayNiveles && Math.max(luchador1.nivel, luchador2.nivel) >= 8;
+    const hayNivelAlto = hayNiveles && Math.max(luchador1.nivel, luchador2.nivel) >= 7;
     const valorVentajas = hayNivelAlto && brecha > ALCANCE_VENTAJAS ? ALCANCE_VENTAJAS / brecha : 1;
     console.log("Cuánto valen el tipo y el elemento (1 = todo) 👇")
     console.log(valorVentajas)
@@ -2776,18 +2881,26 @@ botonIniciarCombate.addEventListener('click', iniciarCombate);
 
 // Audios
 
-const audioMouse = new Audio('audio/Mouse.mp3');
+// Cada archivo suena a VOLUMEN_GENERAL por su nivel relativo. La música de combate es el archivo más fuerte de todos
+// (pico al máximo), así que lleva el recorte más grande; la de victoria y el sonido de victoria, un poco menos.
+const audioConVolumen = (archivo, relativo = 1) => {
+    const audio = new Audio(archivo);
+    audio.volume = VOLUMEN_GENERAL * relativo;
+    return audio;
+};
+
+const audioMouse = audioConVolumen('audio/Mouse.mp3');
 audioMouse.loop = true;
 
-const winMusic = new Audio('audio/Digimon World 3 - Victory.mp3');
+const winMusic = audioConVolumen('audio/Digimon World 3 - Victory.mp3', 0.7);
 audioMouse.loop = true;
 
-const battleMusic = new Audio('audio/Digimon World - Earlygame Battle.mp3');
+const battleMusic = audioConVolumen('audio/Digimon World - Earlygame Battle.mp3', 0.5);
 audioMouse.loop = true;
 
-const winSound = new Audio('audio/Digimon World - PSX Battle Win.mp3');
+const winSound = audioConVolumen('audio/Digimon World - PSX Battle Win.mp3', 0.7);
 
-const audioPajita = new Audio('audio/Pajita.mp3');
+const audioPajita = audioConVolumen('audio/Pajita.mp3');
 let intervaloSonido;
 
 aplicarSilencio(); // si la persona había dejado el sonido apagado, los archivos de audio arrancan en silencio

@@ -72,6 +72,161 @@ body::before {
     background: linear-gradient(to bottom, #25c4e0, #1e2bdd);
 }
 
+// Botón de gel: color base en --c, brillo arriba, biselado abajo y sombra que lo despega del fondo.
+// Lo usan los botones de la barra de arriba y el botón de sonido cuando flota en el celular (fuera de la barra).
+@mixin boton-de-gel {
+    --c: #8a96a3;
+    position: relative;
+    height: 42px;
+    margin: 0;
+    padding: 0 20px;
+    white-space: nowrap;
+    font-family: var(--f-boton), sans-serif;
+    font-size: var(--t-boton);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--c) 55%, black);
+    border-radius: 13px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--c) 78%, white) 0%, var(--c) 55%, color-mix(in srgb, var(--c) 82%, black) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 7px rgba(0, 30, 80, 0.35);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+
+    &:hover:not(:disabled) {
+        filter: brightness(1.08) saturate(1.1);
+        transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+        filter: brightness(0.96);
+        transform: translateY(1px);
+        box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    &:focus-visible {
+        outline: 3px solid rgba(255, 255, 255, 0.95);
+        outline-offset: 2px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(20, 160, 230, 0.75), 0 3px 7px rgba(0, 30, 80, 0.35);
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+    }
+}
+
+// Botón de sonido: chiquito y redondo, del mismo vidrio claro que el de idioma. Su ícono sigue el paso en que está (data-modo, lo
+// escribe main.js): parlante con ondas (sonido y vibración), celular que vibra (solo vibración, únicamente en celulares) o
+// parlante con cruz roja (nada). Mientras no suena queda "hundido", para que se note de un vistazo.
+// "llamando": la primera vez que suena algo en la sesión (celular o computadora) el botón salta y lanza ondas, para que se vea que ahí se puede apagar
+@mixin boton-de-sonido {
+    --c: #cfdde9;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    color: #24476a;
+    text-shadow: none;
+    border-color: rgba(0, 40, 90, 0.4);
+    border-radius: 50%;
+
+    .audio-icono {
+        width: 20px;
+        height: 20px;
+        filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+    }
+
+    // Por defecto (modo "todo"): parlante con ondas
+    .audio-cruz,
+    .audio-movil {
+        display: none;
+    }
+
+    &.silenciado {
+        box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    &[data-modo="vibracion"] {
+        .audio-parlante,
+        .audio-ondas {
+            display: none;
+        }
+
+        .audio-movil {
+            display: inline;
+        }
+    }
+
+    &[data-modo="nada"] {
+        .audio-ondas {
+            display: none;
+        }
+
+        .audio-cruz {
+            display: inline;
+            stroke: #c2362b;
+        }
+    }
+
+    // Las ondas del aviso: un aro que nace en el botón y se agranda mientras se desvanece (invisible el resto del tiempo)
+    &::after {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 1px rgba(10, 110, 200, 0.7), 0 0 12px 2px rgba(60, 170, 255, 0.75);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &.llamando {
+        animation: sonido-salto 2.4s ease-in-out;
+
+        &::after {
+            animation: sonido-onda 0.8s ease-out 3;
+        }
+    }
+
+    // Con "reducir movimiento" no salta ni se agranda: solo se enciende un aro fijo y se apaga
+    @media (prefers-reduced-motion: reduce) {
+        &.llamando {
+            animation: none;
+
+            &::after {
+                animation: sonido-onda-quieta 1.6s ease-out;
+            }
+        }
+    }
+}
+
+@keyframes sonido-salto {
+    0%, 50%, 100% { scale: 1; rotate: 0deg; }
+    10% { scale: 1.35; rotate: -14deg; }
+    20% { scale: 1.35; rotate: 12deg; }
+    30% { scale: 1.3; rotate: -9deg; }
+    40% { scale: 1.2; rotate: 6deg; }
+    60% { scale: 1.25; rotate: -10deg; }
+    70% { scale: 1.25; rotate: 8deg; }
+    80% { scale: 1.1; rotate: -4deg; }
+    90% { scale: 1.03; rotate: 2deg; }
+}
+
+@keyframes sonido-onda {
+    0% { opacity: 0.95; scale: 0.9; }
+    100% { opacity: 0; scale: 2.1; }
+}
+
+@keyframes sonido-onda-quieta {
+    0% { opacity: 0.95; }
+    100% { opacity: 0; }
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 // BARRA DE ARRIBA: vidrio "Frutiger Aero" con botones de gel, del mismo estilo que las cartas
 // -----------------------------------------------------------------------------------------------------------------
@@ -180,52 +335,12 @@ body::before {
         gap: 8px;
     }
 
-    // Botones de gel: color base en --c, brillo arriba, biselado abajo y sombra que los despega de la barra
+    // Botones de gel: color base en --c, brillo arriba, biselado abajo y sombra que los despega de la barra (ver el mixin boton-de-gel)
     .botones,
     .menu-desplegable,
     #cambiar-idioma,
     #silenciar {
-        --c: #8a96a3;
-        position: relative;
-        height: 42px;
-        margin: 0;
-        padding: 0 20px;
-        white-space: nowrap;
-        font-family: var(--f-boton), sans-serif;
-        font-size: var(--t-boton);
-        font-weight: 700;
-        letter-spacing: 0.3px;
-        color: #fff;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
-        cursor: pointer;
-        border: 1px solid color-mix(in srgb, var(--c) 55%, black);
-        border-radius: 13px;
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 100%),
-            linear-gradient(180deg, color-mix(in srgb, var(--c) 78%, white) 0%, var(--c) 55%, color-mix(in srgb, var(--c) 82%, black) 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 7px rgba(0, 30, 80, 0.35);
-        transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
-
-        &:hover:not(:disabled) {
-            filter: brightness(1.08) saturate(1.1);
-            transform: translateY(-1px);
-        }
-
-        &:active:not(:disabled) {
-            filter: brightness(0.96);
-            transform: translateY(1px);
-            box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.6);
-        }
-
-        &:focus-visible {
-            outline: 3px solid rgba(255, 255, 255, 0.95);
-            outline-offset: 2px;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(20, 160, 230, 0.75), 0 3px 7px rgba(0, 30, 80, 0.35);
-        }
-
-        &:disabled {
-            cursor: not-allowed;
-        }
+        @include boton-de-gel;
     }
 
     // Botón principal: es el más grande y el único con color fuerte. Verde y con brillo cuando se puede pelear, gris apagado mientras no
@@ -364,43 +479,10 @@ body::before {
         }
     }
 
-    // Silencio: botón chiquito y redondo, del mismo vidrio claro que el de idioma. Muestra un parlante con ondas (suena) o con una
-    // cruz roja (silenciado) y, al silenciar, queda "hundido" para que se note de un vistazo
+    // Sonido (en computadora): botón chiquito y redondo, junto al de idioma (ver el mixin boton-de-sonido).
+    // En celular main.js lo saca de la barra y lo deja flotando en la esquina de abajo a la derecha (más abajo)
     #silenciar {
-        --c: #cfdde9;
-        flex: none;
-        display: grid;
-        place-items: center;
-        width: 34px;
-        height: 34px;
-        padding: 0;
-        color: #24476a;
-        text-shadow: none;
-        border-color: rgba(0, 40, 90, 0.4);
-        border-radius: 50%;
-
-        .audio-icono {
-            width: 20px;
-            height: 20px;
-            filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
-        }
-
-        .audio-cruz {
-            display: none;
-        }
-
-        &.silenciado {
-            box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
-
-            .audio-ondas {
-                display: none;
-            }
-
-            .audio-cruz {
-                display: inline;
-                stroke: #c2362b;
-            }
-        }
+        @include boton-de-sonido;
     }
 
     // Menús de información (herramientas secundarias): botón de vidrio claro que abre un panel con las opciones
@@ -577,6 +659,29 @@ body::before {
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.4s ease 0.6s;
+    }
+}
+
+// SONIDO EN CELULAR: main.js saca el botón de la barra y lo deja suelto en el <body>. Flota siempre en la esquina de abajo a la
+// derecha, por encima de todo (cartas, ventanas de combate y de información, zoom y sus flechas): se puede apagar el sonido en
+// cualquier momento, también mientras suena la música del combate. En computadora sigue en la barra, junto al idioma.
+@media (max-width: 700px) {
+    body > #silenciar {
+        @include boton-de-gel;
+        @include boton-de-sonido;
+        position: fixed;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        z-index: 1800;
+        width: 44px;
+        height: 44px;
+        // Un aro blanco y más sombra, para que se despegue de lo que haya detrás (cartas claras u oscuras)
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(255, 255, 255, 0.85), 0 5px 14px rgba(0, 20, 70, 0.55);
+
+        .audio-icono {
+            width: 25px;
+            height: 25px;
+        }
     }
 }
 
@@ -1998,7 +2103,7 @@ body::before {
     }
 }
 
-// Marco giratorio de las cartas de nivel 8 y 9 (ver .c-marco): gira una capa entera, sin volver a dibujarla
+// Marco giratorio de las cartas de nivel 7 y 8 (ver .c-marco): gira una capa entera, sin volver a dibujarla
 @keyframes girar-marco {
     to {
         transform: rotate(360deg);
@@ -2010,10 +2115,10 @@ body::before {
 //   El tipo define el color (--tipo) y el nivel lo aclara o lo oscurece: los bebés son pastel y cada nivel es un poco más
 //   profundo que el anterior (--base es el color del tipo ya ajustado al nivel). El elemento define el color de su etiqueta.
 //   Las etiquetas chicas (tipo, gema, botón Evolución) usan el color puro del tipo para que el texto blanco se lea bien.
-//   Los Perfect (nivel 6) tienen marco de cromo helado y los Ultimate (nivel 7) marco dorado; el anillo y el aura
+//   Los Perfect (nivel 5) tienen marco de cromo helado y los Ultimate (nivel 6) marco dorado; el anillo y el aura
 //   interiores conservan el color del tipo, así se distingue el tipo sin perder que es Perfect o Ultimate.
-//   Los niveles 8 (Super Ultimate) y 9 (Absolute) son inventados para el simulador y tienen un marco que gira:
-//   arcoíris holográfico con corona el 8, y estrellado en violeta y oro con un sol el 9.
+//   Los niveles 7 (Super Ultimate) y 8 (Absolute) son inventados para el simulador y tienen un marco que gira:
+//   arcoíris holográfico con corona el 7, y estrellado en violeta y oro con un sol el 8.
 //
 //   Estructura de cada carta (la arma el main.js):
 //     li
@@ -2081,14 +2186,14 @@ body::before {
 
       // Un tono por nivel: Baby I es pastel, Baby II y Child van subiendo hasta el color del tipo,
       // y de Adult en adelante pasan a tonos cada vez más profundos (cada nivel un escalón más oscuro que el anterior,
-      // hasta el nivel 9, el más intenso)
+      // hasta el nivel 8, el más intenso)
       &[data-nivel="1"] { --claro: 58%; --fuerza: 45%; }
-      &[data-nivel="3"] { --claro: 34%; --fuerza: 55%; }
-      &[data-nivel="4"] { --claro: 12%; --fuerza: 64%; }
-      &[data-nivel="5"] { --claro: 0%; --oscuro: 6%; --fuerza: 72%; }
+      &[data-nivel="2"] { --claro: 34%; --fuerza: 55%; }
+      &[data-nivel="3"] { --claro: 12%; --fuerza: 64%; }
+      &[data-nivel="4"] { --claro: 0%; --oscuro: 6%; --fuerza: 72%; }
 
       // PERFECT: marco de cromo helado + un rombo en la esquina
-      &[data-nivel="6"] {
+      &[data-nivel="5"] {
         --claro: 0%;
         --oscuro: 20%;
         --fuerza: 80%;
@@ -2111,7 +2216,7 @@ body::before {
       }
 
       // ULTIMATE: marco dorado + una estrella en la esquina + reflejo de arcoíris en la imagen
-      &[data-nivel="7"] {
+      &[data-nivel="6"] {
         --claro: 0%;
         --oscuro: 34%;
         --fuerza: 88%;
@@ -2144,8 +2249,8 @@ body::before {
         }
       }
 
-      // SUPER ULTIMATE (nivel 8): marco holográfico de arcoíris que gira + corona + aura violeta + reflejo de prisma fuerte
-      &[data-nivel="8"] {
+      // SUPER ULTIMATE (nivel 7): marco holográfico de arcoíris que gira + corona + aura violeta + reflejo de prisma fuerte
+      &[data-nivel="7"] {
         --claro: 0%;
         --oscuro: 46%;
         --fuerza: 95%;
@@ -2185,8 +2290,8 @@ body::before {
         }
       }
 
-      // ABSOLUTE (nivel 9): marco estrellado en violeta y oro que gira + sol + aura dorada + velo cósmico en la imagen
-      &[data-nivel="9"] {
+      // ABSOLUTE (nivel 8): marco estrellado en violeta y oro que gira + sol + aura dorada + velo cósmico en la imagen
+      &[data-nivel="8"] {
         --claro: 0%;
         --oscuro: 58%;
         --fuerza: 100%;
@@ -2227,7 +2332,7 @@ body::before {
         }
       }
 
-      // MARCO QUE GIRA (niveles 8 y 9). Es un <span class="c-marco"> que arma main.js solo en esas cartas.
+      // MARCO QUE GIRA (niveles 7 y 8). Es un <span class="c-marco"> que arma main.js solo en esas cartas.
       // Antes el giro cambiaba el fondo de la carta en cada cuadro, y el navegador tenía que volver a dibujar la carta entera
       // (con su halo) 60 veces por segundo: con una sola carta de estas en pantalla, toda la página bajaba de fluidez.
       // Ahora el degradé es una capa cuadrada, más grande que la carta, que solo se rota (eso lo hace la placa gráfica sin
@@ -2371,7 +2476,7 @@ body::before {
         }
       }
 
-      // Gema con el nivel (número del 1 al 7, o "?" si es desconocido)
+      // Gema con el nivel (número del 1 al 8, o "?" si es desconocido)
       .c-gema {
         position: absolute;
         z-index: 2;
@@ -2568,7 +2673,7 @@ body::before {
       }
 
       // Carta seleccionada para el combate: flota y el halo de afuera cambia de matiz de forma pareja (una vuelta cada 6 s).
-      // El marco queda como es, así no se confunde con el marco multicolor de las cartas de nivel 8.
+      // El marco queda como es, así no se confunde con el marco multicolor de las cartas de nivel 7.
       // Con el zoom (doble clic) la carta se ve como una común, sin el halo: eso es solo para cuando está chica.
       &.seleccionado:not(.zoom-activa) {
         translate: 0 -2px;
@@ -2578,7 +2683,7 @@ body::before {
 
     // Con inclinación (solo mouse o dedo): el reflejo sigue al puntero: la franja diagonal de luz (celeste, blanca y magenta) corre
     // con él. En ninguna carta hay un destello redondo y claro alrededor del puntero (se sacó de las de 1 a 6 y después también
-    // de las holográficas de 7, 8 y 9; en esas, la textura y el brillo irisado de más abajo quedan como estaban).
+    // de las holográficas de 6, 7 y 8; en esas, la textura y el brillo irisado de más abajo quedan como estaban).
     &.tilt-on li {
       &::after {
         background: linear-gradient(115deg, transparent 41%, rgba(0, 200, 255, 0.13) 46%,
@@ -2607,12 +2712,12 @@ body::before {
     //   · signos grabados (una especie de jeroglíficos) que se iluminan con los colores del arcoíris,
     //   · un tramado de líneas finas que irisa.
     // Los colores corren al mover el mouse y los signos se quedan fijos en la carta, como en la realidad.
-    // Solo las cartas de nivel 7, 8 y 9 llevan esta textura; el resto queda solo con el reflejo.
+    // Solo las cartas de nivel 6, 7 y 8 llevan esta textura; el resto queda solo con el reflejo.
     // Van en el frente (el dorso no lleva) y SIN transición de opacidad a propósito: una capa que aparece con fundido sobre una
     // carta inclinada se dibuja un instante a baja resolución.
     $holo-signos: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(0 0)'%3E%3Cpath d='M6 14Q14 5 22 14Q14 23 6 14Z'/%3E%3Ccircle cx='14' cy='14' r='2.4' fill='white'/%3E%3C/g%3E%3Cg transform='translate(28 0)'%3E%3Ccircle cx='14' cy='8.5' r='4'/%3E%3Cpath d='M14 12.5V24M9 17.5H19'/%3E%3C/g%3E%3Cg transform='translate(56 0)'%3E%3Cpath d='M4 17L9 9L14 19L19 9L24 17'/%3E%3C/g%3E%3Cg transform='translate(0 28)'%3E%3Cpath d='M14 4L24 22H4Z'/%3E%3Ccircle cx='14' cy='16.5' r='1.7' fill='white'/%3E%3C/g%3E%3Cg transform='translate(28 28)'%3E%3Cpath d='M6 19a8 8 0 0 1 16 0M10 19a4 4 0 0 1 8 0M14 19v4'/%3E%3C/g%3E%3Cg transform='translate(56 28)'%3E%3Cpath d='M3 14q3.5-7 7 0t7 0 7 0'/%3E%3Cpath d='M3 20q3.5-7 7 0t7 0 7 0' opacity='.6'/%3E%3C/g%3E%3Cg transform='translate(0 56)'%3E%3Cpath d='M14 3L25 14L14 25L3 14Z'/%3E%3Cpath d='M14 9V19M9 14H19'/%3E%3C/g%3E%3Cg transform='translate(28 56)'%3E%3Cpath d='M4 22L14 5L24 22M9 16H19'/%3E%3Ccircle cx='14' cy='5' r='1.4' fill='white'/%3E%3C/g%3E%3Cg transform='translate(56 56)'%3E%3Cpath d='M9 4V24M9 9L19 4M9 15L19 10'/%3E%3Ccircle cx='20' cy='20' r='1.6' fill='white'/%3E%3C/g%3E%3C/svg%3E");
 
-    $holo-niveles: '[data-nivel="7"], [data-nivel="8"], [data-nivel="9"]';
+    $holo-niveles: '[data-nivel="6"], [data-nivel="7"], [data-nivel="8"]';
 
     li:is(#{$holo-niveles}) .c-frente {
       position: relative;
@@ -2758,6 +2863,14 @@ body::before {
   }
 }
 
+// Lugar al final de la lista (celular) para que el botón de sonido, que flota abajo a la derecha, no tape la última fila de cartas.
+// Va después de los bloques de arriba: ellos fijan "padding: 4px" y esto solo cambia el de abajo.
+@media (max-width: 700px) {
+  #listado-digimons {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (max-width: 389px) {
   #listado-digimons > li {
     zoom: 0.79;
@@ -2789,7 +2902,7 @@ body::before {
 //     (con otro número, el alto total de la página cambia al ir mostrando cartas y la barra de scroll da saltos).
 //     "auto" hace que, una vez dibujada una carta, el navegador recuerde su alto real.
 //   · "content-visibility: auto" recorta lo que se sale del frente. Hay brillos y sombras que se salen unos pocos píxeles, y la
-//     textura holográfica de las cartas 7, 8 y 9 llega hasta el marco: "overflow-clip-margin" deja ese margen sin recortar.
+//     textura holográfica de las cartas 6, 7 y 8 llega hasta el marco: "overflow-clip-margin" deja ese margen sin recortar.
 #listado-digimons.lista-completa > li > .c-frente {
   content-visibility: auto;
   contain-intrinsic-block-size: auto 290px;
