@@ -492,7 +492,7 @@ function abrirEvolucion(carta) {
         showConfirmButton: false,
         showCloseButton: true,
         closeButtonAriaLabel: t('evo.cerrar'),
-        width: 'min(96vw, 920px)',
+        width: 'min(94vw, 680px)',
         customClass: { popup: 'popup-evo' },
         didOpen: () => {
             contenedorEvo().addEventListener('click', alTocarEnEvolucion);

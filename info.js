@@ -26,6 +26,7 @@ function mostrarInfo(titulo, descripcion, datos, pie) {
         title: titulo,
         html: `<p class="info-desc">${descripcion}</p><ul class="info-datos">${filas}</ul><p class="info-pie">${pie}</p>`,
         icon: 'info',
+        width: 'min(94vw, 680px)',
         confirmButtonText: t('aceptar'),
         focusConfirm: false,
         customClass: { popup: 'popup-info' }, // para darle al título la fuente pixelada de la barra (ver styles.scss)
@@ -203,7 +204,7 @@ function abrirAtaques(carta) {
         html: cuerpo,
         confirmButtonText: t('aceptar'),
         focusConfirm: false,
-        width: 'min(94vw, 480px)',
+        width: 'min(94vw, 680px)',
         customClass: { popup: 'popup-info popup-ataques' }, // el título con la fuente pixelada, como las otras ventanas de información
         didOpen: (popup) => {
             popup.querySelector('.swal2-confirm')?.blur();

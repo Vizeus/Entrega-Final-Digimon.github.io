@@ -4210,7 +4210,7 @@ document.addEventListener('niveles-cambiados', () => {
 // imágenes y nombres). Al ganador se lo festeja con corona y confeti. Los estilos están en el SCSS (".combate-popup").
 // -----------------------------------------------------------------------------------------------------------------
 const CARTEL_COMBATE = {
-    width: 'min(94vw, 440px)',
+    width: 'min(94vw, 680px)',
     padding: 0,
     buttonsStyling: false,
     customClass: {
