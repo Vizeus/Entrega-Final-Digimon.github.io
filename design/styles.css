@@ -409,14 +409,7 @@ body::before {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%), linear-gradient(180deg, #7cc4f5 0%, #3f97e8 55%, #2a75cf 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 40, 110, 0.4);
 }
-#navbar #cambiar-niveles {
-  order: 1;
-}
-#navbar #cambiar-idioma {
-  order: 2;
-}
 #navbar #silenciar {
-  order: 3;
   --c: #cfdde9;
   flex: none;
   display: grid;
@@ -491,7 +484,6 @@ body::before {
   }
 }
 #navbar #inclinacion-invertida {
-  order: 4;
   --c: #cfdde9;
   flex: none;
   display: grid;
@@ -1276,6 +1268,10 @@ body::before {
 }
 .swal2-container {
   z-index: 2000 !important;
+}
+.swal2-container.swal2-backdrop-show {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 body:has(.swal2-container) #zoom-flechas,

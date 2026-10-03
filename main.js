@@ -2081,20 +2081,28 @@ function activarAvisoDeInclinacion() {
         if (boton.parentElement !== document.body && hayCortinaSobreLaBarra()) {
             devolver = subirBotonSobreLaCortina(boton);
         }
-        const verificarCortina = () => {
-            if (!devolver && boton.parentElement !== document.body && hayCortinaSobreLaBarra()) {
+        let vigiliaAnim = 0;
+        const vigilarCortinaAnim = () => {
+            const tapada = hayCortinaSobreLaBarra();
+            if (!devolver && boton.parentElement !== document.body && tapada) {
                 devolver = subirBotonSobreLaCortina(boton);
+            } else if (devolver && !tapada) {
+                devolver();
+                devolver = null;
             }
+            vigiliaAnim = requestAnimationFrame(vigilarCortinaAnim);
         };
-        requestAnimationFrame(verificarCortina);
+        vigiliaAnim = requestAnimationFrame(vigilarCortinaAnim);
 
         boton.classList.remove('llamando');
         void boton.offsetWidth;
         boton.classList.add('llamando');
 
         setTimeout(() => {
+            cancelAnimationFrame(vigiliaAnim);
             boton.classList.remove('llamando');
             devolver?.();
+            devolver = null;
         }, AUDIO_AVISO_DURACION);
     };
 
@@ -3127,14 +3135,14 @@ function ubicarBotonDeAudio() {
     if (!boton || !ajustes) return;
     const enCelular = PANTALLA_DE_CELULAR.matches;
     const destino = enCelular ? document.body : ajustes;
-    const botonInclinacion = ajustes.querySelector('#inclinacion-invertida');
+    const refInclinacion = ajustes.querySelector('#inclinacion-invertida, [data-hueco="inclinacion-invertida"]');
 
     if (!enCelular) {
         // En computadora debe estar en ajustes y SIEMPRE a la izquierda del botón de inclinación
-        if (boton.parentElement === ajustes && (!botonInclinacion || boton.nextElementSibling === botonInclinacion)) return;
+        if (boton.parentElement === ajustes && (!refInclinacion || boton.nextElementSibling === refInclinacion)) return;
         const teniaElFoco = document.activeElement === boton;
-        if (botonInclinacion) {
-            ajustes.insertBefore(boton, botonInclinacion);
+        if (refInclinacion) {
+            ajustes.insertBefore(boton, refInclinacion);
         } else {
             ajustes.append(boton);
         }
@@ -3196,10 +3204,11 @@ const hayCortinaSobreLaBarra = () => !!(cartaEnZoom || combateEnCurso || documen
 function subirBotonSobreLaCortina(boton) {
     const caja = boton.getBoundingClientRect();
     const teniaElFoco = document.activeElement === boton;
+    const computed = getComputedStyle(boton);
     const hueco = document.createElement('span');
     hueco.setAttribute('aria-hidden', 'true');
     hueco.dataset.hueco = boton.id; // (el CSS de la barra lo cuenta como si el botón siguiera ahí)
-    hueco.style.cssText = `flex: none; width: ${caja.width}px; height: ${caja.height}px; margin: ${getComputedStyle(boton).margin};`;
+    hueco.style.cssText = `flex: none; width: ${caja.width}px; height: ${caja.height}px; margin: ${computed.margin}; order: ${computed.order};`;
     boton.parentElement.insertBefore(hueco, boton);
     document.body.append(boton);
     if (teniaElFoco) boton.focus({ preventScroll: true });
@@ -3216,10 +3225,13 @@ function subirBotonSobreLaCortina(boton) {
     return () => {
         cancelAnimationFrame(cuadro);
         const tieneElFoco = document.activeElement === boton;
-        if (hueco.isConnected) hueco.replaceWith(boton);
+        if (hueco.isConnected) {
+            hueco.replaceWith(boton);
+        } else {
+            if (boton.id === 'silenciar') ubicarBotonDeAudio();
+        }
         boton.style.removeProperty('top');
         boton.style.removeProperty('left');
-        if (boton.id === 'silenciar') ubicarBotonDeAudio(); // (en celular tiene que volver al <body>)
         if (tieneElFoco) boton.focus({ preventScroll: true });
     };
 }
@@ -3257,13 +3269,20 @@ function ubicarGloboDelBoton(boton, globo, lado = 'centro') {
 }
 
 function revisarLlamadas() {
+    const tapada = hayCortinaSobreLaBarra();
     for (const [boton, llamada] of llamadasActivas) {
         if (!boton.isConnected) {
             terminarLlamada(boton);
             continue;
         }
         // Algo tapa la barra (o apareció justo ahora): el botón sube por encima. Solo si está en la barra: en celular, el de sonido ya flota
-        if (!llamada.devolver && boton.parentElement !== document.body && hayCortinaSobreLaBarra()) llamada.devolver = subirBotonSobreLaCortina(boton);
+        if (!llamada.devolver && boton.parentElement !== document.body && tapada) {
+            llamada.devolver = subirBotonSobreLaCortina(boton);
+        } else if (llamada.devolver && !tapada) {
+            // Se cerró la cortina (el zoom o el cartel): el botón vuelve inmediatamente a su lugar en la barra
+            llamada.devolver();
+            llamada.devolver = null;
+        }
     }
     // Si los dos botones llaman a la vez, los globitos se reparten a los costados (el del botón de la izquierda hacia la izquierda y el otro
     // hacia la derecha) para no taparse; si no, cada uno va centrado en su botón
