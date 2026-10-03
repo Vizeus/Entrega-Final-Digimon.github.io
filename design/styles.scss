@@ -118,10 +118,45 @@ body::before {
     }
 }
 
+// "llamando": el botón salta y lanza ondas para que la persona vea dónde está (lo usan el botón de sonido, la primera vez que suena algo
+// en la sesión, y el de inclinación, cuando aparece el cartel que lo explica). main.js pone y saca la clase.
+@mixin boton-que-llama {
+    // Las ondas del aviso: un aro que nace en el botón y se agranda mientras se desvanece (invisible el resto del tiempo)
+    &::after {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 1px rgba(10, 110, 200, 0.7), 0 0 12px 2px rgba(60, 170, 255, 0.75);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &.llamando {
+        animation: sonido-salto 2.4s ease-in-out;
+
+        &::after {
+            animation: sonido-onda 0.8s ease-out 3;
+        }
+    }
+
+    // Con "reducir movimiento" no salta ni se agranda: solo se enciende un aro fijo y se apaga
+    @media (prefers-reduced-motion: reduce) {
+        &.llamando {
+            animation: none;
+
+            &::after {
+                animation: sonido-onda-quieta 1.6s ease-out;
+            }
+        }
+    }
+}
+
 // Botón de sonido: chiquito y redondo, del mismo vidrio claro que el de idioma. Su ícono sigue el paso en que está (data-modo, lo
 // escribe main.js): parlante con ondas (sonido y vibración), celular que vibra (solo vibración, únicamente en celulares) o
 // parlante con cruz roja (nada). Mientras no suena queda "hundido", para que se note de un vistazo.
-// "llamando": la primera vez que suena algo en la sesión (celular o computadora) el botón salta y lanza ondas, para que se vea que ahí se puede apagar
+// (La animación "llamando" de la primera vez que suena algo en la sesión sale del mixin boton-que-llama.)
 @mixin boton-de-sonido {
     --c: #cfdde9;
     flex: none;
@@ -173,36 +208,7 @@ body::before {
         }
     }
 
-    // Las ondas del aviso: un aro que nace en el botón y se agranda mientras se desvanece (invisible el resto del tiempo)
-    &::after {
-        content: "";
-        position: absolute;
-        inset: -4px;
-        border-radius: 50%;
-        border: 3px solid #fff;
-        box-shadow: 0 0 0 1px rgba(10, 110, 200, 0.7), 0 0 12px 2px rgba(60, 170, 255, 0.75);
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    &.llamando {
-        animation: sonido-salto 2.4s ease-in-out;
-
-        &::after {
-            animation: sonido-onda 0.8s ease-out 3;
-        }
-    }
-
-    // Con "reducir movimiento" no salta ni se agranda: solo se enciende un aro fijo y se apaga
-    @media (prefers-reduced-motion: reduce) {
-        &.llamando {
-            animation: none;
-
-            &::after {
-                animation: sonido-onda-quieta 1.6s ease-out;
-            }
-        }
-    }
+    @include boton-que-llama;
 }
 
 @keyframes sonido-salto {
@@ -374,7 +380,8 @@ body::before {
     .botones,
     .menu-desplegable,
     #cambiar-idioma,
-    #silenciar {
+    #silenciar,
+    #inclinacion-invertida {
         @include boton-de-gel;
     }
 
@@ -395,6 +402,15 @@ body::before {
 
         &:enabled:not(:active) {
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 0 3px rgba(52, 179, 90, 0.28), 0 0 22px 4px rgba(52, 179, 90, 0.55);
+        }
+
+        // Mientras se puede pelear (hay 2 digimons elegidos) el botón late cada 2 s: crece un poco y vuelve a su tamaño (1 s) y descansa
+        // otro segundo, y así sigue hasta que se inicia el combate o se quita la selección (al quedar deshabilitado se frena solo).
+        // Usa "scale" y no "transform" para no pisar el movimiento al pasar el mouse o apretarlo. Con "reducir movimiento" no late.
+        @media (prefers-reduced-motion: no-preference) {
+            &:enabled {
+                animation: combate-pulso 2s ease-in-out infinite;
+            }
         }
 
         &:disabled {
@@ -520,9 +536,70 @@ body::before {
         @include boton-de-sonido;
 
         // Queda centrado entre el idioma y los menús de información: a su izquierda hay 8 px (el espacio entre botones de este grupo)
-        // y a su derecha 16 (el espacio entre grupos de la barra). Con 4 px más de un lado y 4 menos del otro quedan 12 y 12.
+        // y a su derecha 16 (el espacio entre grupos de la barra, que es siempre ese: ver "margin-left: auto" de .ajustes más abajo).
+        // Con 4 px más de un lado y 4 menos del otro quedan 12 y 12.
         @media (min-width: 701px) {
             margin-inline: 4px -4px;
+        }
+    }
+
+    // Inclinación con el mouse (solo computadora): botón chiquito y redondo, igual al de sonido y pegado a él (8 px). Si está a la vista,
+    // el par de botones redondos queda centrado entre el idioma y los menús: el de sonido conserva solo los 4 px de su izquierda
+    // (8 + 4 = 12) y el de inclinación se queda con los -4 px de la derecha (16 - 4 = 12). Sin él (pantallas táctiles), el de sonido
+    // sigue centrado solo, como arriba.
+    .ajustes:has(#inclinacion-invertida:not([hidden])) #silenciar {
+        @media (min-width: 701px) {
+            margin-inline: 4px 0;
+        }
+    }
+
+    // Queda "hundido" (aria-pressed) cuando la inclinación está invertida (solo con Shift apretada) y en ese caso muestra, al lado de la
+    // carta en perspectiva, la flecha de Shift (⇧). main.js lo muestra (hidden) solo con mouse; en el celular no existe.
+    #inclinacion-invertida {
+        --c: #cfdde9;
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        color: #24476a;
+        text-shadow: none;
+        border-color: rgba(0, 40, 90, 0.4);
+        border-radius: 50%;
+
+        // (display: grid pisaría al atributo hidden)
+        &[hidden] {
+            display: none;
+        }
+
+        @media (min-width: 701px) {
+            margin-inline: 0 -4px;
+        }
+
+        @media (max-width: 700px) {
+            display: none;
+        }
+
+        // Cuando aparece el cartel de ayuda de la inclinación, el botón salta y lanza ondas (igual que el de sonido en su primer sonido)
+        @include boton-que-llama;
+
+        .inclinacion-icono {
+            width: 20px;
+            height: 20px;
+            filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+        }
+
+        .inclinacion-shift {
+            display: none;
+        }
+
+        &[aria-pressed="true"] {
+            box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
+
+            .inclinacion-shift {
+                display: inline;
+            }
         }
     }
 
@@ -672,6 +749,20 @@ body::before {
     }
 }
 
+// Latido del botón "Iniciar Combate" (ver #iniciar-combate): el mismo "pulse" de animate.css (de 1 a 1,05 y de vuelta en 1 s), pero dentro de un
+// ciclo de 2 s para que descanse un segundo entre latido y latido (en el CSS una animación no puede esperar entre repeticiones por sí sola)
+@keyframes combate-pulso {
+    0%,
+    50%,
+    100% {
+        scale: 1;
+    }
+
+    25% {
+        scale: 1.05;
+    }
+}
+
 // En pantallas angostas el panel de combate baja a su propia fila (sigue siendo lo más grande de la barra):
 // ahí ocupa todo el ancho, la consigna va en una sola línea y los ajustes se van a la derecha, junto a los menús
 @media (max-width: 1439px) {
@@ -686,6 +777,18 @@ body::before {
         white-space: nowrap;
     }
 
+    #navbar .ajustes {
+        margin-left: auto;
+    }
+}
+
+// En pantallas anchas (1440 o más) la barra va en una sola fila y "space-between" reparte el espacio que sobra entre TODOS los huecos,
+// también el que hay entre los ajustes y los menús de información. Ese hueco crecía cuando el bloque de carga se retiraba, y el botón
+// de sonido (que está al borde derecho de los ajustes) dejaba de quedar centrado entre el idioma y "Info. tipos". Con margen automático
+// a la izquierda del panel de combate y de los ajustes, lo que sobra se reparte solo ahí (el panel sigue en el medio) y los ajustes
+// quedan siempre a 16 px de los menús, igual que en las pantallas más angostas: el botón de sonido queda centrado con y sin la carga.
+@media (min-width: 1440px) {
+    #navbar .combate,
     #navbar .ajustes {
         margin-left: auto;
     }
@@ -2741,12 +2844,14 @@ $desenfoque-del-fondo: 10px;
         overscroll-behavior: contain !important;
       }
 
-      // Botón de dar vuelta la carta: aparece solo al pasar el mouse, asomando por la esquina superior izquierda
+      // Botón de dar vuelta la carta: aparece solo al pasar el mouse, asomando por la esquina superior izquierda.
+      // Se coloca respecto del borde de afuera de la carta y no del de adentro (la posición absoluta cuenta desde adentro del borde):
+      // así asoma lo mismo (8 px) en las cartas comunes (borde de 2 px) y en las de nivel 5 en adelante, que tienen marco (de 7 a 9 px)
       .c-flip {
         position: absolute;
         z-index: 10;
-        top: -8px;
-        left: -8px;
+        top: calc(-1 * (var(--borde) + 8px));
+        left: calc(-1 * (var(--borde) + 8px));
         width: 30px;
         height: 30px;
         padding: 0;
@@ -2982,6 +3087,35 @@ $desenfoque-del-fondo: 10px;
   }
 }
 
+// En computadora, mientras se mantiene apretada Shift (main.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)
+// las cartas no reaccionan al mouse: además de no inclinarse, no se levantan y no muestran el reflejo ni la textura holográfica (que
+// sin inclinación quedarían fijos en un lugar). Es lo mismo que se ve en las pantallas táctiles, donde no hay hover.
+// Las cartas elegidas para el combate conservan su levante y la carta ampliada, su posición. Va con !important en la opacidad para ganarle
+// a los reflejos de más arriba, que son más específicos. (El botón de dar vuelta sigue apareciendo: es un control, no un efecto.)
+#listado-digimons.inclinacion-anulada > li:hover:not(.seleccionado):not(.evo-resaltada):not(.zoom-activa) {
+  --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+  translate: 0 0;
+}
+
+#listado-digimons.inclinacion-anulada > li:hover::after,
+#listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::before,
+#listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::after {
+  opacity: 0 !important;
+}
+
+// Una carta bailando (baile.js: "transform" animado) no reacciona al hover: con el puntero quieto y la carta saltando por debajo, el
+// levante y el reflejo aparecerían y desaparecerían a cada rato. Queda como si no tuviera el mouse encima.
+#listado-digimons > li.bailando:hover:not(.seleccionado):not(.evo-resaltada):not(.zoom-activa) {
+  --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+  translate: 0 0;
+}
+
+#listado-digimons > li.bailando:hover::after,
+#listado-digimons.tilt-on > li.bailando:hover .c-frente::before,
+#listado-digimons.tilt-on > li.bailando:hover .c-frente::after {
+  opacity: 0 !important;
+}
+
 // CELULAR: dos cartas por fila. Las cartas se achican enteras con "zoom" (texto, marcos, botones y dorso juntos),
 // con un tamaño según el ancho de la pantalla: (ancho - 8px) / 464px, redondeado para abajo.
 @media (max-width: 483px) {
@@ -3186,6 +3320,33 @@ $desenfoque-del-fondo: 10px;
   }
 }
 
+// En computadora (con mouse) el cartel de ayuda ("Hacé doble clic en una carta...") es bastante más grande: con el tamaño del celular
+// (14 px) casi no se notaba. Todo crece junto: el texto, el ícono, el relleno, el ancho y las esquinas.
+@media (min-width: 701px) and (hover: hover) {
+  #avisos-ayuda {
+    right: 28px;
+    gap: 12px;
+    width: min(620px, calc(100vw - 40px));
+  }
+
+  .aviso-ayuda {
+    gap: 10px;
+    padding: 18px 28px;
+    font-size: 24px;
+    border-radius: 22px;
+    box-shadow: 0 12px 30px rgba(0, 30, 80, 0.4), inset 0 1px 0 #fff;
+
+    .aviso-linea {
+      gap: 16px;
+      max-height: 140px;
+    }
+
+    .aviso-icono {
+      font-size: 34px;
+    }
+  }
+}
+
 // Aviso del contador (main.js, mostrarAvisoDelContador): un minicartel con una flechita que sale de la bolita "2/2" de la barra. Arranca
 // chiquito, desde la punta de la flecha (--punta, que pone main.js), y crece hasta su tamaño; al irse vuelve a achicarse hacia el contador.
 // No frena los clics (pointer-events: none) y queda por encima de la barra (1000).
@@ -3366,6 +3527,15 @@ $desenfoque-del-fondo: 10px;
 
   &.abierto {
     opacity: 1;
+  }
+
+  // Con el zoom extra (la carta agrandada de más, ver main.js) la carta puede llegar hasta las flechas: se esconden
+  &.zoom-extra {
+    opacity: 0;
+
+    .zoom-flecha {
+      pointer-events: none;
+    }
   }
 
   .zoom-flecha {

@@ -21,6 +21,7 @@
     <script defer src="./filtros.js"></script>
     <script defer src="./info.js"></script>
     <script defer src="./evolucion.js"></script>
+    <script defer src="./baile.js"></script>
 
     <!-- Fuentes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -156,6 +157,23 @@
                     <path class="audio-cruz" d="m15.6 9.4 5.2 5.2m0-5.2-5.2 5.2"/>
                 </g>
                 <g class="audio-movil"><rect x="8" y="3.5" width="8" height="17" rx="2"/><path d="M11 17.4h2M4.8 9.2v5.6M2.2 10.8v2.4M19.2 9.2v5.6M21.8 10.8v2.4"/></g>
+            </svg>
+        </button>
+
+        <!-- Inclinación de las cartas con el mouse (solo computadora): botón chiquito y redondo, al lado del de sonido, que invierte cuándo
+             se inclinan. Por defecto se inclinan al pasar el mouse y mantener apretada Shift lo anula; con el botón "hundido" es al revés
+             (no se inclinan al pasar el mouse y solo lo hacen mientras se mantiene apretada Shift). La elección se guarda en el navegador.
+             Está escondido (hidden): main.js lo muestra solo con mouse y sin "reducir movimiento". La ayuda y el estado (aria-pressed)
+             los escribe main.js. El ícono es una carta vista en perspectiva; con la inclinación invertida aparece además la flecha de Shift (⇧) -->
+        <button type="button" id="inclinacion-invertida" hidden aria-pressed="false"
+                title="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo"
+                aria-label="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo">
+            <svg class="inclinacion-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2.5 6.5 14.5 2.5v19l-12-4z"/>
+                <!-- Los detalles de la carta (la ventana de la ilustración y una línea de texto), siguiendo la misma perspectiva, más finos -->
+                <path d="M4.3 8.1 12.7 6.3v7.84L4.3 13.46zM4.3 15.7l5.4 1" stroke-width="1.3"/>
+                <path class="inclinacion-shift" d="M19.6 11.4 16.3 15.6h2.1V20h2.4v-4.4h2.1z" fill="currentColor" stroke-width="1"/>
             </svg>
         </button>
     </div>

@@ -466,14 +466,8 @@ function verificarSeleccion() {
     contadorSeleccion.textContent = `${seleccionados.length}/2`;
     contadorSeleccion.classList.toggle('completo', seleccionados.length === 2);
     mostrarAyudaDelContador();
-    if (seleccionados.length === 2) {
-        botonIniciarCombate.classList.add("animate__animated", "animate__pulse");
-        botonIniciarCombate.disabled = false;
-    } else {
-        botonIniciarCombate.classList.remove("animate__animated", "animate__pulse");
-        botonIniciarCombate.disabled = true;
-    }
-    // El color del botón (verde si se puede pelear, gris si no) lo pone el CSS según :disabled
+    botonIniciarCombate.disabled = seleccionados.length !== 2;
+    // El color del botón (verde si se puede pelear, gris si no) y su latido cada 2 s (solo mientras se puede pelear) los pone el CSS según :disabled
     document.dispatchEvent(new CustomEvent('seleccion-cambio')); // el aviso de ayuda del inicio se va cuando ya eligió las 2
 }
 
@@ -623,6 +617,19 @@ function nombreCompleto(carta) {
 const nombreApiCompleto = carta => conXAntibody(carta, carta.dataset.nombreApi);
 const nombreOccidentalCompleto = carta => conXAntibody(carta, nombreOccidental(carta.dataset.nombreApi));
 
+// El otro nombre del digimon, el que NO se ve en la carta, si tiene uno distinto. Se cuenta en el dorso. En español y en inglés la carta muestra
+// el occidental, así que el otro es el original japonés (el de la API); con el japonés sería al revés. Si los dos nombres son iguales (casi
+// todos los digimon), devuelve null. nombreAlternativo(carta de Omnimon) → { etiqueta: 'carta.nombreOriginal', nombre: 'Omegamon' }
+function nombreAlternativo(carta) {
+    const original = nombreApiCompleto(carta);
+    const occidental = nombreOccidentalCompleto(carta);
+    if (original === occidental) return null;
+    const visible = conXAntibody(carta, nombreParaMostrar(carta.dataset.nombreApi));
+    return visible === original
+        ? { etiqueta: 'carta.nombreOccidental', nombre: occidental }
+        : { etiqueta: 'carta.nombreOriginal', nombre: original };
+}
+
 // Nombre en la carta: lo que va entre paréntesis pasa a una segunda línea, más chica.
 // El texto completo del <h4> no cambia (el combate lo lee con textContent).
 function ponerNombre(elemento, nombre) {
@@ -735,6 +742,17 @@ function construirDorso(carta) {
         cuerpo.append(linea);
     }
 
+    // Si el digimon tiene otro nombre (el original japonés, que la carta no muestra), se cuenta justo antes de la descripción
+    const alternativo = nombreAlternativo(carta);
+    if (alternativo) {
+        const linea = document.createElement('p');
+        linea.className = 'dato c-alias';
+        const negrita = document.createElement('b');
+        negrita.textContent = `${t(alternativo.etiqueta)}:`;
+        linea.append(negrita, ` ${alternativo.nombre}`);
+        cuerpo.append(linea);
+    }
+
     const descripcion = document.createElement('p');
     descripcion.className = 'c-desc';
     descripcion.textContent = datos.descripcion || t('carta.sinDescripcion');
@@ -794,6 +812,7 @@ const PERSPECTIVA = 'perspective(800px) ';
 async function voltearCarta(carta, direccion = 1) {
     if (carta.girando || (zoomOcupado && carta === cartaEnZoom)) return;
     carta.girando = true;
+    if (carta === cartaEnZoom && zoomExtra) await volverAlZoomNormal(carta); // el zoom extra es solo del frente
 
     const frente = carta.querySelector('.c-frente');
     let dorso = carta.querySelector('.c-dorso');
@@ -868,6 +887,13 @@ function calcularZoom(carta) {
         anchoFinal: caja.width * escala, // lo que va a medir la carta de ancho en pantalla
         dx: (ancho / 2 - (caja.left + caja.width / 2)) / zoomCss,
         dy: (alto / 2 - (caja.top + caja.height / 2)) / zoomCss,
+        // Para el zoom extra (ver más abajo): lo que mide la carta en su lugar (a escala 1), el "zoom" de CSS del celular y cuánto está
+        // agrandada de más: "factor" es lo que tiene ahora, "objetivo" lo que se le pidió, y x e y cuánto se corrió del centro (px de pantalla;
+        // "ix" e "iy" son lo que se correría si la carta pudiera quedar con huecos: ver ponerZoomExtra)
+        anchoBase: caja.width,
+        altoBase: caja.height,
+        zoomCss,
+        extra: { factor: 1, objetivo: 1, x: 0, y: 0, ix: 0, iy: 0 },
     };
 }
 
@@ -903,10 +929,17 @@ function crearFondoZoom(carta) {
 // Además la carta queda como capa propia (will-change) ya dibujada a tamaño grande: si el navegador la tuviera que crear
 // recién al empezar la inclinación (y deshacer al terminarla), por un instante la mostraría a baja resolución (pixelada).
 function fijarZoom(carta) {
-    const { escala, dx, dy } = carta.datosZoom;
+    const { escala, dx, dy } = zoomVigente(carta.datosZoom);
     carta.style.setProperty('translate', `${dx}px ${dy}px`, 'important');
     carta.style.setProperty('scale', String(escala), 'important');
-    carta.style.willChange = 'transform';
+    // Con el zoom extra no va el will-change: dejaría la carta dibujada al tamaño de antes y, agrandada, se vería borrosa
+    if (carta.datosZoom.extra.factor > 1) carta.style.removeProperty('will-change');
+    else carta.style.willChange = 'transform';
+}
+
+// Dónde está y cuánto mide la carta ampliada ahora, con el zoom extra (si lo tiene) incluido
+function zoomVigente({ escala, dx, dy, extra, zoomCss }) {
+    return { escala: escala * extra.factor, dx: dx + extra.x / zoomCss, dy: dy + extra.y / zoomCss };
 }
 
 function soltarZoom(carta) {
@@ -925,6 +958,12 @@ function zonaConScroll(destino, delta = 0, selector = '.c-cuerpo') {
 }
 
 const frenarRueda = (evento) => {
+    // Sobre el frente de la carta ampliada, la rueda la agranda todavía más (ver "ZOOM EXTRA"). En el dorso no: ahí la rueda es para la descripción
+    if (zoomExtraDisponible() && cartaEnZoom.contains(evento.target)) {
+        evento.preventDefault();
+        if (evento.deltaY) acercarConRueda(evento);
+        return;
+    }
     if (!zonaConScroll(evento.target, evento.deltaY)) evento.preventDefault();
 };
 
@@ -946,6 +985,7 @@ const alTeclearConZoom = (evento) => {
 
 const alRedimensionarConZoom = () => {
     if (!cartaEnZoom || zoomOcupado) return;
+    limpiarZoomExtra(); // con otro tamaño de ventana, el zoom extra vuelve a lo normal
     soltarZoom(cartaEnZoom); // para medir dónde está la carta en la grilla (los estilos "importantes" de la carta no se pueden pisar)
     cartaEnZoom.datosZoom = calcularZoom(cartaEnZoom);
     fijarZoom(cartaEnZoom);
@@ -959,6 +999,137 @@ function bloquearDesplazamiento(bloquear) {
     window[accion]('touchmove', frenarToque, { passive: false });
     window[accion]('keydown', alTeclearConZoom, true);
     window[accion]('resize', alRedimensionarConZoom);
+}
+
+// ZOOM EXTRA: con una carta ampliada y DE FRENTE (el dorso no: ahí la rueda y el pellizco son para la descripción), la rueda del mouse
+// hacia arriba, con el puntero sobre la carta, la agranda todavía más, y hacia abajo la devuelve al tamaño normal. Lo que está bajo el
+// puntero se queda bajo el puntero (se acerca a donde se mira). En celular se hace separando los dedos (y juntándolos vuelve), y mover los
+// dos dedos a la vez la desplaza. Mientras está agrandada de más la carta no se inclina: la inclinación se cancela (y vuelve sola cuando
+// se la devuelve al tamaño normal). Las flechas de los costados se esconden, y si se da vuelta la carta, se pasa a otra o se cierra el
+// zoom, vuelve a lo normal.
+const ZOOM_EXTRA_MAXIMO = 3;       // veces el tamaño del zoom normal
+const ZOOM_EXTRA_RUEDA = 0.0016;   // cuánto crece por cada unidad de la rueda (una muesca del mouse trae ~100: ×1,17)
+const ZOOM_EXTRA_SUAVIZADO = 60;   // ms que tarda en alcanzar lo pedido con la rueda
+let zoomExtra = false;             // true mientras la carta ampliada está más grande que el zoom normal
+let zoomExtraCuadro = 0;           // pedido de animationFrame pendiente
+let zoomExtraUltimoCuadro = 0;
+let zoomExtraAncla = { x: 0, y: 0 }; // el punto de la pantalla que se queda quieto al agrandar (el puntero)
+const zoomExtraTerminados = [];    // quienes esperan a que termine de volver a lo normal (ver volverAlZoomNormal)
+
+// ¿Se puede agrandar de más la carta ampliada? Solo si ya llegó al centro, no se está dando vuelta y está de frente
+const zoomExtraDisponible = () => !!cartaEnZoom?.datosZoom && !zoomOcupado && !zoomCerrando && !cartaEnZoom.girando
+    && !cartaEnZoom.classList.contains('de-dorso');
+
+// Pone el zoom extra de la carta en "factor". "anclaVieja" es el punto de la pantalla que estaba sobre cierto lugar de la carta, y "anclaNueva"
+// adónde tiene que quedar ese mismo lugar (es el mismo punto con la rueda; con el pellizco los dedos se pueden mover mientras se separan).
+// La carta nunca deja huecos de la pantalla hacia un lado: puede correrse solo hasta que el borde llega al de la pantalla (y si es más chica
+// que la pantalla, queda centrada). Pero se sigue calculando adónde estaría sin ese tope ("ix", "iy"), así acercar mirando cerca de un borde
+// (la rueda) deja ese borde a la vista aunque la carta todavía fuera más chica que la pantalla al empezar a acercar. Con el pellizco, en
+// cambio, la carta sigue a los dedos tal cual: ahí lo de sin el tope se descarta ("directo").
+function ponerZoomExtra(carta, factor, anclaVieja, anclaNueva = anclaVieja, directo = false) {
+    const datos = carta.datosZoom;
+    const extra = datos.extra;
+    const nuevo = Math.max(1, Math.min(ZOOM_EXTRA_MAXIMO, factor));
+    const razon = nuevo / extra.factor;
+    const ancho = document.documentElement.clientWidth;
+    const alto = window.innerHeight;
+    const escala = datos.escala * nuevo;
+    const sobraX = Math.max(0, (datos.anchoBase * escala - ancho) / 2); // cuánto sobra la carta de la pantalla en cada eje
+    const sobraY = Math.max(0, (datos.altoBase * escala - alto) / 2);
+    const viejaX = anclaVieja.x - ancho / 2;
+    const viejaY = anclaVieja.y - alto / 2;
+    const nuevaX = anclaNueva.x - ancho / 2;
+    const nuevaY = anclaNueva.y - alto / 2;
+    if (nuevo === 1) {
+        extra.ix = extra.iy = extra.x = extra.y = 0;
+    } else {
+        extra.ix = nuevaX - (viejaX - extra.ix) * razon;
+        extra.iy = nuevaY - (viejaY - extra.iy) * razon;
+        extra.x = Math.max(-sobraX, Math.min(sobraX, extra.ix));
+        extra.y = Math.max(-sobraY, Math.min(sobraY, extra.iy));
+        if (directo) {
+            extra.ix = extra.x;
+            extra.iy = extra.y;
+        }
+    }
+    extra.factor = nuevo;
+    fijarZoom(carta);
+    avisarZoomExtra();
+}
+
+// Cuando la carta pasa a estar (o deja de estar) agrandada de más: las flechas se esconden, y se avisa (la inclinación se cancela o se retoma)
+function avisarZoomExtra() {
+    const ahora = !!cartaEnZoom?.datosZoom && cartaEnZoom.datosZoom.extra.factor > 1;
+    if (ahora === zoomExtra) return;
+    zoomExtra = ahora;
+    document.getElementById('zoom-flechas')?.classList.toggle('zoom-extra', zoomExtra);
+    document.dispatchEvent(new CustomEvent('zoom-extra'));
+}
+
+function animarZoomExtra(ahora) {
+    zoomExtraCuadro = 0;
+    const carta = cartaEnZoom;
+    if (!carta?.datosZoom || zoomOcupado) {
+        limpiarZoomExtra();
+        return;
+    }
+    const extra = carta.datosZoom.extra;
+    const paso = Math.min(ahora - zoomExtraUltimoCuadro, 64);
+    zoomExtraUltimoCuadro = ahora;
+    let factor = extra.factor + (extra.objetivo - extra.factor) * (1 - Math.exp(-paso / ZOOM_EXTRA_SUAVIZADO));
+    if (Math.abs(extra.objetivo - factor) < 0.003) factor = extra.objetivo;
+    ponerZoomExtra(carta, factor, zoomExtraAncla);
+    if (extra.factor !== extra.objetivo) {
+        zoomExtraCuadro = requestAnimationFrame(animarZoomExtra);
+    } else {
+        zoomExtraTerminados.splice(0).forEach(resolver => resolver());
+    }
+}
+
+// Le pide a la carta que vaya (suavemente) a ese zoom extra, achicándose o agrandándose alrededor de "ancla"
+function pedirZoomExtra(carta, objetivo, ancla) {
+    const extra = carta.datosZoom.extra;
+    extra.objetivo = Math.max(1, Math.min(ZOOM_EXTRA_MAXIMO, objetivo));
+    zoomExtraAncla = ancla;
+    if (reducirMovimiento) {
+        ponerZoomExtra(carta, extra.objetivo, ancla);
+        zoomExtraTerminados.splice(0).forEach(resolver => resolver());
+    } else if (!zoomExtraCuadro) {
+        zoomExtraUltimoCuadro = performance.now();
+        zoomExtraCuadro = requestAnimationFrame(animarZoomExtra);
+    }
+}
+
+function acercarConRueda(evento) {
+    const unidad = evento.deltaMode === 1 ? 33 : evento.deltaMode === 2 ? 800 : 1; // (algunos navegadores cuentan en líneas o en páginas)
+    const delta = evento.deltaY * unidad * (evento.ctrlKey ? 6 : 1); // (con Ctrl llega el pellizco del trackpad, que manda valores chicos)
+    const extra = cartaEnZoom.datosZoom.extra;
+    pedirZoomExtra(cartaEnZoom, extra.objetivo * Math.exp(-delta * ZOOM_EXTRA_RUEDA), { x: evento.clientX, y: evento.clientY });
+}
+
+// Devuelve la carta al tamaño normal y avisa cuando llegó (se usa antes de darla vuelta)
+function volverAlZoomNormal(carta) {
+    return new Promise((resolver) => {
+        if (!carta.datosZoom || carta.datosZoom.extra.factor === 1) {
+            resolver();
+            return;
+        }
+        zoomExtraTerminados.push(resolver);
+        pedirZoomExtra(carta, 1, { x: document.documentElement.clientWidth / 2, y: window.innerHeight / 2 });
+    });
+}
+
+// Corta lo que esté en marcha y deja el zoom extra como "no hay" (la carta que estaba agrandada de más ya no lo está, o se va)
+function limpiarZoomExtra() {
+    cancelAnimationFrame(zoomExtraCuadro);
+    zoomExtraCuadro = 0;
+    zoomExtraTerminados.splice(0).forEach(resolver => resolver());
+    if (cartaEnZoom?.datosZoom) cartaEnZoom.datosZoom.extra.objetivo = cartaEnZoom.datosZoom.extra.factor;
+    if (zoomExtra) {
+        zoomExtra = false;
+        document.getElementById('zoom-flechas')?.classList.remove('zoom-extra');
+        document.dispatchEvent(new CustomEvent('zoom-extra'));
+    }
 }
 
 // Flechas a los costados de la carta ampliada para pasar a la anterior o a la siguiente sin salir del zoom
@@ -1075,7 +1246,8 @@ async function cambiarZoom(direccion, repetida = false) {
 
     const zoomCss = parseFloat(getComputedStyle(vieja).zoom) || 1;
     const salto = direccion * document.documentElement.clientWidth * 0.55 / zoomCss;
-    const antes = vieja.datosZoom;
+    const antes = zoomVigente(vieja.datosZoom); // (con el zoom extra que tenga)
+    limpiarZoomExtra(); // la nueva entra con el zoom normal
     nueva.datosZoom = calcularZoom(nueva);
     const despues = nueva.datosZoom;
     cartaEnZoom = nueva;
@@ -1195,7 +1367,8 @@ async function cerrarZoom({ rapido = false } = {}) {
     zoomCerrando = true;
     document.dispatchEvent(new CustomEvent('zoom-cambio'));
 
-    const { escala, dx, dy } = carta.datosZoom;
+    const { escala, dx, dy } = zoomVigente(carta.datosZoom); // vuelve desde donde está, con el zoom extra que tenga
+    limpiarZoomExtra();
     const fondo = document.getElementById('zoom-fondo');
     fondo?.classList.remove('abierto');
     document.getElementById('zoom-flechas')?.classList.remove('abierto');
@@ -1277,8 +1450,8 @@ function activarZoom() {
 //   - 5 s: cómo ampliar una carta y, en pantallas táctiles, cómo inclinarla y darla vuelta. Con mouse habla del doble clic; en
 //          pantallas táctiles son dos cartelitos separados: el doble toque o pellizco, y que si se mantiene apretada la carta y se mueve
 //          el dedo, brilla y se inclina, y con un barrido rápido se da vuelta (dicho sin palabras técnicas).
-//   - 2 s después de ampliar la primera carta: (solo pantallas táctiles) cómo cerrarla y cómo pasar a otra deslizando el dedo. Sale una
-//          sola vez por visita, y no si se cierra la carta antes de que entre.
+//   - 2 s después de ampliar la primera carta: (solo pantallas táctiles) cómo cerrarla y cómo pasar a otra deslizando el dedo, en dos
+//          cartelitos separados. Salen una sola vez por visita, y no si se cierra la carta antes de que entren.
 // Si hay más de uno a la vez, se apilan (el primero arriba). Cada consejo es independiente: se va apenas la persona hace lo que
 // cuenta (y ni aparece si ya lo hizo antes de que entre). Si ya hizo todo, el aviso no aparece. Mientras hay una carta ampliada
 // los avisos pasan por encima del zoom, para que se lean.
@@ -1342,7 +1515,7 @@ const AVISO_ZOOM_ESPERA = 5000;          // ms desde que aparece la primera cart
 const AVISO_ZOOM_DURACION = 7000;        // ms que queda a la vista el consejo (computadora: uno solo)
 const AVISO_ZOOM_DURACION_DEDO = 14000;  // en celular, los dos cartelitos (el segundo tiene más texto): más tiempo para leerlos
 const AVISO_GESTOS_ESPERA = 2000;        // ms desde que se amplía la carta (solo celular)
-const AVISO_GESTOS_DURACION = 9000;      // ms que queda a la vista (lleva dos consejos)
+const AVISO_GESTOS_DURACION = 10500;     // ms que quedan a la vista (son dos cartelitos, uno por consejo)
 
 let cajaDeAvisos = null; // el contenedor donde se apilan los avisos (se crea con el primero)
 
@@ -1396,14 +1569,16 @@ function escribirAviso(aviso) {
 }
 
 function activarAvisosDeAyuda() {
-    if (!registrarVisitaDeAvisos()) return; // ya entró más de 6 veces: no hace falta ningún aviso
-    activarAvisoCombate();
-    activarAvisoZoom();
-    activarAvisoGestosDelZoom();
+    const hayAvisos = registrarVisitaDeAvisos(); // (también cuenta la visita, así que se llama siempre)
+    // Cómo se acomodan los carteles vale para todos, también para los que salen en visitas más allá de la sexta (el de la inclinación)
     document.addEventListener('zoom-cambio', avisosSobreElZoom);
     window.addEventListener('resize', ubicarAvisos);
     // La barra también cambia de alto sin que cambie la ventana (por ejemplo, cuando el bloque de carga desaparece)
     if ('ResizeObserver' in window) new ResizeObserver(ubicarAvisos).observe(document.getElementById('navbar'));
+    if (!hayAvisos) return; // ya entró más de 6 veces: no hace falta ninguno de los avisos de cómo se usa la página
+    activarAvisoCombate();
+    activarAvisoZoom();
+    activarAvisoGestosDelZoom();
 }
 
 // Con la carta ya ampliada: cómo cerrarla y cómo pasar a otra (los gestos de los que no hay ninguna pista a la vista, porque en pantallas
@@ -1415,13 +1590,13 @@ function activarAvisoGestosDelZoom() {
     let enZoom = false;    // hay una carta ampliada (y no se está cerrando)
     let espera = 0;
     let temporizador = 0;
-    let aviso = null;
+    let avisos = []; // un cartelito por consejo (los que están a la vista)
 
     const cerrar = () => {
         clearTimeout(espera);
         clearTimeout(temporizador);
-        if (aviso) quitarAviso(aviso);
-        aviso = null;
+        avisos.forEach(quitarAviso);
+        avisos = [];
     };
 
     document.addEventListener('zoom-cambio', () => {
@@ -1437,14 +1612,254 @@ function activarAvisoGestosDelZoom() {
             if (!enZoom || yaSeMostro) return;
             yaSeMostro = true;
             marcarAvisoHecho('gestos');
-            aviso = crearAviso('aviso-gestos-zoom', [
+            // Dos cartelitos separados (cerrar, y pasar a otra carta), uno debajo del otro: no una sola burbuja con dos líneas
+            avisos = [
                 { clave: 'cerrar', icono: '👆', texto: 'aviso.zoom.cerrar' },
                 { clave: 'deslizar', icono: '↔️', texto: 'aviso.zoom.deslizar' },
-            ]);
-            escribirAviso(aviso);
-            ponerAviso(aviso);
+            ].map((consejo) => {
+                const aviso = crearAviso(`aviso-gestos-zoom-${consejo.clave}`, [consejo]);
+                escribirAviso(aviso);
+                ponerAviso(aviso);
+                return aviso;
+            });
             temporizador = setTimeout(cerrar, AVISO_GESTOS_DURACION);
         }, AVISO_GESTOS_ESPERA);
+    });
+    document.addEventListener('idioma-cambiado', () => avisos.forEach(escribirAviso));
+}
+
+// Cartel de ayuda de la inclinación con el mouse (solo computadora: existe únicamente si hay inclinación con el mouse, o sea, el botón de la
+// barra está a la vista). Cuenta que se puede anular la inclinación manteniendo apretada Shift y que el botón de la barra (al lado del de
+// sonido) la invierte; mientras sale, el botón salta y lanza ondas (la misma llamada que el botón de sonido en su primer sonido: "llamando").
+// Una sola vez por sesión del navegador. Cuándo sale depende de cuántas sesiones lleva la persona en la página (el mismo contador de visitas
+// de los avisos de ayuda), y es cada vez más tarde:
+//     sesiones 1 a 5:   a los 15 s de inclinación acumulada   (con la inclinación invertida: a los 20 s de cargar la página)
+//     sesiones 6 a 9:   a los 45 s                            (55 s)
+//     sesiones 10 a 14: a 1:20 min                            (1:35 min)
+//     de la 15 en adelante: no sale más
+// Con la inclinación invertida las cartas casi no se inclinan (solo con Shift), así que ahí no se espera a que se inclinen: sale a los tantos
+// segundos de haber cargado la página. Si la persona ya mostró que conoce Shift (la mantuvo apretada más de 3 s o la apretó más de 2 veces
+// con el mouse sobre las cartas, en esta visita o en otra), el cartel no la explica: solo habla del botón. Si hace clic en el botón, ya lo
+// encontró: el cartel deja de hacer falta en lo que queda de la sesión.
+const INCLINACION_AVISO_SESION = 'digimon-aviso-inclinacion'; // sessionStorage: en esta sesión ya salió
+const INCLINACION_AVISO_TRAMOS = [ // de la sesión más alta a la más baja: vale el primero cuyo "desde" no supera el número de sesión
+    { desde: 10, acumulado: 80000, carga: 95000 }, // ms de inclinación acumulada, y ms desde la carga si está invertida
+    { desde: 6, acumulado: 45000, carga: 55000 },
+    { desde: 1, acumulado: 15000, carga: 20000 },
+];
+const INCLINACION_AVISO_ULTIMA_SESION = 14;
+const INCLINACION_AVISO_DURACION = 10000;        // ms a la vista (explica Shift y el botón)
+const INCLINACION_AVISO_DURACION_BREVE = 7000;   // ms a la vista (solo el botón)
+const SHIFT_CONOCIDA_TIEMPO = 3000;              // la conoce si la mantuvo apretada más de 3 s...
+const SHIFT_CONOCIDA_VECES = 2;                  // ...o la apretó más de 2 veces
+
+function inclinacionAvisoYaSalio() {
+    try {
+        return sessionStorage.getItem(INCLINACION_AVISO_SESION) === '1';
+    } catch (error) {
+        return false;
+    }
+}
+
+function activarAvisoDeInclinacion() {
+    const boton = document.getElementById('inclinacion-invertida');
+    if (!boton || boton.hidden) return; // sin inclinación con el mouse (celular, o "reducir movimiento") no hay nada que contar
+    const sesion = memoriaAvisos.visitas;
+    if (sesion > INCLINACION_AVISO_ULTIMA_SESION || inclinacionAvisoYaSalio()) return;
+    const tramo = INCLINACION_AVISO_TRAMOS.find(({ desde }) => sesion >= desde) ?? INCLINACION_AVISO_TRAMOS.at(-1);
+    const estaInvertida = () => boton.getAttribute('aria-pressed') === 'true';
+    const invertidaAlCargar = estaInvertida();
+
+    let terminado = false; // ya salió, o ya no hace falta
+    let aviso = null;
+    let esperaCarga = 0;   // modo invertido: desde la carga de la página
+    let esperaTilt = 0;    // modo normal: cuando la inclinación acumulada llega al tiempo
+    let reintento = 0;
+    let cierre = 0;
+
+    // --- ¿La persona ya sabe usar Shift con las cartas? Cuenta solo con el mouse sobre las cartas (no cuando escribe mayúsculas en un campo) ---
+    let sobreLasCartas = false;
+    let shiftDesde = 0;   // desde cuándo la mantiene apretada sobre las cartas (0: no la mantiene)
+    let shiftTiempo = 0;  // ms que la mantuvo apretada sobre las cartas
+    let shiftVeces = 0;   // veces que la apretó sobre las cartas
+
+    const conoceShift = () => {
+        const tiempo = shiftTiempo + (shiftDesde ? performance.now() - shiftDesde : 0);
+        if (tiempo > SHIFT_CONOCIDA_TIEMPO || shiftVeces > SHIFT_CONOCIDA_VECES) marcarAvisoHecho('shift'); // queda guardado: ya la conoce
+        return avisoHecho('shift');
+    };
+
+    const soltarShift = () => {
+        if (!shiftDesde) return;
+        shiftTiempo += performance.now() - shiftDesde;
+        shiftDesde = 0;
+        conoceShift();
+    };
+
+    listaDigimons.addEventListener('pointermove', (evento) => {
+        if (evento.pointerType === 'touch') return;
+        sobreLasCartas = true;
+        if (!evento.shiftKey) soltarShift(); // (también corrige si se soltó fuera de la ventana y no nos enteramos)
+        else if (!shiftDesde) shiftDesde = performance.now(); // llegó a las cartas con Shift ya apretada
+    });
+    listaDigimons.addEventListener('pointerleave', () => {
+        sobreLasCartas = false;
+        soltarShift();
+    });
+    window.addEventListener('blur', soltarShift);
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key !== 'Shift' || evento.repeat || !sobreLasCartas) return;
+        if (document.activeElement?.matches?.('input, textarea, select')) return;
+        shiftVeces += 1;
+        if (!shiftDesde) shiftDesde = performance.now();
+        conoceShift();
+    });
+    document.addEventListener('keyup', (evento) => {
+        if (evento.key === 'Shift') soltarShift();
+    });
+
+    // --- El cartel ---
+    const cerrar = () => {
+        clearTimeout(cierre);
+        if (aviso) quitarAviso(aviso);
+        aviso = null;
+    };
+
+    // El botón salta y lanza ondas (igual que el de sonido): ver "llamando" en el CSS
+    const llamarLaAtencionDelBoton = () => {
+        boton.classList.remove('llamando');
+        void boton.offsetWidth; // para que la animación arranque de cero
+        boton.classList.add('llamando');
+        setTimeout(() => boton.classList.remove('llamando'), AUDIO_AVISO_DURACION);
+    };
+
+    const mostrar = () => {
+        clearTimeout(reintento);
+        if (terminado) return;
+        // Con una carta ampliada, un combate en curso o la pestaña en segundo plano se espera (taparía el cartel, o nadie vería el botón)
+        if (cartaEnZoom || zoomOcupado || combateEnCurso || document.hidden) {
+            reintento = setTimeout(mostrar, 500);
+            return;
+        }
+        terminado = true;
+        clearTimeout(esperaCarga);
+        clearTimeout(esperaTilt);
+        try {
+            sessionStorage.setItem(INCLINACION_AVISO_SESION, '1');
+        } catch (error) {
+            // Sin sessionStorage, vale mientras no se recargue la página
+        }
+        const sabeShift = conoceShift();
+        aviso = crearAviso('aviso-inclinacion', [{
+            clave: 'inclinacion',
+            icono: '🖱️',
+            texto: `aviso.inclinacion.${estaInvertida() ? 'invertida' : 'normal'}${sabeShift ? '.boton' : ''}`,
+        }]);
+        escribirAviso(aviso);
+        ponerAviso(aviso);
+        llamarLaAtencionDelBoton();
+        cierre = setTimeout(cerrar, sabeShift ? INCLINACION_AVISO_DURACION_BREVE : INCLINACION_AVISO_DURACION);
+    };
+
+    // --- Cuándo: con la inclinación normal, al juntar el tiempo de inclinación con el mouse; con la invertida, a los tantos segundos de cargar ---
+    let inclinando = false; // hay una carta inclinándose con el mouse (la que se inclina con el dedo no cuenta)
+    let acumulado = 0;      // ms de inclinación con el mouse en esta carga de la página
+    let desde = 0;          // desde cuándo corre el tramo de inclinación de ahora (0: no corre)
+
+    const sumarTramo = () => {
+        if (!desde) return;
+        acumulado += performance.now() - desde;
+        desde = 0;
+        clearTimeout(esperaTilt);
+    };
+
+    const empezarTramo = () => {
+        if (desde || terminado || invertidaAlCargar) return;
+        desde = performance.now();
+        esperaTilt = setTimeout(mostrar, Math.max(0, tramo.acumulado - acumulado));
+    };
+
+    document.addEventListener('inclinacion-cambio', (evento) => { // lo avisa activarInclinacion
+        inclinando = evento.detail.activa && !inclinandoConDedo;
+        if (inclinando) empezarTramo();
+        else sumarTramo();
+    });
+    // Con la pestaña en segundo plano no se cuenta
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) sumarTramo();
+        else if (inclinando) empezarTramo();
+    });
+    if (invertidaAlCargar) esperaCarga = setTimeout(mostrar, tramo.carga);
+
+    // Hizo clic en el botón: ya lo encontró
+    boton.addEventListener('click', () => {
+        terminado = true;
+        clearTimeout(esperaCarga);
+        clearTimeout(esperaTilt);
+        clearTimeout(reintento);
+        boton.classList.remove('llamando');
+        cerrar();
+    });
+    document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
+}
+
+// Cartel del zoom extra (solo computadora): al ampliar la primera carta de la sesión cuenta, en una línea, que con el mouse sobre la carta la
+// rueda hacia arriba la agranda todavía más y hacia abajo vuelve (ver "ZOOM EXTRA"). Una sola vez por sesión del navegador (si se cierra la
+// carta antes de que entre, todavía no lo vio y sale con la próxima), y solo en las primeras 5 sesiones de la persona (el mismo contador de
+// visitas de los avisos de ayuda): a partir de la sexta no sale más. Se va si la persona hace lo que cuenta, o al cerrar la carta.
+const ZOOM_EXTRA_AVISO_SESION = 'digimon-aviso-zoom-extra'; // sessionStorage: en esta sesión ya salió
+const ZOOM_EXTRA_AVISO_ULTIMA_SESION = 5;
+const ZOOM_EXTRA_AVISO_ESPERA = 1500;    // ms desde que se abre el zoom (la carta llega al centro a los 0,7 s)
+const ZOOM_EXTRA_AVISO_DURACION = 8000;  // ms a la vista
+
+function activarAvisoDeZoomExtra() {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return; // en celular no
+    if (memoriaAvisos.visitas > ZOOM_EXTRA_AVISO_ULTIMA_SESION) return;
+    const yaSalio = () => {
+        try {
+            return sessionStorage.getItem(ZOOM_EXTRA_AVISO_SESION) === '1';
+        } catch (error) {
+            return false;
+        }
+    };
+    let salio = yaSalio();
+    let enZoom = false;  // hay una carta ampliada (y no se está cerrando)
+    let espera = 0;
+    let cierre = 0;
+    let aviso = null;
+
+    const cerrar = () => {
+        clearTimeout(espera);
+        clearTimeout(cierre);
+        if (aviso) quitarAviso(aviso);
+        aviso = null;
+    };
+
+    document.addEventListener('zoom-cambio', () => {
+        const abierto = !!cartaEnZoom && !zoomCerrando;
+        if (abierto === enZoom) return; // también sale al pasar de una carta a otra: no es un zoom nuevo
+        enZoom = abierto;
+        if (!abierto) { // se cerró la carta: lo que cuenta ya no sirve
+            cerrar();
+            return;
+        }
+        if (salio) return;
+        espera = setTimeout(() => {
+            if (!enZoom || salio) return;
+            salio = true;
+            try {
+                sessionStorage.setItem(ZOOM_EXTRA_AVISO_SESION, '1');
+            } catch (error) {
+                // Sin sessionStorage, vale mientras no se recargue la página
+            }
+            aviso = crearAviso('aviso-zoom-extra', [{ clave: 'zoom-extra', icono: '🔍', texto: 'aviso.zoomExtra' }]);
+            escribirAviso(aviso);
+            ponerAviso(aviso);
+            cierre = setTimeout(cerrar, ZOOM_EXTRA_AVISO_DURACION);
+        }, ZOOM_EXTRA_AVISO_ESPERA);
+    });
+    document.addEventListener('zoom-extra', () => { // ya lo está haciendo: el cartel se va
+        if (zoomExtra) cerrar();
     });
     document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
 }
@@ -1613,6 +2028,8 @@ function activarZoomConDobleToque() {
 
 // Con el dedo la carta también se amplía con el gesto de zoom (dos dedos que se separan sobre la carta) y vuelve
 // a su lugar juntando los dedos. Tocar afuera o la ✕ también la cierra, como siempre.
+// Con la carta ya ampliada y de frente, separar los dedos la agranda todavía más y juntarlos la devuelve (ver "ZOOM EXTRA"); si ya está en su
+// tamaño normal, juntar los dedos la cierra, como siempre. En el dorso, juntar los dedos cierra y separarlos no hace nada.
 // (El CSS deja las cartas con touch-action: pan-y: se pueden desplazar hacia arriba y abajo, pero el navegador no amplía la
 // página con ese pellizco y los dedos le llegan al código.)
 const PELLIZCO_ABRIR = 1.3;   // los dedos se separaron un 30%
@@ -1625,13 +2042,23 @@ function activarZoomConPellizco() {
         toques[0].clientX - toques[1].clientX,
         toques[0].clientY - toques[1].clientY
     );
+    const medioEntreDedos = toques => ({
+        x: (toques[0].clientX + toques[1].clientX) / 2,
+        y: (toques[0].clientY + toques[1].clientY) / 2,
+    });
 
     document.addEventListener('touchstart', (evento) => {
         pellizco = null;
         if (evento.touches.length !== 2) return;
         const [a, b] = evento.touches;
         if (cartaEnZoom) {
-            pellizco = { carta: null, distancia: distanciaEntreDedos(evento.touches), resuelto: false };
+            // "previo" es donde estaban los dedos en el último movimiento (el zoom extra sigue a los dedos paso a paso); "cerrable" es si
+            // este gesto puede cerrar el zoom: no si ya se empezó con la carta agrandada de más (juntar los dedos es para devolverla)
+            pellizco = {
+                carta: null, distancia: distanciaEntreDedos(evento.touches), resuelto: false,
+                previo: { distancia: distanciaEntreDedos(evento.touches), medio: medioEntreDedos(evento.touches) },
+                cerrable: !zoomExtra,
+            };
             return;
         }
         // Los dos dedos tienen que estar en la misma carta (o el segundo en el espacio entre cartas)
@@ -1646,7 +2073,18 @@ function activarZoomConPellizco() {
         if (!pellizco || pellizco.resuelto || evento.touches.length !== 2 || pellizco.distancia < 10) return;
         const proporcion = distanciaEntreDedos(evento.touches) / pellizco.distancia;
         if (evento.cancelable) evento.preventDefault();
-        if (!pellizco.carta && proporcion <= PELLIZCO_CERRAR) {
+        if (!pellizco.carta && zoomExtraDisponible()) { // zoom extra: la carta sigue a los dedos (se agranda con la separación y se corre con el movimiento)
+            const distancia = distanciaEntreDedos(evento.touches);
+            const medio = medioEntreDedos(evento.touches);
+            const carta = cartaEnZoom;
+            const extra = carta.datosZoom.extra;
+            const factor = Math.max(1, Math.min(ZOOM_EXTRA_MAXIMO, extra.factor * distancia / pellizco.previo.distancia));
+            extra.objetivo = factor;
+            ponerZoomExtra(carta, factor, pellizco.previo.medio, medio, true);
+            pellizco.previo = { distancia, medio };
+            if (zoomExtra) pellizco.cerrable = false; // ya se usó para agrandar: juntar los dedos ahora es devolverla, no cerrar
+        }
+        if (!pellizco.carta && pellizco.cerrable && proporcion <= PELLIZCO_CERRAR) {
             pellizco.resuelto = true;
             cerrarZoom();
         } else if (pellizco.carta && proporcion >= PELLIZCO_ABRIR && !cartaEnZoom && !zoomOcupado) {
@@ -1747,8 +2185,34 @@ function activarVoltearConDedo() {
     }, true);
 }
 
+// Preferencia de la inclinación con el mouse (solo computadora): por defecto las cartas se inclinan al pasar el mouse y Shift apretada lo
+// anula; con "invertida" es al revés (no se inclinan al pasar el mouse y solo lo hacen mientras se mantiene apretada Shift). Se cambia con
+// el botón de la barra (#inclinacion-invertida, junto al de sonido) y, como el sonido, se guarda en el navegador de cada persona
+// (localStorage) como un JSON {"invertida": true}, así la próxima vez que entre sigue como la dejó.
+// Para volver a empezar (por ejemplo, para probarlo): localStorage.removeItem('digimon-inclinacion')
+const INCLINACION_ALMACEN = 'digimon-inclinacion';
+
+function leerInclinacionInvertida() {
+    try {
+        return JSON.parse(localStorage.getItem(INCLINACION_ALMACEN))?.invertida === true;
+    } catch (error) {
+        return false; // sin memoria (o con un dato roto) queda como siempre
+    }
+}
+
+function guardarInclinacionInvertida(invertida) {
+    try {
+        localStorage.setItem(INCLINACION_ALMACEN, JSON.stringify({ invertida }));
+    } catch (error) {
+        // Si el navegador no deja guardar, la elección vale solo mientras la página siga abierta
+    }
+}
+
 // Inclinación 3D: la carta se inclina hacia donde apunta el mouse (más en el frente que en el dorso, para poder leer)
-// y el reflejo sigue al puntero (--mx y --my). Sin "reducir movimiento".
+// y el reflejo sigue al puntero (--mx y --my). Sin "reducir movimiento". Con el mouse, mientras se mantiene apretada Shift
+// las cartas no reaccionan: sin inclinación, sin levante ni brillo (se pueden recorrer todas con el mouse sin que pase nada).
+// Al soltarla vuelve todo solo. Con la preferencia "invertida" (ver arriba), Shift hace lo contrario: sin Shift las cartas no reaccionan
+// y con Shift apretada se inclinan, se levantan y brillan.
 // Con el dedo: se mantiene apretada la carta un instante y, sin soltar, al mover el dedo se inclina (mientras tanto la
 // página no se desplaza). Un toque corto sigue siendo un toque normal (elegir la carta para el combate).
 function activarInclinacion() {
@@ -1774,6 +2238,15 @@ function activarInclinacion() {
     const suaves = new Map();  // carta → { x, y }: lo que se está dibujando (incluye las que se están enderezando)
     let cuadro = 0;            // pedido de animationFrame pendiente
     let ultimoCuadro = 0;
+
+    // Le avisa al cartel de ayuda de la inclinación (ver activarAvisoDeInclinacion) cuándo empieza y cuándo termina de inclinarse una carta
+    let inclinacionAvisada = false;
+    function avisarInclinacion() {
+        const activa = !!cartaActual;
+        if (activa === inclinacionAvisada) return;
+        inclinacionAvisada = activa;
+        document.dispatchEvent(new CustomEvent('inclinacion-cambio', { detail: { activa } }));
+    }
 
     function pintar(carta, suave) {
         const maximo = carta.classList.contains('de-dorso') ? INCLINACION_DORSO : INCLINACION_FRENTE;
@@ -1827,6 +2300,7 @@ function activarInclinacion() {
             caja = null;
         }
         if (suaves.has(carta)) arrancar();
+        avisarInclinacion();
     }
 
     // La carta empieza a seguir al puntero. Se usa la caja visible (getBoundingClientRect), que ya tiene en cuenta
@@ -1838,6 +2312,7 @@ function activarInclinacion() {
         caja = { x: rect.left + scrollX, y: rect.top + scrollY, ancho: rect.width, alto: rect.height };
         carta.classList.add('tilt-activo');
         if (!suaves.has(carta)) suaves.set(carta, { x: 0, y: 0 });
+        avisarInclinacion();
     }
 
     function seguir(clienteX, clienteY) {
@@ -1850,16 +2325,53 @@ function activarInclinacion() {
 
     if (conMouse) {
         let puntero = null; // última posición del mouse sobre las cartas (para retomar la inclinación al terminar un giro)
+        // Mientras la inclinación está "anulada", las cartas no reaccionan al mouse: la carta se endereza y no lo sigue, y con la clase
+        // "inclinacion-anulada" el CSS también apaga el levante del hover, el reflejo y la textura holográfica. Se puede pasar el mouse por
+        // todas las cartas sin que ninguna se mueva ni brille. Por defecto se anula mientras se mantiene apretada Shift; con la preferencia
+        // "invertida" es al revés: está anulada siempre, salvo mientras se mantiene apretada Shift. Al cambiar, todo se acomoda solo, sin
+        // mover el mouse. Cada movimiento del mouse trae el estado de Shift (evento.shiftKey), así que si se soltó fuera de la ventana y
+        // nos perdimos el aviso, se corrige solo.
+        let shiftApretada = false;
+        let invertida = leerInclinacionInvertida();
+        const anulada = () => invertida !== shiftApretada; // (invertida y Shift apretada se compensan)
+
+        // Si el mouse está sobre una carta, empieza a seguirlo desde donde está el puntero
+        const retomar = () => {
+            if (!puntero || zoomOcupado || zoomExtra || anulada()) return;
+            const carta = document.elementFromPoint(puntero.x, puntero.y)?.closest('#listado-digimons > li');
+            if (!carta || carta.girando || carta.classList.contains('bailando')) return;
+            tomar(carta);
+            seguir(puntero.x, puntero.y);
+        };
+
+        // Deja todo como corresponde al estado de ahora: anulada, la carta que seguía al mouse se endereza (suave, como al salir de ella);
+        // si no, retoma la inclinación
+        const acomodar = () => {
+            listaDigimons.classList.toggle('inclinacion-anulada', anulada());
+            if (anulada()) soltar(cartaActual);
+            else retomar();
+        };
+
+        const ponerShift = (apretada) => {
+            if (apretada === shiftApretada) return;
+            shiftApretada = apretada;
+            acomodar();
+        };
 
         listaDigimons.addEventListener('pointermove', (evento) => {
             if (evento.pointerType === 'touch' || zoomOcupado) return;
             puntero = { x: evento.clientX, y: evento.clientY };
+            ponerShift(evento.shiftKey);
+            if (anulada() || zoomExtra) { // (con el zoom extra de la carta ampliada tampoco se inclina: ver "ZOOM EXTRA")
+                soltar(cartaActual);
+                return;
+            }
             const carta = evento.target.closest('#listado-digimons > li');
             if (!carta) {
                 soltar(cartaActual);
                 return;
             }
-            if (carta.girando) { // mientras se da vuelta no se inclina (el giro tiene su propia animación)
+            if (carta.girando || carta.classList.contains('bailando')) { // mientras se da vuelta o baila (baile.js) no se inclina: tienen su propia animación
                 soltar(cartaActual);
                 return;
             }
@@ -1871,11 +2383,27 @@ function activarInclinacion() {
         // Se mira qué hay bajo el puntero (y no ":hover"): al terminar el giro el navegador puede tardar en actualizar el "hover"
         document.addEventListener('giro-terminado', (evento) => {
             const carta = evento.detail;
-            if (!puntero || zoomOcupado) return;
+            if (!puntero || zoomOcupado || zoomExtra || anulada()) return;
             const debajo = document.elementFromPoint(puntero.x, puntero.y);
             if (!debajo || !carta.contains(debajo)) return;
             tomar(carta);
             seguir(puntero.x, puntero.y);
+        });
+
+        // Al devolver la carta ampliada a su tamaño normal (ver "ZOOM EXTRA"), la inclinación se retoma si el mouse sigue encima
+        document.addEventListener('zoom-extra', acomodar);
+
+        // El baile de las cartas (baile.js): al empezar, la carta que seguía al puntero se suelta; al terminar, se retoma si el mouse sigue encima
+        document.addEventListener('baile-empezo', () => soltar(cartaActual));
+        document.addEventListener('baile-terminado', acomodar);
+
+        // Al apretar o soltar Shift, la inclinación se anula o se retoma según corresponda (ver "acomodar")
+        document.addEventListener('keydown', (evento) => {
+            if (evento.key === 'Shift') ponerShift(true);
+        });
+
+        document.addEventListener('keyup', (evento) => {
+            if (evento.key === 'Shift') ponerShift(evento.shiftKey); // (por si queda la otra Shift apretada)
         });
 
         listaDigimons.addEventListener('pointerleave', (evento) => {
@@ -1883,12 +2411,39 @@ function activarInclinacion() {
             puntero = null;
             soltar(cartaActual);
         });
+
+        // El botón de la barra (junto al de sonido) invierte la inclinación. Solo existe en computadora: está escondido (hidden) y recién
+        // acá, con mouse y sin "reducir movimiento", se muestra. Queda "hundido" (aria-pressed) cuando está invertida.
+        const botonInversion = document.getElementById('inclinacion-invertida');
+        if (botonInversion) {
+            const mostrarModo = () => {
+                const ayuda = t(invertida ? 'inclinacion.invertida' : 'inclinacion.normal');
+                botonInversion.setAttribute('aria-pressed', String(invertida));
+                botonInversion.title = ayuda;
+                botonInversion.setAttribute('aria-label', ayuda);
+            };
+            botonInversion.hidden = false;
+            botonInversion.addEventListener('click', () => {
+                invertida = !invertida;
+                guardarInclinacionInvertida(invertida);
+                mostrarModo();
+                acomodar();
+            });
+            // Si se cambia el idioma, la ayuda del botón se vuelve a escribir en el idioma nuevo
+            document.addEventListener('idioma-cambiado', mostrarModo);
+            mostrarModo();
+        }
+        acomodar(); // si la preferencia guardada es "invertida", las cartas arrancan sin reaccionar
     }
 
     if (conDedo) activarInclinacionConDedo({ tomar, seguir, soltar: () => soltar(cartaActual) });
 
     // Cuando la carta pasa al centro (o vuelve), la caja que se midió ya no vale: se suelta y se mide de nuevo
     document.addEventListener('zoom-cambio', () => soltar(cartaActual));
+    // Con el zoom extra de la carta ampliada (ver "ZOOM EXTRA") la inclinación se cancela
+    document.addEventListener('zoom-extra', () => {
+        if (zoomExtra) soltar(cartaActual);
+    });
 
     // Al tocar el botón de dar vuelta, la carta se endereza para poder girar
     listaDigimons.addEventListener('click', (evento) => {
@@ -1921,7 +2476,7 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
             return;
         }
         const carta = evento.target.closest('#listado-digimons > li');
-        if (!carta || carta.girando || zoomOcupado || evento.target.closest('button')) return;
+        if (!carta || carta.girando || zoomOcupado || zoomExtra || evento.target.closest('button')) return;
         const toque = evento.touches[0];
         inicio = { x: toque.clientX, y: toque.clientY };
         clearTimeout(espera);
@@ -2203,7 +2758,7 @@ function terminarElAvisoDelBotonDeAudio() {
     devolverBotonDeAudio = null;
 }
 
-let teclaDelBotonDeAudio = false; // true mientras suena la tecla del propio botón al volver a activar el sonido (no cuenta como primer sonido)
+let teclaDelBotonDeAudio = false; // true mientras suena una tecla que no cuenta como primer sonido: la del propio botón de sonido al volver a activarlo y la del botón de inclinación (ver sonarTeclaDeBoton)
 
 function llamarLaAtencionDelBotonDeAudio() {
     if (botonDeAudioYaMostrado || silenciado || teclaDelBotonDeAudio) return;
@@ -2532,8 +3087,25 @@ function sonidoZoom(abrir) {
 // (La vibración en el celular la maneja activarVibracion: vale para todos los botones, también los del reverso de las cartas.)
 // El botón de sonido (#silenciar) es la excepción en las dos cosas: no suena ni vibra al apretarlo sino según a dónde lleva el toque
 // (ver activarBotonDeAudio y activarVibracion): apagar el sonido no hace ruido y apagar la vibración no vibra.
+// El botón de inclinación (#inclinacion-invertida) suena como los demás de la barra, con una excepción: su tecla no cuenta como el primer
+// sonido de la visita, así que no dispara el aviso del botón de sonido (ese aviso queda para el primer sonido que suene después).
 const ZONAS_CON_SONIDO = '#navbar, #filtros, #f-vacio'; // (#silenciar queda afuera aunque esté dentro de la barra)
 const BOTONES_DE_CARTA = '#listado-digimons .c-botones';
+const TECLA_SIN_AVISO = { ...TECLA_NORMAL, sinAviso: true }; // la misma tecla de la barra, pero que no le llama la atención al botón de sonido
+
+// Suena la tecla; si es de las que no cuentan como primer sonido, se avisa mientras suena (llamarLaAtencionDelBotonDeAudio mira esa marca)
+function sonarTeclaDeBoton(bajada, tecla) {
+    if (!tecla.sinAviso) {
+        sonidoTecla(bajada, tecla);
+        return;
+    }
+    teclaDelBotonDeAudio = true;
+    try {
+        sonidoTecla(bajada, tecla);
+    } finally {
+        teclaDelBotonDeAudio = false;
+    }
+}
 
 function activarSonidoBotones() {
     let apretado = null; // la tecla que está apretada (para soltarla igual), o null
@@ -2542,6 +3114,7 @@ function activarSonidoBotones() {
         const boton = evento.target.closest('button');
         if (!boton || boton.disabled) return null;
         if (boton.id === 'silenciar') return null; // el botón de sonido tiene su propio criterio (ver activarBotonDeAudio)
+        if (boton.id === 'inclinacion-invertida') return TECLA_SIN_AVISO;
         if (boton.closest(ZONAS_CON_SONIDO)) return TECLA_NORMAL;
         if (boton.closest(BOTONES_DE_CARTA)) return TECLA_DE_CARTA;
         return null;
@@ -2551,7 +3124,7 @@ function activarSonidoBotones() {
         const tecla = teclaDe(evento);
         if (tecla) {
             apretado = tecla;
-            sonidoTecla(true, tecla);
+            sonarTeclaDeBoton(true, tecla);
         }
     });
     // Se escucha en toda la página: se puede soltar el mouse fuera del botón
@@ -2559,7 +3132,7 @@ function activarSonidoBotones() {
         if (apretado) {
             const tecla = apretado;
             apretado = null;
-            sonidoTecla(false, tecla);
+            sonarTeclaDeBoton(false, tecla);
         }
     });
     document.addEventListener('pointercancel', () => {
@@ -2569,8 +3142,8 @@ function activarSonidoBotones() {
     document.addEventListener('click', (evento) => {
         const tecla = evento.detail === 0 ? teclaDe(evento) : null; // clic hecho con el teclado (Enter o Espacio)
         if (tecla) {
-            sonidoTecla(true, tecla);
-            setTimeout(() => sonidoTecla(false, tecla), 80);
+            sonarTeclaDeBoton(true, tecla);
+            setTimeout(() => sonarTeclaDeBoton(false, tecla), 80);
         }
     }, true);
 }
@@ -2578,6 +3151,8 @@ function activarSonidoBotones() {
 activarInclinacion();
 activarZoom();
 activarAvisosDeAyuda();
+activarAvisoDeInclinacion(); // después de los avisos de ayuda: usa el contador de visitas que ellos cuentan
+activarAvisoDeZoomExtra();   // (este también)
 activarVoltearConDedo();
 activarSonidoBotones();
 activarBotonDeAudio();
