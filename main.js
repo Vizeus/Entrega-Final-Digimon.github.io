@@ -3018,11 +3018,11 @@ const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
 const PERFIL_AUDIO = {
     movil: {
         volumenGeneral: 0.4,
-        volumenTeclas: 0.26,
+        volumenTeclas: 0.15,
     },
     escritorio: {
         volumenGeneral: 0.85,
-        volumenTeclas: 0.38,
+        volumenTeclas: 0.20,
     },
 };
 
@@ -3436,7 +3436,7 @@ function obtenerRuido(contexto) {
 
 // Volumen de las teclas: se adapta según el perfil de audio (celular vs escritorio).
 // GANANCIA_TECLAS empuja el sonido contra ese tope (más ganancia = suena más "lleno" y más fuerte, pero también más comprimido).
-const GANANCIA_TECLAS = 1.3;
+const GANANCIA_TECLAS = 0.85;
 let salidaTeclas;
 let nodoVolumenTeclas;
 
@@ -3472,10 +3472,10 @@ function crearSalidaTeclas(contexto) {
     return compresor;
 }
 
-// Las dos "teclas": la de siempre (barra, filtros y menús) y la de los botones del reverso de las cartas ("⚔️ Ataques" y "🧬 Evolución"),
-// que es la misma pero un poco más bajita de volumen y más aguda de tono (fuerza: multiplica el volumen; tono: multiplica la afinación)
+// Las dos "teclas": la de siempre (barra, filtros y menús) y la de todos los botones de la carta (info, ataques y evolución),
+// que es la misma pero un toque más bajita de volumen y más aguda de tono (fuerza: multiplica el volumen; tono: multiplica la afinación)
 const TECLA_NORMAL = { fuerza: 1, tono: 1 };
-const TECLA_DE_CARTA = { fuerza: 0.8, tono: 1.15 };
+const TECLA_DE_CARTA = { fuerza: 0.65, tono: 1.25 };
 
 // Arma una pulsación (bajada = true) o el soltar la tecla (bajada = false) en el instante t
 function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
@@ -3763,8 +3763,14 @@ function activarSonidoBotones() {
         if (!boton || boton.disabled) return null;
         if (boton.id === 'silenciar') return null; // el botón de sonido tiene su propio criterio (ver activarBotonDeAudio)
         if (boton.id === 'inclinacion-invertida') return TECLA_SIN_AVISO;
-        if (boton.closest(ZONAS_CON_SONIDO)) return TECLA_NORMAL;
-        if (boton.closest(BOTONES_DE_CARTA) || boton.closest('#listado-digimons li')) return TECLA_DE_CARTA;
+        // El botón de hacer flip de la carta no debe hacer sonido
+        if (boton.closest('.c-flip')) return null;
+        // Todos los botones de la carta (los de info: gema, nivel, tipo, elemento; y los de ataque y evolución):
+        // suenan todos con la tecla de cartas (un toque más agudo y bajo)
+        if (boton.closest('.c-gema, .c-nivel, .c-tipo, .c-elem, .c-ataques, .c-evo, .c-botones') || boton.closest('#listado-digimons li')) {
+            return TECLA_DE_CARTA;
+        }
+        if (boton.closest(ZONAS_CON_SONIDO) || boton.closest('.swal2-popup')) return TECLA_NORMAL;
         return null;
     };
     document.addEventListener('pointerdown', (evento) => {
@@ -3895,12 +3901,34 @@ function activarCartelesDeInfoEnCartas() {
                 return;
             }
         }
+
+        // 4. Ataques del dorso
+        const btnAtaques = evento.target.closest?.('#listado-digimons li .c-ataques');
+        if (btnAtaques) {
+            const carta = btnAtaques.closest('#listado-digimons li');
+            if (carta && typeof window.abrirAtaques === 'function') {
+                evento.stopPropagation();
+                window.abrirAtaques(carta);
+                return;
+            }
+        }
+
+        // 5. Evolución del dorso
+        const btnEvo = evento.target.closest?.('#listado-digimons li .c-evo');
+        if (btnEvo) {
+            const carta = btnEvo.closest('#listado-digimons li');
+            if (carta && typeof window.abrirEvolucion === 'function') {
+                evento.stopPropagation();
+                window.abrirEvolucion(carta);
+                return;
+            }
+        }
     }, true);
 
-    // Accesibilidad por teclado: Enter o Espacio sobre la gema, el nivel o los chips activa el clic
+    // Accesibilidad por teclado: Enter o Espacio sobre la gema, el nivel, los chips o los botones del dorso activa el clic
     document.addEventListener('keydown', (evento) => {
         if (evento.key !== 'Enter' && evento.key !== ' ') return;
-        const boton = evento.target.closest?.('#listado-digimons li .c-gema, #listado-digimons li .c-nivel, #listado-digimons li .c-tipo, #listado-digimons li .c-elem');
+        const boton = evento.target.closest?.('#listado-digimons li .c-gema, #listado-digimons li .c-nivel, #listado-digimons li .c-tipo, #listado-digimons li .c-elem, #listado-digimons li .c-ataques, #listado-digimons li .c-evo');
         if (!boton) return;
         evento.preventDefault();
         boton.click();
@@ -4000,6 +4028,7 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, mar
     // Agregamos el manejador de eventos al <li>
     elementoLista.addEventListener('click', (evento) => {
         if (cartaEnZoom) return; // con la carta en grande, un clic no la elige para el combate
+        if (evento.target.closest('button, [role="button"]')) return; // botones y chips de la carta no la seleccionan para el combate
         // Si este clic es el primero de un doble clic, el zoom deshace lo que haga (ver activarZoom)
         if (evento.detail <= 1) seleccionAntesDelClic = { carta: elementoLista, estado: seleccionados.slice() };
         elementoLista.classList.toggle('seleccionado');

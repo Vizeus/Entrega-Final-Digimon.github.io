@@ -2523,6 +2523,8 @@ body:has(.swal2-container) #avisos-ayuda {
 }
 #listado-digimons li .c-frente,
 #listado-digimons li .c-dorso {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -2535,6 +2537,9 @@ body:has(.swal2-container) #avisos-ayuda {
 }
 #listado-digimons li.de-dorso .c-dorso {
   display: flex;
+}
+#listado-digimons li.de-dorso .c-puente {
+  pointer-events: none !important;
 }
 #listado-digimons li .c-cab {
   box-sizing: border-box;
@@ -3451,10 +3456,15 @@ body:has(.swal2-container) #avisos-ayuda {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  position: relative;
+  z-index: 5;
 }
 
 #listado-digimons li .c-evo,
 #listado-digimons li .c-ataques {
+  position: relative;
+  z-index: 6;
+  pointer-events: auto;
   flex: 1 1 82px;
   box-sizing: border-box;
   min-width: 0;

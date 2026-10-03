@@ -2700,6 +2700,8 @@ $desenfoque-del-fondo: 10px;
       // Frente y dorso comparten la misma disposición en columna
       .c-frente,
       .c-dorso {
+        position: relative;
+        z-index: 1;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -2712,6 +2714,7 @@ $desenfoque-del-fondo: 10px;
       &.de-dorso {
         .c-frente { display: none; }
         .c-dorso { display: flex; }
+        .c-puente { pointer-events: none !important; }
       }
 
       // Cabecera con el nombre: una placa metálica con un toque del color del tipo
@@ -3849,10 +3852,15 @@ $desenfoque-del-fondo: 10px;
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    position: relative;
+    z-index: 5;
 }
 
 #listado-digimons li .c-evo,
 #listado-digimons li .c-ataques {
+    position: relative;
+    z-index: 6;
+    pointer-events: auto;
     flex: 1 1 82px;
     box-sizing: border-box;
     min-width: 0;

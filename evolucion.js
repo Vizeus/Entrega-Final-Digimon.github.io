@@ -530,3 +530,5 @@ function crearBotonEvolucion(carta) {
     });
     return boton;
 }
+
+window.abrirEvolucion = abrirEvolucion;

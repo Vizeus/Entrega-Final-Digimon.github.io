@@ -212,6 +212,8 @@ function abrirAtaques(carta) {
     });
 }
 
+window.abrirAtaques = abrirAtaques;
+
 // Si se cambia el idioma con la ventana abierta, el título, la ayuda y el aviso se vuelven a escribir en el idioma nuevo
 document.addEventListener('idioma-cambiado', () => {
     if (!cartaDeAtaques) return;
