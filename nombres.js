@@ -223,7 +223,14 @@ function nombreOccidental(nombreApi) {
     return nombreApi;
 }
 
-// El nombre que se muestra en el idioma actual (es y en: el occidental; el resto de idiomas: el original de la API)
+// Digimon que, aunque tengan nombre occidental (está en la tabla de arriba, así que el buscador y el dorso lo conocen), se muestran con su nombre
+// original también en español y en inglés: el occidental queda como "nombre alternativo". Se anotan con el nombre de la API.
+const SE_MUESTRAN_CON_EL_ORIGINAL = new Set(['Piyomon'].map(claveDeNombre));
+
+// El nombre que se muestra en el idioma actual (es y en: el occidental, salvo los de SE_MUESTRAN_CON_EL_ORIGINAL; el resto de idiomas: el
+// original de la API)
 function nombreParaMostrar(nombreApi) {
-    return IDIOMAS_CON_NOMBRES_OCCIDENTALES.includes(idioma) ? nombreOccidental(nombreApi) : nombreApi;
+    if (!IDIOMAS_CON_NOMBRES_OCCIDENTALES.includes(idioma)) return nombreApi;
+    const base = nombreApi.split('(')[0].trimEnd();
+    return SE_MUESTRAN_CON_EL_ORIGINAL.has(claveDeNombre(base)) ? nombreApi : nombreOccidental(nombreApi);
 }

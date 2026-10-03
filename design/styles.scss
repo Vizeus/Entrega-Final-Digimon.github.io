@@ -211,6 +211,48 @@ body::before {
     @include boton-que-llama;
 }
 
+// Botón de inclinación con el mouse (solo computadora): botón chiquito y redondo, igual al de sonido. Queda "hundido" (aria-pressed) cuando la
+// inclinación está invertida (solo con Shift apretada) y en ese caso muestra, al lado de la carta en perspectiva, la flecha de Shift (⇧).
+// (Cuando aparece el cartel que lo explica salta y lanza ondas, igual que el de sonido en su primer sonido: ver boton-que-llama.)
+@mixin boton-de-inclinacion {
+    --c: #cfdde9;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    color: #24476a;
+    text-shadow: none;
+    border-color: rgba(0, 40, 90, 0.4);
+    border-radius: 50%;
+
+    // (display: grid pisaría al atributo hidden)
+    &[hidden] {
+        display: none;
+    }
+
+    @include boton-que-llama;
+
+    .inclinacion-icono {
+        width: 20px;
+        height: 20px;
+        filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+    }
+
+    .inclinacion-shift {
+        display: none;
+    }
+
+    &[aria-pressed="true"] {
+        box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
+
+        .inclinacion-shift {
+            display: inline;
+        }
+    }
+}
+
 @keyframes sonido-salto {
     0%, 50%, 100% { scale: 1; rotate: 0deg; }
     10% { scale: 1.35; rotate: -14deg; }
@@ -547,31 +589,16 @@ body::before {
     // el par de botones redondos queda centrado entre el idioma y los menús: el de sonido conserva solo los 4 px de su izquierda
     // (8 + 4 = 12) y el de inclinación se queda con los -4 px de la derecha (16 - 4 = 12). Sin él (pantallas táctiles), el de sonido
     // sigue centrado solo, como arriba.
-    .ajustes:has(#inclinacion-invertida:not([hidden])) #silenciar {
+    // (Mientras el de inclinación está afuera de la barra, llamando la atención, en su lugar queda un hueco: cuenta igual)
+    .ajustes:has(#inclinacion-invertida:not([hidden]), [data-hueco="inclinacion-invertida"]) #silenciar {
         @media (min-width: 701px) {
             margin-inline: 4px 0;
         }
     }
 
-    // Queda "hundido" (aria-pressed) cuando la inclinación está invertida (solo con Shift apretada) y en ese caso muestra, al lado de la
-    // carta en perspectiva, la flecha de Shift (⇧). main.js lo muestra (hidden) solo con mouse; en el celular no existe.
+    // Ver el mixin boton-de-inclinacion (más arriba). main.js lo muestra (hidden) solo con mouse; en el celular no existe.
     #inclinacion-invertida {
-        --c: #cfdde9;
-        flex: none;
-        display: grid;
-        place-items: center;
-        width: 34px;
-        height: 34px;
-        padding: 0;
-        color: #24476a;
-        text-shadow: none;
-        border-color: rgba(0, 40, 90, 0.4);
-        border-radius: 50%;
-
-        // (display: grid pisaría al atributo hidden)
-        &[hidden] {
-            display: none;
-        }
+        @include boton-de-inclinacion;
 
         @media (min-width: 701px) {
             margin-inline: 0 -4px;
@@ -579,27 +606,6 @@ body::before {
 
         @media (max-width: 700px) {
             display: none;
-        }
-
-        // Cuando aparece el cartel de ayuda de la inclinación, el botón salta y lanza ondas (igual que el de sonido en su primer sonido)
-        @include boton-que-llama;
-
-        .inclinacion-icono {
-            width: 20px;
-            height: 20px;
-            filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
-        }
-
-        .inclinacion-shift {
-            display: none;
-        }
-
-        &[aria-pressed="true"] {
-            box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
-
-            .inclinacion-shift {
-                display: inline;
-            }
         }
     }
 
@@ -836,19 +842,39 @@ body::before {
         bottom: auto;
         left: 12px;
     }
+
+    // (El de inclinación no existe en celular; si se achica la ventana justo cuando está afuera de la barra, no se muestra)
+    body > #inclinacion-invertida {
+        display: none;
+    }
 }
 
-// En computadora el botón vive en la barra. Solo cuando el primer sonido de la sesión es el del zoom o el de "Iniciar Combate", main.js
-// lo saca un momento de la barra (con top y left puestos en el mismo lugar de la pantalla) para que el aviso se vea por encima de la
-// cortina oscura y desenfocada.
+// En computadora los botones redondos de sonido e inclinación viven en la barra. Cuando uno llama la atención (salta, lanza ondas y suelta
+// su globito: ver "LLAMADA DE LOS BOTONES REDONDOS" en main.js) y hay algo por encima de la barra —el zoom de una carta, un cartel del combate
+// o uno de información, todos con una cortina oscura y desenfocada—, main.js lo saca un momento de la barra (con top y left puestos en el
+// mismo lugar de la pantalla) para que se vea por encima de la cortina y se pueda tocar. Al terminar vuelve a la barra.
 @media (min-width: 701px) {
-    body > #silenciar {
+    body > #silenciar,
+    body > #inclinacion-invertida {
         @include boton-de-gel;
-        @include boton-de-sonido;
         position: fixed;
         z-index: 1800;
         margin: 0;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(255, 255, 255, 0.85), 0 5px 14px rgba(0, 20, 70, 0.55);
+    }
+
+    body > #silenciar {
+        @include boton-de-sonido;
+    }
+
+    body > #inclinacion-invertida {
+        @include boton-de-inclinacion;
+    }
+
+    // "Hundidos" (sonido apagado, inclinación invertida) siguen con su aro blanco y su sombra para despegarse de la cortina
+    body > #silenciar.silenciado,
+    body > #inclinacion-invertida[aria-pressed="true"] {
+        box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.85), 0 5px 14px rgba(0, 20, 70, 0.55);
     }
 }
 
@@ -2758,6 +2784,37 @@ $desenfoque-del-fondo: 10px;
         cursor: help;
       }
 
+      // Marca de los digimons que la API trae como Armor (rojo, "A") o Hybrid (verde, "H"): igual que la gema de la X-Antibody
+      // y en el mismo lugar. Al pasar el mouse dice cuál es. Si una carta tuviera las dos, la marca va justo debajo de la X.
+      // El rojo de Armor es un bermellón (tira a naranja); el de la X-Antibody es un carmesí rosado: con la letra y el lugar no se confunden.
+      .c-marca {
+        position: absolute;
+        z-index: 2;
+        top: 6px;
+        left: 6px;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 900 16px/1 var(--f-titulo), sans-serif;
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 25%, #ffd6c9 0%, #f22f12 52%, #7d1204 100%); // Armor: bermellón
+        box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.7);
+        cursor: help;
+      }
+
+      &[data-marca="Hybrid"] .c-marca {
+        background: radial-gradient(circle at 30% 25%, #c9ffe9 0%, #14b87a 52%, #045239 100%);
+      }
+
+      .c-x ~ .c-marca {
+        top: 36px;
+      }
+
       // Nivel (izquierda) e ID (derecha)
       .c-sub {
         display: flex;
@@ -3108,6 +3165,32 @@ $desenfoque-del-fondo: 10px;
   opacity: 0 !important;
 }
 
+// Al pasar de carta en el zoom (con el teclado o con las flechas), la carta nueva queda sin reflejo ni textura holográfica mientras el mouse no
+// se mueva (main.js le pone la clase "reflejo-quieto" y se la saca con el primer movimiento del mouse; tampoco se inclina). Si no, el "hover" de
+// la carta que aparece justo debajo del puntero la mostraba con el brillo quieto en el medio.
+#listado-digimons > li.reflejo-quieto::after,
+#listado-digimons.tilt-on > li.reflejo-quieto .c-frente::before,
+#listado-digimons.tilt-on > li.reflejo-quieto .c-frente::after {
+  opacity: 0 !important;
+}
+
+// Con la carta agrandada de más el mouse la "agarra" (main.js: activarArrastreDeZoomExtra): mano abierta sobre ella y cerrada mientras se
+// arrastra. No se selecciona su texto ni se arrastra la imagen. (Los botones de la carta conservan su cursor.)
+#listado-digimons > li.zoom-activa.zoom-extra-activo {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#listado-digimons > li.zoom-activa.zoom-extra-activo img {
+  -webkit-user-drag: none;
+}
+
+#listado-digimons > li.zoom-activa.zoom-arrastrando,
+#listado-digimons > li.zoom-activa.zoom-arrastrando * {
+  cursor: grabbing !important;
+}
+
 // Una carta bailando (baile.js: "transform" animado) no reacciona al hover: con el puntero quieto y la carta saltando por debajo, el
 // levante y el reflejo aparecerían y desaparecerían a cada rato. Queda como si no tuviera el mouse encima.
 #listado-digimons > li.bailando:hover:not(.seleccionado):not(.evo-resaltada):not(.zoom-activa) {
@@ -3352,12 +3435,13 @@ $desenfoque-del-fondo: 10px;
   }
 }
 
-// Aviso del contador (main.js, mostrarAvisoDelContador): un minicartel con una flechita que sale de la bolita "2/2" de la barra. Arranca
-// chiquito, desde la punta de la flecha (--punta, que pone main.js), y crece hasta su tamaño; al irse vuelve a achicarse hacia el contador.
-// No frena los clics (pointer-events: none) y queda por encima de la barra (1000).
-.aviso-contador {
+// Globito con flechita que sale de un botón (lo usan el aviso del contador y los de los botones redondos de sonido e inclinación). Arranca
+// chiquito, desde la punta de la flecha (--punta, que pone main.js), y crece hasta su tamaño; al irse vuelve a achicarse hacia el botón.
+// No frena los clics (pointer-events: none). Por defecto va debajo del botón (la flechita arriba); con "sobre-el-boton" va encima de él
+// (la flechita abajo): main.js lo usa para el botón de sonido flotante del celular, que está en la esquina de abajo.
+@mixin globo-de-aviso($capa) {
   position: fixed;
-  z-index: 1100;
+  z-index: $capa;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -3377,7 +3461,7 @@ $desenfoque-del-fondo: 10px;
   transform-origin: var(--punta, 50%) -8px;
   transition: opacity 0.3s ease, scale 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.25);
 
-  // La flechita que apunta al contador
+  // La flechita que apunta al botón
   &::before {
     content: "";
     position: absolute;
@@ -3393,6 +3477,17 @@ $desenfoque-del-fondo: 10px;
     border-top-left-radius: 3px;
   }
 
+  &.sobre-el-boton {
+    transform-origin: var(--punta, 50%) calc(100% + 8px);
+
+    &::before {
+      top: auto;
+      bottom: -7px;
+      rotate: 225deg;
+      background: rgba(226, 241, 255, 0.96);
+    }
+  }
+
   &.visible {
     opacity: 1;
     scale: 1;
@@ -3403,6 +3498,22 @@ $desenfoque-del-fondo: 10px;
     font-size: 18px;
     line-height: 1;
   }
+
+  // Sin movimiento: solo aparece y se va con un desvanecido
+  @media (prefers-reduced-motion: reduce) {
+    scale: 1;
+    transition: opacity 0.3s ease;
+  }
+}
+
+// Aviso del contador (main.js, mostrarAvisoDelContador): sale de la bolita "2/2" de la barra. Queda por encima de la barra (1000).
+.aviso-contador {
+  @include globo-de-aviso(1100);
+}
+
+// Aviso de un botón redondo (main.js, llamarLaAtencion): por encima del zoom de la carta y sus flechas (1700) y del botón mismo (1800)
+.aviso-globo {
+  @include globo-de-aviso(1850);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3413,11 +3524,6 @@ $desenfoque-del-fondo: 10px;
     .aviso-linea {
       transition: none;
     }
-  }
-
-  .aviso-contador {
-    scale: 1;
-    transition: opacity 0.3s ease; // sin movimiento: solo aparece y se va con un desvanecido
   }
 }
 

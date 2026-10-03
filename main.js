@@ -82,16 +82,14 @@ const PESO_NIVEL = 0.15;
 const PESO_ELEMENTO = 0.10;
 
 // Fuerza de cada nivel, usando el nombre original de la API (así no importa qué sistema de clasificación se muestre).
-// Son 8 niveles, del 1 al 8, sin saltos. Armor tiene el poder de un Adult (4). Hybrid queda en un punto medio (5): según la
-// forma van de Adult a Ultimate.
+// Son 8 niveles, del 1 al 8, sin saltos. (Los "Armor" y los "Hybrid" que trae la API no son niveles de acá: cada uno de esos
+// digimons queda en uno de estos 8 y la carta lleva una marca; ver MARCAS_DE_NIVEL más abajo.)
 const numeracionNiveles = {
     'Baby I': 1,
     'Baby II': 2,
     'Child': 3,
     'Adult': 4,
-    'Armor': 4,
     'Perfect': 5,
-    'Hybrid': 5,
     'Ultimate': 6,
     'Super Ultimate': 7,
     'Absolute': 8,
@@ -200,6 +198,68 @@ const ASCENSOS = {
     557: 'Absolute',        // Lucemon (Satan Mode)
 };
 
+// ARMOR e HYBRID: la API los trae como niveles propios, pero son solo 34 digimons (4 Armor y 30 Hybrid) y ensuciaban el filtro y
+// la info de niveles. Acá no son un nivel: cada uno se queda en uno de los 8 normales y la carta lleva un circulito (A o H) en la
+// esquina, como el de la X-Antibody, que al pasar el mouse dice "Armor" o "Hybrid".
+//   · Armor (Digimon Adventure 02): los 4 tienen el poder de un Adult.
+//   · Hybrid (Digimon Frontier): según la forma van de Adult a Ultimate. Las formas humanas son Adult, las bestia son Perfect y
+//     las fusiones (y las formas supremas) son Ultimate. Se asignaron a mano, uno por uno, mirando Wikimon y la Digimon Wiki.
+//     La clave es el nombre de la API sin tildes, mayúsculas ni símbolos (claveDeNombre, de nombres.js: 'Löwemon' → 'lowemon', 'Jet Silphymon' → 'jetsilphymon').
+const NIVEL_DE_LOS_HYBRID = {
+    // Formas humanas (los Human Spirits) → Adult
+    agunimon: 'Adult',        // fuego
+    kazemon: 'Adult',         // viento
+    lobomon: 'Adult',         // luz
+    lanamon: 'Adult',         // agua (Ranamon)
+    arbormon: 'Adult',        // madera
+    blitzmon: 'Adult',        // trueno
+    chackmon: 'Adult',        // hielo
+    mercuremon: 'Adult',      // acero
+    grumblemon: 'Adult',      // tierra
+    duskmon: 'Adult',         // oscuridad (el poder de Duskmon es de fusión, pero todos lo ponen en la clase Adult)
+    lowemon: 'Adult',         // oscuridad (Löwemon): el techo de la clase Adult
+    // Formas bestia (los Beast Spirits) → Perfect
+    burninggreymon: 'Perfect', // fuego (Vritramon)
+    shutumon: 'Perfect',       // viento
+    kendogarurumon: 'Perfect', // luz (Garummon)
+    calamaramon: 'Perfect',    // agua
+    petaldramon: 'Perfect',    // madera
+    bolgmon: 'Perfect',        // trueno
+    blizzarmon: 'Perfect',     // hielo
+    sephirothmon: 'Perfect',   // acero
+    gigasmon: 'Perfect',       // tierra
+    velgrmon: 'Perfect',       // oscuridad (la bestia corrupta de Duskmon)
+    kaiserleomon: 'Perfect',   // oscuridad (la bestia purificada de Löwemon)
+    // Fusiones y formas supremas → Ultimate
+    aldamon: 'Ultimate',          // fusión de fuego
+    beowolfmon: 'Ultimate',       // fusión de luz
+    daipenmon: 'Ultimate',        // fusión de hielo
+    raihimon: 'Ultimate',         // fusión de oscuridad (Löwemon + Kaiser Leomon)
+    rhinokabuterimon: 'Ultimate', // fusión de trueno
+    jetsilphymon: 'Ultimate',     // fusión de viento
+    magnagarurumon: 'Ultimate',   // forma suprema de luz
+    emperorgreymon: 'Ultimate',   // forma suprema de fuego
+};
+const NIVEL_HYBRID_SIN_DATO = 'Perfect'; // para un Hybrid que no esté en la lista (si la API algún día suma uno): el punto medio
+
+// Las marcas de la carta: qué letra lleva el círculo y cómo se llama (es lo que dice al pasar el mouse)
+const MARCAS_DE_NIVEL = {
+    'Armor': { letra: 'A', nombre: 'Armor' },
+    'Hybrid': { letra: 'H', nombre: 'Hybrid' },
+};
+
+// Pasa el nivel que trae la API al nivel con el que se juega. Devuelve { nivel, marca }: la marca ('Armor' o 'Hybrid') solo
+// existe si el digimon venía con ese nivel.
+function resolverNivelDeLaApi(nombre, nivelApi) {
+    if (!nivelApi || nivelApi === 'Unknown') return { nivel: 'Desconocido' };
+    if (nivelApi === 'Armor') return { nivel: 'Adult', marca: 'Armor' };
+    if (nivelApi === 'Hybrid') {
+        const nivel = NIVEL_DE_LOS_HYBRID[claveDeNombre(separarXAntibody(nombre).nombre)] ?? NIVEL_HYBRID_SIN_DATO;
+        return { nivel, marca: 'Hybrid' };
+    }
+    return { nivel: nivelApi };
+}
+
 // Cartas que no están en la API: las agrega el simulador (después de las de la API). Su ID es alto para no chocar con los de ella.
 const CARTAS_PROPIAS = [
     {
@@ -239,7 +299,7 @@ const CARTAS_PROPIAS = [
 ];
 
 // Orden en que se muestran los niveles en los menús y en los filtros (el último, 'Desconocido', es el que no tiene nivel)
-const ORDEN_NIVELES = ['Baby I', 'Baby II', 'Child', 'Adult', 'Armor', 'Perfect', 'Hybrid', 'Ultimate', 'Super Ultimate', 'Absolute', 'Desconocido'];
+const ORDEN_NIVELES = ['Baby I', 'Baby II', 'Child', 'Adult', 'Perfect', 'Ultimate', 'Super Ultimate', 'Absolute', 'Desconocido'];
 
 // Triángulo de tipos: cada tipo es fuerte contra el que tiene en su lista
 const TIPO_FUERTE_CONTRA = {
@@ -619,11 +679,13 @@ const nombreOccidentalCompleto = carta => conXAntibody(carta, nombreOccidental(c
 
 // El otro nombre del digimon, el que NO se ve en la carta, si tiene uno distinto. Se cuenta en el dorso. En español y en inglés la carta muestra
 // el occidental, así que el otro es el original japonés (el de la API); con el japonés sería al revés. Si los dos nombres son iguales (casi
-// todos los digimon), devuelve null. nombreAlternativo(carta de Omnimon) → { etiqueta: 'carta.nombreOriginal', nombre: 'Omegamon' }
+// todos los digimon), devuelve null. Tampoco cuenta como otro nombre el que solo se diferencia en los espacios, los guiones, las mayúsculas o las
+// tildes ('MetalSeadramon' y 'Metal Seadramon'): contarlo en el dorso sería repetir lo mismo.
+// nombreAlternativo(carta de Omnimon) → { etiqueta: 'carta.nombreOriginal', nombre: 'Omegamon' }
 function nombreAlternativo(carta) {
     const original = nombreApiCompleto(carta);
     const occidental = nombreOccidentalCompleto(carta);
-    if (original === occidental) return null;
+    if (claveDeNombre(original) === claveDeNombre(occidental)) return null; // (claveDeNombre: ver nombres.js)
     const visible = conXAntibody(carta, nombreParaMostrar(carta.dataset.nombreApi));
     return visible === original
         ? { etiqueta: 'carta.nombreOccidental', nombre: occidental }
@@ -863,6 +925,35 @@ let zoomOcupado = false;         // mientras vuela, no se inclina, no se da vuel
 let cierrePendiente = false;     // pidieron cerrar mientras todavía estaba llegando
 let zoomCerrando = false;        // la carta ya está volviendo a su lugar: pedir cerrar otra vez no hace falta (ver cerrarZoom)
 let seleccionAntesDelClic = { carta: null, estado: [] }; // cómo estaba la selección antes del primer clic de un doble clic
+
+// Al pasar de una carta a otra dentro del zoom (con el teclado o con las flechas), la carta nueva suele quedar justo debajo del puntero, que
+// no se movió. Sin esto el navegador le daba el "hover" (a veces tarde o de más) y aparecía el reflejo quieto en el medio. Ahora la carta nueva
+// (clase "reflejo-quieto", ver el CSS) no se inclina ni brilla hasta que el mouse se mueve de verdad, aunque sea un píxel: un movimiento
+// "falso" que el navegador manda sin mover el mouse (misma posición) no cuenta, ni el que ocurre mientras la carta todavía está llegando.
+let zoomEsperaMovimiento = false;   // true mientras se espera ese movimiento (la inclinación lo mira: ver activarInclinacion)
+let ultimoPuntero = null;           // dónde estuvo el mouse la última vez que mandó un evento
+
+function pedirMovimientoDelPuntero(carta) {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return; // solo con mouse: con el dedo no hay hover
+    zoomEsperaMovimiento = true;
+    carta.classList.add('reflejo-quieto');
+}
+
+function soltarReflejoQuieto() {
+    zoomEsperaMovimiento = false;
+    listaDigimons.querySelectorAll(':scope > li.reflejo-quieto').forEach(carta => carta.classList.remove('reflejo-quieto'));
+}
+
+function activarReflejoQuieto() {
+    // (en la fase de captura, para ir antes que la inclinación, que mira el mismo movimiento)
+    document.addEventListener('pointermove', (evento) => {
+        if (evento.pointerType === 'touch') return;
+        const seMovio = !ultimoPuntero || evento.clientX !== ultimoPuntero.x || evento.clientY !== ultimoPuntero.y;
+        ultimoPuntero = { x: evento.clientX, y: evento.clientY };
+        if (zoomEsperaMovimiento && seMovio && !zoomOcupado) soltarReflejoQuieto();
+    }, true);
+    document.addEventListener('touchstart', () => { if (zoomEsperaMovimiento) soltarReflejoQuieto(); }, { capture: true, passive: true }); // (pantalla táctil con mouse: el dedo manda)
+}
 
 const ZOOM_ANCHO = 0.9;          // la carta ocupa hasta el 90 % del ancho de la ventana (80 % en celular, para dejar lugar a las flechas)...
 const ZOOM_ALTO = 0.86;          // ...y el 86 % del alto
@@ -1117,6 +1208,80 @@ function acercarConRueda(evento) {
     pedirZoomExtra(cartaEnZoom, extra.objetivo * Math.exp(-delta * ZOOM_EXTRA_RUEDA), { x: evento.clientX, y: evento.clientY });
 }
 
+// Corre la carta agrandada de más "dx" y "dy" píxeles de pantalla (es lo que usa el arrastre con el mouse). Igual que con el pellizco,
+// la carta sigue al puntero tal cual ("ix" e "iy" quedan donde está) y no deja huecos de pantalla: se corre solo hasta que su borde
+// llega al de la pantalla (ver ponerZoomExtra).
+function moverZoomExtra(carta, dx, dy) {
+    const datos = carta.datosZoom;
+    const extra = datos.extra;
+    const escala = datos.escala * extra.factor;
+    const sobraX = Math.max(0, (datos.anchoBase * escala - document.documentElement.clientWidth) / 2);
+    const sobraY = Math.max(0, (datos.altoBase * escala - window.innerHeight) / 2);
+    extra.x = extra.ix = Math.max(-sobraX, Math.min(sobraX, extra.x + dx));
+    extra.y = extra.iy = Math.max(-sobraY, Math.min(sobraY, extra.y + dy));
+    fijarZoom(carta);
+}
+
+// Con el mouse, la carta agrandada de más se puede AGARRAR: se aprieta el botón izquierdo sobre su frente y, sin soltar, se arrastra para
+// verla de un lado a otro (solo con la rueda costaba mucho apuntar justo adonde se quería mirar). El cursor pasa a ser una mano (abierta
+// sobre la carta y cerrada al agarrarla: ver "zoom-arrastrando" en el CSS). Los botones de la carta no la agarran, y soltar después de
+// arrastrar no cierra el zoom aunque el mouse termine sobre el fondo. Con el dedo se corre con dos dedos (ver el pellizco).
+const ARRASTRE_MINIMO = 3; // px que hay que mover el mouse antes de que cuente como arrastre (un clic quieto no corre nada)
+
+function activarArrastreDeZoomExtra() {
+    let arrastre = null; // { carta, id, x, y, movio }: el mouse que tiene agarrada la carta
+
+    const terminar = () => {
+        if (!arrastre) return;
+        const { carta, id, movio } = arrastre;
+        arrastre = null;
+        carta.classList.remove('zoom-arrastrando');
+        if (carta.hasPointerCapture?.(id)) carta.releasePointerCapture(id);
+        if (movio) ultimoDeslizamiento = performance.now(); // soltar después de arrastrar no cierra el zoom (ver crearFondoZoom)
+    };
+
+    listaDigimons.addEventListener('pointerdown', (evento) => {
+        if (evento.pointerType === 'touch' || evento.button !== 0) return;
+        if (!zoomExtra || !zoomExtraDisponible() || !cartaEnZoom.contains(evento.target)) return;
+        if (evento.target.closest('button, a, .c-evo, .c-ataques')) return;
+        terminar();
+        arrastre = { carta: cartaEnZoom, id: evento.pointerId, x: evento.clientX, y: evento.clientY, movio: false };
+        cartaEnZoom.setPointerCapture(evento.pointerId); // así sigue agarrada aunque el mouse se pase de la carta (o de la ventana)
+        cartaEnZoom.classList.add('zoom-arrastrando');
+        evento.preventDefault(); // no selecciona texto ni arrastra la imagen
+    });
+
+    listaDigimons.addEventListener('pointermove', (evento) => {
+        if (!arrastre || evento.pointerId !== arrastre.id) return;
+        if (!zoomExtra || cartaEnZoom !== arrastre.carta || evento.buttons === 0) { // (sin botones: se soltó fuera de la ventana y no nos enteramos)
+            terminar();
+            return;
+        }
+        const dx = evento.clientX - arrastre.x;
+        const dy = evento.clientY - arrastre.y;
+        if (!arrastre.movio && Math.hypot(dx, dy) < ARRASTRE_MINIMO) return;
+        arrastre.movio = true;
+        arrastre.x = evento.clientX;
+        arrastre.y = evento.clientY;
+        moverZoomExtra(arrastre.carta, dx, dy);
+    });
+
+    for (const tipo of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        listaDigimons.addEventListener(tipo, (evento) => {
+            if (arrastre && evento.pointerId === arrastre.id) terminar();
+        });
+    }
+
+    // Si la carta deja de estar agrandada de más, se da vuelta, se cambia o se cierra el zoom, ya no hay nada que agarrar
+    document.addEventListener('zoom-extra', () => { if (!zoomExtra) terminar(); });
+    document.addEventListener('zoom-cambio', terminar);
+
+    // Que el navegador no arranque su propio arrastre de la imagen
+    listaDigimons.addEventListener('dragstart', (evento) => {
+        if (zoomExtra && cartaEnZoom?.contains(evento.target)) evento.preventDefault();
+    });
+}
+
 // Devuelve la carta al tamaño normal y avisa cuando llegó (se usa antes de darla vuelta)
 function volverAlZoomNormal(carta) {
     return new Promise((resolver) => {
@@ -1263,6 +1428,8 @@ async function cambiarZoom(direccion, repetida = false) {
     const despues = nueva.datosZoom;
     cartaEnZoom = nueva;
     nueva.classList.add('zoom-activa');
+    vieja.classList.remove('reflejo-quieto');
+    pedirMovimientoDelPuntero(nueva); // aparece sin inclinación ni reflejo hasta que el mouse se mueva
     document.getElementById('zoom-fondo')?.style.setProperty('--zc', colorDeCarta(nueva));
     soltarZoom(vieja);
 
@@ -1324,6 +1491,7 @@ async function abrirZoom(carta) {
     zoomOcupado = true;
     cierrePendiente = false; // un pedido de cierre viejo no tiene que cerrar este zoom nuevo apenas llegue
     document.activeElement?.blur?.();
+    soltarReflejoQuieto();
     document.dispatchEvent(new CustomEvent('zoom-cambio')); // la inclinación suelta la carta
 
     const fondo = crearFondoZoom(carta);
@@ -1401,6 +1569,7 @@ async function cerrarZoom({ rapido = false } = {}) {
 
     vuelta?.cancel();
     carta.classList.remove('zoom-activa');
+    soltarReflejoQuieto(); // la carta vuelve a la grilla como cualquier otra
     carta.datosZoom = null;
     cartaEnZoom = null;
     fondo?.remove();
@@ -1640,8 +1809,8 @@ function activarAvisoGestosDelZoom() {
 }
 
 // Cartel de ayuda de la inclinación con el mouse (solo computadora: existe únicamente si hay inclinación con el mouse, o sea, el botón de la
-// barra está a la vista). Cuenta que se puede anular la inclinación manteniendo apretada Shift y que el botón de la barra (al lado del de
-// sonido) la invierte; mientras sale, el botón salta y lanza ondas (la misma llamada que el botón de sonido en su primer sonido: "llamando").
+// barra está a la vista). Es un globito que sale del propio botón y cuenta que se puede anular la inclinación manteniendo apretada Shift y que
+// ese botón la invierte; mientras sale, el botón salta y lanza ondas (la misma llamada que el botón de sonido en su primer sonido: "llamando").
 // Una sola vez por sesión del navegador. Cuándo sale depende de cuántas sesiones lleva la persona en la página (el mismo contador de visitas
 // de los avisos de ayuda), y es cada vez más tarde:
 //     sesiones 1 a 5:   a los 15 s de inclinación acumulada   (con la inclinación invertida: a los 20 s de cargar la página)
@@ -1682,11 +1851,9 @@ function activarAvisoDeInclinacion() {
     const invertidaAlCargar = estaInvertida();
 
     let terminado = false; // ya salió, o ya no hace falta
-    let aviso = null;
     let esperaCarga = 0;   // modo invertido: desde la carga de la página
     let esperaTilt = 0;    // modo normal: cuando la inclinación acumulada llega al tiempo
     let reintento = 0;
-    let cierre = 0;
 
     // --- ¿La persona ya sabe usar Shift con las cartas? Cuenta solo con el mouse sobre las cartas (no cuando escribe mayúsculas en un campo) ---
     let sobreLasCartas = false;
@@ -1729,26 +1896,13 @@ function activarAvisoDeInclinacion() {
         if (evento.key === 'Shift') soltarShift();
     });
 
-    // --- El cartel ---
-    const cerrar = () => {
-        clearTimeout(cierre);
-        if (aviso) quitarAviso(aviso);
-        aviso = null;
-    };
-
-    // El botón salta y lanza ondas (igual que el de sonido): ver "llamando" en el CSS
-    const llamarLaAtencionDelBoton = () => {
-        boton.classList.remove('llamando');
-        void boton.offsetWidth; // para que la animación arranque de cero
-        boton.classList.add('llamando');
-        setTimeout(() => boton.classList.remove('llamando'), AUDIO_AVISO_DURACION);
-    };
-
+    // --- El cartel: un globito que sale del botón (ver "LLAMADA DE LOS BOTONES REDONDOS"). Al tocar el botón se va ---
     const mostrar = () => {
         clearTimeout(reintento);
         if (terminado) return;
-        // Con una carta ampliada, un combate en curso o la pestaña en segundo plano se espera (taparía el cartel, o nadie vería el botón)
-        if (cartaEnZoom || zoomOcupado || combateEnCurso || document.hidden) {
+        // Con la pestaña en segundo plano nadie vería el botón, así que se espera. El zoom, el combate y los carteles de información ya no hacen
+        // esperar (el botón sube por encima), ni tampoco el globito del botón de sonido (si coinciden, se reparten a los costados)
+        if (document.hidden) {
             reintento = setTimeout(mostrar, 500);
             return;
         }
@@ -1761,15 +1915,12 @@ function activarAvisoDeInclinacion() {
             // Sin sessionStorage, vale mientras no se recargue la página
         }
         const sabeShift = conoceShift();
-        aviso = crearAviso('aviso-inclinacion', [{
-            clave: 'inclinacion',
+        const clave = `aviso.inclinacion.${estaInvertida() ? 'invertida' : 'normal'}${sabeShift ? '.boton' : ''}`; // (la variante queda fija aunque se invierta mientras está)
+        llamarLaAtencion(boton, {
             icono: '🖱️',
-            texto: `aviso.inclinacion.${estaInvertida() ? 'invertida' : 'normal'}${sabeShift ? '.boton' : ''}`,
-        }]);
-        escribirAviso(aviso);
-        ponerAviso(aviso);
-        llamarLaAtencionDelBoton();
-        cierre = setTimeout(cerrar, sabeShift ? INCLINACION_AVISO_DURACION_BREVE : INCLINACION_AVISO_DURACION);
+            texto: () => t(clave),
+            duracion: sabeShift ? INCLINACION_AVISO_DURACION_BREVE : INCLINACION_AVISO_DURACION,
+        });
     };
 
     // --- Cuándo: con la inclinación normal, al juntar el tiempo de inclinación con el mouse; con la invertida, a los tantos segundos de cargar ---
@@ -1808,10 +1959,8 @@ function activarAvisoDeInclinacion() {
         clearTimeout(esperaCarga);
         clearTimeout(esperaTilt);
         clearTimeout(reintento);
-        boton.classList.remove('llamando');
-        cerrar();
+        terminarLlamada(boton);
     });
-    document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
 }
 
 // Cartel del zoom extra (solo computadora): al ampliar la primera carta de la sesión cuenta, en una línea, que con el mouse sobre la carta la
@@ -2349,7 +2498,7 @@ function activarInclinacion() {
 
         // Si el mouse está sobre una carta, empieza a seguirlo desde donde está el puntero
         const retomar = () => {
-            if (!puntero || zoomOcupado || zoomExtra || anulada()) return;
+            if (!puntero || zoomOcupado || zoomExtra || zoomEsperaMovimiento || anulada()) return;
             const carta = document.elementFromPoint(puntero.x, puntero.y)?.closest('#listado-digimons > li');
             if (!carta || carta.girando || carta.classList.contains('bailando')) return;
             tomar(carta);
@@ -2374,7 +2523,7 @@ function activarInclinacion() {
             if (evento.pointerType === 'touch' || zoomOcupado) return;
             puntero = { x: evento.clientX, y: evento.clientY };
             ponerShift(evento.shiftKey);
-            if (anulada() || zoomExtra) { // (con el zoom extra de la carta ampliada tampoco se inclina: ver "ZOOM EXTRA")
+            if (anulada() || zoomExtra || zoomEsperaMovimiento) { // (con el zoom extra de la carta ampliada tampoco se inclina: ver "ZOOM EXTRA"; ni cuando se pasó de carta y el mouse no se movió: ver zoomEsperaMovimiento)
                 soltar(cartaActual);
                 return;
             }
@@ -2395,7 +2544,7 @@ function activarInclinacion() {
         // Se mira qué hay bajo el puntero (y no ":hover"): al terminar el giro el navegador puede tardar en actualizar el "hover"
         document.addEventListener('giro-terminado', (evento) => {
             const carta = evento.detail;
-            if (!puntero || zoomOcupado || zoomExtra || anulada()) return;
+            if (!puntero || zoomOcupado || zoomExtra || zoomEsperaMovimiento || anulada()) return;
             const debajo = document.elementFromPoint(puntero.x, puntero.y);
             if (!debajo || !carta.contains(debajo)) return;
             tomar(carta);
@@ -2722,19 +2871,33 @@ function marcarBotonDeAudioMostrado() {
     }
 }
 
-// En computadora el botón vive dentro de la barra, que queda por debajo de la cortina oscura (y desenfocada) del zoom y de los carteles
-// del combate. Si el primer sonido de la sesión es el del zoom o el de "Iniciar Combate", durante el aviso el botón sale un momento de
-// la barra y queda por encima de la cortina, en el mismo lugar de la pantalla (en la barra se deja un hueco del mismo tamaño para que
-// nada se corra). Devuelve la función que lo vuelve a su lugar. En celular no hace falta: el botón ya flota por encima de todo.
+// -----------------------------------------------------------------------------------------------------------------
+// LLAMADA DE LOS BOTONES REDONDOS (sonido e inclinación): cuando el botón salta y lanza ondas ("llamando"), de él sale un globito con una
+// flechita (como el del contador de cartas elegidas) que cuenta para qué sirve. Mientras dura, en computadora el botón tiene que verse y
+// poder tocarse aunque haya algo encima de la barra: el zoom de una carta, un cartel del combate o uno de información (todos son una cortina
+// oscura y desenfocada por encima de ella). Si lo hay, el botón sale un momento de la barra y queda por encima de la cortina, en el mismo
+// lugar de la pantalla (en la barra se deja un hueco del mismo tamaño para que nada se corra); al terminar, vuelve a su lugar. No importa
+// cuándo aparezca la cortina: se mira cuadro a cuadro mientras dura la llamada. En celular el botón de sonido ya flota por encima de todo
+// y el de inclinación no existe, así que ahí solo está el globito.
+// -----------------------------------------------------------------------------------------------------------------
 let combateEnCurso = false; // desde que se aprieta "Iniciar Combate" hasta que se cierra el último cartel (lo maneja iniciarCombate)
 
-function subirBotonDeAudioSobreLaCortina(boton) {
+const GLOBO_DEL_BOTON_DURACION = 7000; // ms a la vista (el de inclinación elige el suyo: explica más)
+
+// ¿Hay algo por encima de la barra? El zoom de una carta (#zoom-fondo) o un cartel de SweetAlert (los del combate y los de información)
+const hayCortinaSobreLaBarra = () => !!(cartaEnZoom || combateEnCurso || document.querySelector('#zoom-fondo, .swal2-container'));
+
+// Saca el botón de la barra y lo deja por encima de la cortina. Devuelve la función que lo vuelve a su lugar.
+function subirBotonSobreLaCortina(boton) {
     const caja = boton.getBoundingClientRect();
+    const teniaElFoco = document.activeElement === boton;
     const hueco = document.createElement('span');
     hueco.setAttribute('aria-hidden', 'true');
+    hueco.dataset.hueco = boton.id; // (el CSS de la barra lo cuenta como si el botón siguiera ahí)
     hueco.style.cssText = `flex: none; width: ${caja.width}px; height: ${caja.height}px; margin: ${getComputedStyle(boton).margin};`;
     boton.parentElement.insertBefore(hueco, boton);
     document.body.append(boton);
+    if (teniaElFoco) boton.focus({ preventScroll: true });
     // Mientras está afuera acompaña al hueco cuadro a cuadro: si la barra se acomoda (por ejemplo, termina de cargar), no se despega
     let cuadro;
     const acompañar = () => {
@@ -2747,43 +2910,133 @@ function subirBotonDeAudioSobreLaCortina(boton) {
     acompañar();
     return () => {
         cancelAnimationFrame(cuadro);
+        const tieneElFoco = document.activeElement === boton;
         if (hueco.isConnected) hueco.replaceWith(boton);
         boton.style.removeProperty('top');
         boton.style.removeProperty('left');
-        ubicarBotonDeAudio();
+        if (boton.id === 'silenciar') ubicarBotonDeAudio(); // (en celular tiene que volver al <body>)
+        if (tieneElFoco) boton.focus({ preventScroll: true });
     };
 }
 
-let devolverBotonDeAudio = null; // deshace lo de subirBotonDeAudioSobreLaCortina cuando termina el aviso
+const llamadasActivas = new Map(); // botón → { globo, devolver, temporizador }: los botones que están llamando la atención ahora
+let vigiliaDeLlamadas = 0;         // pedido de animationFrame pendiente
 
-// El aviso ya empezó con el botón en la barra y justo después aparece una cortina (el combate: el primer sonido es el clic de la tecla
-// de "Iniciar Combate", que suena al apretar, un instante antes de que arranque el combate): se lo sube en ese momento
-function subirBotonDeAudioSiLoTapa() {
-    const boton = document.getElementById('silenciar');
-    if (!boton || !boton.classList.contains('llamando') || devolverBotonDeAudio || boton.parentElement === document.body) return;
-    devolverBotonDeAudio = subirBotonDeAudioSobreLaCortina(boton);
+// Dónde va el globito: debajo del botón si está en la mitad de arriba de la pantalla (la barra) y arriba de él si está en la de abajo (el botón de
+// sonido flotante del celular), con la flechita justo sobre el botón (el globito se corre para no salirse de la pantalla).
+// "lado" dice cómo se acomoda respecto del botón: 'centro' (lo normal: centrado en él), o, cuando los dos botones redondos llaman a la vez
+// y sus globitos se taparían, 'izquierda' (el globito se extiende hacia la izquierda, con la flechita en su punta derecha) y 'derecha'
+// (al revés): así caben los dos uno al lado del otro, cada uno con la flechita sobre su botón.
+// (La caja del botón se mide por su centro y su tamaño de reposo: mientras llama se agranda y se mueve, y el globito no tiene que bailar con él.)
+const GLOBO_PUNTA_AL_BORDE = 15; // px entre la flechita y el borde del globito cuando se acomoda a un costado
+
+function ubicarGloboDelBoton(boton, globo, lado = 'centro') {
+    const margen = 8;
+    const caja = boton.getBoundingClientRect();
+    const ancho = globo.offsetWidth;
+    const alto = globo.offsetHeight;
+    const centro = caja.left + caja.width / 2;
+    const centroVertical = caja.top + caja.height / 2;
+    const mitadDelAlto = boton.offsetHeight / 2;
+    let izquierda = centro - ancho / 2;
+    if (lado === 'izquierda') izquierda = centro + GLOBO_PUNTA_AL_BORDE - ancho;
+    else if (lado === 'derecha') izquierda = centro - GLOBO_PUNTA_AL_BORDE;
+    izquierda = Math.round(Math.max(margen, Math.min(izquierda, window.innerWidth - ancho - margen)));
+    const debajo = centroVertical < window.innerHeight / 2;
+    const arriba = Math.round(debajo ? centroVertical + mitadDelAlto + 12 : centroVertical - mitadDelAlto - 12 - alto);
+    const punta = `${Math.round(centro - izquierda)}px`;
+    if (globo.style.left !== `${izquierda}px`) globo.style.left = `${izquierda}px`;
+    if (globo.style.top !== `${arriba}px`) globo.style.top = `${arriba}px`;
+    if (globo.style.getPropertyValue('--punta') !== punta) globo.style.setProperty('--punta', punta);
+    globo.classList.toggle('sobre-el-boton', !debajo);
 }
 
-function terminarElAvisoDelBotonDeAudio() {
-    document.getElementById('silenciar')?.classList.remove('llamando');
-    devolverBotonDeAudio?.();
-    devolverBotonDeAudio = null;
+function revisarLlamadas() {
+    for (const [boton, llamada] of llamadasActivas) {
+        if (!boton.isConnected) {
+            terminarLlamada(boton);
+            continue;
+        }
+        // Algo tapa la barra (o apareció justo ahora): el botón sube por encima. Solo si está en la barra: en celular, el de sonido ya flota
+        if (!llamada.devolver && boton.parentElement !== document.body && hayCortinaSobreLaBarra()) llamada.devolver = subirBotonSobreLaCortina(boton);
+    }
+    // Si los dos botones llaman a la vez, los globitos se reparten a los costados (el del botón de la izquierda hacia la izquierda y el otro
+    // hacia la derecha) para no taparse; si no, cada uno va centrado en su botón
+    const llamadas = [...llamadasActivas];
+    if (llamadas.length > 1) llamadas.sort(([a], [b]) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+    llamadas.forEach(([boton, llamada], i) => {
+        ubicarGloboDelBoton(boton, llamada.globo, llamadas.length < 2 ? 'centro' : i === 0 ? 'izquierda' : 'derecha');
+    });
 }
+
+function vigilarLlamadas() {
+    vigiliaDeLlamadas = 0;
+    revisarLlamadas();
+    if (llamadasActivas.size) vigiliaDeLlamadas = requestAnimationFrame(vigilarLlamadas);
+}
+
+function escribirGloboDelBoton(llamada) {
+    llamada.globo.querySelector('.aviso-texto').textContent = llamada.texto();
+}
+
+// El botón salta y lanza ondas (animación "llamando", 2,6 s) y sale el globito: "icono" va antes del texto y "texto" es una función que
+// devuelve la explicación en el idioma de ahora. El globito (y el botón arriba de la cortina, si hace falta) dura "duracion" ms.
+function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOTON_DURACION }) {
+    terminarLlamada(boton);
+
+    const globo = document.createElement('div');
+    globo.className = 'aviso-globo';
+    globo.setAttribute('role', 'status');
+    globo.innerHTML = '<span class="aviso-icono" aria-hidden="true"></span><span class="aviso-texto"></span>';
+    globo.querySelector('.aviso-icono').textContent = icono;
+    document.body.appendChild(globo);
+
+    const llamada = { globo, texto, devolver: null, temporizador: 0, finDeLaAnimacion: 0 };
+    llamadasActivas.set(boton, llamada);
+    escribirGloboDelBoton(llamada);
+    revisarLlamadas(); // (si ya hay una cortina, el botón sube ahora mismo, antes de que se dibuje el siguiente cuadro)
+
+    boton.classList.remove('llamando');
+    void boton.offsetWidth; // para que la animación arranque de cero
+    boton.classList.add('llamando');
+    llamada.finDeLaAnimacion = setTimeout(() => boton.classList.remove('llamando'), AUDIO_AVISO_DURACION);
+    llamada.temporizador = setTimeout(() => terminarLlamada(boton), Math.max(duracion, AUDIO_AVISO_DURACION));
+
+    void globo.offsetWidth; // para que la entrada se anime
+    globo.classList.add('visible');
+    if (!vigiliaDeLlamadas) vigiliaDeLlamadas = requestAnimationFrame(vigilarLlamadas);
+}
+
+// Termina la llamada del botón (se cumplió el tiempo, o la persona ya lo encontró): se apaga la animación, el globito se achica hacia el
+// botón y, si estaba por encima de una cortina, vuelve a la barra
+function terminarLlamada(boton) {
+    const llamada = llamadasActivas.get(boton);
+    if (!llamada) return;
+    llamadasActivas.delete(boton);
+    clearTimeout(llamada.temporizador);
+    clearTimeout(llamada.finDeLaAnimacion);
+    boton.classList.remove('llamando');
+    llamada.devolver?.();
+    llamada.globo.classList.remove('visible');
+    setTimeout(() => llamada.globo.remove(), 500);
+}
+
+document.addEventListener('idioma-cambiado', () => llamadasActivas.forEach(escribirGloboDelBoton));
+
+const botonDeAudio = () => document.getElementById('silenciar');
+const terminarElAvisoDelBotonDeAudio = () => {
+    const boton = botonDeAudio();
+    if (boton) terminarLlamada(boton);
+};
 
 let teclaDelBotonDeAudio = false; // true mientras suena una tecla que no cuenta como primer sonido: la del propio botón de sonido al volver a activarlo y la del botón de inclinación (ver sonarTeclaDeBoton)
 
 function llamarLaAtencionDelBotonDeAudio() {
     if (botonDeAudioYaMostrado || silenciado || teclaDelBotonDeAudio) return;
-    const boton = document.getElementById('silenciar');
+    const boton = botonDeAudio();
     if (!boton) return;
     marcarBotonDeAudioMostrado();
-    // Si el sonido es el del zoom o el de "Iniciar Combate" y el botón está en la barra (computadora), la cortina lo taparía: se sube por
-    // encima. En el combate el aviso arranca justo al apretar el botón, un instante antes de que se abra el primer cartel
-    if ((cartaEnZoom || combateEnCurso) && boton.parentElement !== document.body) devolverBotonDeAudio = subirBotonDeAudioSobreLaCortina(boton);
-    boton.classList.remove('llamando');
-    void boton.offsetWidth; // para que la animación arranque de cero
-    boton.classList.add('llamando');
-    setTimeout(terminarElAvisoDelBotonDeAudio, AUDIO_AVISO_DURACION);
+    llamarLaAtencion(boton, { icono: '🔊', texto: () => t(VIBRACION_DISPONIBLE ? 'aviso.audio.vibracion' : 'aviso.audio') });
 }
 
 function activarBotonDeAudio() {
@@ -2986,6 +3239,53 @@ function toqueDeCarta(contexto, llegada) {
     cuerpo.stop(llegada + 0.07);
 }
 
+// Al elegir una carta para el combate y al sacarla de la selección: dos toquecitos secos, breves y suaves, de la familia del "tuc" con el que
+// termina de darse vuelta una carta (un roce de papel con un poquito de cuerpo), pero más cortos y más bajitos. Al elegirla suena un "tuc" algo más
+// grave (la carta se apoya); al sacarla, un "tic" más agudo y más flojo (se levanta). En el celular cada uno viene con una vibración chiquita,
+// más corta al sacarla (ver el clic de las cartas en agregarCarta).
+function sonidoSeleccion(elegida) {
+    try {
+        const contexto = obtenerContextoAudio();
+        const inicio = contexto.currentTime;
+        const destino = destinoDeAudio(contexto);
+        // [frecuencia del roce, volumen del roce, tono del cuerpo al empezar y al terminar, volumen del cuerpo, duración del roce]
+        const [frecuencia, volumenRoce, desde, hasta, volumenCuerpo, duracion] = elegida
+            ? [2000, 0.07, 210, 130, 0.028, 0.035]
+            : [3200, 0.04, 330, 240, 0.015, 0.025];
+
+        const roce = contexto.createBufferSource();
+        roce.buffer = obtenerRuido(contexto);
+        const filtro = contexto.createBiquadFilter();
+        filtro.type = 'bandpass';
+        filtro.frequency.value = frecuencia;
+        filtro.Q.value = 1;
+        const volumenDelRoce = contexto.createGain();
+        volumenDelRoce.gain.setValueAtTime(0.0001, inicio);
+        volumenDelRoce.gain.exponentialRampToValueAtTime(volumenRoce, inicio + 0.002);
+        volumenDelRoce.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
+        roce.connect(filtro);
+        filtro.connect(volumenDelRoce);
+        volumenDelRoce.connect(destino);
+        roce.start(inicio, Math.random() * 0.05);
+        roce.stop(inicio + duracion + 0.02);
+
+        const cuerpo = contexto.createOscillator();
+        cuerpo.type = 'sine';
+        cuerpo.frequency.setValueAtTime(desde, inicio);
+        cuerpo.frequency.exponentialRampToValueAtTime(hasta, inicio + duracion * 1.3);
+        const volumenDelCuerpo = contexto.createGain();
+        volumenDelCuerpo.gain.setValueAtTime(0.0001, inicio);
+        volumenDelCuerpo.gain.exponentialRampToValueAtTime(volumenCuerpo, inicio + 0.003);
+        volumenDelCuerpo.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion * 1.4);
+        cuerpo.connect(volumenDelCuerpo);
+        volumenDelCuerpo.connect(destino);
+        cuerpo.start(inicio);
+        cuerpo.stop(inicio + duracion * 1.4 + 0.02);
+    } catch (error) {
+        // Si el navegador no permite audio, simplemente no suena
+    }
+}
+
 // Carta que se da vuelta: un "fshh" de papel cortando el aire mientras gira y, al terminar, el toquecito de apoyarse
 function sonidoVuelta() {
     try {
@@ -3160,8 +3460,44 @@ function activarSonidoBotones() {
     }, true);
 }
 
+// Con Shift apretada, el navegador convierte la rueda del mouse en desplazamiento HORIZONTAL; como la página no se desplaza hacia los costados,
+// no pasaba nada: con Shift (que anula la inclinación de las cartas) no se podía subir ni bajar. Acá la rueda con Shift se vuelve vertical.
+// Se hace después de que el resto de los manejadores de la rueda tuvo su turno (setTimeout), para respetar a los que frenan el fondo (el zoom
+// de una carta, los carteles del combate): si alguno la frenó, no se toca. Si debajo del puntero hay una zona que sí se desplaza hacia los
+// costados (por ejemplo, un árbol de evolución ancho), se deja al navegador; si hay una zona con scroll vertical propio, se desplaza ella.
+function activarRuedaConShift() {
+    const desplazaEn = (elemento, eje) => {
+        const estilo = getComputedStyle(elemento);
+        const valor = eje === 'x' ? estilo.overflowX : estilo.overflowY;
+        if (valor !== 'auto' && valor !== 'scroll') return false;
+        return eje === 'x' ? elemento.scrollWidth > elemento.clientWidth + 1 : elemento.scrollHeight > elemento.clientHeight + 1;
+    };
+
+    window.addEventListener('wheel', (evento) => {
+        if (!evento.shiftKey || evento.ctrlKey || evento.altKey || evento.metaKey) return;
+        const unidad = evento.deltaMode === 1 ? 33 : evento.deltaMode === 2 ? 800 : 1; // (algunos navegadores cuentan en líneas o en páginas)
+        const delta = (evento.deltaY || evento.deltaX) * unidad; // (según el navegador, el valor llega en deltaY o en deltaX)
+        if (!delta) return;
+        const destino = evento.target;
+        setTimeout(() => {
+            if (evento.defaultPrevented || !destino.isConnected) return;
+            let vertical = null;
+            for (let el = destino instanceof Element ? destino : destino.parentElement; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+                if (desplazaEn(el, 'x')) return; // ahí Shift + rueda ya se desplaza hacia los costados
+                if (!vertical && desplazaEn(el, 'y')) vertical = el;
+            }
+            const raiz = document.documentElement;
+            if (!vertical && raiz.scrollWidth > raiz.clientWidth + 1) return; // la página sí se desplaza hacia los costados
+            (vertical ?? window).scrollBy({ top: delta, behavior: 'auto' });
+        }, 0);
+    }, { passive: true });
+}
+
 activarInclinacion();
+activarRuedaConShift();
 activarZoom();
+activarArrastreDeZoomExtra();
+activarReflejoQuieto();
 activarAvisosDeAyuda();
 activarAvisoDeInclinacion(); // después de los avisos de ayuda: usa el contador de visitas que ellos cuentan
 activarAvisoDeZoomExtra();   // (este también)
@@ -3179,7 +3515,7 @@ const observadorDeMarcos = 'IntersectionObserver' in window
     : null;
 
 // Crea una carta, la agrega a la lista y avisa a los filtros. La usan los digimons de la API y las cartas propias.
-function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, elemento, datosDorso }) {
+function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, marca, elemento, datosDorso }) {
     // Datos que usa el combate y el diseño de la carta
     const nivelNumerico = numeracionNiveles[nivelOriginal]; // undefined si el nivel es desconocido
     const { nombre: nombreEnCarta, xAntibody } = separarXAntibody(nombre); // el X-Antibody va en su propia gema
@@ -3198,6 +3534,10 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
     if (xAntibody) {
         elementoLista.dataset.xAntibody = 'true';
     }
+    const datosMarca = MARCAS_DE_NIVEL[marca]; // undefined si no es Armor ni Hybrid
+    if (datosMarca) {
+        elementoLista.dataset.marca = datosMarca.nombre;
+    }
     if (nivelNumerico !== undefined) {
         elementoLista.dataset.nivel = nivelNumerico;
         elementoLista.style.setProperty('--nivel', nivelNumerico); // el CSS lo usa para la intensidad del color
@@ -3212,6 +3552,7 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
             <div class="c-arte">
                 <img src="${imagen}" alt="" loading="lazy" decoding="async">
                 ${xAntibody ? '<span class="c-x" title="X-Antibody">X</span>' : ''}
+                ${datosMarca ? `<span class="c-marca" title="${datosMarca.nombre}" role="img" aria-label="${datosMarca.nombre}">${datosMarca.letra}</span>` : ''}
                 <span class="c-gema"><small></small>${nivelNumerico ?? '?'}</span>
             </div>
             <div class="c-sub"><span class="c-nivel"></span><span>#${etiquetaId ?? String(id).padStart(3, '0')}</span></div>
@@ -3228,8 +3569,13 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
     elementoLista.datosDorso = datosDorso;
 
     // El botón de dar vuelta la carta no la selecciona para el combate
-    elementoLista.querySelector('.c-flip').addEventListener('click', (evento) => {
+    // Con el mouse el botón no toma el foco: si no, al hacer clic (sobre todo con Shift apretada: el navegador lo toma como un clic "de teclado")
+    // quedaba resaltado con el aro de foco y a la vista hasta hacer clic en otro lado. Con el teclado (Tab y Enter o Espacio) sigue andando igual.
+    const botonVoltear = elementoLista.querySelector('.c-flip');
+    botonVoltear.addEventListener('mousedown', (evento) => evento.preventDefault());
+    botonVoltear.addEventListener('click', (evento) => {
         evento.stopPropagation();
+        if (evento.detail > 0) botonVoltear.blur(); // (clic de mouse o de dedo; el de teclado trae detail 0)
         voltearCarta(elementoLista);
     });
 
@@ -3240,7 +3586,14 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
         if (evento.detail <= 1) seleccionAntesDelClic = { carta: elementoLista, estado: seleccionados.slice() };
         elementoLista.classList.toggle('seleccionado');
 
+        // Al elegirla suena un "tuc" y al sacarla de la selección un "tic" más suave; en el celular también vibra un instante, menos al sacarla
+        // (con el mouse no vibra). El segundo clic de un doble clic no suena: ese doble clic abre el zoom y la selección se deshace (ver activarZoom).
+        const sonar = evento.detail <= 1;
         if (elementoLista.classList.contains('seleccionado')) {
+            if (sonar) {
+                sonidoSeleccion(true);
+                if (evento.pointerType !== 'mouse') vibrar(10);
+            }
             if (seleccionados.length < 2) {
                 seleccionados.push(elementoLista);
             } else {
@@ -3249,6 +3602,10 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, ele
                 seleccionados.push(elementoLista);
             }
         } else {
+            if (sonar) {
+                sonidoSeleccion(false);
+                if (evento.pointerType !== 'mouse') vibrar(5); // al sacarla vibra todavía menos que al elegirla
+            }
             const index = seleccionados.indexOf(elementoLista);
             if (index > -1) {
                 seleccionados.splice(index, 1);
@@ -3334,9 +3691,10 @@ async function crearListaDeDigimons() {
             const tipo = tipoDeLaApi[detalles.attributes[0]?.attribute] || 'Desconocido';
 
             // Extraemos el nivel original de la API (sin traducir) o, sino tiene, le ponemos "Desconocido".
-            // Un nivel "Unknown" de la API también es desconocido. Los digimons de ASCENSOS suben a un nivel inventado.
-            const nivelApi = detalles.levels[0]?.level;
-            const nivelOriginal = ASCENSOS[digimon.id] ?? NIVELES_CORREGIDOS[digimon.id] ?? (nivelApi && nivelApi !== 'Unknown' ? nivelApi : 'Desconocido');
+            // Un nivel "Unknown" de la API también es desconocido. Los Armor y los Hybrid se pasan a uno de los 8 niveles
+            // normales y quedan con su marca (resolverNivelDeLaApi). Los digimons de ASCENSOS suben a un nivel inventado.
+            const { nivel: nivelDeLaApi, marca } = resolverNivelDeLaApi(digimon.name, detalles.levels[0]?.level);
+            const nivelOriginal = ASCENSOS[digimon.id] ?? NIVELES_CORREGIDOS[digimon.id] ?? nivelDeLaApi;
 
             agregarCarta({
                 id: digimon.id,
@@ -3344,6 +3702,7 @@ async function crearListaDeDigimons() {
                 imagen: digimon.image,
                 tipo,
                 nivelOriginal,
+                marca,
                 elemento: deducirElemento(digimon.id, detalles),
                 datosDorso: {
                     especie: (detalles.types || []).map(especie => especie.type).join(', ') || '–',
@@ -3605,8 +3964,8 @@ async function abrirCartelDeCombate({ didOpen, ...opciones }) {
 }
 
 async function iniciarCombate() {
-    combateEnCurso = true; // (el botón de sonido lo mira: si este es el primer sonido, su aviso tiene que verse por encima del cartel)
-    subirBotonDeAudioSiLoTapa(); // si el aviso del botón ya arrancó con el clic de la tecla, se lo sube ahora
+    combateEnCurso = true; // (las llamadas de los botones lo miran: si el primer sonido es el de "Iniciar Combate", el botón tiene que verse por encima del cartel)
+    revisarLlamadas(); // si la llamada del botón ya arrancó con el clic de la tecla, el botón sube ahora mismo
     try {
         await correrCombate();
     } finally {

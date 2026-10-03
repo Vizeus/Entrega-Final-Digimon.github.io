@@ -32,10 +32,12 @@ const BAILE_VUELTA_SUAVE = 380;   // ms que tarda cuando el baile termina solo
 const BAILE_MAX_CARTAS = 80;      // tope de cartas bailando a la vez (sobra: en una pantalla grande se ven unas 30)
 
 // Una pose de la carta como "transform". Todas llevan las mismas funciones en el mismo orden, así el navegador mueve cada una por separado
-// (por ejemplo, un giro de 360° en "ry" da la vuelta entera en vez de quedarse quieto)
-//   x, y: corrimiento (px) · r: giro en el plano (grados) · rx, ry: inclinación hacia adelante / hacia el costado (grados) · sx, sy: escala
-const pose = ({ x = 0, y = 0, r = 0, rx = 0, ry = 0, sx = 1, sy = 1 } = {}) =>
-    `translate(${x}px, ${y}px) rotate(${r}deg) perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${sx}, ${sy})`;
+// (por ejemplo, una vuelta de 360° en "v" da la vuelta entera en vez de quedarse quieta)
+//   x, y: corrimiento (px) · r: balanceo en el plano (grados) · v: vuelta entera en el plano (grados, no se escala con la fuerza)
+//   rx: cabeceo hacia adelante (grados, siempre chico) · sx, sy: escala
+// A propósito no hay giros de costado (rotateY) pasados de los 90°: de espaldas la carta se ve vacía (solo el color de fondo) y de canto titila.
+const pose = ({ x = 0, y = 0, r = 0, v = 0, rx = 0, sx = 1, sy = 1 } = {}) =>
+    `translate(${x}px, ${y}px) rotate(${r + v}deg) perspective(800px) rotateX(${rx}deg) scale(${sx}, ${sy})`;
 
 // Las figuras de baile. Cada una empieza y termina en reposo (para poder encadenarlas). "peso" es cuántos "tiempos" dura la figura.
 // "pasos": [qué parte de la figura (0 a 1), pose, suavizado hasta el paso que sigue]
@@ -56,9 +58,9 @@ const FIGURAS = {
         [0, {}, 'ease-out'], [0.3, { sx: 1.1, sy: 1.1 }, 'ease-in-out'], [0.5, { sx: 0.98, sy: 0.98 }, 'ease-out'],
         [0.7, { sx: 1.07, sy: 1.07 }, 'ease-in-out'], [1, {}],
     ] },
-    giro: { peso: 2, pasos: [ // salta y da una vuelta entera (mientras gira, se ve el revés de la carta)
-        [0, {}, 'ease-out'], [0.12, { sx: 1.04, sy: 0.93 }, 'ease-out'], [0.3, { y: -16, ry: 120 }, 'linear'], [0.55, { y: -20, ry: 240 }, 'linear'],
-        [0.8, { y: -6, ry: 340 }, 'ease-out'], [1, { ry: 360 }],
+    pirueta: { peso: 2, pasos: [ // salta y da una vuelta entera sobre sí misma, como un trompo (siempre de frente)
+        [0, {}, 'ease-out'], [0.12, { sx: 1.04, sy: 0.93 }, 'ease-out'], [0.3, { y: -16, v: 120 }, 'linear'], [0.55, { y: -20, v: 240 }, 'linear'],
+        [0.8, { y: -6, v: 340 }, 'ease-out'], [1, { v: 360 }],
     ] },
     cabeceo: { peso: 1, pasos: [ // asiente con la cabeza al ritmo, como en un recital
         [0, {}, 'ease-in-out'], [0.25, { rx: 14, y: 2 }, 'ease-in-out'], [0.5, { rx: -4 }, 'ease-in-out'],
@@ -85,11 +87,11 @@ function mezclar(lista) {
 }
 
 // Los pasos de una figura (o de varias, una atrás de la otra) como keyframes, y cuántos "tiempos" dura en total.
-// "fuerza" agranda o achica los movimientos (no el giro entero)
+// "fuerza" agranda o achica los movimientos (no la vuelta entera)
 function keyframesDeFiguras(nombres, fuerza = 1) {
     const total = nombres.reduce((suma, nombre) => suma + FIGURAS[nombre].peso, 0);
-    const ajustar = ({ x = 0, y = 0, r = 0, rx = 0, ry = 0, sx = 1, sy = 1 }) => ({
-        x: x * fuerza, y: y * fuerza, r: r * fuerza, rx: rx * fuerza, ry, sx: 1 + (sx - 1) * fuerza, sy: 1 + (sy - 1) * fuerza,
+    const ajustar = ({ x = 0, y = 0, r = 0, v = 0, rx = 0, sx = 1, sy = 1 }) => ({
+        x: x * fuerza, y: y * fuerza, r: r * fuerza, v, rx: rx * fuerza, sx: 1 + (sx - 1) * fuerza, sy: 1 + (sy - 1) * fuerza,
     });
     const frames = [];
     let inicio = 0;
@@ -157,10 +159,10 @@ function bailarConElPuntero(carta) {
     return [carta];
 }
 
-// ZOOM: una rutina larga y especial (con salto, paso, giro entero, cabeceo y latido), solo para la carta ampliada. Como la carta ya está
+// ZOOM: una rutina larga y especial (con salto, paso, pirueta, cabeceo y latido), solo para la carta ampliada. Como la carta ya está
 // agrandada (el "transform" se aplica después del "scale"), los corrimientos salen más grandes en pantalla: se achican un poco
 function bailarConZoom(carta) {
-    const figuras = ['salto', 'salto', 'balanceo', 'giro', 'meneo', 'cabeceo', 'latido', 'paso', 'giro'];
+    const figuras = ['salto', 'salto', 'balanceo', 'pirueta', 'meneo', 'cabeceo', 'latido', 'paso', 'pirueta'];
     ponerABailar(carta, figuras, azar(560, 640) * keyframesDeFiguras(figuras).tiempos, { fuerza: 0.85 });
     return [carta];
 }
