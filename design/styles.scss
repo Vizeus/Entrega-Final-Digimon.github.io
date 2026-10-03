@@ -2877,8 +2877,10 @@ $desenfoque-del-fondo: 10px;
         }
       }
 
+      // (Con el teclado, el botón se ve cuando recibe el foco. Con el mouse NO: después de un clic el botón queda con el foco y la carta
+      // lo mostraría pegado hasta hacer clic en otro lado. Por eso es ":focus-visible" y no ":focus-within".)
       &:hover .c-flip,
-      &:focus-within .c-flip {
+      .c-flip:focus-visible {
         opacity: 1;
         scale: 1;
         rotate: 0deg;
@@ -3088,18 +3090,21 @@ $desenfoque-del-fondo: 10px;
 }
 
 // En computadora, mientras se mantiene apretada Shift (main.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)
-// las cartas no reaccionan al mouse: además de no inclinarse, no se levantan y no muestran el reflejo ni la textura holográfica (que
-// sin inclinación quedarían fijos en un lugar). Es lo mismo que se ve en las pantallas táctiles, donde no hay hover.
-// Las cartas elegidas para el combate conservan su levante y la carta ampliada, su posición. Va con !important en la opacidad para ganarle
-// a los reflejos de más arriba, que son más específicos. (El botón de dar vuelta sigue apareciendo: es un control, no un efecto.)
-#listado-digimons.inclinacion-anulada > li:hover:not(.seleccionado):not(.evo-resaltada):not(.zoom-activa) {
-  --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
-  translate: 0 0;
-}
-
+// las cartas no se inclinan con el mouse: tampoco muestran el reflejo ni la textura holográfica, que siguen al puntero y sin inclinación
+// quedarían fijos en un lugar. El levante del hover (la carta que se alza un poquito, con su sombra) NO se anula: ese siempre está.
+// Va con !important en la opacidad para ganarle a los reflejos de más arriba, que son más específicos.
+// (El botón de dar vuelta sigue apareciendo: es un control, no un efecto.)
 #listado-digimons.inclinacion-anulada > li:hover::after,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::before,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::after {
+  opacity: 0 !important;
+}
+
+// La carta ampliada de más (zoom extra, con la rueda del mouse o el pellizco; main.js le pone la clase "zoom-extra-activo") no se inclina
+// y tampoco muestra el reflejo ni la textura holográfica (los signos): eso va con la inclinación. Al volver al zoom normal vuelven.
+#listado-digimons > li.zoom-activa.zoom-extra-activo::after,
+#listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::before,
+#listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::after {
   opacity: 0 !important;
 }
 

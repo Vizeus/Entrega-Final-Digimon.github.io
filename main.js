@@ -1063,7 +1063,17 @@ function avisarZoomExtra() {
     if (ahora === zoomExtra) return;
     zoomExtra = ahora;
     document.getElementById('zoom-flechas')?.classList.toggle('zoom-extra', zoomExtra);
+    marcarCartaConZoomExtra(zoomExtra ? cartaEnZoom : null);
     document.dispatchEvent(new CustomEvent('zoom-extra'));
+}
+
+// La carta agrandada de más lleva la clase "zoom-extra-activo": con ella el CSS le apaga el reflejo y la textura holográfica (igual que
+// la inclinación, que se cancela). Se le saca a cualquier otra carta que la tuviera.
+function marcarCartaConZoomExtra(carta) {
+    listaDigimons.querySelectorAll(':scope > li.zoom-extra-activo').forEach((otra) => {
+        if (otra !== carta) otra.classList.remove('zoom-extra-activo');
+    });
+    carta?.classList.add('zoom-extra-activo');
 }
 
 function animarZoomExtra(ahora) {
@@ -1128,6 +1138,7 @@ function limpiarZoomExtra() {
     if (zoomExtra) {
         zoomExtra = false;
         document.getElementById('zoom-flechas')?.classList.remove('zoom-extra');
+        marcarCartaConZoomExtra(null);
         document.dispatchEvent(new CustomEvent('zoom-extra'));
     }
 }
@@ -2210,9 +2221,9 @@ function guardarInclinacionInvertida(invertida) {
 
 // Inclinación 3D: la carta se inclina hacia donde apunta el mouse (más en el frente que en el dorso, para poder leer)
 // y el reflejo sigue al puntero (--mx y --my). Sin "reducir movimiento". Con el mouse, mientras se mantiene apretada Shift
-// las cartas no reaccionan: sin inclinación, sin levante ni brillo (se pueden recorrer todas con el mouse sin que pase nada).
-// Al soltarla vuelve todo solo. Con la preferencia "invertida" (ver arriba), Shift hace lo contrario: sin Shift las cartas no reaccionan
-// y con Shift apretada se inclinan, se levantan y brillan.
+// las cartas no se inclinan ni brillan (el levante del hover, en cambio, sigue siempre: se pueden recorrer todas con el mouse sin que se
+// incline ninguna). Al soltarla vuelve todo solo. Con la preferencia "invertida" (ver arriba), Shift hace lo contrario: sin Shift las
+// cartas no se inclinan ni brillan y con Shift apretada sí.
 // Con el dedo: se mantiene apretada la carta un instante y, sin soltar, al mover el dedo se inclina (mientras tanto la
 // página no se desplaza). Un toque corto sigue siendo un toque normal (elegir la carta para el combate).
 function activarInclinacion() {
@@ -2325,9 +2336,10 @@ function activarInclinacion() {
 
     if (conMouse) {
         let puntero = null; // última posición del mouse sobre las cartas (para retomar la inclinación al terminar un giro)
-        // Mientras la inclinación está "anulada", las cartas no reaccionan al mouse: la carta se endereza y no lo sigue, y con la clase
-        // "inclinacion-anulada" el CSS también apaga el levante del hover, el reflejo y la textura holográfica. Se puede pasar el mouse por
-        // todas las cartas sin que ninguna se mueva ni brille. Por defecto se anula mientras se mantiene apretada Shift; con la preferencia
+        // Mientras la inclinación está "anulada", la carta se endereza y no sigue al mouse, y con la clase "inclinacion-anulada" el CSS
+        // también apaga el reflejo y la textura holográfica (que siguen al puntero). El levante del hover NO se apaga: sigue como siempre.
+        // Se puede pasar el mouse por todas las cartas sin que ninguna se incline ni brille. Por defecto se anula mientras se mantiene
+        // apretada Shift; con la preferencia
         // "invertida" es al revés: está anulada siempre, salvo mientras se mantiene apretada Shift. Al cambiar, todo se acomoda solo, sin
         // mover el mouse. Cada movimiento del mouse trae el estado de Shift (evento.shiftKey), así que si se soltó fuera de la ventana y
         // nos perdimos el aviso, se corrige solo.

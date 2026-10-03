@@ -2606,7 +2606,8 @@ body::before {
   background: linear-gradient(180deg, #8cc4f2 0%, #cfe9ff 100%);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
-#listado-digimons li:hover .c-flip, #listado-digimons li:focus-within .c-flip {
+#listado-digimons li:hover .c-flip,
+#listado-digimons li .c-flip:focus-visible {
   opacity: 1;
   scale: 1;
   rotate: 0deg;
@@ -2731,14 +2732,15 @@ body::before {
     opacity: 0;
   }
 }
-#listado-digimons.inclinacion-anulada > li:hover:not(.seleccionado):not(.evo-resaltada):not(.zoom-activa) {
-  --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
-  translate: 0 0;
-}
-
 #listado-digimons.inclinacion-anulada > li:hover::after,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::before,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::after {
+  opacity: 0 !important;
+}
+
+#listado-digimons > li.zoom-activa.zoom-extra-activo::after,
+#listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::before,
+#listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::after {
   opacity: 0 !important;
 }
 
