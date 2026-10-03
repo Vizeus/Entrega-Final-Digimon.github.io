@@ -1423,18 +1423,21 @@ async function cambiarZoom(direccion, repetida = false) {
     const zoomCss = parseFloat(getComputedStyle(vieja).zoom) || 1;
     const salto = direccion * document.documentElement.clientWidth * 0.55 / zoomCss;
     const antes = zoomVigente(vieja.datosZoom); // (con el zoom extra que tenga)
+    // La que se va, si no mostraba el reflejo (porque la carta recién había aparecido y el mouse no se movió, o porque estaba agrandada de más),
+    // se va igual sin mostrarlo: el puntero sigue encima de ella y, sin esa marca, el "hover" se lo prendería justo cuando se está yendo
+    const seVaSinReflejo = vieja.classList.contains('reflejo-quieto') || vieja.classList.contains('zoom-extra-activo');
     limpiarZoomExtra(); // la nueva entra con el zoom normal
     nueva.datosZoom = calcularZoom(nueva);
     const despues = nueva.datosZoom;
     cartaEnZoom = nueva;
     nueva.classList.add('zoom-activa');
-    vieja.classList.remove('reflejo-quieto');
+    if (seVaSinReflejo) vieja.classList.add('reflejo-quieto'); // (se la saca cuando termina de irse)
     pedirMovimientoDelPuntero(nueva); // aparece sin inclinación ni reflejo hasta que el mouse se mueva
     document.getElementById('zoom-fondo')?.style.setProperty('--zc', colorDeCarta(nueva));
     soltarZoom(vieja);
 
     if (reducirMovimiento) {
-        vieja.classList.remove('zoom-activa');
+        vieja.classList.remove('zoom-activa', 'reflejo-quieto');
         vieja.datosZoom = null;
     } else {
         const sale = vieja.animate([
@@ -1460,7 +1463,7 @@ async function cambiarZoom(direccion, repetida = false) {
         fijarZoom(nueva);
         entra.cancel();
         sale.cancel();
-        vieja.classList.remove('zoom-activa');
+        vieja.classList.remove('zoom-activa', 'reflejo-quieto');
         vieja.datosZoom = null;
     }
     if (reducirMovimiento) fijarZoom(nueva);
