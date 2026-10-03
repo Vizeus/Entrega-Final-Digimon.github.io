@@ -1286,7 +1286,8 @@ body:has(.swal2-container) #avisos-ayuda {
   font-family: var(--f-cuerpo), sans-serif;
 }
 @media (min-width: 641px) {
-  .swal2-popup:not(.combate-popup) {
+  .popup-info,
+  .popup-ataques {
     width: min(94vw, 680px) !important;
     max-width: 680px !important;
   }
@@ -3599,6 +3600,8 @@ body:has(.swal2-container) #avisos-ayuda {
 /* Ventana de la línea evolutiva */
 .popup-evo {
   padding: 1.1em 1em 1em;
+  width: min(96vw, 920px) !important;
+  max-width: 920px !important;
 }
 
 .popup-evo .swal2-title {
@@ -3612,9 +3615,17 @@ body:has(.swal2-container) #avisos-ayuda {
   margin: 0.4em 0.4em 0.2em;
 }
 
+@media (min-width: 1000px) {
+  .popup-evo {
+    zoom: 1.3;
+    width: min(calc(96vw / 1.3), 920px) !important;
+    max-width: 920px !important;
+  }
+}
+
 .evo {
   --linea: #7d93a8;
-  --g: 36px;
+  --g: 46px;
   text-align: left;
 }
 
