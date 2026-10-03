@@ -1286,7 +1286,7 @@ body:has(.swal2-container) #avisos-ayuda {
   font-family: var(--f-cuerpo), sans-serif;
 }
 @media (min-width: 641px) {
-  .swal2-popup {
+  .swal2-popup:not(.combate-popup) {
     width: min(94vw, 680px) !important;
     max-width: 680px !important;
   }
@@ -1559,7 +1559,6 @@ body:has(.swal2-container) #avisos-ayuda {
 .combate-popup .combate-pantalla img {
   display: block;
   width: 100%;
-  max-height: 250px;
   aspect-ratio: var(--proporcion, 16/9);
   object-fit: cover;
   border-radius: 10px;
@@ -1577,12 +1576,12 @@ body:has(.swal2-container) #avisos-ayuda {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 14px;
+  gap: 6px;
   margin-top: 18px;
 }
 .combate-popup .vs-luchador {
   position: relative;
-  flex: 0 1 170px;
+  flex: 0 1 138px;
   min-width: 0;
   margin: 0;
   display: flex;
