@@ -150,8 +150,8 @@
         <button type="button" id="silenciar" data-modo="todo" title="Silenciar el sonido" aria-label="Silenciar el sonido">
             <svg class="audio-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <!-- El parlante con sus ondas se dibuja medio punto corrido a la derecha: así el dibujo queda centrado en el círculo -->
-                <g transform="translate(.5 0)">
+                <!-- El parlante con sus ondas se dibuja centrado en el círculo -->
+                <g transform="translate(1 0)">
                     <path class="audio-parlante" d="M10.5 5.2 6.4 8.8H3.2a.7.7 0 0 0-.7.7v5a.7.7 0 0 0 .7.7h3.2l4.1 3.6a.5.5 0 0 0 .8-.4V5.6a.5.5 0 0 0-.8-.4z"/>
                     <path class="audio-ondas" d="M15.2 9a4.2 4.2 0 0 1 0 6M18 6.4a8 8 0 0 1 0 11.2"/>
                     <path class="audio-cruz" d="m15.6 9.4 5.2 5.2m0-5.2-5.2 5.2"/>
@@ -170,9 +170,11 @@
                 aria-label="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo">
             <svg class="inclinacion-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2.5 6.5 14.5 2.5v19l-12-4z"/>
-                <!-- Los detalles de la carta (la ventana de la ilustración y una línea de texto), siguiendo la misma perspectiva, más finos -->
-                <path d="M4.3 8.1 12.7 6.3v7.84L4.3 13.46zM4.3 15.7l5.4 1" stroke-width="1.3"/>
+                <g class="inclinacion-carta">
+                    <path d="M2.5 6.5 14.5 2.5v19l-12-4z"/>
+                    <!-- Los detalles de la carta (la ventana de la ilustración y una línea de texto), siguiendo la misma perspectiva, más finos -->
+                    <path d="M4.3 8.1 12.7 6.3v7.84L4.3 13.46zM4.3 15.7l5.4 1" stroke-width="1.3"/>
+                </g>
                 <path class="inclinacion-shift" d="M19.6 11.4 16.3 15.6h2.1V20h2.4v-4.4h2.1z" fill="currentColor" stroke-width="1"/>
             </svg>
         </button>

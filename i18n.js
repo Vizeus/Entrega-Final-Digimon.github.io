@@ -59,6 +59,9 @@ const DICCIONARIO = {
         // Cartas
         'carta.nv': 'NV',
         'carta.voltear': 'Dar vuelta la carta',
+        'carta.infoNivel': 'Información del nivel {nivel}',
+        'carta.infoTipo': 'Información del tipo {tipo}',
+        'carta.infoElemento': 'Información del elemento {elemento}',
         'zoom.cerrar': 'Cerrar (Esc)',
         'zoom.ayuda': 'Esc o un clic afuera para cerrar · ← → para cambiar de carta',
         'zoom.anterior': 'Carta anterior (←)',
@@ -225,6 +228,9 @@ const DICCIONARIO = {
         // Cards
         'carta.nv': 'LV',
         'carta.voltear': 'Flip the card',
+        'carta.infoNivel': '{nivel} level info',
+        'carta.infoTipo': '{tipo} type info',
+        'carta.infoElemento': '{elemento} element info',
         'zoom.cerrar': 'Close (Esc)',
         'zoom.ayuda': 'Press Esc or click outside to close · ← → to switch cards',
         'zoom.anterior': 'Previous card (←)',

@@ -113,6 +113,7 @@ function datosDeFiltro(carta) {
             nivel: carta.dataset.nivelApi,
             elemento: carta.dataset.elemento,
             x: carta.dataset.xAntibody ? 'con' : 'sin', // si tiene X-Antibody
+            marca: carta.dataset.marca ? normalizar(carta.dataset.marca) : null, // 'armor' o 'hybrid'
             id: Number(carta.dataset.id),
             nombres,
         };
@@ -127,11 +128,19 @@ function coincideBusqueda(datos, consulta) {
     const numero = consulta.match(/^#?(\d+)$/);
     if (numero && datos.id === Number(numero[1])) return true;
 
-    // Cada palabra tiene que estar en el mismo nombre (en cualquier orden): en el original o en el occidental, pero sin mezclarlos.
+    // Cada palabra tiene que estar en el mismo nombre (en cualquier orden): en el original o en el occidental, pero sin mezclarlos,
+    // o bien coincidir con la marca especial de la carta (Armor o Hybrid).
     // Las que no llevan signos también se buscan sin signos: "vmon", "wargreymon"
     const palabras = consulta.split(' ');
+    const coincideMarca = palabra => {
+        if (!datos.marca) return false;
+        if (datos.marca === 'armor') return palabra === 'armor' || palabra === 'armors' || palabra === 'armour' || palabra === 'armours' || palabra === 'armadura' || palabra === 'armaduras';
+        if (datos.marca === 'hybrid') return palabra === 'hybrid' || palabra === 'hybrids' || palabra === 'hibrido' || palabra === 'hibridos';
+        return datos.marca.includes(palabra);
+    };
+
     return datos.nombres.some(({ nombre, compacto }) => palabras.every(palabra =>
-        nombre.includes(palabra) || (/^[a-z0-9]+$/.test(palabra) && compacto.includes(palabra))
+        coincideMarca(palabra) || nombre.includes(palabra) || (/^[a-z0-9]+$/.test(palabra) && compacto.includes(palabra))
     ));
 }
 

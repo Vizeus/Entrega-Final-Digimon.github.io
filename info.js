@@ -27,7 +27,11 @@ function mostrarInfo(titulo, descripcion, datos, pie) {
         html: `<p class="info-desc">${descripcion}</p><ul class="info-datos">${filas}</ul><p class="info-pie">${pie}</p>`,
         icon: 'info',
         confirmButtonText: t('aceptar'),
+        focusConfirm: false,
         customClass: { popup: 'popup-info' }, // para darle al título la fuente pixelada de la barra (ver styles.scss)
+        didOpen: (popup) => {
+            popup.querySelector('.swal2-confirm')?.blur();
+        },
     });
 }
 
@@ -198,8 +202,12 @@ function abrirAtaques(carta) {
         titleText: t('ataques.titulo', { nombre: nombreCompleto(carta) }),
         html: cuerpo,
         confirmButtonText: t('aceptar'),
+        focusConfirm: false,
         width: 'min(94vw, 480px)',
         customClass: { popup: 'popup-info popup-ataques' }, // el título con la fuente pixelada, como las otras ventanas de información
+        didOpen: (popup) => {
+            popup.querySelector('.swal2-confirm')?.blur();
+        },
         willClose: () => { cartaDeAtaques = null; },
     });
 }

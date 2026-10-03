@@ -19,8 +19,9 @@ const contadorSeleccion = document.getElementById('contador-seleccion');
 // Número total de Digimons 
 const totalDigimons = 1488; // todos los que tiene la API (digi-api.com)
 
-// Número de páginas a recuperar
-const totalPaginas = 298; // 5 digimons por página: 1488 digimons en total (la última página trae solo 3)
+// Número de páginas a recuperar (con pageSize=100 son solo 15 páginas en vez de 298)
+const DIGIMONS_POR_PAGINA = 100;
+const totalPaginas = Math.ceil(totalDigimons / DIGIMONS_POR_PAGINA);
 
 // Tipo (atributo) de cada Digimon: la API lo trae en inglés y por dentro lo guardamos con estos nombres en español.
 // Lo que se ve en pantalla ("Datos" o "Data") lo decide i18n.js según el idioma, ver nombreTipo().
@@ -403,33 +404,121 @@ function calcularVentaja(tabla, a, b) {
     return aVenceAb - bVenceAa;
 }
 
-// Función para obtener los Digimons de una página
-async function obtenerPagina(numeroPagina) {
+// -----------------------------------------------------------------------------------------------------------------
+// Caché en IndexedDB para los detalles de los Digimons (así cargan al instante en visitas posteriores y no saturan la API)
+// -----------------------------------------------------------------------------------------------------------------
+const CACHE_DB_NOMBRE = 'digimon-cache-v1';
+const CACHE_STORE_DETALLES = 'detalles';
+
+function abrirCacheDB() {
+    return new Promise((resolve) => {
+        if (typeof window === 'undefined' || !('indexedDB' in window)) return resolve(null);
+        try {
+            const peticion = indexedDB.open(CACHE_DB_NOMBRE, 1);
+            peticion.onupgradeneeded = () => {
+                const db = peticion.result;
+                if (!db.objectStoreNames.contains(CACHE_STORE_DETALLES)) {
+                    db.createObjectStore(CACHE_STORE_DETALLES);
+                }
+            };
+            peticion.onsuccess = () => resolve(peticion.result);
+            peticion.onerror = () => resolve(null);
+        } catch {
+            resolve(null);
+        }
+    });
+}
+
+let dbPromise = null;
+function getCacheDB() {
+    if (!dbPromise) dbPromise = abrirCacheDB();
+    return dbPromise;
+}
+
+async function obtenerDetalleCache(url) {
     try {
-        const respuesta = await fetch(`${urlBase}?page=${numeroPagina}`);
-        const datos = await respuesta.json();
-        return datos.content;
-    } catch (error) {
-        console.error('Error al obtener los Digimons de la página:', numeroPagina, error);
+        const db = await getCacheDB();
+        if (!db) return null;
+        return new Promise((resolve) => {
+            const tx = db.transaction(CACHE_STORE_DETALLES, 'readonly');
+            const store = tx.objectStore(CACHE_STORE_DETALLES);
+            const req = store.get(url);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    } catch {
+        return null;
     }
 }
 
-// Función para obtener los detalles de un Digimon específico
-async function obtenerDetallesDigimon(url) {
+async function guardarDetalleCache(url, datos) {
+    if (!datos) return;
     try {
-        const respuesta = await fetch(url);
-        const datos = await respuesta.json();
-        return datos;
-    } catch (error) {
-        console.error('Error al obtener detalles del Digimon:', error);
-        return null;
+        const db = await getCacheDB();
+        if (!db) return;
+        const tx = db.transaction(CACHE_STORE_DETALLES, 'readwrite');
+        const store = tx.objectStore(CACHE_STORE_DETALLES);
+        store.put(datos, url);
+    } catch {
+        // Silencioso si falla la escritura en cache
     }
+}
+
+// Función para obtener los Digimons de una página con pageSize=100 y reintentos automáticos
+async function obtenerPagina(numeroPagina, reintentos = 3) {
+    for (let intento = 1; intento <= reintentos; intento++) {
+        try {
+            const respuesta = await fetch(`${urlBase}?pageSize=${DIGIMONS_POR_PAGINA}&page=${numeroPagina}`);
+            if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+            const datos = await respuesta.json();
+            return datos.content || [];
+        } catch (error) {
+            if (intento === reintentos) {
+                console.warn(`Aviso: No se pudo obtener la página ${numeroPagina}:`, error.message);
+                return [];
+            }
+            await new Promise(r => setTimeout(r, 400 * intento));
+        }
+    }
+    return [];
+}
+
+// Función para obtener los detalles de un Digimon específico con caché y reintentos
+async function obtenerDetallesDigimon(url, reintentos = 3) {
+    // 1. Intentar desde caché local IndexedDB
+    try {
+        const cacheado = await obtenerDetalleCache(url);
+        if (cacheado) return cacheado;
+    } catch {
+        // Continuar si la caché no está disponible
+    }
+
+    // 2. Si no está en caché, solicitar con reintentos y retroceso exponencial
+    for (let intento = 1; intento <= reintentos; intento++) {
+        try {
+            const respuesta = await fetch(url);
+            if (!respuesta.ok) {
+                if (respuesta.status === 404) return null;
+                throw new Error(`HTTP ${respuesta.status}`);
+            }
+            const datos = await respuesta.json();
+            guardarDetalleCache(url, datos);
+            return datos;
+        } catch (error) {
+            if (intento === reintentos) {
+                console.warn('Aviso al obtener detalles del Digimon:', url, error.message);
+                return null;
+            }
+            await new Promise(r => setTimeout(r, 500 * intento));
+        }
+    }
+    return null;
 }
 
 // Función para obtener los Digimons de todas las páginas
 async function crearArrayDeDatos() {
     try {
-        // Generar array de promesas para todas las páginas
+        // Generar array de promesas para todas las páginas (15 páginas en vez de 298)
         const promesasPaginas = [];
         for (let i = 0; i < totalPaginas; i++) {
             promesasPaginas.push(obtenerPagina(i));
@@ -437,18 +526,13 @@ async function crearArrayDeDatos() {
 
         // Esperar a que se resuelvan todas las promesas
         const paginas = await Promise.all(promesasPaginas);
-        console.log("Páginas 👇")
-        console.info(paginas)
 
         // Combinar todos los sub-arrays de cada página en un solo array
         const digimons = paginas.flat();
-        console.log("Digimons 👇")
-        console.info(digimons)
-        console.log("----------------------------------------------------------------------")
 
         return digimons; // Devolvemos el array aplanado de Digimons
     } catch (error) {
-        console.error('Error al obtener todos los Digimons:', error);
+        console.warn('Aviso al obtener todos los Digimons:', error.message);
         return [];
     }
 }
@@ -547,7 +631,10 @@ function quitarSeleccion() {
     verificarSeleccion();
 }
 
-contadorSeleccion.addEventListener('click', quitarSeleccion);
+contadorSeleccion.addEventListener('click', () => {
+    quitarSeleccion();
+    quitarAvisoDelContador();
+});
 document.addEventListener('idioma-cambiado', mostrarAyudaDelContador);
 mostrarAyudaDelContador();
 
@@ -626,6 +713,7 @@ function mostrarAvisoDelContador(reintentos = 15) {
     avisoDelContador.setAttribute('role', 'status');
     avisoDelContador.innerHTML = '<span class="aviso-icono" aria-hidden="true">👆</span><span class="aviso-texto"></span>';
     escribirAvisoDelContador();
+    avisoDelContador.addEventListener('click', quitarAvisoDelContador);
     document.body.appendChild(avisoDelContador);
     ubicarAvisoDelContador();
     void avisoDelContador.offsetWidth; // para que la entrada se anime
@@ -639,7 +727,9 @@ function mostrarAvisoDelContador(reintentos = 15) {
     vigilanteDeLaBarra.observe(barra, { attributes: true, attributeFilter: ['class'] });
 }
 
-document.addEventListener('seleccion-cambio', quitarAvisoDelContador); // tocó el contador o una carta: ya sabe cómo hacerlo
+// Al seleccionar o deseleccionar cartas el cartel NO se cancela: queda los segundos para que se pueda leer,
+// a menos que la persona toque directamente el botón contador (o empiece otro combate o amplíe una carta).
+document.addEventListener('seleccion-cambio', ubicarAvisoDelContador);
 botonIniciarCombate.addEventListener('click', quitarAvisoDelContador);
 document.addEventListener('zoom-cambio', () => { if (cartaEnZoom) quitarAvisoDelContador(); });
 document.addEventListener('idioma-cambiado', () => {
@@ -845,14 +935,45 @@ function construirDorso(carta) {
 function traducirCarta(carta) {
     const { tipo, elemento, nivelApi } = carta.dataset;
 
-    carta.querySelector('.c-gema small').textContent = t('carta.nv');
-    carta.querySelector('.c-nivel').textContent = nombreNivel(nivelApi);
-    carta.querySelector('.c-tipo').textContent = `${nombreTipo(tipo)} ${EMOJIS_TIPO[tipo]}`;
-    carta.querySelector('.c-elem').textContent = `${nombreElemento(elemento)} ${EMOJIS_ELEMENTO[elemento]}`;
+    const gema = carta.querySelector('.c-gema');
+    const nivel = carta.querySelector('.c-nivel');
+    const chipTipo = carta.querySelector('.c-tipo');
+    const chipElem = carta.querySelector('.c-elem');
+
+    const textoNivel = nombreNivel(nivelApi);
+    const textoTipo = nombreTipo(tipo);
+    const textoElem = nombreElemento(elemento);
+
+    if (gema) {
+        gema.querySelector('small').textContent = t('carta.nv');
+        const ayudaNivel = t('carta.infoNivel', { nivel: textoNivel });
+        gema.title = ayudaNivel;
+        gema.setAttribute('aria-label', ayudaNivel);
+    }
+    if (nivel) {
+        nivel.textContent = textoNivel;
+        const ayudaNivel = t('carta.infoNivel', { nivel: textoNivel });
+        nivel.title = ayudaNivel;
+        nivel.setAttribute('aria-label', ayudaNivel);
+    }
+    if (chipTipo) {
+        chipTipo.textContent = `${textoTipo} ${EMOJIS_TIPO[tipo]}`;
+        const ayudaTipo = t('carta.infoTipo', { tipo: textoTipo });
+        chipTipo.title = ayudaTipo;
+        chipTipo.setAttribute('aria-label', ayudaTipo);
+    }
+    if (chipElem) {
+        chipElem.textContent = `${textoElem} ${EMOJIS_ELEMENTO[elemento]}`;
+        const ayudaElem = t('carta.infoElemento', { elemento: textoElem });
+        chipElem.title = ayudaElem;
+        chipElem.setAttribute('aria-label', ayudaElem);
+    }
 
     const botonVoltear = carta.querySelector('.c-flip');
-    botonVoltear.title = t('carta.voltear');
-    botonVoltear.setAttribute('aria-label', t('carta.voltear'));
+    if (botonVoltear) {
+        botonVoltear.title = t('carta.voltear');
+        botonVoltear.setAttribute('aria-label', t('carta.voltear'));
+    }
 
     const dorsoViejo = carta.querySelector('.c-dorso');
     if (dorsoViejo) {
@@ -873,6 +994,7 @@ const PERSPECTIVA = 'perspective(800px) ';
 // direccion: 1 gira hacia un lado y -1 hacia el otro (con el barrido del dedo, la carta gira hacia donde va el dedo)
 async function voltearCarta(carta, direccion = 1) {
     if (carta.girando || (zoomOcupado && carta === cartaEnZoom)) return;
+    document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { accion: 'voltear' } }));
     carta.girando = true;
     if (carta === cartaEnZoom && zoomExtra) await volverAlZoomNormal(carta); // el zoom extra es solo del frente
 
@@ -1049,6 +1171,8 @@ function zonaConScroll(destino, delta = 0, selector = '.c-cuerpo') {
 }
 
 const frenarRueda = (evento) => {
+    // Si hay un cartel de SweetAlert abierto (ataques, evolución, etc.), permitimos su propio desplazamiento
+    if (document.querySelector('.swal2-container')) return;
     // Sobre el frente de la carta ampliada, la rueda la agranda todavía más (ver "ZOOM EXTRA"). En el dorso no: ahí la rueda es para la descripción
     if (zoomExtraDisponible() && cartaEnZoom.contains(evento.target)) {
         evento.preventDefault();
@@ -1059,10 +1183,13 @@ const frenarRueda = (evento) => {
 };
 
 const frenarToque = (evento) => {
+    if (document.querySelector('.swal2-container')) return;
     if (!zonaConScroll(evento.target) && evento.cancelable) evento.preventDefault();
 };
 
 const alTeclearConZoom = (evento) => {
+    // Si hay un cartel de SweetAlert abierto, SweetAlert maneja sus teclas (Escape para cerrar el cartel, etc.)
+    if (document.querySelector('.swal2-container')) return;
     if (evento.key === 'Escape') {
         evento.preventDefault();
         cerrarZoom();
@@ -1584,6 +1711,9 @@ async function cerrarZoom({ rapido = false } = {}) {
     document.dispatchEvent(new CustomEvent('zoom-cambio'));
 }
 
+window.cerrarZoom = cerrarZoom;
+window.obtenerCartaEnZoom = () => cartaEnZoom;
+
 // Vuelve la selección para el combate a como estaba antes del primer clic del doble clic
 function restaurarSeleccion(estado) {
     seleccionados.forEach(carta => carta.classList.remove('seleccionado'));
@@ -1609,16 +1739,15 @@ function activarZoom() {
         }
     });
 
-    // Las ventanas de evolución y de ataques se abren sobre la página, por detrás de la carta en grande: primero la carta vuelve
-    // a su lugar y recién ahí se abre la ventana (se repite el clic en el botón cuando el zoom ya se cerró)
-    document.addEventListener('click', async (evento) => {
+    // Las ventanas de evolución y de ataques se abren directamente sobre la carta en grande, sin salir del modo zoom.
+    // Solo si el zoom todavía está en plena transición (llegando o yéndose) se ignora el toque.
+    document.addEventListener('click', (evento) => {
         const boton = cartaEnZoom && evento.target.closest('.c-evo, .c-ataques');
         if (!boton) return;
-        evento.stopPropagation();
-        evento.preventDefault();
-        if (zoomOcupado) return; // todavía está llegando o yéndose: hay que volver a tocar el botón
-        await cerrarZoom();
-        boton.click();
+        if (zoomOcupado) {
+            evento.stopPropagation();
+            evento.preventDefault();
+        }
     }, true);
 
     activarZoomConPellizco();
@@ -1643,12 +1772,12 @@ function activarZoom() {
 //   { "visitas": 3, "hecho": { "combate": true, "zoom": true, "inclinar": false, "gestos": true } }
 //   - "hecho": lo que la persona ya hizo (eligió las 2 cartas, amplió una, inclinó una con el dedo) o ya vio ("gestos", que se
 //     muestra una sola vez). Un aviso que ya no hace falta no vuelve a salir.
-//   - "visitas": cuántas veces entró. Entrar una sexta vez todavía los muestra; desde la séptima no sale ninguno (ya los conoce).
+//   - "visitas": cuántas veces entró. Entrar una séptima vez todavía los muestra; desde la octava no sale ninguno (ya los conoce).
 //     Cuenta una por sesión del navegador: recargar la página con la pestaña abierta no suma.
 // Si el navegador no deja guardar (modo privado, datos bloqueados), todo sigue andando como si fuera la primera vez.
 // Para empezar de cero (por ejemplo, para probarlos): localStorage.removeItem('digimon-avisos')
 const AVISOS_ALMACEN = 'digimon-avisos';
-const AVISOS_VISITAS_MAXIMAS = 6;
+const AVISOS_VISITAS_MAXIMAS = 7;
 let memoriaAvisos = { visitas: 0, hecho: {} };
 
 function guardarMemoriaAvisos() {
@@ -1825,6 +1954,7 @@ function activarAvisoGestosDelZoom() {
 // con el mouse sobre las cartas, en esta visita o en otra), el cartel no la explica: solo habla del botón. Si hace clic en el botón, ya lo
 // encontró: el cartel deja de hacer falta en lo que queda de la sesión.
 const INCLINACION_AVISO_SESION = 'digimon-aviso-inclinacion'; // sessionStorage: en esta sesión ya salió
+const INCLINACION_ANIMACION_SOLA_SESION = 'digimon-animacion-inclinacion-sola'; // sessionStorage: animación sola ya salió
 const INCLINACION_AVISO_TRAMOS = [ // de la sesión más alta a la más baja: vale el primero cuyo "desde" no supera el número de sesión
     { desde: 10, acumulado: 80000, carga: 95000 }, // ms de inclinación acumulada, y ms desde la carga si está invertida
     { desde: 6, acumulado: 45000, carga: 55000 },
@@ -1844,16 +1974,30 @@ function inclinacionAvisoYaSalio() {
     }
 }
 
+function inclinacionAnimacionSolaYaSalio() {
+    try {
+        return sessionStorage.getItem(INCLINACION_ANIMACION_SOLA_SESION) === '1';
+    } catch (error) {
+        return false;
+    }
+}
+
+function marcarInclinacionAnimacionSolaHecha() {
+    try {
+        sessionStorage.setItem(INCLINACION_ANIMACION_SOLA_SESION, '1');
+    } catch (error) {
+    }
+}
+
 function activarAvisoDeInclinacion() {
     const boton = document.getElementById('inclinacion-invertida');
     if (!boton || boton.hidden) return; // sin inclinación con el mouse (celular, o "reducir movimiento") no hay nada que contar
     const sesion = memoriaAvisos.visitas;
-    if (sesion > INCLINACION_AVISO_ULTIMA_SESION || inclinacionAvisoYaSalio()) return;
     const tramo = INCLINACION_AVISO_TRAMOS.find(({ desde }) => sesion >= desde) ?? INCLINACION_AVISO_TRAMOS.at(-1);
     const estaInvertida = () => boton.getAttribute('aria-pressed') === 'true';
     const invertidaAlCargar = estaInvertida();
 
-    let terminado = false; // ya salió, o ya no hace falta
+    let terminado = sesion > INCLINACION_AVISO_ULTIMA_SESION || inclinacionAvisoYaSalio(); // ya salió, o ya no hace falta el cartel
     let esperaCarga = 0;   // modo invertido: desde la carga de la página
     let esperaTilt = 0;    // modo normal: cuando la inclinación acumulada llega al tiempo
     let reintento = 0;
@@ -1917,6 +2061,7 @@ function activarAvisoDeInclinacion() {
         } catch (error) {
             // Sin sessionStorage, vale mientras no se recargue la página
         }
+        marcarInclinacionAnimacionSolaHecha();
         const sabeShift = conoceShift();
         const clave = `aviso.inclinacion.${estaInvertida() ? 'invertida' : 'normal'}${sabeShift ? '.boton' : ''}`; // (la variante queda fija aunque se invierta mientras está)
         llamarLaAtencion(boton, {
@@ -1925,6 +2070,43 @@ function activarAvisoDeInclinacion() {
             duracion: sabeShift ? INCLINACION_AVISO_DURACION_BREVE : INCLINACION_AVISO_DURACION,
         });
     };
+
+    // Solo la animación del botón (saltos y ondas), por única vez por sesión, sin el cartel
+    const animarBotonSinCartel = () => {
+        if (inclinacionAnimacionSolaYaSalio()) return;
+        marcarInclinacionAnimacionSolaHecha();
+        if (llamadasActivas.has(boton)) return;
+
+        let devolver = null;
+        if (boton.parentElement !== document.body && hayCortinaSobreLaBarra()) {
+            devolver = subirBotonSobreLaCortina(boton);
+        }
+        const verificarCortina = () => {
+            if (!devolver && boton.parentElement !== document.body && hayCortinaSobreLaBarra()) {
+                devolver = subirBotonSobreLaCortina(boton);
+            }
+        };
+        requestAnimationFrame(verificarCortina);
+
+        boton.classList.remove('llamando');
+        void boton.offsetWidth;
+        boton.classList.add('llamando');
+
+        setTimeout(() => {
+            boton.classList.remove('llamando');
+            devolver?.();
+        }, AUDIO_AVISO_DURACION);
+    };
+
+    // Tercera condición de aparición: clic en los botones inferiores del frente de la carta (tipo o elemento).
+    // Si el cartel aún no salió en la sesión, sale con el cartel; si ya había pasado, sale solo la animación del botón.
+    document.addEventListener('click-chip-carta', () => {
+        if (!terminado && !inclinacionAvisoYaSalio()) {
+            mostrar();
+        } else {
+            animarBotonSinCartel();
+        }
+    });
 
     // --- Cuándo: con la inclinación normal, al juntar el tiempo de inclinación con el mouse; con la invertida, a los tantos segundos de cargar ---
     let inclinando = false; // hay una carta inclinándose con el mouse (la que se inclina con el dedo no cuenta)
@@ -1954,7 +2136,7 @@ function activarAvisoDeInclinacion() {
         if (document.hidden) sumarTramo();
         else if (inclinando) empezarTramo();
     });
-    if (invertidaAlCargar) esperaCarga = setTimeout(mostrar, tramo.carga);
+    if (!terminado && invertidaAlCargar) esperaCarga = setTimeout(mostrar, tramo.carga);
 
     // Hizo clic en el botón: ya lo encontró
     boton.addEventListener('click', () => {
@@ -1963,6 +2145,7 @@ function activarAvisoDeInclinacion() {
         clearTimeout(esperaTilt);
         clearTimeout(reintento);
         terminarLlamada(boton);
+        marcarInclinacionAnimacionSolaHecha();
     });
 }
 
@@ -2284,6 +2467,45 @@ const BARRIDO_DISTANCIA_INCLINANDO = 70;  // px
 const BARRIDO_VELOCIDAD_INCLINANDO = 1.8; // px por milisegundo (más de 2 veces la normal)
 let inclinandoConDedo = false;            // true mientras hay una carta inclinándose con el dedo (lo maneja activarInclinacionConDedo)
 
+// Ocultamiento inteligente de las flechas de flip en móvil:
+// Cuando el usuario en móvil demuestra que ya sabe rotar cartas con el dedo (acumula 4 flips por sesión),
+// o cuando es la séptima vez (o más) que entra al sitio, se ocultan todas las flechas de flip para que las cartas se vean limpias.
+const ALMACEN_FLIPS_SESION = 'digimon-flips-sesion';
+const MIN_FLIPS_SESION_PARA_OCULTAR = 4;
+const MIN_VISITAS_PARA_OCULTAR_SIEMPRE = 7;
+
+function aplicarOcultarFlechasFlip() {
+    document.body.classList.add('sin-flechas-flip-movil');
+}
+
+function gestionarVisitasYFlechasMovil() {
+    // Si ya es la 7ma visita o más, las flechas desaparecen para siempre en móvil
+    if (memoriaAvisos.visitas >= MIN_VISITAS_PARA_OCULTAR_SIEMPRE) {
+        aplicarOcultarFlechasFlip();
+        return;
+    }
+
+    // Si en la sesión actual ya acumuló 4 flips con el dedo, se ocultan por lo que resta de la sesión
+    try {
+        const flipsSesion = parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
+        if (flipsSesion >= MIN_FLIPS_SESION_PARA_OCULTAR) {
+            aplicarOcultarFlechasFlip();
+        }
+    } catch (error) {}
+}
+
+function registrarFlipConDedo() {
+    try {
+        let flips = parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
+        if (isNaN(flips)) flips = 0;
+        flips += 1;
+        sessionStorage.setItem(ALMACEN_FLIPS_SESION, String(flips));
+        if (flips >= MIN_FLIPS_SESION_PARA_OCULTAR) {
+            aplicarOcultarFlechasFlip();
+        }
+    } catch (error) {}
+}
+
 function activarVoltearConDedo() {
     if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
     let gesto = null;        // { carta, x0, y0, muestras, resuelto }: el dedo que está apoyado en una carta
@@ -2333,6 +2555,7 @@ function activarVoltearConDedo() {
             setTimeout(() => { evitarClic = false; }, 450);
             vibrar(8);
             voltearCarta(gesto.carta, dx > 0 ? 1 : -1);
+            registrarFlipConDedo();
         }
     }, { passive: false });
 
@@ -2530,7 +2753,25 @@ function activarInclinacion() {
                 soltar(cartaActual);
                 return;
             }
-            const carta = evento.target.closest('#listado-digimons > li');
+            let carta = evento.target.closest('#listado-digimons > li');
+
+            // Si la carta actual se inclinó o levantó y el puntero quedó un instante en el borde que se apartó,
+            // no la soltamos de inmediato: verificamos si el puntero sigue dentro de su zona de interacción (caja base con tolerancia).
+            // Esto evita que la carta vibre (se active y desactive a 60 fps) al entrar lentamente desde cualquier borde.
+            if (!carta && cartaActual && caja) {
+                const px = evento.clientX + scrollX;
+                const py = evento.clientY + scrollY;
+                const margenX = 12;
+                const margenY = 22;
+                const dentro = px >= (caja.x - margenX) &&
+                               px <= (caja.x + caja.ancho + margenX) &&
+                               py >= (caja.y - margenY) &&
+                               py <= (caja.y + caja.alto + margenY);
+                if (dentro) {
+                    carta = cartaActual;
+                }
+            }
+
             if (!carta) {
                 soltar(cartaActual);
                 return;
@@ -2757,20 +2998,53 @@ function guardarAudio() {
     }
 }
 
+const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
+
+// =================================================================================================================
+// PERFILES DE AUDIO DIFERENCIADOS: CELULAR VS ESCRITORIO
+// =================================================================================================================
+// En celular, los parlantes suelen saturar con facilidad y están muy próximos al usuario; un volumen de 0.4
+// resulta equilibrado y confortable.
+// En computadora (parlantes integrados o externos, auriculares), 0.4 se percibe demasiado bajo; con 0.85 recupera
+// presencia, volumen y pegada en los clics, los efectos de las cartas y la música de batalla.
+const PERFIL_AUDIO = {
+    movil: {
+        volumenGeneral: 0.4,
+        volumenTeclas: 0.26,
+    },
+    escritorio: {
+        volumenGeneral: 0.85,
+        volumenTeclas: 0.38,
+    },
+};
+
+function esDispositivoMovil() {
+    if (typeof window === 'undefined') return false;
+    return PANTALLA_DE_CELULAR.matches || 
+           (typeof navigator !== 'undefined' && (
+               (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024) ||
+               /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+           ));
+}
+
+function perfilAudioActual() {
+    return esDispositivoMovil() ? PERFIL_AUDIO.movil : PERFIL_AUDIO.escritorio;
+}
+
+function obtenerVolumenGeneral() {
+    return perfilAudioActual().volumenGeneral;
+}
+
 const audioGuardado = leerAudioGuardado();
 let silenciado = audioGuardado.sinSonido;
 let vibracionApagada = audioGuardado.sinVibracion;
 let salidaGeneral = null; // el "volumen maestro" de Web Audio: todos los sonidos sintetizados pasan por acá antes de salir
 
-// Volumen general de toda la página (1 = como venía antes). Se bajó bastante: con el volumen del celular a la mitad sonaba
-// demasiado fuerte. Cada archivo de audio lleva además su propio nivel relativo (ver más abajo, en "Audios").
-const VOLUMEN_GENERAL = 0.4;
-
 // A dónde se conecta cada sonido sintetizado (en vez de directo a los parlantes): así un solo control los silencia a todos
 function destinoDeAudio(contexto) {
     if (!salidaGeneral || salidaGeneral.context !== contexto) {
         salidaGeneral = contexto.createGain();
-        salidaGeneral.gain.value = silenciado ? 0 : VOLUMEN_GENERAL;
+        salidaGeneral.gain.value = silenciado ? 0 : obtenerVolumenGeneral();
         salidaGeneral.connect(contexto.destination);
     }
     return salidaGeneral;
@@ -2779,14 +3053,27 @@ function destinoDeAudio(contexto) {
 // Deja todo como corresponde: Web Audio por el volumen maestro y los archivos de audio con "muted", que sigue
 // reproduciéndolos (en silencio) y así los tiempos del combate no cambian. Si se quitó la vibración, corta la que esté en marcha
 function aplicarSilencio() {
+    const vol = obtenerVolumenGeneral();
     if (salidaGeneral) {
         // Bajada rapidísima en vez de un corte seco, para que no suene un "clic" al silenciar
-        salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : VOLUMEN_GENERAL, salidaGeneral.context.currentTime, 0.01);
+        salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : vol, salidaGeneral.context.currentTime, 0.01);
     }
-    [audioMouse, winMusic, battleMusic, winSound, audioPajita].forEach(audio => { audio.muted = silenciado; });
+    actualizarVolumenAudios();
+    [audioMouse, winMusic, battleMusic, winSound, audioPajita].forEach(audio => { if (audio) audio.muted = silenciado; });
     if (vibracionApagada) {
         try { navigator.vibrate?.(0); } catch (error) { /* nada que cortar */ }
     }
+}
+
+function actualizarVolumenesSegunDispositivo() {
+    const perfil = perfilAudioActual();
+    if (salidaGeneral && !silenciado) {
+        salidaGeneral.gain.setTargetAtTime(perfil.volumenGeneral, salidaGeneral.context.currentTime, 0.02);
+    }
+    if (nodoVolumenTeclas) {
+        nodoVolumenTeclas.gain.value = perfil.volumenTeclas;
+    }
+    actualizarVolumenAudios();
 }
 
 // En qué paso está el botón: "todo" (sonido y vibración), "vibracion" (solo vibración) o "nada"
@@ -2834,13 +3121,27 @@ function mostrarEstadoDelAudio() {
 // En celular el botón no vive en la barra ni en el menú ☰: flota en la esquina de abajo a la derecha (lo dibuja el CSS cuando el botón
 // es hijo directo del <body>). Acá se lo cambia de lugar según el ancho de la pantalla: en celular al <body>, en computadora
 // de vuelta junto al selector de idioma. Es el mismo botón siempre, así que conserva su estado y sus eventos.
-const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
-
 function ubicarBotonDeAudio() {
     const boton = document.getElementById('silenciar');
     const ajustes = document.querySelector('#navbar .ajustes');
     if (!boton || !ajustes) return;
-    const destino = PANTALLA_DE_CELULAR.matches ? document.body : ajustes;
+    const enCelular = PANTALLA_DE_CELULAR.matches;
+    const destino = enCelular ? document.body : ajustes;
+    const botonInclinacion = ajustes.querySelector('#inclinacion-invertida');
+
+    if (!enCelular) {
+        // En computadora debe estar en ajustes y SIEMPRE a la izquierda del botón de inclinación
+        if (boton.parentElement === ajustes && (!botonInclinacion || boton.nextElementSibling === botonInclinacion)) return;
+        const teniaElFoco = document.activeElement === boton;
+        if (botonInclinacion) {
+            ajustes.insertBefore(boton, botonInclinacion);
+        } else {
+            ajustes.append(boton);
+        }
+        if (teniaElFoco) boton.focus({ preventScroll: true });
+        return;
+    }
+
     if (boton.parentElement === destino) return;
     const teniaElFoco = document.activeElement === boton;
     destino.append(boton);
@@ -2886,6 +3187,7 @@ function marcarBotonDeAudioMostrado() {
 let combateEnCurso = false; // desde que se aprieta "Iniciar Combate" hasta que se cierra el último cartel (lo maneja iniciarCombate)
 
 const GLOBO_DEL_BOTON_DURACION = 7000; // ms a la vista (el de inclinación elige el suyo: explica más)
+const GLOBO_DEL_BOTON_DURACION_DOBLE = 16000; // ms: si coinciden dos carteles (ej. sonido e inclinación al voltear), más tiempo para leer ambos
 
 // ¿Hay algo por encima de la barra? El zoom de una carta (#zoom-fondo) o un cartel de SweetAlert (los del combate y los de información)
 const hayCortinaSobreLaBarra = () => !!(cartaEnZoom || combateEnCurso || document.querySelector('#zoom-fondo, .swal2-container'));
@@ -3005,6 +3307,15 @@ function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOTON_DURA
     llamada.finDeLaAnimacion = setTimeout(() => boton.classList.remove('llamando'), AUDIO_AVISO_DURACION);
     llamada.temporizador = setTimeout(() => terminarLlamada(boton), Math.max(duracion, AUDIO_AVISO_DURACION));
 
+    // Si coinciden dos o más carteles a la vez (por ejemplo, el primer sonido de la sesión es voltear una carta,
+    // disparando a la vez el aviso de silenciar y el de tilt/shift), dejamos ambos carteles más tiempo para darle al usuario tiempo de leer ambos
+    if (llamadasActivas.size > 1) {
+        for (const [b, l] of llamadasActivas) {
+            clearTimeout(l.temporizador);
+            l.temporizador = setTimeout(() => terminarLlamada(b), GLOBO_DEL_BOTON_DURACION_DOBLE);
+        }
+    }
+
     void globo.offsetWidth; // para que la entrada se anime
     globo.classList.add('visible');
     if (!vigiliaDeLlamadas) vigiliaDeLlamadas = requestAnimationFrame(vigilarLlamadas);
@@ -3046,7 +3357,10 @@ function activarBotonDeAudio() {
     const boton = document.getElementById('silenciar');
     if (!boton) return;
     ubicarBotonDeAudio();
-    PANTALLA_DE_CELULAR.addEventListener('change', ubicarBotonDeAudio);
+    PANTALLA_DE_CELULAR.addEventListener('change', () => {
+        ubicarBotonDeAudio();
+        actualizarVolumenesSegunDispositivo();
+    });
     mostrarEstadoDelAudio();
     boton.addEventListener('click', () => {
         terminarElAvisoDelBotonDeAudio();
@@ -3101,11 +3415,11 @@ function obtenerRuido(contexto) {
     return ruidosPorContexto.get(contexto);
 }
 
-// Volumen de las teclas: VOLUMEN_TECLAS (0 a 1) es el tope de sonido. GANANCIA_TECLAS empuja el sonido contra ese tope
-// (más ganancia = suena más "lleno" y más fuerte, pero también más comprimido).
-const VOLUMEN_TECLAS = 0.26; // era 0.8, después 0.52, 0.4 y 0.32: se fue bajando el volumen de los botones
+// Volumen de las teclas: se adapta según el perfil de audio (celular vs escritorio).
+// GANANCIA_TECLAS empuja el sonido contra ese tope (más ganancia = suena más "lleno" y más fuerte, pero también más comprimido).
 const GANANCIA_TECLAS = 1.3;
 let salidaTeclas;
+let nodoVolumenTeclas;
 
 // Salida común de las teclas. Cadena: compresor (suaviza los golpes fuertes) -> ganancia -> saturador suave (tanh) -> volumen.
 // El saturador redondea los picos en vez de cortarlos, así se puede subir el volumen sin que suene rota.
@@ -3129,13 +3443,13 @@ function crearSalidaTeclas(contexto) {
     saturador.curve = curva;
     saturador.oversample = '2x';
 
-    const volumen = contexto.createGain();
-    volumen.gain.value = VOLUMEN_TECLAS;
+    nodoVolumenTeclas = contexto.createGain();
+    nodoVolumenTeclas.gain.value = perfilAudioActual().volumenTeclas;
 
     compresor.connect(ganancia);
     ganancia.connect(saturador);
-    saturador.connect(volumen);
-    volumen.connect(destinoDeAudio(contexto));
+    saturador.connect(nodoVolumenTeclas);
+    nodoVolumenTeclas.connect(destinoDeAudio(contexto));
     return compresor;
 }
 
@@ -3426,12 +3740,12 @@ function activarSonidoBotones() {
     let apretado = null; // la tecla que está apretada (para soltarla igual), o null
     // Qué tecla suena al tocar este botón (null: ninguna)
     const teclaDe = (evento) => {
-        const boton = evento.target.closest('button');
+        const boton = evento.target.closest('button, [role="button"]');
         if (!boton || boton.disabled) return null;
         if (boton.id === 'silenciar') return null; // el botón de sonido tiene su propio criterio (ver activarBotonDeAudio)
         if (boton.id === 'inclinacion-invertida') return TECLA_SIN_AVISO;
         if (boton.closest(ZONAS_CON_SONIDO)) return TECLA_NORMAL;
-        if (boton.closest(BOTONES_DE_CARTA)) return TECLA_DE_CARTA;
+        if (boton.closest(BOTONES_DE_CARTA) || boton.closest('#listado-digimons li')) return TECLA_DE_CARTA;
         return null;
     };
     document.addEventListener('pointerdown', (evento) => {
@@ -3496,14 +3810,95 @@ function activarRuedaConShift() {
     }, { passive: true });
 }
 
+// Al hacer clic en un botón con el mouse (en especial con la tecla Shift mantenida, por ejemplo al usar la rueda con Shift),
+// los botones no deben retener el aro de foco (:focus-visible) ni iniciar una selección de texto accidental.
+// Con la navegación por teclado (Tab, Enter, Espacio) la accesibilidad y el foco visible siguen funcionando con total normalidad.
+function evitarFocoYSeleccionConShift() {
+    document.addEventListener('mousedown', (evento) => {
+        const boton = evento.target.closest('button, [role="button"]');
+        if (!boton) return;
+        if (evento.shiftKey) {
+            evento.preventDefault();
+            window.getSelection?.()?.removeAllRanges?.();
+        }
+    });
+
+    document.addEventListener('click', (evento) => {
+        const boton = evento.target.closest('button, [role="button"]');
+        if (!boton) return;
+        if (evento.detail > 0 || evento.shiftKey) {
+            if (document.activeElement === boton || boton.contains(document.activeElement)) {
+                boton.blur();
+            }
+            if (evento.shiftKey) {
+                window.getSelection?.()?.removeAllRanges?.();
+            }
+        }
+    }, true);
+}
+
+// Al hacer clic en el nivel (la gema o el nombre), tipo o elemento de una carta, se abre su ventana de información (info.js)
+// sin seleccionar la carta para el combate ni cerrarla si está en modo zoom.
+function activarCartelesDeInfoEnCartas() {
+    document.addEventListener('click', (evento) => {
+        // 1. Tipo
+        const chipTipo = evento.target.closest?.('#listado-digimons li .c-tipo');
+        if (chipTipo) {
+            const carta = chipTipo.closest('#listado-digimons li');
+            if (carta?.dataset.tipo) {
+                evento.stopPropagation();
+                document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { tipo: carta.dataset.tipo } }));
+                if (typeof window.infoTipo === 'function') window.infoTipo(carta.dataset.tipo);
+                return;
+            }
+        }
+
+        // 2. Elemento
+        const chipElem = evento.target.closest?.('#listado-digimons li .c-elem');
+        if (chipElem) {
+            const carta = chipElem.closest('#listado-digimons li');
+            if (carta?.dataset.elemento) {
+                evento.stopPropagation();
+                document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { elemento: carta.dataset.elemento } }));
+                if (typeof window.infoElemento === 'function') window.infoElemento(carta.dataset.elemento);
+                return;
+            }
+        }
+
+        // 3. Nivel (gema o texto del nivel)
+        const nivelTarget = evento.target.closest?.('#listado-digimons li .c-gema, #listado-digimons li .c-nivel');
+        if (nivelTarget) {
+            const carta = nivelTarget.closest('#listado-digimons li');
+            if (carta?.dataset.nivelApi) {
+                evento.stopPropagation();
+                document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { nivel: carta.dataset.nivelApi } }));
+                if (typeof window.infoNivel === 'function') window.infoNivel(carta.dataset.nivelApi);
+                return;
+            }
+        }
+    }, true);
+
+    // Accesibilidad por teclado: Enter o Espacio sobre la gema, el nivel o los chips activa el clic
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key !== 'Enter' && evento.key !== ' ') return;
+        const boton = evento.target.closest?.('#listado-digimons li .c-gema, #listado-digimons li .c-nivel, #listado-digimons li .c-tipo, #listado-digimons li .c-elem');
+        if (!boton) return;
+        evento.preventDefault();
+        boton.click();
+    });
+}
+
 activarInclinacion();
 activarRuedaConShift();
+evitarFocoYSeleccionConShift();
+activarCartelesDeInfoEnCartas();
 activarZoom();
 activarArrastreDeZoomExtra();
 activarReflejoQuieto();
 activarAvisosDeAyuda();
 activarAvisoDeInclinacion(); // después de los avisos de ayuda: usa el contador de visitas que ellos cuentan
 activarAvisoDeZoomExtra();   // (este también)
+gestionarVisitasYFlechasMovil();
 activarVoltearConDedo();
 activarSonidoBotones();
 activarBotonDeAudio();
@@ -3550,18 +3945,19 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, mar
     // traducirCarta(); el nombre lo pone ponerNombre para separar lo que va entre paréntesis.
     elementoLista.innerHTML = `
         ${nivelNumerico >= 7 ? '<span class="c-marco" aria-hidden="true"></span>' : ''}
+        <span class="c-puente" aria-hidden="true"></span>
         <div class="c-frente">
             <div class="c-cab"><h4></h4></div>
             <div class="c-arte">
                 <img src="${imagen}" alt="" loading="lazy" decoding="async">
                 ${xAntibody ? '<span class="c-x" title="X-Antibody">X</span>' : ''}
                 ${datosMarca ? `<span class="c-marca" title="${datosMarca.nombre}" role="img" aria-label="${datosMarca.nombre}">${datosMarca.letra}</span>` : ''}
-                <span class="c-gema"><small></small>${nivelNumerico ?? '?'}</span>
+                <span class="c-gema" role="button" tabindex="0"><small></small>${nivelNumerico ?? '?'}</span>
             </div>
-            <div class="c-sub"><span class="c-nivel"></span><span>#${etiquetaId ?? String(id).padStart(3, '0')}</span></div>
+            <div class="c-sub"><span class="c-nivel" role="button" tabindex="0"></span><span>#${etiquetaId ?? String(id).padStart(3, '0')}</span></div>
             <div class="c-chips">
-                <span class="chip c-tipo"></span>
-                <span class="chip c-elem"></span>
+                <span class="chip c-tipo" role="button" tabindex="0"></span>
+                <span class="chip c-elem" role="button" tabindex="0"></span>
             </div>
         </div>
         <button class="c-flip" type="button">↻</button>`;
@@ -3691,12 +4087,12 @@ async function crearListaDeDigimons() {
             }
 
             // Extraemos el tipo (atributo) o, sino tiene, le ponemos "Desconocido"
-            const tipo = tipoDeLaApi[detalles.attributes[0]?.attribute] || 'Desconocido';
+            const tipo = tipoDeLaApi[detalles.attributes?.[0]?.attribute] || 'Desconocido';
 
             // Extraemos el nivel original de la API (sin traducir) o, sino tiene, le ponemos "Desconocido".
             // Un nivel "Unknown" de la API también es desconocido. Los Armor y los Hybrid se pasan a uno de los 8 niveles
             // normales y quedan con su marca (resolverNivelDeLaApi). Los digimons de ASCENSOS suben a un nivel inventado.
-            const { nivel: nivelDeLaApi, marca } = resolverNivelDeLaApi(digimon.name, detalles.levels[0]?.level);
+            const { nivel: nivelDeLaApi, marca } = resolverNivelDeLaApi(digimon.name, detalles.levels?.[0]?.level);
             const nivelOriginal = ASCENSOS[digimon.id] ?? NIVELES_CORREGIDOS[digimon.id] ?? nivelDeLaApi;
 
             agregarCarta({
@@ -3716,6 +4112,10 @@ async function crearListaDeDigimons() {
                         .filter(habilidad => habilidad.skill)
                         .map(habilidad => ({ nombre: habilidad.skill, traduccion: habilidad.translation || '', descripcion: habilidad.description || '' })),
                     descripcion: (detalles.descriptions || []).find(texto => texto.language === 'en_us')?.description || '',
+                    evo: {
+                        previas: (detalles.priorEvolutions || []).map(item => ({ id: item.id, condicion: item.condition || '' })),
+                        siguientes: (detalles.nextEvolutions || []).map(item => ({ id: item.id, condicion: item.condition || '' })),
+                    },
                 },
             });
 
@@ -4139,22 +4539,33 @@ botonIniciarCombate.addEventListener('click', iniciarCombate);
 
 // Audios
 
-// Cada archivo suena a VOLUMEN_GENERAL por su nivel relativo. La música de combate es el archivo más fuerte de todos
+// Cada archivo suena a volumen maestro por su nivel relativo. La música de combate es el archivo más fuerte de todos
 // (pico al máximo), así que lleva el recorte más grande; la de victoria y el sonido de victoria, un poco menos.
+const LISTA_AUDIOS = [];
+
 const audioConVolumen = (archivo, relativo = 1) => {
     const audio = new Audio(archivo);
-    audio.volume = VOLUMEN_GENERAL * relativo;
+    LISTA_AUDIOS.push({ audio, relativo });
+    audio.volume = Math.min(1, obtenerVolumenGeneral() * relativo);
     return audio;
 };
+
+function actualizarVolumenAudios() {
+    const base = obtenerVolumenGeneral();
+    for (const { audio, relativo } of LISTA_AUDIOS) {
+        if (audio) {
+            audio.volume = Math.min(1, base * relativo);
+        }
+    }
+}
 
 const audioMouse = audioConVolumen('audio/Mouse.mp3');
 audioMouse.loop = true;
 
 const winMusic = audioConVolumen('audio/Digimon World 3 - Victory.mp3', 0.7);
-audioMouse.loop = true;
 
 const battleMusic = audioConVolumen('audio/Digimon World - Earlygame Battle.mp3', 0.5);
-audioMouse.loop = true;
+battleMusic.loop = true;
 
 const winSound = audioConVolumen('audio/Digimon World - PSX Battle Win.mp3', 0.7);
 

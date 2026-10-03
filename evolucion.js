@@ -446,6 +446,10 @@ function resaltarCarta(carta) {
 async function irALaCarta(id) {
     const carta = cartaPorId(id);
     Swal.close();
+    const zoomActivo = (typeof window.obtenerCartaEnZoom === 'function' && window.obtenerCartaEnZoom()) || document.querySelector('.zoom-activa');
+    if (zoomActivo && typeof window.cerrarZoom === 'function') {
+        await window.cerrarZoom({ rapido: true });
+    }
     if (!carta) return;
     await esperarQueCierreLaVentana();
     if (carta.classList.contains('filtrada')) limpiarTodo(); // si los filtros la estaban escondiendo, se sacan
