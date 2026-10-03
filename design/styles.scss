@@ -3589,9 +3589,9 @@ $desenfoque-del-fondo: 10px;
   }
 }
 
-// En computadora (con mouse) el cartel de ayuda ("Hacé doble clic en una carta...") es bastante más grande: con el tamaño del celular
-// (14 px) casi no se notaba. Todo crece junto: el texto, el ícono, el relleno, el ancho y las esquinas.
-@media (min-width: 701px) and (hover: hover) {
+// En computadora todos los carteles de aviso y ayuda tienen el mismo tamaño unificado:
+// crecen juntos el texto, el ícono, el relleno, el ancho y las esquinas.
+@media (min-width: 701px) {
   #avisos-ayuda {
     right: 28px;
     gap: 12px;
@@ -3602,6 +3602,7 @@ $desenfoque-del-fondo: 10px;
     gap: 10px;
     padding: 18px 28px;
     font-size: 24px;
+    line-height: 1.3;
     border-radius: 22px;
     box-shadow: 0 12px 30px rgba(0, 30, 80, 0.4), inset 0 1px 0 #fff;
 
@@ -3612,6 +3613,34 @@ $desenfoque-del-fondo: 10px;
 
     .aviso-icono {
       font-size: 34px;
+    }
+  }
+
+  .aviso-globo,
+  .aviso-contador {
+    gap: 16px;
+    padding: 18px 28px;
+    font-size: 24px;
+    line-height: 1.3;
+    border-radius: 22px;
+    box-shadow: 0 12px 30px rgba(0, 30, 80, 0.4), inset 0 1px 0 #fff;
+    max-width: min(620px, calc(100vw - 40px));
+
+    .aviso-icono {
+      font-size: 34px;
+    }
+
+    &::before {
+      width: 18px;
+      height: 18px;
+      margin-left: -9px;
+      top: -10px;
+      border-top-left-radius: 4px;
+    }
+
+    &.sobre-el-boton::before {
+      top: auto;
+      bottom: -10px;
     }
   }
 }

@@ -3245,7 +3245,7 @@ let vigiliaDeLlamadas = 0;         // pedido de animationFrame pendiente
 // y sus globitos se taparían, 'izquierda' (el globito se extiende hacia la izquierda, con la flechita en su punta derecha) y 'derecha'
 // (al revés): así caben los dos uno al lado del otro, cada uno con la flechita sobre su botón.
 // (La caja del botón se mide por su centro y su tamaño de reposo: mientras llama se agranda y se mueve, y el globito no tiene que bailar con él.)
-const GLOBO_PUNTA_AL_BORDE = 15; // px entre la flechita y el borde del globito cuando se acomoda a un costado
+const GLOBO_PUNTA_AL_BORDE = 28; // px entre la flechita y el borde del globito cuando se acomoda a un costado
 
 function ubicarGloboDelBoton(boton, globo, lado = 'centro') {
     const margen = 8;
@@ -3260,7 +3260,8 @@ function ubicarGloboDelBoton(boton, globo, lado = 'centro') {
     else if (lado === 'derecha') izquierda = centro - GLOBO_PUNTA_AL_BORDE;
     izquierda = Math.round(Math.max(margen, Math.min(izquierda, window.innerWidth - ancho - margen)));
     const debajo = centroVertical < window.innerHeight / 2;
-    const arriba = Math.round(debajo ? centroVertical + mitadDelAlto + 12 : centroVertical - mitadDelAlto - 12 - alto);
+    const separacion = window.innerWidth > 700 ? 15 : 12;
+    const arriba = Math.round(debajo ? centroVertical + mitadDelAlto + separacion : centroVertical - mitadDelAlto - separacion - alto);
     const punta = `${Math.round(centro - izquierda)}px`;
     if (globo.style.left !== `${izquierda}px`) globo.style.left = `${izquierda}px`;
     if (globo.style.top !== `${arriba}px`) globo.style.top = `${arriba}px`;
