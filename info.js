@@ -13,18 +13,92 @@ const conEmojiTipo = tipo => `${nombreTipo(tipo)} ${EMOJIS_TIPO[tipo]}`;
 const conEmojiElemento = elemento => `${nombreElemento(elemento)} ${EMOJIS_ELEMENTO[elemento]}`;
 const porcentaje = peso => Math.round(peso * 100);
 
+// Colores temáticos para los enlaces interactivos
+const COLORES_TIPO = {
+    'Vacuna': '#2563eb',
+    'Virus': '#7c3aed',
+    'Datos': '#16a34a',
+    'Libre': '#0d9488',
+    'Variable': '#ea580c',
+    'Desconocido': '#4b5563',
+};
+
+const COLORES_ELEMENTO = {
+    'Fuego': '#dc2626',
+    'Agua': '#2563eb',
+    'Planta': '#16a34a',
+    'Hielo': '#0284c7',
+    'Rayo': '#d97706',
+    'Viento': '#059669',
+    'Tierra': '#92400e',
+    'Luz': '#ca8a04',
+    'Oscuridad': '#6b21a8',
+    'Metal': '#475569',
+    'Veneno': '#9333ea',
+    'Neutro': '#64748b',
+};
+
+// Genera un botón con enlace de referencia cruzada (línea punteada al pasar el puntero)
+function linkTipo(tipo) {
+    const texto = conEmojiTipo(tipo);
+    const color = COLORES_TIPO[tipo] || 'currentColor';
+    const ayuda = t('info.verInfoDe', { nombre: nombreTipo(tipo) });
+    return `<button type="button" class="info-link info-link-tipo" data-info-tipo="${tipo}" style="--link-c: ${color};" title="${ayuda}" aria-label="${ayuda}">${texto}</button>`;
+}
+
+function linkElemento(elemento) {
+    const texto = conEmojiElemento(elemento);
+    const color = COLORES_ELEMENTO[elemento] || 'currentColor';
+    const ayuda = t('info.verInfoDe', { nombre: nombreElemento(elemento) });
+    return `<button type="button" class="info-link info-link-elemento" data-info-elemento="${elemento}" style="--link-c: ${color};" title="${ayuda}" aria-label="${ayuda}">${texto}</button>`;
+}
+
+function linkNivel(nivelApi, textoMostrar = null) {
+    const texto = textoMostrar || nombreNivel(nivelApi);
+    const ayuda = t('info.verInfoDe', { nombre: texto });
+    return `<button type="button" class="info-link info-link-nivel" data-info-nivel="${nivelApi}" title="${ayuda}" aria-label="${ayuda}">${texto}</button>`;
+}
+
 // "Vacuna 💉, Hielo ❄️" o, si no hay ninguno, "ninguno"
 const enLista = (elementos, formato) => (elementos.length ? elementos.map(formato).join(', ') : t('info.ninguno'));
 
 // Quiénes le ganan a "x" según una tabla de ventajas (ej.: TIPO_FUERTE_CONTRA)
 const quienesLeGanan = (tabla, x) => Object.keys(tabla).filter(clave => tabla[clave].includes(x));
 
+const MENCIONES_NIVEL_MAP = {
+    'Super Ultimate': 'Super Ultimate',
+    'Absolute': 'Absolute',
+    'Baby II': 'Baby II',
+    'Baby I': 'Baby I',
+    'Child': 'Child',
+    'Adult': 'Adult',
+    'Perfect': 'Perfect',
+    'Ultimate': 'Ultimate',
+    'Mega': 'Ultimate',
+};
+
+const REGEX_NIVELES = /\b(Super Ultimate|Absolute|Baby II|Baby I|Child|Adult|Perfect|Ultimate|Mega)\b/g;
+
+// Enlaza menciones de niveles, tipos o elementos que aparezcan en el texto de las descripciones
+function enlazarTexto(texto) {
+    if (!texto) return '';
+    return texto.replace(REGEX_NIVELES, (match) => {
+        const nivel = MENCIONES_NIVEL_MAP[match];
+        const ayuda = t('info.verInfoDe', { nombre: match });
+        return `<button type="button" class="info-link info-link-nivel" data-info-nivel="${nivel}" title="${ayuda}" aria-label="${ayuda}">${match}</button>`;
+    });
+}
+
+let ultimaInfoAbierta = null;
+
 // Ventana común a los tres menús: descripción, lista de datos (con la etiqueta en negrita) y un pie con el peso en el combate
 function mostrarInfo(titulo, descripcion, datos, pie) {
     const filas = datos.map(([etiqueta, valor]) => `<li><b>${etiqueta}:</b> ${valor}</li>`).join('');
+    const descHtml = enlazarTexto(descripcion);
+
     Swal.fire({
         title: titulo,
-        html: `<p class="info-desc">${descripcion}</p><ul class="info-datos">${filas}</ul><p class="info-pie">${pie}</p>`,
+        html: `<p class="info-desc">${descHtml}</p><ul class="info-datos">${filas}</ul><p class="info-pie">${pie}</p>`,
         icon: 'info',
         width: 'min(94vw, 680px)',
         confirmButtonText: t('aceptar'),
@@ -37,6 +111,7 @@ function mostrarInfo(titulo, descripcion, datos, pie) {
 }
 
 function infoTipo(tipo) {
+    ultimaInfoAbierta = { fn: infoTipo, args: [tipo] };
     const fuerte = TIPO_FUERTE_CONTRA[tipo] || [];
     const debil = quienesLeGanan(TIPO_FUERTE_CONTRA, tipo);
     const sinVentajas = fuerte.length === 0 && debil.length === 0; // Libre, Variable y Desconocido
@@ -45,24 +120,25 @@ function infoTipo(tipo) {
         conEmojiTipo(tipo),
         t(`tipo.desc.${tipo}`),
         [
-            [t('info.fuerte'), enLista(fuerte, conEmojiTipo)],
-            [t('info.debil'), enLista(debil, conEmojiTipo)],
+            [t('info.fuerte'), enLista(fuerte, linkTipo)],
+            [t('info.debil'), enLista(debil, linkTipo)],
         ],
         sinVentajas ? t('tipo.pieSin') : t('tipo.pie', { p: porcentaje(PESO_TIPO) })
     );
 }
 
 function infoElemento(elemento) {
+    ultimaInfoAbierta = { fn: infoElemento, args: [elemento] };
     const fuerte = ELEMENTO_FUERTE_CONTRA[elemento] || [];
     const debil = quienesLeGanan(ELEMENTO_FUERTE_CONTRA, elemento);
     const mutua = fuerte.filter(otro => debil.includes(otro)); // Luz y Oscuridad se ganan entre sí: se cancelan
 
     const datos = [
-        [t('info.fuerte'), enLista(fuerte, conEmojiElemento)],
-        [t('info.debil'), enLista(debil, conEmojiElemento)],
+        [t('info.fuerte'), enLista(fuerte, linkElemento)],
+        [t('info.debil'), enLista(debil, linkElemento)],
     ];
     if (mutua.length > 0) {
-        datos.push([t('info.mutua'), `${enLista(mutua, conEmojiElemento)} ${t('info.seCancelan')}`]);
+        datos.push([t('info.mutua'), `${enLista(mutua, linkElemento)} ${t('info.seCancelan')}`]);
     }
 
     mostrarInfo(
@@ -75,6 +151,7 @@ function infoElemento(elemento) {
 
 // El nivel se pide con el nombre original de la API ('Adult'); el nombre que se muestra depende del sistema de clasificación
 function infoNivel(nivelApi) {
+    ultimaInfoAbierta = { fn: infoNivel, args: [nivelApi] };
     const poder = numeracionNiveles[nivelApi]; // undefined si el nivel es desconocido
     const nombre = nombreNivel(nivelApi);
 
@@ -82,6 +159,18 @@ function infoNivel(nivelApi) {
         [t('info.poder'), poder ?? t('info.sinDato')],
         [t('info.clasificacion'), t(clasificacionAlternativa ? 'info.eeuu' : 'info.japon')],
     ];
+
+    // Referencias cruzadas: nivel anterior y nivel siguiente
+    if (poder !== undefined) {
+        if (poder > 1) {
+            const nivelPrevio = ORDEN_NIVELES[poder - 2];
+            if (nivelPrevio) datos.push([t('info.evolucionaDe'), linkNivel(nivelPrevio)]);
+        }
+        if (poder < 8) {
+            const nivelSiguiente = ORDEN_NIVELES[poder];
+            if (nivelSiguiente) datos.push([t('info.evolucionaA'), linkNivel(nivelSiguiente)]);
+        }
+    }
 
     // Los niveles que rompen la escala (7 y 8) pesan más en el combate de lo que dice su número
     const poderCombate = PODER_EN_COMBATE[poder];
@@ -106,6 +195,54 @@ function infoNivel(nivelApi) {
             : t('nivel.pie', { p: porcentaje(PESO_NIVEL) })
     );
 }
+
+// Clics en referencias cruzadas (links)
+document.addEventListener('click', (evento) => {
+    const linkT = evento.target.closest('.info-link-tipo');
+    if (linkT) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        const tipo = linkT.dataset.infoTipo;
+        if (tipo && typeof infoTipo === 'function') {
+            infoTipo(tipo);
+        }
+        return;
+    }
+
+    const linkE = evento.target.closest('.info-link-elemento');
+    if (linkE) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        const elemento = linkE.dataset.infoElemento;
+        if (elemento && typeof infoElemento === 'function') {
+            infoElemento(elemento);
+        }
+        return;
+    }
+
+    const linkN = evento.target.closest('.info-link-nivel');
+    if (linkN) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        const nivel = linkN.dataset.infoNivel;
+        if (nivel && typeof infoNivel === 'function') {
+            infoNivel(nivel);
+        }
+        return;
+    }
+});
+
+// Redibujar la ventana si se cambia el idioma o el sistema de niveles
+const redibujarInfoAbierta = () => {
+    if (!ultimaInfoAbierta) return;
+    const popup = document.querySelector('.popup-info:not(.popup-ataques)');
+    if (popup && typeof Swal !== 'undefined' && Swal.isVisible()) {
+        ultimaInfoAbierta.fn(...ultimaInfoAbierta.args);
+    }
+};
+
+document.addEventListener('idioma-cambiado', redibujarInfoAbierta);
+document.addEventListener('niveles-cambiados', redibujarInfoAbierta);
 
 // ---- Ventana de ataques de una carta ---------------------------------------------------------------------------------
 // El botón "⚔️ Ataques" del dorso (lo arma main.js al construir el dorso). Abre una lista con todos los ataques de la carta; al tocar
@@ -214,6 +351,9 @@ function abrirAtaques(carta) {
 }
 
 window.abrirAtaques = abrirAtaques;
+window.infoTipo = infoTipo;
+window.infoElemento = infoElemento;
+window.infoNivel = infoNivel;
 
 // Si se cambia el idioma con la ventana abierta, el título, la ayuda y el aviso se vuelven a escribir en el idioma nuevo
 document.addEventListener('idioma-cambiado', () => {
