@@ -3212,7 +3212,7 @@ body:has(.swal2-container) #avisos-ayuda {
   align-items: center;
   gap: 8px;
   margin: 0;
-  max-height: 80px;
+  max-height: 180px;
   overflow: hidden;
   transition: opacity 0.3s ease, max-height 0.35s ease, margin 0.35s ease;
 }

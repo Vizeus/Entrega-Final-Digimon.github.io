@@ -79,7 +79,7 @@ const DICCIONARIO = {
         'aviso.inclinacion.invertida.boton': 'Con este botón podés cambiar cómo se inclinan las cartas',
         'aviso.audio': 'Con este botón podés silenciar el sonido de la página',
         'aviso.audio.vibracion': 'Con este botón podés apagar el sonido y la vibración de la página',
-        'aviso.zoomExtra': 'Con el mouse sobre la carta, girá la rueda hacia arriba para acercarte todavía más, y hacia abajo para volver. Ya acercada, agarrala y arrastrala para moverla',
+        'aviso.zoomExtra': 'Girá la rueda hacia arriba con el mouse sobre la carta para acercarte todavía más, y hacia abajo para volver. Ya acercada, agarrala y arrastrala para moverla',
         'carta.especie': 'Especie',
         'carta.campos': 'Grupos',
         'carta.estreno': 'Estreno',
