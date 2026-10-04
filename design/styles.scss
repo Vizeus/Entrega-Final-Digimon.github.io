@@ -1285,13 +1285,17 @@ body:has(.swal2-container) #avisos-ayuda {
         list-style: none;
         margin: 0;
         padding: 0 4px 2px 0;
-        max-height: min(52vh, 380px);
+        max-height: min(65vh, 480px);
         overflow-y: auto;
         overscroll-behavior: contain;
         text-align: left;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
+    }
+
+    .ataque-item {
+        border-radius: 10px;
     }
 
     .ataque-boton {
@@ -1301,7 +1305,7 @@ body:has(.swal2-container) #avisos-ayuda {
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        padding: 9px 12px;
+        padding: 10px 14px;
         font: 600 15px/1.25 var(--f-boton), sans-serif;
         text-align: left;
         color: #24476a;
@@ -1309,6 +1313,7 @@ body:has(.swal2-container) #avisos-ayuda {
         border: 1px solid rgba(36, 71, 106, 0.25);
         border-radius: 10px;
         background: rgba(36, 71, 106, 0.08);
+        transition: background 0.15s ease, border-color 0.15s ease;
 
         &:hover,
         &:focus-visible {
@@ -1318,6 +1323,8 @@ body:has(.swal2-container) #avisos-ayuda {
         &[aria-expanded="true"] {
             background: rgba(36, 71, 106, 0.18);
             border-color: rgba(36, 71, 106, 0.45);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
         }
 
         small {
@@ -1336,22 +1343,60 @@ body:has(.swal2-container) #avisos-ayuda {
         rotate: 180deg;
     }
 
+    .ataque-detalle {
+        padding: 12px 14px 14px;
+        background: rgba(36, 71, 106, 0.04);
+        border: 1px solid rgba(36, 71, 106, 0.35);
+        border-top: none;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+
     .ataque-desc {
-        margin: 6px 6px 4px;
+        margin: 0 0 10px;
         font-family: var(--f-descripcion), sans-serif;
         font-size: 1rem;
         line-height: 1.45;
         color: #26303a;
+
+        &.sin-desc-texto {
+            font-style: italic;
+            color: #6a7989;
+        }
     }
 
-    .sin-descripcion {
-        padding: 6px 12px;
-        font: 600 15px/1.25 var(--f-boton), sans-serif;
-        color: #7a848f;
+    .ataque-digimons-seccion {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed rgba(36, 71, 106, 0.25);
+    }
 
-        small {
-            font-weight: 400;
-            font-size: 0.85em;
+    .ataque-digimons-titulo {
+        margin: 0 0 8px;
+        font: 700 13px var(--f-boton), sans-serif;
+        color: #24476a;
+    }
+
+    .ataque-digimons-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-height: 230px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 2px;
+    }
+
+    .ataque-digimons-grid .ataque-digimon-nodo {
+        flex: 0 1 calc(50% - 4px);
+        width: calc(50% - 4px);
+        box-sizing: border-box;
+    }
+
+    @media (min-width: 600px) {
+        .ataque-digimons-grid .ataque-digimon-nodo {
+            flex: 0 1 calc(33.333% - 6px);
+            width: calc(33.333% - 6px);
         }
     }
 

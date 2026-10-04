@@ -532,3 +532,4 @@ function crearBotonEvolucion(carta) {
 }
 
 window.abrirEvolucion = abrirEvolucion;
+window.irALaCarta = irALaCarta;

@@ -262,6 +262,75 @@ function crearBotonAtaques(carta) {
     return boton;
 }
 
+function obtenerDigimonsConAtaque(nombreAtaque) {
+    if (!nombreAtaque) return [];
+    const nombreNormalizado = nombreAtaque.trim().toLowerCase();
+    const cartas = Array.from(document.querySelectorAll('#listado-digimons > li'));
+    const encontradas = cartas.filter(carta => {
+        const habilidades = carta.datosDorso?.habilidades || [];
+        return habilidades.some(h => (h.nombre || '').trim().toLowerCase() === nombreNormalizado);
+    });
+
+    // Ordenamos por nivel (menor a mayor poder) y luego por nombre
+    encontradas.sort((a, b) => {
+        const nvA = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[a.dataset.nivelOriginal]) ?? 99;
+        const nvB = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[b.dataset.nivelOriginal]) ?? 99;
+        if (nvA !== nvB) return nvA - nvB;
+        const nomA = typeof nombreCompleto === 'function' ? nombreCompleto(a) : (a.dataset.nombreApi || '');
+        const nomB = typeof nombreCompleto === 'function' ? nombreCompleto(b) : (b.dataset.nombreApi || '');
+        return nomA.localeCompare(nomB);
+    });
+
+    return encontradas;
+}
+
+function crearMiniNodoDigimon(carta) {
+    const id = carta.dataset.id;
+    const nodo = document.createElement('button');
+    nodo.type = 'button';
+    nodo.className = 'evo-nodo ataque-digimon-nodo';
+    nodo.dataset.id = id;
+
+    const nvOriginal = carta.dataset.nivelOriginal;
+    const nvNumero = typeof numeracionNiveles !== 'undefined' ? numeracionNiveles[nvOriginal] : undefined;
+    const color = (typeof COLOR_NIVEL !== 'undefined' && COLOR_NIVEL[nvNumero])
+        || carta.querySelector('.c-arte')?.style.getPropertyValue('--c')
+        || (typeof COLOR_NIVEL_DESCONOCIDO !== 'undefined' ? COLOR_NIVEL_DESCONOCIDO : '#3a8dde');
+    nodo.style.setProperty('--c', color);
+
+    const nombreTexto = typeof nombreCompleto === 'function' ? nombreCompleto(carta) : (carta.dataset.nombreApi || '');
+    nodo.title = `${nombreTexto} (${t('ataques.irACarta') || 'Ir a la carta'})`;
+
+    const imagen = document.createElement('img');
+    const imgOrigen = carta.querySelector('.c-arte img');
+    imagen.src = imgOrigen?.currentSrc || imgOrigen?.src || '';
+    imagen.alt = '';
+    imagen.draggable = false;
+
+    const texto = document.createElement('span');
+    texto.className = 'evo-txt';
+
+    const nombre = document.createElement('span');
+    nombre.className = 'evo-nombre';
+    nombre.textContent = nombreTexto;
+
+    const nivel = document.createElement('span');
+    nivel.className = 'evo-nv';
+    nivel.textContent = typeof nombreNivel === 'function' ? nombreNivel(carta.dataset.nivelApi) : (nvOriginal || '');
+
+    texto.append(nombre, nivel);
+    nodo.append(imagen, texto);
+
+    nodo.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof window.irALaCarta === 'function') {
+            window.irALaCarta(id);
+        }
+    });
+
+    return nodo;
+}
+
 function crearListaDeAtaques(habilidades) {
     const lista = document.createElement('ul');
     lista.className = 'ataques-lista';
@@ -270,12 +339,15 @@ function crearListaDeAtaques(habilidades) {
         for (const otro of lista.querySelectorAll('.ataque-boton[aria-expanded="true"]')) {
             if (otro === salvo) continue;
             otro.setAttribute('aria-expanded', 'false');
-            otro.nextElementSibling.hidden = true;
+            const detalle = otro.nextElementSibling;
+            if (detalle) detalle.hidden = true;
         }
     };
 
     for (const habilidad of habilidades) {
         const item = document.createElement('li');
+        item.className = 'ataque-item';
+
         const nombre = document.createElement('span');
         nombre.className = 'ataque-nombre';
         nombre.textContent = habilidad.nombre;
@@ -283,13 +355,6 @@ function crearListaDeAtaques(habilidades) {
             const traduccion = document.createElement('small');
             traduccion.textContent = `(${habilidad.traduccion})`;
             nombre.append(' ', traduccion);
-        }
-
-        if (!habilidad.descripcion) { // sin nada que contar: queda como un renglón, sin desplegar
-            item.className = 'sin-descripcion';
-            item.append(nombre);
-            lista.append(item);
-            continue;
         }
 
         const boton = document.createElement('button');
@@ -302,19 +367,51 @@ function crearListaDeAtaques(habilidades) {
         flecha.textContent = '▾';
         boton.append(nombre, flecha);
 
-        const descripcion = document.createElement('p');
-        descripcion.className = 'ataque-desc';
-        descripcion.hidden = true;
-        descripcion.textContent = habilidad.descripcion;
+        const detalle = document.createElement('div');
+        detalle.className = 'ataque-detalle';
+        detalle.hidden = true;
+
+        if (habilidad.descripcion) {
+            const descripcion = document.createElement('p');
+            descripcion.className = 'ataque-desc';
+            descripcion.textContent = habilidad.descripcion;
+            detalle.append(descripcion);
+        } else {
+            const sinDesc = document.createElement('p');
+            sinDesc.className = 'ataque-desc sin-desc-texto';
+            sinDesc.textContent = t('ataques.sinDescripcion');
+            detalle.append(sinDesc);
+        }
+
+        const digimonsConAtaque = obtenerDigimonsConAtaque(habilidad.nombre);
+        if (digimonsConAtaque.length > 0) {
+            const seccion = document.createElement('div');
+            seccion.className = 'ataque-digimons-seccion';
+
+            const titulo = document.createElement('h6');
+            titulo.className = 'ataque-digimons-titulo';
+            titulo.textContent = t(digimonsConAtaque.length === 1 ? 'ataques.quienesUsan.uno' : 'ataques.quienesUsan', { n: digimonsConAtaque.length });
+
+            const grid = document.createElement('div');
+            grid.className = 'ataque-digimons-grid';
+
+            for (const c of digimonsConAtaque) {
+                grid.append(crearMiniNodoDigimon(c));
+            }
+
+            seccion.append(titulo, grid);
+            detalle.append(seccion);
+        }
 
         boton.addEventListener('click', () => {
             const abrir = boton.getAttribute('aria-expanded') !== 'true';
             cerrarTodos(boton);
             boton.setAttribute('aria-expanded', String(abrir));
-            descripcion.hidden = !abrir;
+            detalle.hidden = !abrir;
             if (abrir) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         });
-        item.append(boton, descripcion);
+
+        item.append(boton, detalle);
         lista.append(item);
     }
     return lista;
