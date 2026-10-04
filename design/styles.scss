@@ -1773,6 +1773,7 @@ $desenfoque-del-fondo: 10px;
         color: #3a4a5a;
         display: -webkit-box;
         -webkit-line-clamp: 3;
+        line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
@@ -2757,6 +2758,7 @@ $desenfoque-del-fondo: 10px;
             // Solo se ve el borde: se resta el interior (content-box) a la caja entera
             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite: xor;
+            mask-composite: exclude;
             mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 
             &::before {

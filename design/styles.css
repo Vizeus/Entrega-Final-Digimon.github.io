@@ -1739,6 +1739,7 @@ body:has(.swal2-container) #avisos-ayuda {
   color: #3a4a5a;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2548,6 +2549,7 @@ body:has(.swal2-container) #avisos-ayuda {
     pointer-events: none;
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
+    mask-composite: exclude;
     mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   }
   #listado-digimons li[data-nivel]:where(.en-pantalla) .c-marco::before {
