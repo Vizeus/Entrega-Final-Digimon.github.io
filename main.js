@@ -1010,7 +1010,7 @@ async function voltearCarta(carta, direccion = 1) {
         dorso.style.height = `${frente.offsetHeight}px`; // el dorso mide lo mismo que el frente
     }
 
-    await sonidoVuelta();
+    void sonidoVuelta(); // el desbloqueo del audio móvil no debe retrasar el giro visual
 
     if (reducirMovimiento) {
         carta.classList.toggle('de-dorso');
