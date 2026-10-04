@@ -1010,7 +1010,7 @@ async function voltearCarta(carta, direccion = 1) {
         dorso.style.height = `${frente.offsetHeight}px`; // el dorso mide lo mismo que el frente
     }
 
-    sonidoVuelta();
+    await sonidoVuelta();
 
     if (reducirMovimiento) {
         carta.classList.toggle('de-dorso');
@@ -1824,9 +1824,10 @@ function marcarAvisoHecho(clave) {
 const AVISO_COMBATE_ESPERA = 2000;       // ms desde que aparece la primera carta
 const AVISO_COMBATE_DURACION = 7000;     // ms que queda a la vista
 const AVISO_ZOOM_ESPERA = 5000;          // ms desde que aparece la primera carta (3 s después del de combate, para que se lean de a uno)
-const AVISO_ZOOM_ESPERA_DEDO = AVISO_ZOOM_ESPERA + 2000; // en celular, espera 2 s más antes de mostrar los consejos
+const AVISO_ZOOM_ESPERA_DEDO = 2000;         // ms desde que termina de salir el aviso de combate (solo celular)
 const AVISO_ZOOM_DURACION = 7000;        // ms que queda a la vista el consejo (computadora: uno solo)
-const AVISO_ZOOM_DURACION_DEDO = 14000;  // en celular, los dos cartelitos (el segundo tiene más texto): más tiempo para leerlos
+const AVISO_ZOOM_DURACION_DEDO = 14000;  // ms que duran los consejos móviles
+const AVISO_VOLTEAR_DURACION_EXTRA = 3000; // el consejo del barrido dura 3 s más que los demás
 const AVISO_GESTOS_ESPERA = 2000;        // ms desde que se amplía la carta (solo celular)
 const AVISO_GESTOS_DURACION = 10500;     // ms que quedan a la vista (son dos cartelitos, uno por consejo)
 
@@ -2225,19 +2226,32 @@ function activarAvisoCombate() {
     let aviso = null;
     let temporizador = 0;
     let cerrado = false;
+    let secuenciaFinalizada = false;
+
+    const finalizarSecuencia = () => {
+        if (secuenciaFinalizada) return;
+        secuenciaFinalizada = true;
+        document.dispatchEvent(new Event('aviso-combate-finalizado'));
+    };
 
     const cerrar = () => {
         if (cerrado) return;
         cerrado = true;
         clearTimeout(temporizador);
-        if (aviso) quitarAviso(aviso);
-        aviso = null;
+        if (aviso) {
+            quitarAviso(aviso);
+            aviso = null;
+            setTimeout(finalizarSecuencia, 600); // esperar que termine la animación de salida antes del siguiente consejo
+        } else {
+            finalizarSecuencia();
+        }
     };
 
     const mostrar = () => {
         if (cerrado || aviso) return;
         if (!celular.matches || avisoHecho('combate') || seleccionados.length >= 2) { // en computadora ya se ve en la barra; si ya eligió las 2 (ahora o en otra visita), no hay nada que pedirle
             cerrado = true;
+            finalizarSecuencia();
             return;
         }
         aviso = crearAviso('aviso-combate', [{ clave: 'combate', icono: '⚔️', texto: 'combate.consigna' }]);
@@ -2256,29 +2270,37 @@ function activarAvisoCombate() {
 }
 
 // Después: cómo ampliar una carta (y en pantallas táctiles, cómo inclinarla y darla vuelta). Cada consejo es un cartelito aparte:
-// se apilan (el primero arriba) y cada uno se va cuando la persona ya hizo lo que cuenta.
+// se apilan (el primero arriba), tienen su propio tiempo y cada uno se va cuando la persona ya hizo lo que cuenta.
 function activarAvisoZoom() {
     const conDedo = window.matchMedia('(hover: none)').matches;
     // "clave" es lo que la persona tiene que hacer; "texto" es la clave de la traducción
     const consejos = conDedo
-        ? [{ clave: 'zoom', icono: '👆', texto: 'aviso.zoom.dedos' }, { clave: 'inclinar', icono: '✨', texto: 'aviso.inclinar.dedo' }]
+        ? [
+            { clave: 'zoom', icono: '👆', texto: 'aviso.zoom.dedos' },
+            { clave: 'inclinar', icono: '✨', texto: 'aviso.inclinar.dedo' },
+            { clave: 'voltear', icono: '↔️', texto: 'aviso.voltear.dedo' },
+        ]
         : [{ clave: 'zoom', icono: '💡', texto: 'aviso.zoom.mouse' }];
     const hecho = new Set(consejos.map(consejo => consejo.clave).filter(avisoHecho)); // lo que la persona ya hizo (también en visitas anteriores)
     const avisos = new Map(); // clave del consejo -> su cartelito (los que están a la vista)
-    let temporizador = 0;
+    const temporizadores = new Map();
     let cerrado = false;
 
     const quitar = (clave) => {
         const aviso = avisos.get(clave);
         if (!aviso) return;
+        clearTimeout(temporizadores.get(clave));
+        temporizadores.delete(clave);
         avisos.delete(clave);
         quitarAviso(aviso);
+        if (!avisos.size) cerrado = true;
     };
 
     const cerrar = () => {
         if (cerrado) return;
         cerrado = true;
-        clearTimeout(temporizador);
+        temporizadores.forEach(clearTimeout);
+        temporizadores.clear();
         [...avisos.keys()].forEach(quitar);
     };
 
@@ -2301,18 +2323,27 @@ function activarAvisoZoom() {
             escribirAviso(aviso);
             ponerAviso(aviso);
             avisos.set(consejo.clave, aviso);
+            const duracion = conDedo
+                ? AVISO_ZOOM_DURACION_DEDO + (consejo.clave === 'voltear' ? AVISO_VOLTEAR_DURACION_EXTRA : 0)
+                : AVISO_ZOOM_DURACION;
+            temporizadores.set(consejo.clave, setTimeout(() => quitar(consejo.clave), duracion));
         });
-        temporizador = setTimeout(cerrar, conDedo ? AVISO_ZOOM_DURACION_DEDO : AVISO_ZOOM_DURACION);
     };
 
-    // Aparece unos segundos después de la primera carta: antes no tiene sentido hablar de cartas que todavía no están
-    document.addEventListener('carta-agregada', () => {
-        setTimeout(mostrar, conDedo ? AVISO_ZOOM_ESPERA_DEDO : AVISO_ZOOM_ESPERA);
-    }, { once: true });
+    // En móvil, los consejos aparecen después del cartel de selección para que no se solapen.
+    // En computadora, solo hay un aviso y conserva su espera desde la primera carta.
+    if (conDedo) {
+        document.addEventListener('aviso-combate-finalizado', () => {
+            setTimeout(mostrar, AVISO_ZOOM_ESPERA_DEDO);
+        }, { once: true });
+    } else {
+        document.addEventListener('carta-agregada', () => setTimeout(mostrar, AVISO_ZOOM_ESPERA), { once: true });
+    }
     document.addEventListener('zoom-cambio', () => {
         if (cartaEnZoom) yaLoHizo('zoom'); // hay una carta ampliada (o cerrándose): ya sabe cómo hacerlo
     });
     document.addEventListener('inclinacion-con-dedo', () => yaLoHizo('inclinar')); // lo avisa activarInclinacionConDedo
+    document.addEventListener('flip-con-dedo', () => yaLoHizo('voltear'));
     document.addEventListener('idioma-cambiado', () => avisos.forEach(escribirAviso));
 }
 
@@ -2532,6 +2563,7 @@ function gestionarVisitasYFlechasMovil() {
 }
 
 function registrarFlipConDedo() {
+    document.dispatchEvent(new Event('flip-con-dedo'));
     try {
         let flips = Number.parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
         if (!Number.isFinite(flips)) flips = 0;
@@ -2550,6 +2582,7 @@ function activarVoltearConDedo() {
     let evitarClic = false;  // al soltar después del barrido no se elige la carta
 
     document.addEventListener('touchstart', (evento) => {
+        prepararAudioAlTocar();
         gesto = null;
         if (evento.touches.length !== 1) return;
         const toque = evento.touches[0];
@@ -3440,12 +3473,40 @@ function activarBotonDeAudio() {
     document.addEventListener('idioma-cambiado', mostrarEstadoDelAudio);
 }
 
+let reanudacionAudioPendiente = null;
+
+function solicitarReanudacionAudio(contexto) {
+    if (contexto.state !== 'suspended') return Promise.resolve();
+    if (reanudacionAudioPendiente) return reanudacionAudioPendiente;
+
+    const pendiente = contexto.resume();
+    reanudacionAudioPendiente = pendiente;
+    pendiente.then(
+        () => {
+            if (reanudacionAudioPendiente === pendiente) reanudacionAudioPendiente = null;
+        },
+        (error) => {
+            if (reanudacionAudioPendiente === pendiente) reanudacionAudioPendiente = null;
+            console.warn('No se pudo reanudar el audio:', error);
+        }
+    );
+    return pendiente;
+}
+
+function prepararAudioAlTocar() {
+    try {
+        contextoAudio = contextoAudio || new (window.AudioContext || window.webkitAudioContext)();
+        destinoDeAudio(contextoAudio);
+        solicitarReanudacionAudio(contextoAudio);
+    } catch (error) {
+        console.warn('No se pudo preparar el audio al tocar la página:', error);
+    }
+}
+
 function obtenerContextoAudio() {
     contextoAudio = contextoAudio || new (window.AudioContext || window.webkitAudioContext)();
     destinoDeAudio(contextoAudio);
-    if (contextoAudio.state === 'suspended') {
-        contextoAudio.resume();
-    }
+    solicitarReanudacionAudio(contextoAudio);
     llamarLaAtencionDelBotonDeAudio(); // el primer sonido de la visita (si no hay silencio) le llama la atención al botón de sonido
     return contextoAudio;
 }
@@ -3658,9 +3719,11 @@ function sonidoSeleccion(elegida) {
 }
 
 // Carta que se da vuelta: un "fshh" de papel cortando el aire mientras gira y, al terminar, el toquecito de apoyarse
-function sonidoVuelta() {
+async function sonidoVuelta() {
     try {
         const contexto = obtenerContextoAudio();
+        if (contexto.state === 'suspended') await reanudacionAudioPendiente;
+        if (contexto.state !== 'running') return;
         const t = contexto.currentTime;
 
         // Ruido blanco filtrado: el filtro sube de tono durante la primera mitad del giro y baja en la segunda
