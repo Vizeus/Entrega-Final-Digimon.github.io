@@ -1824,6 +1824,7 @@ function marcarAvisoHecho(clave) {
 const AVISO_COMBATE_ESPERA = 2000;       // ms desde que aparece la primera carta
 const AVISO_COMBATE_DURACION = 7000;     // ms que queda a la vista
 const AVISO_ZOOM_ESPERA = 5000;          // ms desde que aparece la primera carta (3 s después del de combate, para que se lean de a uno)
+const AVISO_ZOOM_ESPERA_DEDO = AVISO_ZOOM_ESPERA + 2000; // en celular, espera 2 s más antes de mostrar los consejos
 const AVISO_ZOOM_DURACION = 7000;        // ms que queda a la vista el consejo (computadora: uno solo)
 const AVISO_ZOOM_DURACION_DEDO = 14000;  // en celular, los dos cartelitos (el segundo tiene más texto): más tiempo para leerlos
 const AVISO_GESTOS_ESPERA = 2000;        // ms desde que se amplía la carta (solo celular)
@@ -2305,7 +2306,9 @@ function activarAvisoZoom() {
     };
 
     // Aparece unos segundos después de la primera carta: antes no tiene sentido hablar de cartas que todavía no están
-    document.addEventListener('carta-agregada', () => setTimeout(mostrar, AVISO_ZOOM_ESPERA), { once: true });
+    document.addEventListener('carta-agregada', () => {
+        setTimeout(mostrar, conDedo ? AVISO_ZOOM_ESPERA_DEDO : AVISO_ZOOM_ESPERA);
+    }, { once: true });
     document.addEventListener('zoom-cambio', () => {
         if (cartaEnZoom) yaLoHizo('zoom'); // hay una carta ampliada (o cerrándose): ya sabe cómo hacerlo
     });
@@ -2476,40 +2479,67 @@ const BARRIDO_VELOCIDAD_INCLINANDO = 1.8; // px por milisegundo (más de 2 veces
 let inclinandoConDedo = false;            // true mientras hay una carta inclinándose con el dedo (lo maneja activarInclinacionConDedo)
 
 // Ocultamiento inteligente de las flechas de flip en móvil:
-// Cuando el usuario en móvil demuestra que ya sabe rotar cartas con el dedo (acumula 4 flips por sesión),
-// o cuando es la séptima vez (o más) que entra al sitio, se ocultan todas las flechas de flip para que las cartas se vean limpias.
+// 4 flips con el dedo las ocultan por el resto de esa sesión. Al completar esto en 5 sesiones distintas, se ocultan para siempre.
 const ALMACEN_FLIPS_SESION = 'digimon-flips-sesion';
+const ALMACEN_SESION_FLIPS_COMPLETADA = 'digimon-flips-sesion-completada';
+const ALMACEN_SESIONES_FLIPS_COMPLETADAS = 'digimon-flips-sesiones-completadas';
 const MIN_FLIPS_SESION_PARA_OCULTAR = 4;
-const MIN_VISITAS_PARA_OCULTAR_SIEMPRE = 7;
+const MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE = 5;
+let sesionFlipContada = false;
 
 function aplicarOcultarFlechasFlip() {
     document.body.classList.add('sin-flechas-flip-movil');
 }
 
-function gestionarVisitasYFlechasMovil() {
-    // Si ya es la 7ma visita o más, las flechas desaparecen para siempre en móvil
-    if (memoriaAvisos.visitas >= MIN_VISITAS_PARA_OCULTAR_SIEMPRE) {
-        aplicarOcultarFlechasFlip();
-        return;
-    }
-
-    // Si en la sesión actual ya acumuló 4 flips con el dedo, se ocultan por lo que resta de la sesión
+function registrarSesionDeFlipsCompletada() {
+    if (sesionFlipContada) return;
     try {
-        const flipsSesion = parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
+        if (sessionStorage.getItem(ALMACEN_SESION_FLIPS_COMPLETADA) === '1') {
+            sesionFlipContada = true;
+            return;
+        }
+        sesionFlipContada = true;
+        const guardadas = Number.parseInt(localStorage.getItem(ALMACEN_SESIONES_FLIPS_COMPLETADAS) || '0', 10);
+        const sesiones = Number.isFinite(guardadas) ? Math.max(0, guardadas) : 0;
+        const completadas = Math.min(sesiones + 1, MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE);
+        localStorage.setItem(ALMACEN_SESIONES_FLIPS_COMPLETADAS, String(completadas));
+        sessionStorage.setItem(ALMACEN_SESION_FLIPS_COMPLETADA, '1');
+        if (completadas >= MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE) {
+            aplicarOcultarFlechasFlip();
+        }
+    } catch (error) {}
+}
+
+function gestionarVisitasYFlechasMovil() {
+    // Solo se vuelve permanente después de completar los 4 flips en 5 sesiones distintas
+    try {
+        const sesionesCompletadas = Number.parseInt(localStorage.getItem(ALMACEN_SESIONES_FLIPS_COMPLETADAS) || '0', 10);
+        if (sesionesCompletadas >= MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE) {
+            aplicarOcultarFlechasFlip();
+            return;
+        }
+    } catch (error) {}
+
+    // Si ya completó los 4 flips en esta sesión, oculta las flechas y registra el logro si todavía no estaba contado
+    try {
+        const flipsSesion = Number.parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
+        if (sessionStorage.getItem(ALMACEN_SESION_FLIPS_COMPLETADA) === '1') sesionFlipContada = true;
         if (flipsSesion >= MIN_FLIPS_SESION_PARA_OCULTAR) {
             aplicarOcultarFlechasFlip();
+            registrarSesionDeFlipsCompletada();
         }
     } catch (error) {}
 }
 
 function registrarFlipConDedo() {
     try {
-        let flips = parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
-        if (isNaN(flips)) flips = 0;
+        let flips = Number.parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
+        if (!Number.isFinite(flips)) flips = 0;
         flips += 1;
         sessionStorage.setItem(ALMACEN_FLIPS_SESION, String(flips));
         if (flips >= MIN_FLIPS_SESION_PARA_OCULTAR) {
             aplicarOcultarFlechasFlip();
+            registrarSesionDeFlipsCompletada();
         }
     } catch (error) {}
 }
@@ -2602,8 +2632,9 @@ function guardarInclinacionInvertida(invertida) {
     }
 }
 
-// Inclinación 3D: la carta se inclina hacia donde apunta el mouse (más en el frente que en el dorso, para poder leer)
-// y el reflejo sigue al puntero (--mx y --my). Sin "reducir movimiento". Con el mouse, mientras se mantiene apretada Shift
+// Inclinación 3D: la carta se inclina hacia donde apunta y el reflejo sigue al puntero (--mx y --my). Con mouse se inclina
+// más en el frente que en el dorso para poder leer; con el dedo, solo se puede inclinar el frente para no interferir con el scroll.
+// Sin "reducir movimiento". Con el mouse, mientras se mantiene apretada Shift
 // las cartas no se inclinan ni brillan (el levante del hover, en cambio, sigue siempre: se pueden recorrer todas con el mouse sin que se
 // incline ninguna). Al soltarla vuelve todo solo. Con la preferencia "invertida" (ver arriba), Shift hace lo contrario: sin Shift las
 // cartas no se inclinan ni brillan y con Shift apretada sí.
@@ -2889,12 +2920,15 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
             return;
         }
         const carta = evento.target.closest('#listado-digimons > li');
-        if (!carta || carta.girando || zoomOcupado || zoomExtra || evento.target.closest('button')) return;
+        if (!carta || carta.classList.contains('de-dorso') || carta.girando || zoomOcupado || zoomExtra || evento.target.closest('button')) return;
         const toque = evento.touches[0];
         inicio = { x: toque.clientX, y: toque.clientY };
         clearTimeout(espera);
         espera = setTimeout(() => {
-            if (!inicio || carta.girando) return;
+            if (!inicio || carta.girando || carta.classList.contains('de-dorso')) {
+                cancelar();
+                return;
+            }
             inclinando = true;
             inclinandoConDedo = true;
             tomar(carta);

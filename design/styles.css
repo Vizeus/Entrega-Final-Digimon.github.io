@@ -1494,6 +1494,74 @@ body:has(.swal2-container) #avisos-ayuda {
   opacity: 0.75;
 }
 
+@media (max-width: 700px) {
+  .popup-info:not(.popup-ataques) {
+    padding: 0.65em 0.55em 0.75em !important;
+  }
+  .popup-info:not(.popup-ataques) .swal2-icon {
+    width: 3.7em;
+    height: 3.7em;
+    margin: 1em auto 0.35em;
+    font-size: 14px;
+  }
+  .popup-info:not(.popup-ataques) .swal2-title {
+    padding: 12px 16px 0;
+    font-size: 1.4em;
+  }
+  .popup-info:not(.popup-ataques) .swal2-html-container {
+    padding: 8px 18px 3px;
+    font-size: 0.95em;
+  }
+  .popup-info:not(.popup-ataques) .info-desc {
+    margin-bottom: 8px;
+    font-size: 1em;
+    line-height: 1.35;
+  }
+  .popup-info:not(.popup-ataques) .info-datos {
+    margin-bottom: 8px;
+    padding: 7px 10px;
+  }
+  .popup-info:not(.popup-ataques) .info-datos li {
+    margin: 2px 0;
+  }
+  .popup-info:not(.popup-ataques) .info-pie {
+    font-size: 0.84em;
+    line-height: 1.3;
+  }
+  .popup-info:not(.popup-ataques) .swal2-actions {
+    margin: 12px 0 0;
+  }
+  .popup-info:not(.popup-ataques) .swal2-confirm {
+    padding: 8px 14px;
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 370px) {
+  .popup-info:not(.popup-ataques) .swal2-icon {
+    width: 3.2em;
+    height: 3.2em;
+    margin: 0.7em auto 0.25em;
+  }
+  .popup-info:not(.popup-ataques) .swal2-title {
+    padding: 8px 12px 0;
+    font-size: 1.25em;
+  }
+  .popup-info:not(.popup-ataques) .swal2-html-container {
+    padding: 6px 12px 2px;
+    font-size: 0.9em;
+  }
+  .popup-info:not(.popup-ataques) .info-desc {
+    line-height: 1.3;
+  }
+  .popup-info:not(.popup-ataques) .swal2-actions {
+    margin-top: 8px;
+  }
+  .popup-info:not(.popup-ataques) .swal2-confirm {
+    padding: 7px 12px;
+  }
+}
+
 @keyframes vs-ataque-entra {
   from {
     opacity: 0;
@@ -3346,6 +3414,16 @@ body:has(.swal2-container) #avisos-ayuda {
   .aviso-globo {
     scale: 1;
     transition: opacity 0.3s ease;
+  }
+}
+
+@media (min-width: 701px) {
+  body:has(.popup-info) > #silenciar,
+  body:has(.popup-info) > #inclinacion-invertida {
+    z-index: 2100;
+  }
+  body:has(.popup-info) > .aviso-globo {
+    z-index: 2150;
   }
 }
 
