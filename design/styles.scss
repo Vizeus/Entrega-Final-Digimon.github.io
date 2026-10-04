@@ -3635,62 +3635,6 @@ $desenfoque-del-fondo: 10px;
   }
 }
 
-// En computadora todos los carteles de aviso y ayuda tienen el mismo tamaño unificado:
-// crecen juntos el texto, el ícono, el relleno, el ancho y las esquinas.
-@media (min-width: 701px) {
-  #avisos-ayuda {
-    right: 28px;
-    gap: 12px;
-    width: min(620px, calc(100vw - 40px));
-  }
-
-  .aviso-ayuda {
-    gap: 10px;
-    padding: 18px 28px;
-    font-size: 24px;
-    line-height: 1.3;
-    border-radius: 22px;
-    box-shadow: 0 12px 30px rgba(0, 30, 80, 0.4), inset 0 1px 0 #fff;
-
-    .aviso-linea {
-      gap: 16px;
-      max-height: 140px;
-    }
-
-    .aviso-icono {
-      font-size: 34px;
-    }
-  }
-
-  .aviso-globo,
-  .aviso-contador {
-    gap: 16px;
-    padding: 18px 28px;
-    font-size: 24px;
-    line-height: 1.3;
-    border-radius: 22px;
-    box-shadow: 0 12px 30px rgba(0, 30, 80, 0.4), inset 0 1px 0 #fff;
-    max-width: min(620px, calc(100vw - 40px));
-
-    .aviso-icono {
-      font-size: 34px;
-    }
-
-    &::before {
-      width: 18px;
-      height: 18px;
-      margin-left: -9px;
-      top: -10px;
-      border-top-left-radius: 4px;
-    }
-
-    &.sobre-el-boton::before {
-      top: auto;
-      bottom: -10px;
-    }
-  }
-}
-
 // Globito con flechita que sale de un botón (lo usan el aviso del contador y los de los botones redondos de sonido e inclinación). Arranca
 // chiquito, desde la punta de la flecha (--punta, que pone main.js), y crece hasta su tamaño; al irse vuelve a achicarse hacia el botón.
 // No frena los clics (pointer-events: none). Por defecto va debajo del botón (la flechita arriba); con "sobre-el-boton" va encima de él
@@ -3770,6 +3714,15 @@ $desenfoque-del-fondo: 10px;
 // Aviso de un botón redondo (main.js, llamarLaAtencion): por encima del zoom de la carta y sus flechas (1700) y del botón mismo (1800)
 .aviso-globo {
   @include globo-de-aviso(1850);
+}
+
+// En computadora los avisos de ayuda usan el mismo ancho compacto que los globos anclados a botones.
+@media (min-width: 701px) {
+  #avisos-ayuda {
+    right: 28px;
+    gap: 8px;
+    width: min(290px, calc(100vw - 40px));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
