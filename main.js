@@ -3502,6 +3502,13 @@ function prepararAudioAlTocar() {
     try {
         contextoAudio = contextoAudio || new (window.AudioContext || window.webkitAudioContext)();
         destinoDeAudio(contextoAudio);
+        if (contextoAudio.state !== 'running') {
+            const fuenteSilenciosa = contextoAudio.createBufferSource();
+            fuenteSilenciosa.buffer = contextoAudio.createBuffer(1, 1, contextoAudio.sampleRate);
+            fuenteSilenciosa.connect(destinoDeAudio(contextoAudio));
+            fuenteSilenciosa.onended = () => fuenteSilenciosa.disconnect();
+            fuenteSilenciosa.start();
+        }
         solicitarReanudacionAudio(contextoAudio);
     } catch (error) {
         console.warn('No se pudo preparar el audio al tocar la página:', error);
@@ -3633,11 +3640,9 @@ function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
 }
 
 // Suena la tecla apretada (bajada = true) o soltada (bajada = false)
-async function sonidoTecla(bajada = true, tecla = TECLA_NORMAL) {
+function sonidoTecla(bajada = true, tecla = TECLA_NORMAL) {
     try {
         const contexto = obtenerContextoAudio();
-        await solicitarReanudacionAudio(contexto);
-        if (contexto.state !== 'running') return;
         salidaTeclas = salidaTeclas || crearSalidaTeclas(contexto);
         armarTecla(contexto, salidaTeclas, contexto.currentTime, bajada, tecla);
     } catch (error) {
@@ -3682,11 +3687,9 @@ function toqueDeCarta(contexto, llegada) {
 // termina de darse vuelta una carta (un roce de papel con un poquito de cuerpo), pero más cortos y más bajitos. Al elegirla suena un "tuc" algo más
 // grave (la carta se apoya); al sacarla, un "tic" más agudo y más flojo (se levanta). En el celular cada uno viene con una vibración chiquita,
 // más corta al sacarla (ver el clic de las cartas en agregarCarta).
-async function sonidoSeleccion(elegida) {
+function sonidoSeleccion(elegida) {
     try {
         const contexto = obtenerContextoAudio();
-        await solicitarReanudacionAudio(contexto);
-        if (contexto.state !== 'running') return;
         const inicio = contexto.currentTime;
         const destino = destinoDeAudio(contexto);
         // [frecuencia del roce, volumen del roce, tono del cuerpo al empezar y al terminar, volumen del cuerpo, duración del roce]
@@ -3728,11 +3731,9 @@ async function sonidoSeleccion(elegida) {
 }
 
 // Carta que se da vuelta: un "fshh" de papel cortando el aire mientras gira y, al terminar, el toquecito de apoyarse
-async function sonidoVuelta() {
+function sonidoVuelta() {
     try {
         const contexto = obtenerContextoAudio();
-        await solicitarReanudacionAudio(contexto);
-        if (contexto.state !== 'running') return;
         const t = contexto.currentTime;
 
         // Ruido blanco filtrado: el filtro sube de tono durante la primera mitad del giro y baja en la segunda
@@ -3779,11 +3780,9 @@ async function sonidoVuelta() {
 // Zoom de la carta: el "fwip" de una carta de cartulina movida en el aire (aire filtrado con un aleteo rápido, como el de
 // una carta que se agita). Al abrir sube de tono y suena solo eso; al cerrar baja de tono y, cuando la carta vuelve a su
 // lugar, se apoya con el toquecito de siempre. Es sutil.
-async function sonidoZoom(abrir) {
+function sonidoZoom(abrir) {
     try {
         const contexto = obtenerContextoAudio();
-        await solicitarReanudacionAudio(contexto);
-        if (contexto.state !== 'running') return;
         const ahora = contexto.currentTime;
         const afinacion = 0.94 + Math.random() * 0.12; // cada vez suena apenas distinto, como una carta de verdad
         const duracion = abrir ? 0.34 : 0.28;
