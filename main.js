@@ -2582,7 +2582,6 @@ function activarVoltearConDedo() {
     let evitarClic = false;  // al soltar después del barrido no se elige la carta
 
     document.addEventListener('touchstart', (evento) => {
-        prepararAudioAlTocar();
         gesto = null;
         if (evento.touches.length !== 1) return;
         const toque = evento.touches[0];
@@ -3493,6 +3492,12 @@ function solicitarReanudacionAudio(contexto) {
     return pendiente;
 }
 
+function activarDesbloqueoAudio() {
+    const preparar = () => prepararAudioAlTocar();
+    document.addEventListener('pointerdown', preparar, { capture: true });
+    document.addEventListener('touchstart', preparar, { capture: true, passive: true });
+}
+
 function prepararAudioAlTocar() {
     try {
         contextoAudio = contextoAudio || new (window.AudioContext || window.webkitAudioContext)();
@@ -3628,9 +3633,11 @@ function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
 }
 
 // Suena la tecla apretada (bajada = true) o soltada (bajada = false)
-function sonidoTecla(bajada = true, tecla = TECLA_NORMAL) {
+async function sonidoTecla(bajada = true, tecla = TECLA_NORMAL) {
     try {
         const contexto = obtenerContextoAudio();
+        await solicitarReanudacionAudio(contexto);
+        if (contexto.state !== 'running') return;
         salidaTeclas = salidaTeclas || crearSalidaTeclas(contexto);
         armarTecla(contexto, salidaTeclas, contexto.currentTime, bajada, tecla);
     } catch (error) {
@@ -3675,9 +3682,11 @@ function toqueDeCarta(contexto, llegada) {
 // termina de darse vuelta una carta (un roce de papel con un poquito de cuerpo), pero más cortos y más bajitos. Al elegirla suena un "tuc" algo más
 // grave (la carta se apoya); al sacarla, un "tic" más agudo y más flojo (se levanta). En el celular cada uno viene con una vibración chiquita,
 // más corta al sacarla (ver el clic de las cartas en agregarCarta).
-function sonidoSeleccion(elegida) {
+async function sonidoSeleccion(elegida) {
     try {
         const contexto = obtenerContextoAudio();
+        await solicitarReanudacionAudio(contexto);
+        if (contexto.state !== 'running') return;
         const inicio = contexto.currentTime;
         const destino = destinoDeAudio(contexto);
         // [frecuencia del roce, volumen del roce, tono del cuerpo al empezar y al terminar, volumen del cuerpo, duración del roce]
@@ -3722,7 +3731,7 @@ function sonidoSeleccion(elegida) {
 async function sonidoVuelta() {
     try {
         const contexto = obtenerContextoAudio();
-        if (contexto.state === 'suspended') await reanudacionAudioPendiente;
+        await solicitarReanudacionAudio(contexto);
         if (contexto.state !== 'running') return;
         const t = contexto.currentTime;
 
@@ -3770,9 +3779,11 @@ async function sonidoVuelta() {
 // Zoom de la carta: el "fwip" de una carta de cartulina movida en el aire (aire filtrado con un aleteo rápido, como el de
 // una carta que se agita). Al abrir sube de tono y suena solo eso; al cerrar baja de tono y, cuando la carta vuelve a su
 // lugar, se apoya con el toquecito de siempre. Es sutil.
-function sonidoZoom(abrir) {
+async function sonidoZoom(abrir) {
     try {
         const contexto = obtenerContextoAudio();
+        await solicitarReanudacionAudio(contexto);
+        if (contexto.state !== 'running') return;
         const ahora = contexto.currentTime;
         const afinacion = 0.94 + Math.random() * 0.12; // cada vez suena apenas distinto, como una carta de verdad
         const duracion = abrir ? 0.34 : 0.28;
@@ -4044,6 +4055,7 @@ activarAvisosDeAyuda();
 activarAvisoDeInclinacion(); // después de los avisos de ayuda: usa el contador de visitas que ellos cuentan
 activarAvisoDeZoomExtra();   // (este también)
 gestionarVisitasYFlechasMovil();
+activarDesbloqueoAudio();
 activarVoltearConDedo();
 activarSonidoBotones();
 activarBotonDeAudio();
