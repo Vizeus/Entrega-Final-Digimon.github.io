@@ -1,0 +1,9 @@
+{
+    "tabWidth": 4,
+    "singleQuote": true,
+    "printWidth": 160,
+    "arrowParens": "avoid",
+    "quoteProps": "preserve",
+    "endOfLine": "auto",
+    "overrides": [{ "files": "*.scss", "options": { "singleQuote": false } }]
+}

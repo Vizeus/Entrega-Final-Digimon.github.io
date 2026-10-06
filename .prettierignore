@@ -1,0 +1,6 @@
+# Lo que genera Sass a partir de styles.scss (no se edita a mano)
+design/styles.css
+design/styles.css.map
+# Lo que genera npm
+package-lock.json
+node_modules/

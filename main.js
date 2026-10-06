@@ -16,7 +16,7 @@ const botonIniciarCombate = document.getElementById('iniciar-combate');
 // Seleccionar el contador de digimons elegidos (junto a la consigna, arriba)
 const contadorSeleccion = document.getElementById('contador-seleccion');
 
-// Número total de digimons 
+// Número total de digimons
 const totalDigimons = 1488; // todos los que tiene la API (digi-api.com)
 
 // Número de páginas a recuperar (con pageSize=100 son solo 15 páginas en vez de 298)
@@ -53,7 +53,7 @@ const nivelesAlternativos = {
     'Perfect': 'Ultimate ',
     'Ultimate': 'Mega',
     'Super Ultimate': 'Ultra', // nivel 7 (inventado para este simulador): por encima del Mega
-    'Absolute': 'Apex'         // nivel 8 (inventado para este simulador): lo más alto
+    'Absolute': 'Apex', // nivel 8 (inventado para este simulador): lo más alto
 };
 
 // Qué sistema de clasificación de niveles se está mostrando (lo guarda el botón de la banderita)
@@ -78,9 +78,9 @@ function nombreNivel(nivelApi) {
 // -----------------------------------------------------------------------------------------------------------------
 
 // Cuánto pesa cada factor
-const PESO_TIPO = 0.20;
+const PESO_TIPO = 0.2;
 const PESO_NIVEL = 0.15;
-const PESO_ELEMENTO = 0.10;
+const PESO_ELEMENTO = 0.1;
 
 // Fuerza de cada nivel, usando el nombre original de la API (así no importa qué sistema de clasificación se muestre).
 // Son 8 niveles, del 1 al 8, sin saltos. (Los "Armor" y los "Hybrid" que trae la API no son niveles de acá: cada uno de esos
@@ -119,84 +119,84 @@ const NIVELES_CORREGIDOS = {
 // (Los X-Antibody y algunos más solo aparecen cuando se carga la API completa.)
 const ASCENSOS = {
     // Nivel 7 (Super Ultimate) · Reyes Reales
-    183: 'Super Ultimate',  // Omegamon
-    636: 'Super Ultimate',  // Alphamon
-    637: 'Super Ultimate',  // Alphamon (Ouryuken)
-    434: 'Super Ultimate',  // Dukemon
-    435: 'Super Ultimate',  // Dukemon (Crimson Mode)
-    658: 'Super Ultimate',  // Dukemon (X-Antibody)
-    430: 'Super Ultimate',  // Chaos Dukemon (forma oscura de Dukemon)
-    543: 'Super Ultimate',  // Gallantmon Chaos Mode (el mismo Chaos Dukemon, con su nombre en inglés)
-    545: 'Super Ultimate',  // Dynasmon
-    659: 'Super Ultimate',  // Dynasmon (X-Antibody)
-    760: 'Super Ultimate',  // Craniummon
+    183: 'Super Ultimate', // Omegamon
+    636: 'Super Ultimate', // Alphamon
+    637: 'Super Ultimate', // Alphamon (Ouryuken)
+    434: 'Super Ultimate', // Dukemon
+    435: 'Super Ultimate', // Dukemon (Crimson Mode)
+    658: 'Super Ultimate', // Dukemon (X-Antibody)
+    430: 'Super Ultimate', // Chaos Dukemon (forma oscura de Dukemon)
+    543: 'Super Ultimate', // Gallantmon Chaos Mode (el mismo Chaos Dukemon, con su nombre en inglés)
+    545: 'Super Ultimate', // Dynasmon
+    659: 'Super Ultimate', // Dynasmon (X-Antibody)
+    760: 'Super Ultimate', // Craniummon
     1228: 'Super Ultimate', // Craniummon (X-Antibody)
-    776: 'Super Ultimate',  // Sleipmon
+    776: 'Super Ultimate', // Sleipmon
     1237: 'Super Ultimate', // Sleipmon (X-Antibody)
-    916: 'Super Ultimate',  // Sleipmon (Burst Mode)
-    315: 'Super Ultimate',  // Magnamon
-    588: 'Super Ultimate',  // Ulforce V-dramon
-    700: 'Super Ultimate',  // Ulforce V-dramon (X-Antibody)
-    699: 'Super Ultimate',  // Ulforce V-dramon Future Mode
-    554: 'Super Ultimate',  // Lord Knightmon
+    916: 'Super Ultimate', // Sleipmon (Burst Mode)
+    315: 'Super Ultimate', // Magnamon
+    588: 'Super Ultimate', // Ulforce V-dramon
+    700: 'Super Ultimate', // Ulforce V-dramon (X-Antibody)
+    699: 'Super Ultimate', // Ulforce V-dramon Future Mode
+    554: 'Super Ultimate', // Lord Knightmon
     1233: 'Super Ultimate', // Lord Knightmon (X-Antibody)
-    895: 'Super Ultimate',  // Examon
+    895: 'Super Ultimate', // Examon
     1262: 'Super Ultimate', // Examon (X-Antibody)
     1135: 'Super Ultimate', // Gankoomon
     1263: 'Super Ultimate', // Gankoomon (X-Antibody)
-    892: 'Super Ultimate',  // Duftmon
-    893: 'Super Ultimate',  // Duftmon (X-Antibody)
-    894: 'Super Ultimate',  // Duftmon (Leopard Mode)
+    892: 'Super Ultimate', // Duftmon
+    893: 'Super Ultimate', // Duftmon (X-Antibody)
+    894: 'Super Ultimate', // Duftmon (Leopard Mode)
     1187: 'Super Ultimate', // JESmon
     1250: 'Super Ultimate', // JESmon (X-Antibody)
     1295: 'Super Ultimate', // JESmon GX
-    961: 'Super Ultimate',  // Omegamon Zwart
-    686: 'Super Ultimate',  // Omegamon (X-Antibody)
+    961: 'Super Ultimate', // Omegamon Zwart
+    686: 'Super Ultimate', // Omegamon (X-Antibody)
     1196: 'Super Ultimate', // Omegamon Alter-B
     1197: 'Super Ultimate', // Omegamon Zwart Defeat
     1209: 'Super Ultimate', // Omegamon Alter-S
     1235: 'Super Ultimate', // Omegamon (Merciful Mode)
     // Nivel 7 · Los 5 Soberanos
-    272: 'Super Ultimate',  // Baihumon
-    361: 'Super Ultimate',  // Zhuqiaomon
-    357: 'Super Ultimate',  // Xuanwumon
-    374: 'Super Ultimate',  // Qinglongmon
-    620: 'Super Ultimate',  // Huanglongmon
+    272: 'Super Ultimate', // Baihumon
+    361: 'Super Ultimate', // Zhuqiaomon
+    357: 'Super Ultimate', // Xuanwumon
+    374: 'Super Ultimate', // Qinglongmon
+    620: 'Super Ultimate', // Huanglongmon
     1428: 'Super Ultimate', // Huanglongmon (Ruin Mode)
     // Nivel 7 · Los 7 Lores Demonio
-    667: 'Super Ultimate',  // Leviamon
+    667: 'Super Ultimate', // Leviamon
     1264: 'Super Ultimate', // Leviamon (X-Antibody)
-    640: 'Super Ultimate',  // Barbamon
+    640: 'Super Ultimate', // Barbamon
     1254: 'Super Ultimate', // Barbamon (X-Antibody)
-    739: 'Super Ultimate',  // Belphemon (Rage Mode)
+    739: 'Super Ultimate', // Belphemon (Rage Mode)
     1255: 'Super Ultimate', // Belphemon (X-Antibody)
-    422: 'Super Ultimate',  // Beelzebumon (Blast Mode)
-    753: 'Super Ultimate',  // Beelzebumon (X-Antibody)
-    154: 'Super Ultimate',  // Demon
+    422: 'Super Ultimate', // Beelzebumon (Blast Mode)
+    753: 'Super Ultimate', // Beelzebumon (X-Antibody)
+    154: 'Super Ultimate', // Demon
     1261: 'Super Ultimate', // Demon (X-Antibody)
-    648: 'Super Ultimate',  // Demon Super Ultimate
-    639: 'Super Ultimate',  // Arkadimon Super Ultimate (su forma final se llama así: es el nivel que está por encima del Mega)
-    552: 'Super Ultimate',  // Lilithmon
+    648: 'Super Ultimate', // Demon Super Ultimate
+    639: 'Super Ultimate', // Arkadimon Super Ultimate (su forma final se llama así: es el nivel que está por encima del Mega)
+    552: 'Super Ultimate', // Lilithmon
     1265: 'Super Ultimate', // Lilithmon (X-Antibody)
-    556: 'Super Ultimate',  // Lucemon (Falldown Mode): el más fuerte de los 7 Lores Demonio
+    556: 'Super Ultimate', // Lucemon (Falldown Mode): el más fuerte de los 7 Lores Demonio
     1267: 'Super Ultimate', // Lucemon (X-Antibody)
     // Nivel 7 · Excepcionales
-    576: 'Super Ultimate',  // Susanoomon
-    132: 'Super Ultimate',  // Apocalymon
-    384: 'Super Ultimate',  // Seraphimon
-    445: 'Super Ultimate',  // Ofanimon
+    576: 'Super Ultimate', // Susanoomon
+    132: 'Super Ultimate', // Apocalymon
+    384: 'Super Ultimate', // Seraphimon
+    445: 'Super Ultimate', // Ofanimon
     1275: 'Super Ultimate', // Ofanimon (X-Antibody)
     1061: 'Super Ultimate', // Ofanimon (Falldown Mode)
     1276: 'Super Ultimate', // Ofanimon (Falldown Mode, X-Antibody)
-    287: 'Super Ultimate',  // Cherubimon (Vice): el tercero de los Tres Arcángeles, igual que Seraphimon y Ofanimon
-    288: 'Super Ultimate',  // Cherubimon (Virtue)
+    287: 'Super Ultimate', // Cherubimon (Vice): el tercero de los Tres Arcángeles, igual que Seraphimon y Ofanimon
+    288: 'Super Ultimate', // Cherubimon (Virtue)
     1256: 'Super Ultimate', // Cherubimon (Vice) (X-Antibody)
     1257: 'Super Ultimate', // Cherubimon (Virtue) (X-Antibody)
-    904: 'Super Ultimate',  // Ogudomon (la versión X-Antibody queda en el nivel 8)
+    904: 'Super Ultimate', // Ogudomon (la versión X-Antibody queda en el nivel 8)
     // Nivel 8 (Absolute)
-    457: 'Absolute',        // Zeed Millenniumon
-    1277: 'Absolute',       // Ogudomon (X-Antibody)
-    557: 'Absolute',        // Lucemon (Satan Mode)
+    457: 'Absolute', // Zeed Millenniumon
+    1277: 'Absolute', // Ogudomon (X-Antibody)
+    557: 'Absolute', // Lucemon (Satan Mode)
 };
 
 // ARMOR e HYBRID: la API los trae como niveles propios, pero son solo 34 digimons (4 Armor y 30 Hybrid) y ensuciaban el filtro y
@@ -208,38 +208,38 @@ const ASCENSOS = {
 //     La clave es el nombre de la API sin tildes, mayúsculas ni símbolos (claveDeNombre, de nombres.js: 'Löwemon' → 'lowemon', 'Jet Silphymon' → 'jetsilphymon').
 const NIVEL_DE_LOS_HYBRID = {
     // Formas humanas (los Human Spirits) → Adult
-    agunimon: 'Adult',        // fuego
-    kazemon: 'Adult',         // viento
-    lobomon: 'Adult',         // luz
-    lanamon: 'Adult',         // agua (Ranamon)
-    arbormon: 'Adult',        // madera
-    blitzmon: 'Adult',        // trueno
-    chackmon: 'Adult',        // hielo
-    mercuremon: 'Adult',      // acero
-    grumblemon: 'Adult',      // tierra
-    duskmon: 'Adult',         // oscuridad (el poder de Duskmon es de fusión, pero todos lo ponen en la clase Adult)
-    lowemon: 'Adult',         // oscuridad (Löwemon): el techo de la clase Adult
+    agunimon: 'Adult', // fuego
+    kazemon: 'Adult', // viento
+    lobomon: 'Adult', // luz
+    lanamon: 'Adult', // agua (Ranamon)
+    arbormon: 'Adult', // madera
+    blitzmon: 'Adult', // trueno
+    chackmon: 'Adult', // hielo
+    mercuremon: 'Adult', // acero
+    grumblemon: 'Adult', // tierra
+    duskmon: 'Adult', // oscuridad (el poder de Duskmon es de fusión, pero todos lo ponen en la clase Adult)
+    lowemon: 'Adult', // oscuridad (Löwemon): el techo de la clase Adult
     // Formas bestia (los Beast Spirits) → Perfect
     burninggreymon: 'Perfect', // fuego (Vritramon)
-    shutumon: 'Perfect',       // viento
+    shutumon: 'Perfect', // viento
     kendogarurumon: 'Perfect', // luz (Garummon)
-    calamaramon: 'Perfect',    // agua
-    petaldramon: 'Perfect',    // madera
-    bolgmon: 'Perfect',        // trueno
-    blizzarmon: 'Perfect',     // hielo
-    sephirothmon: 'Perfect',   // acero
-    gigasmon: 'Perfect',       // tierra
-    velgrmon: 'Perfect',       // oscuridad (la bestia corrupta de Duskmon)
-    kaiserleomon: 'Perfect',   // oscuridad (la bestia purificada de Löwemon)
+    calamaramon: 'Perfect', // agua
+    petaldramon: 'Perfect', // madera
+    bolgmon: 'Perfect', // trueno
+    blizzarmon: 'Perfect', // hielo
+    sephirothmon: 'Perfect', // acero
+    gigasmon: 'Perfect', // tierra
+    velgrmon: 'Perfect', // oscuridad (la bestia corrupta de Duskmon)
+    kaiserleomon: 'Perfect', // oscuridad (la bestia purificada de Löwemon)
     // Fusiones y formas supremas → Ultimate
-    aldamon: 'Ultimate',          // fusión de fuego
-    beowolfmon: 'Ultimate',       // fusión de luz
-    daipenmon: 'Ultimate',        // fusión de hielo
-    raihimon: 'Ultimate',         // fusión de oscuridad (Löwemon + Kaiser Leomon)
+    aldamon: 'Ultimate', // fusión de fuego
+    beowolfmon: 'Ultimate', // fusión de luz
+    daipenmon: 'Ultimate', // fusión de hielo
+    raihimon: 'Ultimate', // fusión de oscuridad (Löwemon + Kaiser Leomon)
     rhinokabuterimon: 'Ultimate', // fusión de trueno
-    jetsilphymon: 'Ultimate',     // fusión de viento
-    magnagarurumon: 'Ultimate',   // forma suprema de luz
-    emperorgreymon: 'Ultimate',   // forma suprema de fuego
+    jetsilphymon: 'Ultimate', // fusión de viento
+    magnagarurumon: 'Ultimate', // forma suprema de luz
+    emperorgreymon: 'Ultimate', // forma suprema de fuego
 };
 const NIVEL_HYBRID_SIN_DATO = 'Perfect'; // para un Hybrid que no esté en la lista (si la API algún día suma uno): el punto medio
 
@@ -276,7 +276,8 @@ const CARTAS_PROPIAS = [
             campos: '–',
             estreno: '–',
             habilidades: [],
-            descripcion: 'The host computer that rules over the Digital World, treated in many adaptations as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
+            descripcion:
+                'The host computer that rules over the Digital World, treated in many adaptations as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
             evo: { previas: [], siguientes: [] },
         },
     },
@@ -293,7 +294,8 @@ const CARTAS_PROPIAS = [
             campos: '–',
             estreno: '–',
             habilidades: [],
-            descripcion: 'The security system of the Digital World, which keeps the balance between good and evil. In some stories it takes the place of Yggdrasil as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
+            descripcion:
+                'The security system of the Digital World, which keeps the balance between good and evil. In some stories it takes the place of Yggdrasil as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
             evo: { previas: [], siguientes: [] },
         },
     },
@@ -411,7 +413,7 @@ const CACHE_DB_NOMBRE = 'digimon-cache-v1';
 const CACHE_STORE_DETALLES = 'detalles';
 
 function abrirCacheDB() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         if (typeof window === 'undefined' || !('indexedDB' in window)) return resolve(null);
         try {
             const peticion = indexedDB.open(CACHE_DB_NOMBRE, 1);
@@ -439,7 +441,7 @@ async function obtenerDetalleCache(url) {
     try {
         const db = await getCacheDB();
         if (!db) return null;
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             const tx = db.transaction(CACHE_STORE_DETALLES, 'readonly');
             const store = tx.objectStore(CACHE_STORE_DETALLES);
             const req = store.get(url);
@@ -647,8 +649,8 @@ mostrarAyudaDelContador();
 // cuarta vez que entra a la página ya no sale.
 // -----------------------------------------------------------------------------------------------------------------
 const AVISO_CONTADOR_SESION = 'digimon-aviso-contador'; // sessionStorage: recargar la página no lo vuelve a mostrar, abrirla de nuevo sí
-const AVISO_CONTADOR_ESPERA = 300;     // ms después de que se cierra el último cartel del combate (además de lo que tarde en irse)
-const AVISO_CONTADOR_DURACION = 9000;  // ms que queda a la vista
+const AVISO_CONTADOR_ESPERA = 300; // ms después de que se cierra el último cartel del combate (además de lo que tarde en irse)
+const AVISO_CONTADOR_DURACION = 9000; // ms que queda a la vista
 const AVISO_CONTADOR_VISITAS_MAXIMAS = 3; // desde la cuarta visita ya no sale
 let avisoContadorVisto = false;
 let avisoDelContador = null;
@@ -694,7 +696,8 @@ function quitarAvisoDelContador() {
 function mostrarAvisoDelContador(reintentos = 15) {
     if (memoriaAvisos.visitas > AVISO_CONTADOR_VISITAS_MAXIMAS) return; // ya entró 4 veces o más: no hace falta
     if (avisoContadorVisto || avisoDelContador || seleccionados.length === 0) return;
-    if (document.querySelector('.combate-contenedor')) { // el último cartel todavía se está desvaneciendo: se espera a que se vaya del todo
+    if (document.querySelector('.combate-contenedor')) {
+        // el último cartel todavía se está desvaneciendo: se espera a que se vaya del todo
         if (reintentos > 0) setTimeout(() => mostrarAvisoDelContador(reintentos - 1), 150);
         return;
     }
@@ -731,7 +734,9 @@ function mostrarAvisoDelContador(reintentos = 15) {
 // a menos que la persona toque directamente el botón contador (o empiece otro combate o amplíe una carta).
 document.addEventListener('seleccion-cambio', ubicarAvisoDelContador);
 botonIniciarCombate.addEventListener('click', quitarAvisoDelContador);
-document.addEventListener('zoom-cambio', () => { if (cartaEnZoom) quitarAvisoDelContador(); });
+document.addEventListener('zoom-cambio', () => {
+    if (cartaEnZoom) quitarAvisoDelContador();
+});
 document.addEventListener('idioma-cambiado', () => {
     escribirAvisoDelContador();
     ubicarAvisoDelContador();
@@ -756,7 +761,7 @@ function separarXAntibody(nombre) {
 
 // Nombre completo de una carta, con su "(X-Antibody)" si lo tiene. Lo usan el combate, la evolución y el dorso,
 // para que no se confunda con la versión normal del mismo digimon. Es el que se ve, o sea, el del idioma actual (ver nombres.js).
-const conXAntibody = (carta, nombre) => carta.dataset.xAntibody ? `${nombre} (X-Antibody)` : nombre;
+const conXAntibody = (carta, nombre) => (carta.dataset.xAntibody ? `${nombre} (X-Antibody)` : nombre);
 
 function nombreCompleto(carta) {
     return conXAntibody(carta, carta.querySelector('h4').textContent.trim());
@@ -777,9 +782,7 @@ function nombreAlternativo(carta) {
     const occidental = nombreOccidentalCompleto(carta);
     if (claveDeNombre(original) === claveDeNombre(occidental)) return null; // (claveDeNombre: ver nombres.js)
     const visible = conXAntibody(carta, nombreParaMostrar(carta.dataset.nombreApi));
-    return visible === original
-        ? { etiqueta: 'carta.nombreOccidental', nombre: occidental }
-        : { etiqueta: 'carta.nombreOriginal', nombre: original };
+    return visible === original ? { etiqueta: 'carta.nombreOccidental', nombre: occidental } : { etiqueta: 'carta.nombreOriginal', nombre: original };
 }
 
 // Nombre en la carta: lo que va entre paréntesis pasa a una segunda línea, más chica.
@@ -812,9 +815,9 @@ function escribirNombre(carta) {
 
 // Tamaño del nombre según su largo: los cortos se agrandan hasta llenar la placa y los largos quedan chicos
 // (en dos líneas si no entran). Se mide con un canvas, usando la misma tipografía que el CSS.
-const MAX_CRECIMIENTO = 1.5;        // un nombre corto puede crecer hasta 1,5 veces el tamaño base
+const MAX_CRECIMIENTO = 1.5; // un nombre corto puede crecer hasta 1,5 veces el tamaño base
 const MAX_CRECIMIENTO_PAREN = 1.25; // si tiene paréntesis, la línea de arriba crece menos para que entren las dos líneas
-const MIN_TAMANO_PAREN = 7.5;       // tamaño mínimo (en px) de la línea del paréntesis
+const MIN_TAMANO_PAREN = 7.5; // tamaño mínimo (en px) de la línea del paréntesis
 
 let medidasNombre = null; // se calculan una sola vez, con la primera carta
 
@@ -849,16 +852,16 @@ function ajustarNombre(carta) {
     if (!aparte) {
         // Si entra en una línea al tamaño base, lo agrandamos hasta llenar ~92% de la placa; si no, queda en dos líneas
         const anchoNombre = medir(titulo.textContent.trim());
-        const k = anchoNombre < ancho ? Math.max(1, Math.min(MAX_CRECIMIENTO, ancho * 0.92 / anchoNombre)) : 1;
+        const k = anchoNombre < ancho ? Math.max(1, Math.min(MAX_CRECIMIENTO, (ancho * 0.92) / anchoNombre)) : 1;
         carta.style.setProperty('--k', k.toFixed(3));
         return;
     }
 
     // Con paréntesis: arriba el nombre y abajo el paréntesis, más chico (los dos tienen que entrar en la placa)
     const principal = titulo.firstChild.textContent.trim();
-    let tamanoPrincipal = base * Math.max(0.75, Math.min(MAX_CRECIMIENTO_PAREN, ancho * 0.94 / medir(principal)));
+    let tamanoPrincipal = base * Math.max(0.75, Math.min(MAX_CRECIMIENTO_PAREN, (ancho * 0.94) / medir(principal)));
     const anchoPorPx = medir(aparte.textContent.trim()) / base;
-    let tamanoAparte = Math.max(MIN_TAMANO_PAREN, Math.min(tamanoPrincipal * 0.8, ancho * 0.94 / anchoPorPx));
+    let tamanoAparte = Math.max(MIN_TAMANO_PAREN, Math.min(tamanoPrincipal * 0.8, (ancho * 0.94) / anchoPorPx));
     if (tamanoPrincipal + tamanoAparte > limiteSuma) {
         tamanoAparte = Math.max(MIN_TAMANO_PAREN, limiteSuma - tamanoPrincipal);
         if (tamanoPrincipal + tamanoAparte > limiteSuma) {
@@ -871,8 +874,9 @@ function ajustarNombre(carta) {
 
 // Espera a que carguen las tipografías de las cartas (si tardan más de 3 segundos, sigue igual)
 function esperarTipografias() {
-    const cargas = ['800 12px "Orbitron"', '700 12px "Pixelify Sans"', '500 12px "Exo 2"', '12px "DotGothic16"']
-        .map(fuente => document.fonts.load(fuente).catch(() => null));
+    const cargas = ['800 12px "Orbitron"', '700 12px "Pixelify Sans"', '500 12px "Exo 2"', '12px "DotGothic16"'].map(fuente =>
+        document.fonts.load(fuente).catch(() => null),
+    );
     return Promise.race([Promise.all(cargas), new Promise(resolve => setTimeout(resolve, 3000))]);
 }
 
@@ -885,7 +889,11 @@ function construirDorso(carta) {
     ponerNombre(dorso.querySelector('.c-nombre'), nombreCompleto(carta));
 
     const cuerpo = dorso.querySelector('.c-cuerpo');
-    for (const [etiqueta, valor] of [['carta.especie', datos.especie], ['carta.campos', datos.campos ?? '–'], ['carta.estreno', datos.estreno]]) {
+    for (const [etiqueta, valor] of [
+        ['carta.especie', datos.especie],
+        ['carta.campos', datos.campos ?? '–'],
+        ['carta.estreno', datos.estreno],
+    ]) {
         const linea = document.createElement('p');
         linea.className = 'dato';
         const negrita = document.createElement('b');
@@ -1019,15 +1027,21 @@ async function voltearCarta(carta, direccion = 1) {
     }
 
     const primeraMitad = carta.animate(
-        [{ transform: `${PERSPECTIVA}rotateY(0deg)`, scale: 1 }, { transform: `${PERSPECTIVA}rotateY(${90 * direccion}deg)`, scale: 1.06 }],
-        { duration: 230, easing: 'ease-in', fill: 'forwards' }
+        [
+            { transform: `${PERSPECTIVA}rotateY(0deg)`, scale: 1 },
+            { transform: `${PERSPECTIVA}rotateY(${90 * direccion}deg)`, scale: 1.06 },
+        ],
+        { duration: 230, easing: 'ease-in', fill: 'forwards' },
     );
     await primeraMitad.finished;
 
     carta.classList.toggle('de-dorso'); // de canto no se ve: cambiamos de cara
     const segundaMitad = carta.animate(
-        [{ transform: `${PERSPECTIVA}rotateY(${-90 * direccion}deg)`, scale: 1.06 }, { transform: `${PERSPECTIVA}rotateY(0deg)`, scale: 1 }],
-        { duration: 230, easing: 'ease-out' }
+        [
+            { transform: `${PERSPECTIVA}rotateY(${-90 * direccion}deg)`, scale: 1.06 },
+            { transform: `${PERSPECTIVA}rotateY(0deg)`, scale: 1 },
+        ],
+        { duration: 230, easing: 'ease-out' },
     );
     primeraMitad.cancel();
     await segundaMitad.finished;
@@ -1042,18 +1056,18 @@ async function voltearCarta(carta, direccion = 1) {
 //   queda un hueco del tamaño de la carta, con el fondo a la vista) y sigue funcionando la inclinación ("transform") y
 //   el dar vuelta. Se cierra con Esc, con un clic afuera o con la ✕.
 // -----------------------------------------------------------------------------------------------------------------
-let cartaEnZoom = null;          // la carta que está en el centro (o volviendo a su lugar)
-let zoomOcupado = false;         // mientras vuela, no se inclina, no se da vuelta y no se cierra
-let cierrePendiente = false;     // pidieron cerrar mientras todavía estaba llegando
-let zoomCerrando = false;        // la carta ya está volviendo a su lugar: pedir cerrar otra vez no hace falta (ver cerrarZoom)
+let cartaEnZoom = null; // la carta que está en el centro (o volviendo a su lugar)
+let zoomOcupado = false; // mientras vuela, no se inclina, no se da vuelta y no se cierra
+let cierrePendiente = false; // pidieron cerrar mientras todavía estaba llegando
+let zoomCerrando = false; // la carta ya está volviendo a su lugar: pedir cerrar otra vez no hace falta (ver cerrarZoom)
 let seleccionAntesDelClic = { carta: null, estado: [] }; // cómo estaba la selección antes del primer clic de un doble clic
 
 // Al pasar de una carta a otra dentro del zoom (con el teclado o con las flechas), la carta nueva suele quedar justo debajo del puntero, que
 // no se movió. Sin esto el navegador le daba el "hover" (a veces tarde o de más) y aparecía el reflejo quieto en el medio. Ahora la carta nueva
 // (clase "reflejo-quieto", ver el CSS) no se inclina ni brilla hasta que el mouse se mueve de verdad, aunque sea un píxel: un movimiento
 // "falso" que el navegador manda sin mover el mouse (misma posición) no cuenta, ni el que ocurre mientras la carta todavía está llegando.
-let zoomEsperaMovimiento = false;   // true mientras se espera ese movimiento (la inclinación lo mira: ver activarInclinacion)
-let ultimoPuntero = null;           // dónde estuvo el mouse la última vez que mandó un evento
+let zoomEsperaMovimiento = false; // true mientras se espera ese movimiento (la inclinación lo mira: ver activarInclinacion)
+let ultimoPuntero = null; // dónde estuvo el mouse la última vez que mandó un evento
 
 function pedirMovimientoDelPuntero(carta) {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return; // solo con mouse: con el dedo no hay hover
@@ -1068,17 +1082,27 @@ function soltarReflejoQuieto() {
 
 function activarReflejoQuieto() {
     // (en la fase de captura, para ir antes que la inclinación, que mira el mismo movimiento)
-    document.addEventListener('pointermove', (evento) => {
-        if (evento.pointerType === 'touch') return;
-        const seMovio = !ultimoPuntero || evento.clientX !== ultimoPuntero.x || evento.clientY !== ultimoPuntero.y;
-        ultimoPuntero = { x: evento.clientX, y: evento.clientY };
-        if (zoomEsperaMovimiento && seMovio && !zoomOcupado) soltarReflejoQuieto();
-    }, true);
-    document.addEventListener('touchstart', () => { if (zoomEsperaMovimiento) soltarReflejoQuieto(); }, { capture: true, passive: true }); // (pantalla táctil con mouse: el dedo manda)
+    document.addEventListener(
+        'pointermove',
+        evento => {
+            if (evento.pointerType === 'touch') return;
+            const seMovio = !ultimoPuntero || evento.clientX !== ultimoPuntero.x || evento.clientY !== ultimoPuntero.y;
+            ultimoPuntero = { x: evento.clientX, y: evento.clientY };
+            if (zoomEsperaMovimiento && seMovio && !zoomOcupado) soltarReflejoQuieto();
+        },
+        true,
+    );
+    document.addEventListener(
+        'touchstart',
+        () => {
+            if (zoomEsperaMovimiento) soltarReflejoQuieto();
+        },
+        { capture: true, passive: true },
+    ); // (pantalla táctil con mouse: el dedo manda)
 }
 
-const ZOOM_ANCHO = 0.9;          // la carta ocupa hasta el 90 % del ancho de la ventana (80 % en celular, para dejar lugar a las flechas)...
-const ZOOM_ALTO = 0.86;          // ...y el 86 % del alto
+const ZOOM_ANCHO = 0.9; // la carta ocupa hasta el 90 % del ancho de la ventana (80 % en celular, para dejar lugar a las flechas)...
+const ZOOM_ALTO = 0.86; // ...y el 86 % del alto
 const ZOOM_ANCHO_CELULAR = 0.8;
 const ZOOM_MAXIMO = 4.5;
 const ZOOM_MINIMO = 1.25;
@@ -1094,7 +1118,7 @@ function calcularZoom(carta) {
     const ancho = document.documentElement.clientWidth;
     const alto = window.innerHeight;
     const anchoUtil = ancho * (ancho < 600 ? ZOOM_ANCHO_CELULAR : ZOOM_ANCHO);
-    const escala = Math.max(ZOOM_MINIMO, Math.min(ZOOM_MAXIMO, anchoUtil / caja.width, alto * ZOOM_ALTO / caja.height));
+    const escala = Math.max(ZOOM_MINIMO, Math.min(ZOOM_MAXIMO, anchoUtil / caja.width, (alto * ZOOM_ALTO) / caja.height));
     return {
         escala,
         anchoFinal: caja.width * escala, // lo que va a medir la carta de ancho en pantalla
@@ -1170,7 +1194,7 @@ function zonaConScroll(destino, delta = 0, selector = '.c-cuerpo') {
     return delta < 0 ? zona.scrollTop > 0 : zona.scrollTop + zona.clientHeight < zona.scrollHeight - 1;
 }
 
-const frenarRueda = (evento) => {
+const frenarRueda = evento => {
     // Si hay un cartel de SweetAlert abierto (ataques, evolución, etc.), permitimos su propio desplazamiento
     if (document.querySelector('.swal2-container')) return;
     // Sobre el frente de la carta ampliada, la rueda la agranda todavía más (ver "ZOOM EXTRA"). En el dorso no: ahí la rueda es para la descripción
@@ -1182,12 +1206,12 @@ const frenarRueda = (evento) => {
     if (!zonaConScroll(evento.target, evento.deltaY)) evento.preventDefault();
 };
 
-const frenarToque = (evento) => {
+const frenarToque = evento => {
     if (document.querySelector('.swal2-container')) return;
     if (!zonaConScroll(evento.target) && evento.cancelable) evento.preventDefault();
 };
 
-const alTeclearConZoom = (evento) => {
+const alTeclearConZoom = evento => {
     // Si hay un cartel de SweetAlert abierto, SweetAlert maneja sus teclas (Escape para cerrar el cartel, etc.)
     if (document.querySelector('.swal2-container')) return;
     if (evento.key === 'Escape') {
@@ -1225,18 +1249,18 @@ function bloquearDesplazamiento(bloquear) {
 // dos dedos a la vez la desplaza. Mientras está agrandada de más la carta no se inclina: la inclinación se cancela (y vuelve sola cuando
 // se la devuelve al tamaño normal). Las flechas de los costados se esconden, y si se da vuelta la carta, se pasa a otra o se cierra el
 // zoom, vuelve a lo normal.
-const ZOOM_EXTRA_MAXIMO = 3;       // veces el tamaño del zoom normal
-const ZOOM_EXTRA_RUEDA = 0.0016;   // cuánto crece por cada unidad de la rueda (una muesca del mouse trae ~100: ×1,17)
-const ZOOM_EXTRA_SUAVIZADO = 60;   // ms que tarda en alcanzar lo pedido con la rueda
-let zoomExtra = false;             // true mientras la carta ampliada está más grande que el zoom normal
-let zoomExtraCuadro = 0;           // pedido de animationFrame pendiente
+const ZOOM_EXTRA_MAXIMO = 3; // veces el tamaño del zoom normal
+const ZOOM_EXTRA_RUEDA = 0.0016; // cuánto crece por cada unidad de la rueda (una muesca del mouse trae ~100: ×1,17)
+const ZOOM_EXTRA_SUAVIZADO = 60; // ms que tarda en alcanzar lo pedido con la rueda
+let zoomExtra = false; // true mientras la carta ampliada está más grande que el zoom normal
+let zoomExtraCuadro = 0; // pedido de animationFrame pendiente
 let zoomExtraUltimoCuadro = 0;
 let zoomExtraAncla = { x: 0, y: 0 }; // el punto de la pantalla que se queda quieto al agrandar (el puntero)
-const zoomExtraTerminados = [];    // quienes esperan a que termine de volver a lo normal (ver volverAlZoomNormal)
+const zoomExtraTerminados = []; // quienes esperan a que termine de volver a lo normal (ver volverAlZoomNormal)
 
 // ¿Se puede agrandar de más la carta ampliada? Solo si ya llegó al centro, no se está dando vuelta y está de frente
-const zoomExtraDisponible = () => !!cartaEnZoom?.datosZoom && !zoomOcupado && !zoomCerrando && !cartaEnZoom.girando
-    && !cartaEnZoom.classList.contains('de-dorso');
+const zoomExtraDisponible = () =>
+    !!cartaEnZoom?.datosZoom && !zoomOcupado && !zoomCerrando && !cartaEnZoom.girando && !cartaEnZoom.classList.contains('de-dorso');
 
 // Pone el zoom extra de la carta en "factor". "anclaVieja" es el punto de la pantalla que estaba sobre cierto lugar de la carta, y "anclaNueva"
 // adónde tiene que quedar ese mismo lugar (es el mismo punto con la rueda; con el pellizco los dedos se pueden mover mientras se separan).
@@ -1288,7 +1312,7 @@ function avisarZoomExtra() {
 // La carta agrandada de más lleva la clase "zoom-extra-activo": con ella el CSS le apaga el reflejo y la textura holográfica (igual que
 // la inclinación, que se cancela). Se le saca a cualquier otra carta que la tuviera.
 function marcarCartaConZoomExtra(carta) {
-    listaDigimons.querySelectorAll(':scope > li.zoom-extra-activo').forEach((otra) => {
+    listaDigimons.querySelectorAll(':scope > li.zoom-extra-activo').forEach(otra => {
         if (otra !== carta) otra.classList.remove('zoom-extra-activo');
     });
     carta?.classList.add('zoom-extra-activo');
@@ -1367,7 +1391,7 @@ function activarArrastreDeZoomExtra() {
         if (movio) ultimoDeslizamiento = performance.now(); // soltar después de arrastrar no cierra el zoom (ver crearFondoZoom)
     };
 
-    listaDigimons.addEventListener('pointerdown', (evento) => {
+    listaDigimons.addEventListener('pointerdown', evento => {
         if (evento.pointerType === 'touch' || evento.button !== 0) return;
         if (!zoomExtra || !zoomExtraDisponible() || !cartaEnZoom.contains(evento.target)) return;
         if (evento.target.closest('button, a, .c-evo, .c-ataques')) return;
@@ -1378,9 +1402,10 @@ function activarArrastreDeZoomExtra() {
         evento.preventDefault(); // no selecciona texto ni arrastra la imagen
     });
 
-    listaDigimons.addEventListener('pointermove', (evento) => {
+    listaDigimons.addEventListener('pointermove', evento => {
         if (!arrastre || evento.pointerId !== arrastre.id) return;
-        if (!zoomExtra || cartaEnZoom !== arrastre.carta || evento.buttons === 0) { // (sin botones: se soltó fuera de la ventana y no nos enteramos)
+        if (!zoomExtra || cartaEnZoom !== arrastre.carta || evento.buttons === 0) {
+            // (sin botones: se soltó fuera de la ventana y no nos enteramos)
             terminar();
             return;
         }
@@ -1394,24 +1419,26 @@ function activarArrastreDeZoomExtra() {
     });
 
     for (const tipo of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-        listaDigimons.addEventListener(tipo, (evento) => {
+        listaDigimons.addEventListener(tipo, evento => {
             if (arrastre && evento.pointerId === arrastre.id) terminar();
         });
     }
 
     // Si la carta deja de estar agrandada de más, se da vuelta, se cambia o se cierra el zoom, ya no hay nada que agarrar
-    document.addEventListener('zoom-extra', () => { if (!zoomExtra) terminar(); });
+    document.addEventListener('zoom-extra', () => {
+        if (!zoomExtra) terminar();
+    });
     document.addEventListener('zoom-cambio', terminar);
 
     // Que el navegador no arranque su propio arrastre de la imagen
-    listaDigimons.addEventListener('dragstart', (evento) => {
+    listaDigimons.addEventListener('dragstart', evento => {
         if (zoomExtra && cartaEnZoom?.contains(evento.target)) evento.preventDefault();
     });
 }
 
 // Devuelve la carta al tamaño normal y avisa cuando llegó (se usa antes de darla vuelta)
 function volverAlZoomNormal(carta) {
-    return new Promise((resolver) => {
+    return new Promise(resolver => {
         if (!carta.datosZoom || carta.datosZoom.extra.factor === 1) {
             resolver();
             return;
@@ -1454,42 +1481,54 @@ let ultimoDeslizamiento = 0;
 function activarCambioConDedo(fondo) {
     let gesto = null; // { x0, y0, resuelto }: el dedo que está apoyado en el fondo
 
-    fondo.addEventListener('touchstart', (evento) => {
-        gesto = null;
-        if (evento.touches.length !== 1 || evento.target.closest('button')) return;
-        const toque = evento.touches[0];
-        gesto = { x0: toque.clientX, y0: toque.clientY, resuelto: false };
-    }, { passive: true });
-
-    fondo.addEventListener('touchmove', (evento) => {
-        if (!gesto || gesto.resuelto) return;
-        if (evento.touches.length !== 1) {
+    fondo.addEventListener(
+        'touchstart',
+        evento => {
             gesto = null;
-            return;
-        }
-        const toque = evento.touches[0];
-        const dx = toque.clientX - gesto.x0;
-        const dy = toque.clientY - gesto.y0;
-        if (Math.abs(dx) >= DESLIZAR_DISTANCIA && Math.abs(dx) > Math.abs(dy) * 1.5) {
-            gesto.resuelto = true;
-            ultimoDeslizamiento = performance.now();
-            vibrar(8);
-            cambiarZoom(dx < 0 ? 1 : -1);
-        }
-    }, { passive: true });
+            if (evento.touches.length !== 1 || evento.target.closest('button')) return;
+            const toque = evento.touches[0];
+            gesto = { x0: toque.clientX, y0: toque.clientY, resuelto: false };
+        },
+        { passive: true },
+    );
 
-    const terminar = () => { gesto = null; };
+    fondo.addEventListener(
+        'touchmove',
+        evento => {
+            if (!gesto || gesto.resuelto) return;
+            if (evento.touches.length !== 1) {
+                gesto = null;
+                return;
+            }
+            const toque = evento.touches[0];
+            const dx = toque.clientX - gesto.x0;
+            const dy = toque.clientY - gesto.y0;
+            if (Math.abs(dx) >= DESLIZAR_DISTANCIA && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                gesto.resuelto = true;
+                ultimoDeslizamiento = performance.now();
+                vibrar(8);
+                cambiarZoom(dx < 0 ? 1 : -1);
+            }
+        },
+        { passive: true },
+    );
+
+    const terminar = () => {
+        gesto = null;
+    };
     fondo.addEventListener('touchend', terminar);
     fondo.addEventListener('touchcancel', terminar);
 }
 
-const ICONO_FLECHA = (puntos) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${puntos}" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICONO_FLECHA = puntos =>
+    `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${puntos}" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 function crearFlechasZoom() {
     const flechas = document.createElement('div');
     flechas.id = 'zoom-flechas';
-    flechas.innerHTML = `<button type="button" class="zoom-flecha zoom-anterior">${ICONO_FLECHA('M15 5l-7 7 7 7')}</button>`
-        + `<button type="button" class="zoom-flecha zoom-siguiente">${ICONO_FLECHA('M9 5l7 7-7 7')}</button>`;
+    flechas.innerHTML =
+        `<button type="button" class="zoom-flecha zoom-anterior">${ICONO_FLECHA('M15 5l-7 7 7 7')}</button>` +
+        `<button type="button" class="zoom-flecha zoom-siguiente">${ICONO_FLECHA('M9 5l7 7-7 7')}</button>`;
     const anterior = flechas.querySelector('.zoom-anterior');
     const siguiente = flechas.querySelector('.zoom-siguiente');
     anterior.title = t('zoom.anterior');
@@ -1548,7 +1587,7 @@ async function cambiarZoom(direccion, repetida = false) {
     sonidoZoom(true);
 
     const zoomCss = parseFloat(getComputedStyle(vieja).zoom) || 1;
-    const salto = direccion * document.documentElement.clientWidth * 0.55 / zoomCss;
+    const salto = (direccion * document.documentElement.clientWidth * 0.55) / zoomCss;
     const antes = zoomVigente(vieja.datosZoom); // (con el zoom extra que tenga)
     // La que se va, si no mostraba el reflejo (porque la carta recién había aparecido y el mouse no se movió, o porque estaba agrandada de más),
     // se va igual sin mostrarlo: el puntero sigue encima de ella y, sin esa marca, el "hover" se lo prendería justo cuando se está yendo
@@ -1567,16 +1606,24 @@ async function cambiarZoom(direccion, repetida = false) {
         vieja.classList.remove('zoom-activa', 'reflejo-quieto');
         vieja.datosZoom = null;
     } else {
-        const sale = vieja.animate([
-            { translate: `${antes.dx}px ${antes.dy}px`, scale: antes.escala, opacity: 1 },
-            { translate: `${antes.dx - salto}px ${antes.dy}px`, scale: antes.escala * 0.92, opacity: 0 },
-        ], { duration: apurado ? 110 : 170, easing: 'cubic-bezier(0.5, 0, 0.9, 0.6)', fill: 'forwards' });
-        const entra = nueva.animate([
-            { translate: `${despues.dx + salto}px ${despues.dy}px`, scale: despues.escala * 0.92, opacity: 0 },
-            { translate: `${despues.dx}px ${despues.dy}px`, scale: despues.escala, opacity: 1 },
-        ], { duration: apurado ? 170 : 270, delay: apurado ? 20 : 50, easing: 'cubic-bezier(0.2, 0.9, 0.25, 1)', fill: 'both' });
+        const sale = vieja.animate(
+            [
+                { translate: `${antes.dx}px ${antes.dy}px`, scale: antes.escala, opacity: 1 },
+                { translate: `${antes.dx - salto}px ${antes.dy}px`, scale: antes.escala * 0.92, opacity: 0 },
+            ],
+            { duration: apurado ? 110 : 170, easing: 'cubic-bezier(0.5, 0, 0.9, 0.6)', fill: 'forwards' },
+        );
+        const entra = nueva.animate(
+            [
+                { translate: `${despues.dx + salto}px ${despues.dy}px`, scale: despues.escala * 0.92, opacity: 0 },
+                { translate: `${despues.dx}px ${despues.dy}px`, scale: despues.escala, opacity: 1 },
+            ],
+            { duration: apurado ? 170 : 270, delay: apurado ? 20 : 50, easing: 'cubic-bezier(0.2, 0.9, 0.25, 1)', fill: 'both' },
+        );
         cambioEnCurso = {
-            listo: new Promise((resolver) => { terminarCambio = resolver; }),
+            listo: new Promise(resolver => {
+                terminarCambio = resolver;
+            }),
             acelerar: () => {
                 sale.updatePlaybackRate(3.5);
                 entra.updatePlaybackRate(3.5);
@@ -1638,12 +1685,15 @@ async function abrirZoom(carta) {
         fijarZoom(carta);
     } else {
         const destino = `${dx}px ${dy}px`;
-        const vuelo = carta.animate([
-            { offset: 0, translate: '0px 0px', scale: 1, rotate: '0deg', easing: 'cubic-bezier(0.2, 0.9, 0.25, 1)' },
-            { offset: 0.35, rotate: '-4deg', easing: 'ease-in-out' },
-            { offset: 0.72, translate: destino, scale: escala * 1.05, rotate: '1.5deg', easing: 'ease-in-out' },
-            { offset: 1, translate: destino, scale: escala, rotate: '0deg' },
-        ], { duration: 680, fill: 'forwards' });
+        const vuelo = carta.animate(
+            [
+                { offset: 0, translate: '0px 0px', scale: 1, rotate: '0deg', easing: 'cubic-bezier(0.2, 0.9, 0.25, 1)' },
+                { offset: 0.35, rotate: '-4deg', easing: 'ease-in-out' },
+                { offset: 0.72, translate: destino, scale: escala * 1.05, rotate: '1.5deg', easing: 'ease-in-out' },
+                { offset: 1, translate: destino, scale: escala, rotate: '0deg' },
+            ],
+            { duration: 680, fill: 'forwards' },
+        );
         try {
             await vuelo.finished;
         } catch (error) {
@@ -1686,10 +1736,13 @@ async function cerrarZoom({ rapido = false } = {}) {
     let vuelta;
     if (!rapido && !reducirMovimiento) {
         sonidoZoom(false);
-        vuelta = carta.animate([
-            { translate: `${dx}px ${dy}px`, scale: escala, rotate: '0deg' },
-            { translate: '0px 0px', scale: 1, rotate: '0deg' },
-        ], { duration: 480, easing: 'cubic-bezier(0.5, 0, 0.2, 1)', fill: 'both' });
+        vuelta = carta.animate(
+            [
+                { translate: `${dx}px ${dy}px`, scale: escala, rotate: '0deg' },
+                { translate: '0px 0px', scale: 1, rotate: '0deg' },
+            ],
+            { duration: 480, easing: 'cubic-bezier(0.5, 0, 0.2, 1)', fill: 'both' },
+        );
         try {
             await vuelta.finished;
         } catch (error) {
@@ -1723,7 +1776,7 @@ function restaurarSeleccion(estado) {
 }
 
 function activarZoom() {
-    listaDigimons.addEventListener('dblclick', (evento) => {
+    listaDigimons.addEventListener('dblclick', evento => {
         if (evento.target.closest('button')) return;
         const carta = evento.target.closest('#listado-digimons > li');
         if (!carta || cartaEnZoom) return;
@@ -1733,7 +1786,7 @@ function activarZoom() {
     });
 
     // Un doble clic no selecciona el texto de la carta
-    listaDigimons.addEventListener('mousedown', (evento) => {
+    listaDigimons.addEventListener('mousedown', evento => {
         if (evento.detail > 1 && !cartaEnZoom && !evento.target.closest('button') && evento.target.closest('#listado-digimons > li')) {
             evento.preventDefault();
         }
@@ -1741,14 +1794,18 @@ function activarZoom() {
 
     // Las ventanas de evolución y de ataques se abren directamente sobre la carta en grande, sin salir del modo zoom.
     // Solo si el zoom todavía está en plena transición (llegando o yéndose) se ignora el toque.
-    document.addEventListener('click', (evento) => {
-        const boton = cartaEnZoom && evento.target.closest('.c-evo, .c-ataques');
-        if (!boton) return;
-        if (zoomOcupado) {
-            evento.stopPropagation();
-            evento.preventDefault();
-        }
-    }, true);
+    document.addEventListener(
+        'click',
+        evento => {
+            const boton = cartaEnZoom && evento.target.closest('.c-evo, .c-ataques');
+            if (!boton) return;
+            if (zoomOcupado) {
+                evento.stopPropagation();
+                evento.preventDefault();
+            }
+        },
+        true,
+    );
 
     activarZoomConPellizco();
     activarZoomConDobleToque();
@@ -1821,15 +1878,15 @@ function marcarAvisoHecho(clave) {
     guardarMemoriaAvisos();
 }
 
-const AVISO_COMBATE_ESPERA = 2000;       // ms desde que aparece la primera carta
-const AVISO_COMBATE_DURACION = 7000;     // ms que queda a la vista
-const AVISO_ZOOM_ESPERA = 5000;          // ms desde que aparece la primera carta (3 s después del de combate, para que se lean de a uno)
-const AVISO_ZOOM_ESPERA_DEDO = 2000;         // ms desde que termina de salir el aviso de combate (solo celular)
-const AVISO_ZOOM_DURACION = 7000;        // ms que queda a la vista el consejo (computadora: uno solo)
-const AVISO_ZOOM_DURACION_DEDO = 14000;  // ms que duran los consejos móviles
+const AVISO_COMBATE_ESPERA = 2000; // ms desde que aparece la primera carta
+const AVISO_COMBATE_DURACION = 7000; // ms que queda a la vista
+const AVISO_ZOOM_ESPERA = 5000; // ms desde que aparece la primera carta (3 s después del de combate, para que se lean de a uno)
+const AVISO_ZOOM_ESPERA_DEDO = 2000; // ms desde que termina de salir el aviso de combate (solo celular)
+const AVISO_ZOOM_DURACION = 7000; // ms que queda a la vista el consejo (computadora: uno solo)
+const AVISO_ZOOM_DURACION_DEDO = 14000; // ms que duran los consejos móviles
 const AVISO_VOLTEAR_DURACION_EXTRA = 3000; // el consejo del barrido dura 3 s más que los demás
-const AVISO_GESTOS_ESPERA = 2000;        // ms desde que se amplía la carta (solo celular)
-const AVISO_GESTOS_DURACION = 10500;     // ms que quedan a la vista (son dos cartelitos, uno por consejo)
+const AVISO_GESTOS_ESPERA = 2000; // ms desde que se amplía la carta (solo celular)
+const AVISO_GESTOS_DURACION = 10500; // ms que quedan a la vista (son dos cartelitos, uno por consejo)
 
 let cajaDeAvisos = null; // el contenedor donde se apilan los avisos (se crea con el primero)
 
@@ -1871,13 +1928,16 @@ function crearAviso(id, lineas) {
     aviso.className = 'aviso-ayuda';
     aviso.setAttribute('role', 'status');
     aviso.innerHTML = lineas
-        .map(({ clave, icono, texto }) => `<p class="aviso-linea" data-clave="${clave}" data-texto="${texto}"><span class="aviso-icono" aria-hidden="true">${icono}</span><span class="aviso-texto"></span></p>`)
+        .map(
+            ({ clave, icono, texto }) =>
+                `<p class="aviso-linea" data-clave="${clave}" data-texto="${texto}"><span class="aviso-icono" aria-hidden="true">${icono}</span><span class="aviso-texto"></span></p>`,
+        )
         .join('');
     return aviso;
 }
 
 function escribirAviso(aviso) {
-    aviso?.querySelectorAll('.aviso-linea').forEach((linea) => {
+    aviso?.querySelectorAll('.aviso-linea').forEach(linea => {
         linea.querySelector('.aviso-texto').textContent = t(linea.dataset.texto);
     });
 }
@@ -1901,7 +1961,7 @@ function activarAvisosDeAyuda() {
 function activarAvisoGestosDelZoom() {
     if (!window.matchMedia('(hover: none)').matches) return;
     let yaSeMostro = avisoHecho('gestos'); // también si salió en una visita anterior
-    let enZoom = false;    // hay una carta ampliada (y no se está cerrando)
+    let enZoom = false; // hay una carta ampliada (y no se está cerrando)
     let espera = 0;
     let temporizador = 0;
     let avisos = []; // un cartelito por consejo (los que están a la vista)
@@ -1917,7 +1977,8 @@ function activarAvisoGestosDelZoom() {
         const abierto = !!cartaEnZoom && !zoomCerrando;
         if (abierto === enZoom) return; // también sale al pasar de una carta a otra o al girar el celular: no es un zoom nuevo
         enZoom = abierto;
-        if (!abierto) { // se cerró la carta: lo que cuenta ya no sirve
+        if (!abierto) {
+            // se cerró la carta: lo que cuenta ya no sirve
             cerrar();
             return;
         }
@@ -1930,7 +1991,7 @@ function activarAvisoGestosDelZoom() {
             avisos = [
                 { clave: 'cerrar', icono: '👆', texto: 'aviso.zoom.cerrar' },
                 { clave: 'deslizar', icono: '↔️', texto: 'aviso.zoom.deslizar' },
-            ].map((consejo) => {
+            ].map(consejo => {
                 const aviso = crearAviso(`aviso-gestos-zoom-${consejo.clave}`, [consejo]);
                 escribirAviso(aviso);
                 ponerAviso(aviso);
@@ -1957,16 +2018,17 @@ function activarAvisoGestosDelZoom() {
 // encontró: el cartel deja de hacer falta en lo que queda de la sesión.
 const INCLINACION_AVISO_SESION = 'digimon-aviso-inclinacion'; // sessionStorage: en esta sesión ya salió
 const INCLINACION_ANIMACION_SOLA_SESION = 'digimon-animacion-inclinacion-sola'; // sessionStorage: animación sola ya salió
-const INCLINACION_AVISO_TRAMOS = [ // de la sesión más alta a la más baja: vale el primero cuyo "desde" no supera el número de sesión
+const INCLINACION_AVISO_TRAMOS = [
+    // de la sesión más alta a la más baja: vale el primero cuyo "desde" no supera el número de sesión
     { desde: 10, acumulado: 80000, carga: 95000 }, // ms de inclinación acumulada, y ms desde la carga si está invertida
     { desde: 6, acumulado: 45000, carga: 55000 },
     { desde: 1, acumulado: 15000, carga: 20000 },
 ];
 const INCLINACION_AVISO_ULTIMA_SESION = 14;
-const INCLINACION_AVISO_DURACION = 10000;        // ms a la vista (explica Shift y el botón)
-const INCLINACION_AVISO_DURACION_BREVE = 7000;   // ms a la vista (solo el botón)
-const SHIFT_CONOCIDA_TIEMPO = 3000;              // la conoce si la mantuvo apretada más de 3 s...
-const SHIFT_CONOCIDA_VECES = 2;                  // ...o la apretó más de 2 veces
+const INCLINACION_AVISO_DURACION = 10000; // ms a la vista (explica Shift y el botón)
+const INCLINACION_AVISO_DURACION_BREVE = 7000; // ms a la vista (solo el botón)
+const SHIFT_CONOCIDA_TIEMPO = 3000; // la conoce si la mantuvo apretada más de 3 s...
+const SHIFT_CONOCIDA_VECES = 2; // ...o la apretó más de 2 veces
 
 function inclinacionAvisoYaSalio() {
     try {
@@ -1987,8 +2049,7 @@ function inclinacionAnimacionSolaYaSalio() {
 function marcarInclinacionAnimacionSolaHecha() {
     try {
         sessionStorage.setItem(INCLINACION_ANIMACION_SOLA_SESION, '1');
-    } catch (error) {
-    }
+    } catch (error) {}
 }
 
 function activarAvisoDeInclinacion() {
@@ -2000,15 +2061,15 @@ function activarAvisoDeInclinacion() {
     const invertidaAlCargar = estaInvertida();
 
     let terminado = sesion > INCLINACION_AVISO_ULTIMA_SESION || inclinacionAvisoYaSalio(); // ya salió, o ya no hace falta el cartel
-    let esperaCarga = 0;   // modo invertido: desde la carga de la página
-    let esperaTilt = 0;    // modo normal: cuando la inclinación acumulada llega al tiempo
+    let esperaCarga = 0; // modo invertido: desde la carga de la página
+    let esperaTilt = 0; // modo normal: cuando la inclinación acumulada llega al tiempo
     let reintento = 0;
 
     // --- ¿La persona ya sabe usar Shift con las cartas? Cuenta solo con el mouse sobre las cartas (no cuando escribe mayúsculas en un campo) ---
     let sobreLasCartas = false;
-    let shiftDesde = 0;   // desde cuándo la mantiene apretada sobre las cartas (0: no la mantiene)
-    let shiftTiempo = 0;  // ms que la mantuvo apretada sobre las cartas
-    let shiftVeces = 0;   // veces que la apretó sobre las cartas
+    let shiftDesde = 0; // desde cuándo la mantiene apretada sobre las cartas (0: no la mantiene)
+    let shiftTiempo = 0; // ms que la mantuvo apretada sobre las cartas
+    let shiftVeces = 0; // veces que la apretó sobre las cartas
 
     const conoceShift = () => {
         const tiempo = shiftTiempo + (shiftDesde ? performance.now() - shiftDesde : 0);
@@ -2023,10 +2084,11 @@ function activarAvisoDeInclinacion() {
         conoceShift();
     };
 
-    listaDigimons.addEventListener('pointermove', (evento) => {
+    listaDigimons.addEventListener('pointermove', evento => {
         if (evento.pointerType === 'touch') return;
         sobreLasCartas = true;
-        if (!evento.shiftKey) soltarShift(); // (también corrige si se soltó fuera de la ventana y no nos enteramos)
+        if (!evento.shiftKey)
+            soltarShift(); // (también corrige si se soltó fuera de la ventana y no nos enteramos)
         else if (!shiftDesde) shiftDesde = performance.now(); // llegó a las cartas con Shift ya apretada
     });
     listaDigimons.addEventListener('pointerleave', () => {
@@ -2034,14 +2096,14 @@ function activarAvisoDeInclinacion() {
         soltarShift();
     });
     window.addEventListener('blur', soltarShift);
-    document.addEventListener('keydown', (evento) => {
+    document.addEventListener('keydown', evento => {
         if (evento.key !== 'Shift' || evento.repeat || !sobreLasCartas) return;
         if (document.activeElement?.matches?.('input, textarea, select')) return;
         shiftVeces += 1;
         if (!shiftDesde) shiftDesde = performance.now();
         conoceShift();
     });
-    document.addEventListener('keyup', (evento) => {
+    document.addEventListener('keyup', evento => {
         if (evento.key === 'Shift') soltarShift();
     });
 
@@ -2120,8 +2182,8 @@ function activarAvisoDeInclinacion() {
 
     // --- Cuándo: con la inclinación normal, al juntar el tiempo de inclinación con el mouse; con la invertida, a los tantos segundos de cargar ---
     let inclinando = false; // hay una carta inclinándose con el mouse (la que se inclina con el dedo no cuenta)
-    let acumulado = 0;      // ms de inclinación con el mouse en esta carga de la página
-    let desde = 0;          // desde cuándo corre el tramo de inclinación de ahora (0: no corre)
+    let acumulado = 0; // ms de inclinación con el mouse en esta carga de la página
+    let desde = 0; // desde cuándo corre el tramo de inclinación de ahora (0: no corre)
 
     const sumarTramo = () => {
         if (!desde) return;
@@ -2136,7 +2198,8 @@ function activarAvisoDeInclinacion() {
         esperaTilt = setTimeout(mostrar, Math.max(0, tramo.acumulado - acumulado));
     };
 
-    document.addEventListener('inclinacion-cambio', (evento) => { // lo avisa activarInclinacion
+    document.addEventListener('inclinacion-cambio', evento => {
+        // lo avisa activarInclinacion
         inclinando = evento.detail.activa && !inclinandoConDedo;
         if (inclinando) empezarTramo();
         else sumarTramo();
@@ -2165,8 +2228,8 @@ function activarAvisoDeInclinacion() {
 // visitas de los avisos de ayuda): a partir de la sexta no sale más. Se va si la persona hace lo que cuenta, o al cerrar la carta.
 const ZOOM_EXTRA_AVISO_SESION = 'digimon-aviso-zoom-extra'; // sessionStorage: en esta sesión ya salió
 const ZOOM_EXTRA_AVISO_ULTIMA_SESION = 5;
-const ZOOM_EXTRA_AVISO_ESPERA = 1500;    // ms desde que se abre el zoom (la carta llega al centro a los 0,7 s)
-const ZOOM_EXTRA_AVISO_DURACION = 8000;  // ms a la vista
+const ZOOM_EXTRA_AVISO_ESPERA = 1500; // ms desde que se abre el zoom (la carta llega al centro a los 0,7 s)
+const ZOOM_EXTRA_AVISO_DURACION = 8000; // ms a la vista
 
 function activarAvisoDeZoomExtra() {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return; // en celular no
@@ -2179,7 +2242,7 @@ function activarAvisoDeZoomExtra() {
         }
     };
     let salio = yaSalio();
-    let enZoom = false;  // hay una carta ampliada (y no se está cerrando)
+    let enZoom = false; // hay una carta ampliada (y no se está cerrando)
     let espera = 0;
     let cierre = 0;
     let aviso = null;
@@ -2195,7 +2258,8 @@ function activarAvisoDeZoomExtra() {
         const abierto = !!cartaEnZoom && !zoomCerrando;
         if (abierto === enZoom) return; // también sale al pasar de una carta a otra: no es un zoom nuevo
         enZoom = abierto;
-        if (!abierto) { // se cerró la carta: lo que cuenta ya no sirve
+        if (!abierto) {
+            // se cerró la carta: lo que cuenta ya no sirve
             cerrar();
             return;
         }
@@ -2214,7 +2278,8 @@ function activarAvisoDeZoomExtra() {
             cierre = setTimeout(cerrar, ZOOM_EXTRA_AVISO_DURACION);
         }, ZOOM_EXTRA_AVISO_ESPERA);
     });
-    document.addEventListener('zoom-extra', () => { // ya lo está haciendo: el cartel se va
+    document.addEventListener('zoom-extra', () => {
+        // ya lo está haciendo: el cartel se va
         if (zoomExtra) cerrar();
     });
     document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
@@ -2249,7 +2314,8 @@ function activarAvisoCombate() {
 
     const mostrar = () => {
         if (cerrado || aviso) return;
-        if (!celular.matches || avisoHecho('combate') || seleccionados.length >= 2) { // en computadora ya se ve en la barra; si ya eligió las 2 (ahora o en otra visita), no hay nada que pedirle
+        if (!celular.matches || avisoHecho('combate') || seleccionados.length >= 2) {
+            // en computadora ya se ve en la barra; si ya eligió las 2 (ahora o en otra visita), no hay nada que pedirle
             cerrado = true;
             finalizarSecuencia();
             return;
@@ -2276,17 +2342,17 @@ function activarAvisoZoom() {
     // "clave" es lo que la persona tiene que hacer; "texto" es la clave de la traducción
     const consejos = conDedo
         ? [
-            { clave: 'zoom', icono: '👆', texto: 'aviso.zoom.dedos' },
-            { clave: 'inclinar', icono: '✨', texto: 'aviso.inclinar.dedo' },
-            { clave: 'voltear', icono: '↔️', texto: 'aviso.voltear.dedo' },
-        ]
+              { clave: 'zoom', icono: '👆', texto: 'aviso.zoom.dedos' },
+              { clave: 'inclinar', icono: '✨', texto: 'aviso.inclinar.dedo' },
+              { clave: 'voltear', icono: '↔️', texto: 'aviso.voltear.dedo' },
+          ]
         : [{ clave: 'zoom', icono: '💡', texto: 'aviso.zoom.mouse' }];
     const hecho = new Set(consejos.map(consejo => consejo.clave).filter(avisoHecho)); // lo que la persona ya hizo (también en visitas anteriores)
     const avisos = new Map(); // clave del consejo -> su cartelito (los que están a la vista)
     const temporizadores = new Map();
     let cerrado = false;
 
-    const quitar = (clave) => {
+    const quitar = clave => {
         const aviso = avisos.get(clave);
         if (!aviso) return;
         clearTimeout(temporizadores.get(clave));
@@ -2296,16 +2362,8 @@ function activarAvisoZoom() {
         if (!avisos.size) cerrado = true;
     };
 
-    const cerrar = () => {
-        if (cerrado) return;
-        cerrado = true;
-        temporizadores.forEach(clearTimeout);
-        temporizadores.clear();
-        [...avisos.keys()].forEach(quitar);
-    };
-
     // La persona hizo lo que cuenta ese consejo: su cartelito se va (el otro se queda)
-    const yaLoHizo = (clave) => {
+    const yaLoHizo = clave => {
         hecho.add(clave);
         marcarAvisoHecho(clave);
         quitar(clave);
@@ -2318,24 +2376,29 @@ function activarAvisoZoom() {
             cerrado = true; // ya hizo todo: no hay nada que contarle
             return;
         }
-        pendientes.forEach((consejo) => {
+        pendientes.forEach(consejo => {
             const aviso = crearAviso(`aviso-zoom-${consejo.clave}`, [consejo]);
             escribirAviso(aviso);
             ponerAviso(aviso);
             avisos.set(consejo.clave, aviso);
-            const duracion = conDedo
-                ? AVISO_ZOOM_DURACION_DEDO + (consejo.clave === 'voltear' ? AVISO_VOLTEAR_DURACION_EXTRA : 0)
-                : AVISO_ZOOM_DURACION;
-            temporizadores.set(consejo.clave, setTimeout(() => quitar(consejo.clave), duracion));
+            const duracion = conDedo ? AVISO_ZOOM_DURACION_DEDO + (consejo.clave === 'voltear' ? AVISO_VOLTEAR_DURACION_EXTRA : 0) : AVISO_ZOOM_DURACION;
+            temporizadores.set(
+                consejo.clave,
+                setTimeout(() => quitar(consejo.clave), duracion),
+            );
         });
     };
 
     // En móvil, los consejos aparecen después del cartel de selección para que no se solapen.
     // En computadora, solo hay un aviso y conserva su espera desde la primera carta.
     if (conDedo) {
-        document.addEventListener('aviso-combate-finalizado', () => {
-            setTimeout(mostrar, AVISO_ZOOM_ESPERA_DEDO);
-        }, { once: true });
+        document.addEventListener(
+            'aviso-combate-finalizado',
+            () => {
+                setTimeout(mostrar, AVISO_ZOOM_ESPERA_DEDO);
+            },
+            { once: true },
+        );
     } else {
         document.addEventListener('carta-agregada', () => setTimeout(mostrar, AVISO_ZOOM_ESPERA), { once: true });
     }
@@ -2350,68 +2413,87 @@ function activarAvisoZoom() {
 // En celulares la carta también se amplía con doble toque (dos toques cortos seguidos sobre la misma carta). Igual que con el
 // doble clic, el primer toque ya eligió la carta y el segundo la desmarcó: al ampliar se deja la selección como estaba antes.
 // (Se detecta acá y no con "dblclick" porque no todos los navegadores del celular lo mandan con un doble toque.)
-const DOBLE_TOQUE_ESPERA = 320;    // ms máximos entre el final de un toque y el principio del siguiente
-const DOBLE_TOQUE_DISTANCIA = 30;  // px máximos entre los dos toques
-const TOQUE_DURACION = 250;        // ms máximos que el dedo puede estar apoyado para que cuente como toque (más es una presión larga)
-const TOQUE_MOVIMIENTO = 12;       // px máximos que se puede mover el dedo durante un toque
+const DOBLE_TOQUE_ESPERA = 320; // ms máximos entre el final de un toque y el principio del siguiente
+const DOBLE_TOQUE_DISTANCIA = 30; // px máximos entre los dos toques
+const TOQUE_DURACION = 250; // ms máximos que el dedo puede estar apoyado para que cuente como toque (más es una presión larga)
+const TOQUE_MOVIMIENTO = 12; // px máximos que se puede mover el dedo durante un toque
 
 function activarZoomConDobleToque() {
     if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
-    let apoyado = null;  // { carta, t, x, y, estado }: el dedo que está apoyado ahora
+    let apoyado = null; // { carta, t, x, y, estado }: el dedo que está apoyado ahora
     let anterior = null; // { carta, tFin, x, y, estado }: el último toque corto
 
-    document.addEventListener('touchstart', (evento) => {
-        apoyado = null;
-        const toque = evento.touches[0];
-        const carta = evento.touches.length === 1 ? toque.target.closest?.('#listado-digimons > li') : null;
-        if (!carta || cartaEnZoom || zoomOcupado || toque.target.closest('button')) {
-            anterior = null;
-            return;
-        }
-        // "estado" es la selección de antes del primer toque (el clic de ese toque llega recién al soltar el dedo)
-        const esSegundo = anterior && anterior.carta === carta && evento.timeStamp - anterior.tFin <= DOBLE_TOQUE_ESPERA;
-        apoyado = { carta, t: evento.timeStamp, x: toque.clientX, y: toque.clientY, estado: esSegundo ? anterior.estado : seleccionados.slice() };
-    }, { passive: true });
+    document.addEventListener(
+        'touchstart',
+        evento => {
+            apoyado = null;
+            const toque = evento.touches[0];
+            const carta = evento.touches.length === 1 ? toque.target.closest?.('#listado-digimons > li') : null;
+            if (!carta || cartaEnZoom || zoomOcupado || toque.target.closest('button')) {
+                anterior = null;
+                return;
+            }
+            // "estado" es la selección de antes del primer toque (el clic de ese toque llega recién al soltar el dedo)
+            const esSegundo = anterior && anterior.carta === carta && evento.timeStamp - anterior.tFin <= DOBLE_TOQUE_ESPERA;
+            apoyado = { carta, t: evento.timeStamp, x: toque.clientX, y: toque.clientY, estado: esSegundo ? anterior.estado : seleccionados.slice() };
+        },
+        { passive: true },
+    );
 
-    document.addEventListener('touchmove', (evento) => {
-        if (!apoyado) return;
-        const toque = evento.touches[0];
-        if (Math.hypot(toque.clientX - apoyado.x, toque.clientY - apoyado.y) > TOQUE_MOVIMIENTO) {
+    document.addEventListener(
+        'touchmove',
+        evento => {
+            if (!apoyado) return;
+            const toque = evento.touches[0];
+            if (Math.hypot(toque.clientX - apoyado.x, toque.clientY - apoyado.y) > TOQUE_MOVIMIENTO) {
+                apoyado = null;
+                anterior = null;
+            }
+        },
+        { passive: true },
+    );
+
+    document.addEventListener(
+        'touchend',
+        evento => {
+            const toque = apoyado;
+            apoyado = null;
+            if (!toque) return;
+            if (evento.timeStamp - toque.t > TOQUE_DURACION) {
+                // presión larga (la inclinación): no cuenta como toque
+                anterior = null;
+                return;
+            }
+            const previo = anterior;
+            const esDoble =
+                previo &&
+                previo.carta === toque.carta &&
+                toque.t - previo.tFin <= DOBLE_TOQUE_ESPERA &&
+                Math.hypot(toque.x - previo.x, toque.y - previo.y) <= DOBLE_TOQUE_DISTANCIA;
+            if (!esDoble) {
+                anterior = { carta: toque.carta, tFin: evento.timeStamp, x: toque.x, y: toque.y, estado: toque.estado };
+                return;
+            }
+            anterior = null;
+            // Se espera un instante a que el segundo toque termine de procesarse como clic, y ahí se deshace lo que hicieron los dos
+            setTimeout(() => {
+                restaurarSeleccion(previo.estado);
+                if (cartaEnZoom || zoomOcupado) return;
+                vibrar(12);
+                abrirZoom(toque.carta);
+            }, 60);
+        },
+        { passive: true },
+    );
+
+    document.addEventListener(
+        'touchcancel',
+        () => {
             apoyado = null;
             anterior = null;
-        }
-    }, { passive: true });
-
-    document.addEventListener('touchend', (evento) => {
-        const toque = apoyado;
-        apoyado = null;
-        if (!toque) return;
-        if (evento.timeStamp - toque.t > TOQUE_DURACION) { // presión larga (la inclinación): no cuenta como toque
-            anterior = null;
-            return;
-        }
-        const previo = anterior;
-        const esDoble = previo && previo.carta === toque.carta
-            && toque.t - previo.tFin <= DOBLE_TOQUE_ESPERA
-            && Math.hypot(toque.x - previo.x, toque.y - previo.y) <= DOBLE_TOQUE_DISTANCIA;
-        if (!esDoble) {
-            anterior = { carta: toque.carta, tFin: evento.timeStamp, x: toque.x, y: toque.y, estado: toque.estado };
-            return;
-        }
-        anterior = null;
-        // Se espera un instante a que el segundo toque termine de procesarse como clic, y ahí se deshace lo que hicieron los dos
-        setTimeout(() => {
-            restaurarSeleccion(previo.estado);
-            if (cartaEnZoom || zoomOcupado) return;
-            vibrar(12);
-            abrirZoom(toque.carta);
-        }, 60);
-    }, { passive: true });
-
-    document.addEventListener('touchcancel', () => {
-        apoyado = null;
-        anterior = null;
-    }, { passive: true });
+        },
+        { passive: true },
+    );
 }
 
 // Con el dedo la carta también se amplía con el gesto de zoom (dos dedos que se separan sobre la carta) y vuelve
@@ -2420,69 +2502,77 @@ function activarZoomConDobleToque() {
 // tamaño normal, juntar los dedos la cierra, como siempre. En el dorso, juntar los dedos cierra y separarlos no hace nada.
 // (El CSS deja las cartas con touch-action: pan-y: se pueden desplazar hacia arriba y abajo, pero el navegador no amplía la
 // página con ese pellizco y los dedos le llegan al código.)
-const PELLIZCO_ABRIR = 1.3;   // los dedos se separaron un 30%
+const PELLIZCO_ABRIR = 1.3; // los dedos se separaron un 30%
 const PELLIZCO_CERRAR = 0.75; // los dedos se juntaron un 25%
 
 function activarZoomConPellizco() {
     let pellizco = null; // { carta, distancia, resuelto }: el gesto de dos dedos que está en curso
 
-    const distanciaEntreDedos = (toques) => Math.hypot(
-        toques[0].clientX - toques[1].clientX,
-        toques[0].clientY - toques[1].clientY
-    );
+    const distanciaEntreDedos = toques => Math.hypot(toques[0].clientX - toques[1].clientX, toques[0].clientY - toques[1].clientY);
     const medioEntreDedos = toques => ({
         x: (toques[0].clientX + toques[1].clientX) / 2,
         y: (toques[0].clientY + toques[1].clientY) / 2,
     });
 
-    document.addEventListener('touchstart', (evento) => {
-        pellizco = null;
-        if (evento.touches.length !== 2) return;
-        const [a, b] = evento.touches;
-        if (cartaEnZoom) {
-            // "previo" es donde estaban los dedos en el último movimiento (el zoom extra sigue a los dedos paso a paso); "cerrable" es si
-            // este gesto puede cerrar el zoom: no si ya se empezó con la carta agrandada de más (juntar los dedos es para devolverla)
-            pellizco = {
-                carta: null, distancia: distanciaEntreDedos(evento.touches), resuelto: false,
-                previo: { distancia: distanciaEntreDedos(evento.touches), medio: medioEntreDedos(evento.touches) },
-                cerrable: !zoomExtra,
-            };
-            return;
-        }
-        // Los dos dedos tienen que estar en la misma carta (o el segundo en el espacio entre cartas)
-        const cartaA = a.target.closest?.('#listado-digimons > li');
-        const cartaB = b.target.closest?.('#listado-digimons > li');
-        if (cartaA && (cartaB === cartaA || !cartaB)) {
-            pellizco = { carta: cartaA, distancia: distanciaEntreDedos(evento.touches), resuelto: false };
-        }
-    }, { passive: true });
+    document.addEventListener(
+        'touchstart',
+        evento => {
+            pellizco = null;
+            if (evento.touches.length !== 2) return;
+            const [a, b] = evento.touches;
+            if (cartaEnZoom) {
+                // "previo" es donde estaban los dedos en el último movimiento (el zoom extra sigue a los dedos paso a paso); "cerrable" es si
+                // este gesto puede cerrar el zoom: no si ya se empezó con la carta agrandada de más (juntar los dedos es para devolverla)
+                pellizco = {
+                    carta: null,
+                    distancia: distanciaEntreDedos(evento.touches),
+                    resuelto: false,
+                    previo: { distancia: distanciaEntreDedos(evento.touches), medio: medioEntreDedos(evento.touches) },
+                    cerrable: !zoomExtra,
+                };
+                return;
+            }
+            // Los dos dedos tienen que estar en la misma carta (o el segundo en el espacio entre cartas)
+            const cartaA = a.target.closest?.('#listado-digimons > li');
+            const cartaB = b.target.closest?.('#listado-digimons > li');
+            if (cartaA && (cartaB === cartaA || !cartaB)) {
+                pellizco = { carta: cartaA, distancia: distanciaEntreDedos(evento.touches), resuelto: false };
+            }
+        },
+        { passive: true },
+    );
 
-    document.addEventListener('touchmove', (evento) => {
-        if (!pellizco || pellizco.resuelto || evento.touches.length !== 2 || pellizco.distancia < 10) return;
-        const proporcion = distanciaEntreDedos(evento.touches) / pellizco.distancia;
-        if (evento.cancelable) evento.preventDefault();
-        if (!pellizco.carta && zoomExtraDisponible()) { // zoom extra: la carta sigue a los dedos (se agranda con la separación y se corre con el movimiento)
-            const distancia = distanciaEntreDedos(evento.touches);
-            const medio = medioEntreDedos(evento.touches);
-            const carta = cartaEnZoom;
-            const extra = carta.datosZoom.extra;
-            const factor = Math.max(1, Math.min(ZOOM_EXTRA_MAXIMO, extra.factor * distancia / pellizco.previo.distancia));
-            extra.objetivo = factor;
-            ponerZoomExtra(carta, factor, pellizco.previo.medio, medio, true);
-            pellizco.previo = { distancia, medio };
-            if (zoomExtra) pellizco.cerrable = false; // ya se usó para agrandar: juntar los dedos ahora es devolverla, no cerrar
-        }
-        if (!pellizco.carta && pellizco.cerrable && proporcion <= PELLIZCO_CERRAR) {
-            pellizco.resuelto = true;
-            cerrarZoom();
-        } else if (pellizco.carta && proporcion >= PELLIZCO_ABRIR && !cartaEnZoom && !zoomOcupado) {
-            pellizco.resuelto = true;
-            vibrar(12);
-            abrirZoom(pellizco.carta);
-        }
-    }, { passive: false });
+    document.addEventListener(
+        'touchmove',
+        evento => {
+            if (!pellizco || pellizco.resuelto || evento.touches.length !== 2 || pellizco.distancia < 10) return;
+            const proporcion = distanciaEntreDedos(evento.touches) / pellizco.distancia;
+            if (evento.cancelable) evento.preventDefault();
+            if (!pellizco.carta && zoomExtraDisponible()) {
+                // zoom extra: la carta sigue a los dedos (se agranda con la separación y se corre con el movimiento)
+                const distancia = distanciaEntreDedos(evento.touches);
+                const medio = medioEntreDedos(evento.touches);
+                const carta = cartaEnZoom;
+                const extra = carta.datosZoom.extra;
+                const factor = Math.max(1, Math.min(ZOOM_EXTRA_MAXIMO, (extra.factor * distancia) / pellizco.previo.distancia));
+                extra.objetivo = factor;
+                ponerZoomExtra(carta, factor, pellizco.previo.medio, medio, true);
+                pellizco.previo = { distancia, medio };
+                if (zoomExtra) pellizco.cerrable = false; // ya se usó para agrandar: juntar los dedos ahora es devolverla, no cerrar
+            }
+            if (!pellizco.carta && pellizco.cerrable && proporcion <= PELLIZCO_CERRAR) {
+                pellizco.resuelto = true;
+                cerrarZoom();
+            } else if (pellizco.carta && proporcion >= PELLIZCO_ABRIR && !cartaEnZoom && !zoomOcupado) {
+                pellizco.resuelto = true;
+                vibrar(12);
+                abrirZoom(pellizco.carta);
+            }
+        },
+        { passive: false },
+    );
 
-    const terminar = (evento) => {
+    const terminar = evento => {
         if (evento.touches.length < 2) pellizco = null;
     };
     document.addEventListener('touchend', terminar);
@@ -2490,24 +2580,28 @@ function activarZoomConPellizco() {
 
     // iPhone: el pellizco sobre una carta (o con la carta ampliada) no tiene que ampliar la página
     for (const tipo of ['gesturestart', 'gesturechange']) {
-        document.addEventListener(tipo, (evento) => {
-            if (cartaEnZoom || evento.target.closest?.('#listado-digimons > li')) evento.preventDefault();
-        }, { passive: false });
+        document.addEventListener(
+            tipo,
+            evento => {
+                if (cartaEnZoom || evento.target.closest?.('#listado-digimons > li')) evento.preventDefault();
+            },
+            { passive: false },
+        );
     }
 }
 
 // En celulares la carta también se da vuelta con un barrido rápido de un dedo hacia un costado (además del botón de la
 // esquina). Si antes se mantuvo apretada para inclinarla, el barrido tiene que ser mucho más rápido (ver más abajo).
 // La carta gira hacia donde va el dedo.
-const BARRIDO_DISTANCIA = 40;  // px que tiene que recorrer el dedo hacia el costado en los últimos instantes
+const BARRIDO_DISTANCIA = 40; // px que tiene que recorrer el dedo hacia el costado en los últimos instantes
 const BARRIDO_VELOCIDAD = 0.7; // px por milisegundo: tiene que ser un movimiento rápido
-const BARRIDO_VENTANA = 90;    // ms que se miran para calcular la distancia y la velocidad
+const BARRIDO_VENTANA = 90; // ms que se miran para calcular la distancia y la velocidad
 // Mientras la carta se está inclinando con el dedo (mantenida apretada), se mueve el dedo de un lado a otro para ver el
 // brillo, y sin querer se daba vuelta. Entonces, en ese caso, el barrido tiene que ser muchísimo más rápido y más largo
 // (si se da vuelta sin querer: subir estos números; si cuesta darla vuelta a propósito: bajarlos)
-const BARRIDO_DISTANCIA_INCLINANDO = 70;  // px
+const BARRIDO_DISTANCIA_INCLINANDO = 70; // px
 const BARRIDO_VELOCIDAD_INCLINANDO = 1.8; // px por milisegundo (más de 2 veces la normal)
-let inclinandoConDedo = false;            // true mientras hay una carta inclinándose con el dedo (lo maneja activarInclinacionConDedo)
+let inclinandoConDedo = false; // true mientras hay una carta inclinándose con el dedo (lo maneja activarInclinacionConDedo)
 
 // Ocultamiento inteligente de las flechas de flip en móvil:
 // 4 flips con el dedo las ocultan por el resto de esa sesión. Al completar esto en 5 sesiones distintas, se ocultan para siempre.
@@ -2585,18 +2679,18 @@ function registrarFlipConDedo() {
 // toque corto casi no llega a verse. Así el hundimiento dura como mínimo TOQUE_HUNDIDO_MINIMO ms y la ventana se abre un instante
 // después de que se ve.
 const TOQUE_HUNDIDO_MINIMO = 120; // ms que el botón se ve hundido, aunque el toque haya sido más corto
-const TOQUE_TOLERANCIA = 12;      // px que puede moverse el dedo y que siga contando como toque (más es un desplazamiento)
+const TOQUE_TOLERANCIA = 12; // px que puede moverse el dedo y que siga contando como toque (más es un desplazamiento)
 
 function activarBotonDelDorso(boton, accion) {
-    let toque = null;      // { x, y, desde } mientras el dedo está apoyado en el botón
-    let sinClicHasta = 0;  // hasta cuándo se ignora el "click" que manda el navegador después de un toque (ya se atendió al levantar el dedo)
+    let toque = null; // { x, y, desde } mientras el dedo está apoyado en el botón
+    let sinClicHasta = 0; // hasta cuándo se ignora el "click" que manda el navegador después de un toque (ya se atendió al levantar el dedo)
     let levantando = 0;
 
     const hundir = () => {
         clearTimeout(levantando);
         boton.classList.add('hundido');
     };
-    const levantar = (desde) => {
+    const levantar = desde => {
         clearTimeout(levantando);
         levantando = setTimeout(() => boton.classList.remove('hundido'), Math.max(0, TOQUE_HUNDIDO_MINIMO - (performance.now() - desde)));
     };
@@ -2610,23 +2704,31 @@ function activarBotonDelDorso(boton, accion) {
         toque = null;
     };
 
-    boton.addEventListener('touchstart', (evento) => {
-        if (evento.touches.length !== 1) {
-            soltarToque();
-            return;
-        }
-        const dedo = evento.touches[0];
-        toque = { x: dedo.clientX, y: dedo.clientY, desde: performance.now() };
-        hundir();
-    }, { passive: true });
+    boton.addEventListener(
+        'touchstart',
+        evento => {
+            if (evento.touches.length !== 1) {
+                soltarToque();
+                return;
+            }
+            const dedo = evento.touches[0];
+            toque = { x: dedo.clientX, y: dedo.clientY, desde: performance.now() };
+            hundir();
+        },
+        { passive: true },
+    );
 
-    boton.addEventListener('touchmove', (evento) => {
-        if (!toque) return;
-        const dedo = evento.touches[0];
-        if (Math.hypot(dedo.clientX - toque.x, dedo.clientY - toque.y) > TOQUE_TOLERANCIA) soltarToque();
-    }, { passive: true });
+    boton.addEventListener(
+        'touchmove',
+        evento => {
+            if (!toque) return;
+            const dedo = evento.touches[0];
+            if (Math.hypot(dedo.clientX - toque.x, dedo.clientY - toque.y) > TOQUE_TOLERANCIA) soltarToque();
+        },
+        { passive: true },
+    );
 
-    boton.addEventListener('touchend', (evento) => {
+    boton.addEventListener('touchend', evento => {
         if (!toque) return;
         const { desde } = toque;
         toque = null;
@@ -2638,9 +2740,10 @@ function activarBotonDelDorso(boton, accion) {
 
     boton.addEventListener('touchcancel', soltarToque);
 
-    boton.addEventListener('click', (evento) => {
+    boton.addEventListener('click', evento => {
         evento.stopPropagation(); // que no cuente como elegir la carta para el combate
-        if (performance.now() < sinClicHasta) { // el toque ya lo atendió: este "click" es el que el navegador manda de todos modos
+        if (performance.now() < sinClicHasta) {
+            // el toque ya lo atendió: este "click" es el que el navegador manda de todos modos
             evento.preventDefault();
             return;
         }
@@ -2650,67 +2753,83 @@ function activarBotonDelDorso(boton, accion) {
 
 function activarVoltearConDedo() {
     if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
-    let gesto = null;        // { carta, x0, y0, muestras, resuelto }: el dedo que está apoyado en una carta
-    let evitarClic = false;  // al soltar después del barrido no se elige la carta
+    let gesto = null; // { carta, x0, y0, muestras, resuelto }: el dedo que está apoyado en una carta
+    let evitarClic = false; // al soltar después del barrido no se elige la carta
 
-    document.addEventListener('touchstart', (evento) => {
-        gesto = null;
-        if (evento.touches.length !== 1) return;
-        const toque = evento.touches[0];
-        const carta = toque.target.closest?.('#listado-digimons > li');
-        if (!carta || toque.target.closest('button')) return;
-        gesto = {
-            carta,
-            x0: toque.clientX,
-            y0: toque.clientY,
-            muestras: [{ t: evento.timeStamp, x: toque.clientX, y: toque.clientY }],
-            resuelto: false,
-        };
-    }, { passive: true });
-
-    document.addEventListener('touchmove', (evento) => {
-        if (!gesto || gesto.resuelto) return;
-        if (evento.touches.length !== 1) {
+    document.addEventListener(
+        'touchstart',
+        evento => {
             gesto = null;
-            return;
-        }
-        const toque = evento.touches[0];
-        const muestras = gesto.muestras;
-        muestras.push({ t: evento.timeStamp, x: toque.clientX, y: toque.clientY });
-        while (muestras.length > 2 && evento.timeStamp - muestras[0].t > BARRIDO_VENTANA) muestras.shift();
+            if (evento.touches.length !== 1) return;
+            const toque = evento.touches[0];
+            const carta = toque.target.closest?.('#listado-digimons > li');
+            if (!carta || toque.target.closest('button')) return;
+            gesto = {
+                carta,
+                x0: toque.clientX,
+                y0: toque.clientY,
+                muestras: [{ t: evento.timeStamp, x: toque.clientX, y: toque.clientY }],
+                resuelto: false,
+            };
+        },
+        { passive: true },
+    );
 
-        // Si el dedo va decididamente hacia un costado, la página no se desplaza
-        const dxTotal = toque.clientX - gesto.x0;
-        const dyTotal = toque.clientY - gesto.y0;
-        if (evento.cancelable && Math.abs(dxTotal) > 10 && Math.abs(dxTotal) > Math.abs(dyTotal)) evento.preventDefault();
+    document.addEventListener(
+        'touchmove',
+        evento => {
+            if (!gesto || gesto.resuelto) return;
+            if (evento.touches.length !== 1) {
+                gesto = null;
+                return;
+            }
+            const toque = evento.touches[0];
+            const muestras = gesto.muestras;
+            muestras.push({ t: evento.timeStamp, x: toque.clientX, y: toque.clientY });
+            while (muestras.length > 2 && evento.timeStamp - muestras[0].t > BARRIDO_VENTANA) muestras.shift();
 
-        const primera = muestras[0];
-        const ultima = muestras[muestras.length - 1];
-        const dx = ultima.x - primera.x;
-        const dy = ultima.y - primera.y;
-        const ms = Math.max(1, ultima.t - primera.t);
-        const distanciaMinima = inclinandoConDedo ? BARRIDO_DISTANCIA_INCLINANDO : BARRIDO_DISTANCIA;
-        const velocidadMinima = inclinandoConDedo ? BARRIDO_VELOCIDAD_INCLINANDO : BARRIDO_VELOCIDAD;
-        if (Math.abs(dx) >= distanciaMinima && Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) / ms >= velocidadMinima) {
-            gesto.resuelto = true;
-            evitarClic = true;
-            setTimeout(() => { evitarClic = false; }, 450);
-            vibrar(8);
-            voltearCarta(gesto.carta, dx > 0 ? 1 : -1);
-            registrarFlipConDedo();
-        }
-    }, { passive: false });
+            // Si el dedo va decididamente hacia un costado, la página no se desplaza
+            const dxTotal = toque.clientX - gesto.x0;
+            const dyTotal = toque.clientY - gesto.y0;
+            if (evento.cancelable && Math.abs(dxTotal) > 10 && Math.abs(dxTotal) > Math.abs(dyTotal)) evento.preventDefault();
 
-    const terminar = () => { gesto = null; };
+            const primera = muestras[0];
+            const ultima = muestras[muestras.length - 1];
+            const dx = ultima.x - primera.x;
+            const dy = ultima.y - primera.y;
+            const ms = Math.max(1, ultima.t - primera.t);
+            const distanciaMinima = inclinandoConDedo ? BARRIDO_DISTANCIA_INCLINANDO : BARRIDO_DISTANCIA;
+            const velocidadMinima = inclinandoConDedo ? BARRIDO_VELOCIDAD_INCLINANDO : BARRIDO_VELOCIDAD;
+            if (Math.abs(dx) >= distanciaMinima && Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) / ms >= velocidadMinima) {
+                gesto.resuelto = true;
+                evitarClic = true;
+                setTimeout(() => {
+                    evitarClic = false;
+                }, 450);
+                vibrar(8);
+                voltearCarta(gesto.carta, dx > 0 ? 1 : -1);
+                registrarFlipConDedo();
+            }
+        },
+        { passive: false },
+    );
+
+    const terminar = () => {
+        gesto = null;
+    };
     document.addEventListener('touchend', terminar);
     document.addEventListener('touchcancel', terminar);
 
-    listaDigimons.addEventListener('click', (evento) => {
-        if (!evitarClic) return;
-        evitarClic = false;
-        evento.stopPropagation();
-        evento.preventDefault();
-    }, true);
+    listaDigimons.addEventListener(
+        'click',
+        evento => {
+            if (!evitarClic) return;
+            evitarClic = false;
+            evento.stopPropagation();
+            evento.preventDefault();
+        },
+        true,
+    );
 }
 
 // Preferencia de la inclinación con el mouse (solo computadora): por defecto las cartas se inclinan al pasar el mouse y Shift apretada lo
@@ -2754,18 +2873,18 @@ function activarInclinacion() {
     const INCLINACION_FRENTE = 10; // grados máximos
     const INCLINACION_DORSO = 3;
     let cartaActual = null;
-    let caja = null;      // posición y tamaño de la carta cuando empezó a seguir al puntero
+    let caja = null; // posición y tamaño de la carta cuando empezó a seguir al puntero
     let x = 0;
-    let y = 0;            // posición del puntero dentro de la carta, de -1 a 1 (hacia dónde se tiene que inclinar)
+    let y = 0; // posición del puntero dentro de la carta, de -1 a 1 (hacia dónde se tiene que inclinar)
 
     // La inclinación se suaviza acá, cuadro a cuadro, y NO con una transición de CSS sobre "transform". Con la perspectiva,
     // el navegador dibuja una carta que tiene una animación de "transform" a menor resolución mientras dura: se veía
     // pixelada todo el rato que se movía el mouse sobre la carta (y mucho más con el zoom) y un instante al soltarla.
     // Sin animación de CSS, la carta se dibuja siempre a su resolución real.
-    const TIEMPO_SEGUIR = 45;  // ms que tarda la carta en alcanzar al puntero
+    const TIEMPO_SEGUIR = 45; // ms que tarda la carta en alcanzar al puntero
     const TIEMPO_VOLVER = 140; // ms que tarda en enderezarse al soltarla (más lento, para que no sea un tirón)
-    const suaves = new Map();  // carta → { x, y }: lo que se está dibujando (incluye las que se están enderezando)
-    let cuadro = 0;            // pedido de animationFrame pendiente
+    const suaves = new Map(); // carta → { x, y }: lo que se está dibujando (incluye las que se están enderezando)
+    let cuadro = 0; // pedido de animationFrame pendiente
     let ultimoCuadro = 0;
 
     // Le avisa al cartel de ayuda de la inclinación (ver activarAvisoDeInclinacion) cuándo empieza y cuándo termina de inclinarse una carta
@@ -2796,7 +2915,8 @@ function activarInclinacion() {
         const paso = Math.min(ahora - ultimoCuadro, 64);
         ultimoCuadro = ahora;
         for (const [carta, suave] of suaves) {
-            if (carta.girando) { // mientras se da vuelta manda la animación del giro
+            if (carta.girando) {
+                // mientras se da vuelta manda la animación del giro
                 enderezar(carta);
                 soltar(carta); // y deja de ser la carta que sigue al puntero: si no, al terminar el giro no volvía a inclinarse
                 continue;
@@ -2847,8 +2967,8 @@ function activarInclinacion() {
     function seguir(clienteX, clienteY) {
         if (!caja) return; // la carta está dándose vuelta y ya no sigue al dedo
         const limitar = valor => Math.max(-1, Math.min(1, valor));
-        x = limitar(((clienteX + scrollX) - caja.x) / caja.ancho * 2 - 1);
-        y = limitar(((clienteY + scrollY) - caja.y) / caja.alto * 2 - 1);
+        x = limitar(((clienteX + scrollX - caja.x) / caja.ancho) * 2 - 1);
+        y = limitar(((clienteY + scrollY - caja.y) / caja.alto) * 2 - 1);
         arrancar();
     }
 
@@ -2882,17 +3002,18 @@ function activarInclinacion() {
             else retomar();
         };
 
-        const ponerShift = (apretada) => {
+        const ponerShift = apretada => {
             if (apretada === shiftApretada) return;
             shiftApretada = apretada;
             acomodar();
         };
 
-        listaDigimons.addEventListener('pointermove', (evento) => {
+        listaDigimons.addEventListener('pointermove', evento => {
             if (evento.pointerType === 'touch' || zoomOcupado) return;
             puntero = { x: evento.clientX, y: evento.clientY };
             ponerShift(evento.shiftKey);
-            if (anulada() || zoomExtra || zoomEsperaMovimiento) { // (con el zoom extra de la carta ampliada tampoco se inclina: ver "ZOOM EXTRA"; ni cuando se pasó de carta y el mouse no se movió: ver zoomEsperaMovimiento)
+            if (anulada() || zoomExtra || zoomEsperaMovimiento) {
+                // (con el zoom extra de la carta ampliada tampoco se inclina: ver "ZOOM EXTRA"; ni cuando se pasó de carta y el mouse no se movió: ver zoomEsperaMovimiento)
                 soltar(cartaActual);
                 return;
             }
@@ -2906,10 +3027,7 @@ function activarInclinacion() {
                 const py = evento.clientY + scrollY;
                 const margenX = 12;
                 const margenY = 22;
-                const dentro = px >= (caja.x - margenX) &&
-                               px <= (caja.x + caja.ancho + margenX) &&
-                               py >= (caja.y - margenY) &&
-                               py <= (caja.y + caja.alto + margenY);
+                const dentro = px >= caja.x - margenX && px <= caja.x + caja.ancho + margenX && py >= caja.y - margenY && py <= caja.y + caja.alto + margenY;
                 if (dentro) {
                     carta = cartaActual;
                 }
@@ -2919,7 +3037,8 @@ function activarInclinacion() {
                 soltar(cartaActual);
                 return;
             }
-            if (carta.girando || carta.classList.contains('bailando')) { // mientras se da vuelta o baila (baile.js) no se inclina: tienen su propia animación
+            if (carta.girando || carta.classList.contains('bailando')) {
+                // mientras se da vuelta o baila (baile.js) no se inclina: tienen su propia animación
                 soltar(cartaActual);
                 return;
             }
@@ -2929,7 +3048,7 @@ function activarInclinacion() {
 
         // Si se dio vuelta una carta con el mouse encima y no se lo movió de ahí, la inclinación sigue sin pedir que se salga y se vuelva a entrar.
         // Se mira qué hay bajo el puntero (y no ":hover"): al terminar el giro el navegador puede tardar en actualizar el "hover"
-        document.addEventListener('giro-terminado', (evento) => {
+        document.addEventListener('giro-terminado', evento => {
             const carta = evento.detail;
             if (!puntero || zoomOcupado || zoomExtra || zoomEsperaMovimiento || anulada()) return;
             const debajo = document.elementFromPoint(puntero.x, puntero.y);
@@ -2946,15 +3065,15 @@ function activarInclinacion() {
         document.addEventListener('baile-terminado', acomodar);
 
         // Al apretar o soltar Shift, la inclinación se anula o se retoma según corresponda (ver "acomodar")
-        document.addEventListener('keydown', (evento) => {
+        document.addEventListener('keydown', evento => {
             if (evento.key === 'Shift') ponerShift(true);
         });
 
-        document.addEventListener('keyup', (evento) => {
+        document.addEventListener('keyup', evento => {
             if (evento.key === 'Shift') ponerShift(evento.shiftKey); // (por si queda la otra Shift apretada)
         });
 
-        listaDigimons.addEventListener('pointerleave', (evento) => {
+        listaDigimons.addEventListener('pointerleave', evento => {
             if (evento.pointerType === 'touch') return;
             puntero = null;
             soltar(cartaActual);
@@ -2994,19 +3113,23 @@ function activarInclinacion() {
     });
 
     // Al tocar el botón de dar vuelta, la carta se endereza para poder girar
-    listaDigimons.addEventListener('click', (evento) => {
-        if (evento.target.closest('.c-flip')) soltar(cartaActual);
-    }, true);
+    listaDigimons.addEventListener(
+        'click',
+        evento => {
+            if (evento.target.closest('.c-flip')) soltar(cartaActual);
+        },
+        true,
+    );
 }
 
-const ESPERA_DEDO = 220;     // ms que hay que mantener apretada la carta para que empiece a inclinarse
-const TOLERANCIA_DEDO = 10;  // px que se puede mover el dedo antes de eso (si se mueve más, es que quiere desplazar la página)
+const ESPERA_DEDO = 220; // ms que hay que mantener apretada la carta para que empiece a inclinarse
+const TOLERANCIA_DEDO = 10; // px que se puede mover el dedo antes de eso (si se mueve más, es que quiere desplazar la página)
 
 function activarInclinacionConDedo({ tomar, seguir, soltar }) {
-    let espera = 0;          // temporizador de "mantener apretado"
-    let inicio = null;       // dónde y en qué carta apoyó el dedo
+    let espera = 0; // temporizador de "mantener apretado"
+    let inicio = null; // dónde y en qué carta apoyó el dedo
     let inclinando = false;
-    let evitarClic = false;  // al soltar después de inclinar no se elige la carta
+    let evitarClic = false; // al soltar después de inclinar no se elige la carta
 
     function cancelar() {
         clearTimeout(espera);
@@ -3018,61 +3141,75 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
         }
     }
 
-    listaDigimons.addEventListener('touchstart', (evento) => {
-        if (evento.touches.length !== 1) {
-            cancelar();
-            return;
-        }
-        const carta = evento.target.closest('#listado-digimons > li');
-        if (!carta || carta.classList.contains('de-dorso') || carta.girando || zoomOcupado || zoomExtra || evento.target.closest('button')) return;
-        const toque = evento.touches[0];
-        inicio = { x: toque.clientX, y: toque.clientY };
-        clearTimeout(espera);
-        espera = setTimeout(() => {
-            if (!inicio || carta.girando || carta.classList.contains('de-dorso')) {
+    listaDigimons.addEventListener(
+        'touchstart',
+        evento => {
+            if (evento.touches.length !== 1) {
                 cancelar();
                 return;
             }
-            inclinando = true;
-            inclinandoConDedo = true;
-            tomar(carta);
-            seguir(inicio.x, inicio.y);
-            vibrar(10);
-            document.dispatchEvent(new CustomEvent('inclinacion-con-dedo')); // el cartel de ayuda ya no tiene que contar cómo se hace
-        }, ESPERA_DEDO);
-    }, { passive: true });
+            const carta = evento.target.closest('#listado-digimons > li');
+            if (!carta || carta.classList.contains('de-dorso') || carta.girando || zoomOcupado || zoomExtra || evento.target.closest('button')) return;
+            const toque = evento.touches[0];
+            inicio = { x: toque.clientX, y: toque.clientY };
+            clearTimeout(espera);
+            espera = setTimeout(() => {
+                if (!inicio || carta.girando || carta.classList.contains('de-dorso')) {
+                    cancelar();
+                    return;
+                }
+                inclinando = true;
+                inclinandoConDedo = true;
+                tomar(carta);
+                seguir(inicio.x, inicio.y);
+                vibrar(10);
+                document.dispatchEvent(new CustomEvent('inclinacion-con-dedo')); // el cartel de ayuda ya no tiene que contar cómo se hace
+            }, ESPERA_DEDO);
+        },
+        { passive: true },
+    );
 
     // No es pasivo porque, mientras se inclina la carta, hay que frenar el desplazamiento de la página
-    listaDigimons.addEventListener('touchmove', (evento) => {
-        const toque = evento.touches[0];
-        if (inclinando) {
-            if (evento.cancelable) evento.preventDefault();
-            seguir(toque.clientX, toque.clientY);
-        } else if (inicio && Math.hypot(toque.clientX - inicio.x, toque.clientY - inicio.y) > TOLERANCIA_DEDO) {
-            cancelar(); // está desplazando la página
-        }
-    }, { passive: false });
+    listaDigimons.addEventListener(
+        'touchmove',
+        evento => {
+            const toque = evento.touches[0];
+            if (inclinando) {
+                if (evento.cancelable) evento.preventDefault();
+                seguir(toque.clientX, toque.clientY);
+            } else if (inicio && Math.hypot(toque.clientX - inicio.x, toque.clientY - inicio.y) > TOLERANCIA_DEDO) {
+                cancelar(); // está desplazando la página
+            }
+        },
+        { passive: false },
+    );
 
     const terminar = () => {
         const estabaInclinando = inclinando;
         cancelar();
         if (estabaInclinando) {
             evitarClic = true;
-            setTimeout(() => { evitarClic = false; }, 450);
+            setTimeout(() => {
+                evitarClic = false;
+            }, 450);
         }
     };
     listaDigimons.addEventListener('touchend', terminar);
     listaDigimons.addEventListener('touchcancel', terminar);
 
-    listaDigimons.addEventListener('click', (evento) => {
-        if (!evitarClic) return;
-        evitarClic = false;
-        evento.stopPropagation();
-        evento.preventDefault();
-    }, true);
+    listaDigimons.addEventListener(
+        'click',
+        evento => {
+            if (!evitarClic) return;
+            evitarClic = false;
+            evento.stopPropagation();
+            evento.preventDefault();
+        },
+        true,
+    );
 
     // Mantener apretada una carta no abre el menú del sistema (guardar imagen, copiar...)
-    listaDigimons.addEventListener('contextmenu', (evento) => {
+    listaDigimons.addEventListener('contextmenu', evento => {
         if (evento.target.closest('#listado-digimons > li')) evento.preventDefault();
     });
 }
@@ -3091,9 +3228,10 @@ function vibrar(duracion = 8, forzar = false) {
 
 function activarVibracion() {
     if (!navigator.vibrate) return;
-    document.addEventListener('pointerdown', (evento) => {
+    document.addEventListener('pointerdown', evento => {
         if (evento.pointerType !== 'touch') return;
-        const boton = evento.target.closest('button');
+        // También los "botones" del frente de la carta (gema, nivel, tipo, elemento), que son <span role="button">
+        const boton = evento.target.closest('button, [role="button"]');
         if (!boton || boton.disabled) return;
         if (boton.id === 'silenciar') {
             // El botón de sonido vibra según a dónde lleva el toque y no según cómo está ahora: al pasar a "solo vibración" y al volver a
@@ -3102,7 +3240,8 @@ function activarVibracion() {
             if (modoSiguienteDelAudio() !== 'nada') vibrar(8, true);
             return;
         }
-        vibrar(8);
+        // Los del frente de la carta, una mini vibración (como su tecla, que también es más suave)
+        vibrar(boton.matches('[role="button"]') ? 6 : 8);
     });
 }
 
@@ -3161,17 +3300,17 @@ const PERFIL_AUDIO = {
     },
     escritorio: {
         volumenGeneral: 0.85,
-        volumenTeclas: 0.20,
+        volumenTeclas: 0.2,
     },
 };
 
 function esDispositivoMovil() {
     if (typeof window === 'undefined') return false;
-    return PANTALLA_DE_CELULAR.matches || 
-           (typeof navigator !== 'undefined' && (
-               (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024) ||
-               /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-           ));
+    return (
+        PANTALLA_DE_CELULAR.matches ||
+        (typeof navigator !== 'undefined' &&
+            ((navigator.maxTouchPoints > 1 && window.innerWidth <= 1024) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)))
+    );
 }
 
 function perfilAudioActual() {
@@ -3206,9 +3345,15 @@ function aplicarSilencio() {
         salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : vol, salidaGeneral.context.currentTime, 0.01);
     }
     actualizarVolumenAudios();
-    [audioMouse, winMusic, battleMusic, winSound, audioPajita].forEach(audio => { if (audio) audio.muted = silenciado; });
+    [audioMouse, winMusic, battleMusic, winSound, audioPajita].forEach(audio => {
+        if (audio) audio.muted = silenciado;
+    });
     if (vibracionApagada) {
-        try { navigator.vibrate?.(0); } catch (error) { /* nada que cortar */ }
+        try {
+            navigator.vibrate?.(0);
+        } catch (error) {
+            /* nada que cortar */
+        }
     }
 }
 
@@ -3240,11 +3385,11 @@ function modoSiguienteDelAudio() {
 function pasarAlSiguienteModoDelAudio() {
     const modo = modoDelAudio();
     if (modo === 'todo') {
-        silenciado = true;               // 1 → 2: se va el sonido, la vibración sigue
+        silenciado = true; // 1 → 2: se va el sonido, la vibración sigue
     } else if (modo === 'vibracion') {
-        vibracionApagada = true;         // 2 → 3: se va también la vibración
+        vibracionApagada = true; // 2 → 3: se va también la vibración
     } else {
-        silenciado = false;              // 3 → 1 (o, sin vibración, de silenciado a sonando): vuelve todo
+        silenciado = false; // 3 → 1 (o, sin vibración, de silenciado a sonando): vuelve todo
         vibracionApagada = false;
     }
 }
@@ -3259,7 +3404,7 @@ function mostrarEstadoDelAudio() {
     if (!boton) return;
     const modo = modoDelAudio();
     const ayuda = t(AYUDA_DEL_AUDIO[modo]);
-    boton.dataset.modo = modo;                       // el ícono: parlante con ondas, celular que vibra o parlante con cruz
+    boton.dataset.modo = modo; // el ícono: parlante con ondas, celular que vibra o parlante con cruz
     boton.classList.toggle('silenciado', silenciado); // el botón "hundido" mientras no suena
     boton.title = ayuda;
     boton.setAttribute('aria-label', ayuda);
@@ -3376,7 +3521,7 @@ function subirBotonSobreLaCortina(boton) {
 }
 
 const llamadasActivas = new Map(); // botón → { globo, devolver, temporizador }: los botones que están llamando la atención ahora
-let vigiliaDeLlamadas = 0;         // pedido de animationFrame pendiente
+let vigiliaDeLlamadas = 0; // pedido de animationFrame pendiente
 
 // Dónde va el globito: debajo del botón si está en la mitad de arriba de la pantalla (la barra) y arriba de él si está en la de abajo (el botón de
 // sonido flotante del celular), con la flechita justo sobre el botón (el globito se corre para no salirse de la pantalla).
@@ -3532,7 +3677,7 @@ function activarBotonDeAudio() {
         // Esa tecla no cuenta como el primer sonido del aviso del botón (no tiene sentido avisarle a quien lo está tocando): el aviso queda
         // para el primer sonido que suene después
         if (modoDelAudio() === 'todo') {
-            const tecla = (bajada) => {
+            const tecla = bajada => {
                 teclaDelBotonDeAudio = true;
                 sonidoTecla(bajada);
                 teclaDelBotonDeAudio = false;
@@ -3557,10 +3702,10 @@ function solicitarReanudacionAudio(contexto) {
         () => {
             if (reanudacionAudioPendiente === pendiente) reanudacionAudioPendiente = null;
         },
-        (error) => {
+        error => {
             if (reanudacionAudioPendiente === pendiente) reanudacionAudioPendiente = null;
             console.warn('No se pudo reanudar el audio:', error);
-        }
+        },
     );
     return pendiente;
 }
@@ -3737,12 +3882,12 @@ function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
     };
 
     if (bajada) {
-        chasquido(0, 3000, 1.1, 5.4, 0.03);              // clic agudo del mecanismo
-        chasquido(0.004, 1300, 0.8, 3.6, 0.055);         // la tecla llega al fondo
-        golpe(0.002, 'triangle', 380, 170, 0.17, 0.12);  // "thock" de la carcasa
-        golpe(0, 'sine', 2400, 2100, 0.085, 0.02);       // toque de plástico
+        chasquido(0, 3000, 1.1, 5.4, 0.03); // clic agudo del mecanismo
+        chasquido(0.004, 1300, 0.8, 3.6, 0.055); // la tecla llega al fondo
+        golpe(0.002, 'triangle', 380, 170, 0.17, 0.12); // "thock" de la carcasa
+        golpe(0, 'sine', 2400, 2100, 0.085, 0.02); // toque de plástico
     } else {
-        chasquido(0, 4400, 1.5, 5.4, 0.025);             // clic suave y agudo del resorte al volver
+        chasquido(0, 4400, 1.5, 5.4, 0.025); // clic suave y agudo del resorte al volver
         golpe(0, 'triangle', 420, 240, 0.3, 0.05);
     }
 }
@@ -3953,8 +4098,8 @@ function sonidoZoom(abrir) {
 //   · los botones de cada ataque (se despliega o se recoge la descripción): suenan SOLOS, sin la tecla;
 //   · los desplegables de los filtros (Tipo, Nivel, Elemento) y de los menús "Info.": suenan después de la tecla del botón, más bajito.
 // Abrir: un golpecito de tapa, un barrido de aire que sube y un crujido de hojas. Cerrar: el barrido baja, el crujido se apaga y las hojas se apoyan.
-const FICHERO_DE_ATAQUES = 1;         // fuerza con que suena en los botones de los ataques (el sonido de referencia)
-const FICHERO_DE_DESPLEGABLES = 0.5;  // en los desplegables de los filtros y de "Info.": la mitad, más bajito aún
+const FICHERO_DE_ATAQUES = 1; // fuerza con que suena en los botones de los ataques (el sonido de referencia)
+const FICHERO_DE_DESPLEGABLES = 0.5; // en los desplegables de los filtros y de "Info.": la mitad, más bajito aún
 const RETRASO_FICHERO_DESPLEGABLES = 0.001; // segundos: el fichero entra un milisegundo después del sonido del botón
 
 // Arma el sonido en el instante t. fuerza multiplica todos los volúmenes (1 = el de los ataques)
@@ -4048,7 +4193,7 @@ function sonidoFichero(abrir = true, fuerza = FICHERO_DE_ATAQUES, retraso = 0) {
 // opción o al cerrarse el menú ☰ del celular. Solo cuenta el cambio de abierto a cerrado (o al revés), no cualquier otra clase que se toque.
 function activarSonidoDeDesplegables() {
     const estaba = new WeakMap(); // si cada desplegable estaba abierto la última vez que se miró
-    const observador = new MutationObserver((cambios) => {
+    const observador = new MutationObserver(cambios => {
         for (const cambio of cambios) {
             const desplegable = cambio.target;
             const abierto = desplegable.classList.contains('abierto');
@@ -4057,7 +4202,7 @@ function activarSonidoDeDesplegables() {
             sonidoFichero(abierto, FICHERO_DE_DESPLEGABLES, RETRASO_FICHERO_DESPLEGABLES);
         }
     });
-    document.querySelectorAll('.f-grupo, .menu-info').forEach((desplegable) => {
+    document.querySelectorAll('.f-grupo, .menu-info').forEach(desplegable => {
         estaba.set(desplegable, desplegable.classList.contains('abierto'));
         observador.observe(desplegable, { attributes: true, attributeFilter: ['class'] });
     });
@@ -4093,7 +4238,7 @@ function sonarTeclaDeBoton(bajada, tecla) {
 function activarSonidoBotones() {
     let apretado = null; // la tecla que está apretada (para soltarla igual), o null
     // Qué tecla suena al tocar este botón (null: ninguna)
-    const teclaDe = (evento) => {
+    const teclaDe = evento => {
         const boton = evento.target.closest('button, [role="button"]');
         if (!boton || boton.disabled) return null;
         if (boton.id === 'silenciar') return null; // el botón de sonido tiene su propio criterio (ver activarBotonDeAudio)
@@ -4110,7 +4255,7 @@ function activarSonidoBotones() {
         if (boton.closest(ZONAS_CON_SONIDO) || boton.closest('.swal2-popup')) return TECLA_NORMAL;
         return null;
     };
-    document.addEventListener('pointerdown', (evento) => {
+    document.addEventListener('pointerdown', evento => {
         if (evento.pointerType === 'mouse' && evento.button !== 0) return; // solo el botón izquierdo
         const tecla = teclaDe(evento);
         if (tecla) {
@@ -4130,13 +4275,17 @@ function activarSonidoBotones() {
         apretado = null;
     });
     // (En la fase de captura: los botones del reverso de las cartas cortan la propagación del clic y, si no, no se llegaría a oír)
-    document.addEventListener('click', (evento) => {
-        const tecla = evento.detail === 0 ? teclaDe(evento) : null; // clic hecho con el teclado (Enter o Espacio)
-        if (tecla) {
-            sonarTeclaDeBoton(true, tecla);
-            setTimeout(() => sonarTeclaDeBoton(false, tecla), 80);
-        }
-    }, true);
+    document.addEventListener(
+        'click',
+        evento => {
+            const tecla = evento.detail === 0 ? teclaDe(evento) : null; // clic hecho con el teclado (Enter o Espacio)
+            if (tecla) {
+                sonarTeclaDeBoton(true, tecla);
+                setTimeout(() => sonarTeclaDeBoton(false, tecla), 80);
+            }
+        },
+        true,
+    );
 }
 
 // Con Shift apretada, el navegador convierte la rueda del mouse en desplazamiento HORIZONTAL; como la página no se desplaza hacia los costados,
@@ -4152,31 +4301,39 @@ function activarRuedaConShift() {
         return eje === 'x' ? elemento.scrollWidth > elemento.clientWidth + 1 : elemento.scrollHeight > elemento.clientHeight + 1;
     };
 
-    window.addEventListener('wheel', (evento) => {
-        if (!evento.shiftKey || evento.ctrlKey || evento.altKey || evento.metaKey) return;
-        const unidad = evento.deltaMode === 1 ? 33 : evento.deltaMode === 2 ? 800 : 1; // (algunos navegadores cuentan en líneas o en páginas)
-        const delta = (evento.deltaY || evento.deltaX) * unidad; // (según el navegador, el valor llega en deltaY o en deltaX)
-        if (!delta) return;
-        const destino = evento.target;
-        setTimeout(() => {
-            if (evento.defaultPrevented || !destino.isConnected) return;
-            let vertical = null;
-            for (let el = destino instanceof Element ? destino : destino.parentElement; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
-                if (desplazaEn(el, 'x')) return; // ahí Shift + rueda ya se desplaza hacia los costados
-                if (!vertical && desplazaEn(el, 'y')) vertical = el;
-            }
-            const raiz = document.documentElement;
-            if (!vertical && raiz.scrollWidth > raiz.clientWidth + 1) return; // la página sí se desplaza hacia los costados
-            (vertical ?? window).scrollBy({ top: delta, behavior: 'auto' });
-        }, 0);
-    }, { passive: true });
+    window.addEventListener(
+        'wheel',
+        evento => {
+            if (!evento.shiftKey || evento.ctrlKey || evento.altKey || evento.metaKey) return;
+            const unidad = evento.deltaMode === 1 ? 33 : evento.deltaMode === 2 ? 800 : 1; // (algunos navegadores cuentan en líneas o en páginas)
+            const delta = (evento.deltaY || evento.deltaX) * unidad; // (según el navegador, el valor llega en deltaY o en deltaX)
+            if (!delta) return;
+            const destino = evento.target;
+            setTimeout(() => {
+                if (evento.defaultPrevented || !destino.isConnected) return;
+                let vertical = null;
+                for (
+                    let el = destino instanceof Element ? destino : destino.parentElement;
+                    el && el !== document.body && el !== document.documentElement;
+                    el = el.parentElement
+                ) {
+                    if (desplazaEn(el, 'x')) return; // ahí Shift + rueda ya se desplaza hacia los costados
+                    if (!vertical && desplazaEn(el, 'y')) vertical = el;
+                }
+                const raiz = document.documentElement;
+                if (!vertical && raiz.scrollWidth > raiz.clientWidth + 1) return; // la página sí se desplaza hacia los costados
+                (vertical ?? window).scrollBy({ top: delta, behavior: 'auto' });
+            }, 0);
+        },
+        { passive: true },
+    );
 }
 
 // Al hacer clic en un botón con el mouse (en especial con la tecla Shift mantenida, por ejemplo al usar la rueda con Shift),
 // los botones no deben retener el aro de foco (:focus-visible) ni iniciar una selección de texto accidental.
 // Con la navegación por teclado (Tab, Enter, Espacio) la accesibilidad y el foco visible siguen funcionando con total normalidad.
 function evitarFocoYSeleccionConShift() {
-    document.addEventListener('mousedown', (evento) => {
+    document.addEventListener('mousedown', evento => {
         const boton = evento.target.closest('button, [role="button"]');
         if (!boton) return;
         if (evento.shiftKey) {
@@ -4185,87 +4342,97 @@ function evitarFocoYSeleccionConShift() {
         }
     });
 
-    document.addEventListener('click', (evento) => {
-        const boton = evento.target.closest('button, [role="button"]');
-        if (!boton) return;
-        if (evento.detail > 0 || evento.shiftKey) {
-            if (document.activeElement === boton || boton.contains(document.activeElement)) {
-                boton.blur();
+    document.addEventListener(
+        'click',
+        evento => {
+            const boton = evento.target.closest('button, [role="button"]');
+            if (!boton) return;
+            if (evento.detail > 0 || evento.shiftKey) {
+                if (document.activeElement === boton || boton.contains(document.activeElement)) {
+                    boton.blur();
+                }
+                if (evento.shiftKey) {
+                    window.getSelection?.()?.removeAllRanges?.();
+                }
             }
-            if (evento.shiftKey) {
-                window.getSelection?.()?.removeAllRanges?.();
-            }
-        }
-    }, true);
+        },
+        true,
+    );
 }
 
 // Al hacer clic en el nivel (la gema o el nombre), tipo o elemento de una carta, se abre su ventana de información (info.js)
 // sin seleccionar la carta para el combate ni cerrarla si está en modo zoom.
 function activarCartelesDeInfoEnCartas() {
-    document.addEventListener('click', (evento) => {
-        // 1. Tipo
-        const chipTipo = evento.target.closest?.('#listado-digimons li .c-tipo');
-        if (chipTipo) {
-            const carta = chipTipo.closest('#listado-digimons li');
-            if (carta?.dataset.tipo) {
-                evento.stopPropagation();
-                document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { tipo: carta.dataset.tipo } }));
-                if (typeof window.infoTipo === 'function') window.infoTipo(carta.dataset.tipo);
-                return;
+    document.addEventListener(
+        'click',
+        evento => {
+            // 1. Tipo
+            const chipTipo = evento.target.closest?.('#listado-digimons li .c-tipo');
+            if (chipTipo) {
+                const carta = chipTipo.closest('#listado-digimons li');
+                if (carta?.dataset.tipo) {
+                    evento.stopPropagation();
+                    document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { tipo: carta.dataset.tipo } }));
+                    if (typeof window.infoTipo === 'function') window.infoTipo(carta.dataset.tipo);
+                    return;
+                }
             }
-        }
 
-        // 2. Elemento
-        const chipElem = evento.target.closest?.('#listado-digimons li .c-elem');
-        if (chipElem) {
-            const carta = chipElem.closest('#listado-digimons li');
-            if (carta?.dataset.elemento) {
-                evento.stopPropagation();
-                document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { elemento: carta.dataset.elemento } }));
-                if (typeof window.infoElemento === 'function') window.infoElemento(carta.dataset.elemento);
-                return;
+            // 2. Elemento
+            const chipElem = evento.target.closest?.('#listado-digimons li .c-elem');
+            if (chipElem) {
+                const carta = chipElem.closest('#listado-digimons li');
+                if (carta?.dataset.elemento) {
+                    evento.stopPropagation();
+                    document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { elemento: carta.dataset.elemento } }));
+                    if (typeof window.infoElemento === 'function') window.infoElemento(carta.dataset.elemento);
+                    return;
+                }
             }
-        }
 
-        // 3. Nivel (gema o texto del nivel)
-        const nivelTarget = evento.target.closest?.('#listado-digimons li .c-gema, #listado-digimons li .c-nivel');
-        if (nivelTarget) {
-            const carta = nivelTarget.closest('#listado-digimons li');
-            if (carta?.dataset.nivelApi) {
-                evento.stopPropagation();
-                document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { nivel: carta.dataset.nivelApi } }));
-                if (typeof window.infoNivel === 'function') window.infoNivel(carta.dataset.nivelApi);
-                return;
+            // 3. Nivel (gema o texto del nivel)
+            const nivelTarget = evento.target.closest?.('#listado-digimons li .c-gema, #listado-digimons li .c-nivel');
+            if (nivelTarget) {
+                const carta = nivelTarget.closest('#listado-digimons li');
+                if (carta?.dataset.nivelApi) {
+                    evento.stopPropagation();
+                    document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { nivel: carta.dataset.nivelApi } }));
+                    if (typeof window.infoNivel === 'function') window.infoNivel(carta.dataset.nivelApi);
+                    return;
+                }
             }
-        }
 
-        // 4. Ataques del dorso
-        const btnAtaques = evento.target.closest?.('#listado-digimons li .c-ataques');
-        if (btnAtaques) {
-            const carta = btnAtaques.closest('#listado-digimons li');
-            if (carta && typeof window.abrirAtaques === 'function') {
-                evento.stopPropagation();
-                window.abrirAtaques(carta);
-                return;
+            // 4. Ataques del dorso
+            const btnAtaques = evento.target.closest?.('#listado-digimons li .c-ataques');
+            if (btnAtaques) {
+                const carta = btnAtaques.closest('#listado-digimons li');
+                if (carta && typeof window.abrirAtaques === 'function') {
+                    evento.stopPropagation();
+                    window.abrirAtaques(carta);
+                    return;
+                }
             }
-        }
 
-        // 5. Evolución del dorso
-        const btnEvo = evento.target.closest?.('#listado-digimons li .c-evo');
-        if (btnEvo) {
-            const carta = btnEvo.closest('#listado-digimons li');
-            if (carta && typeof window.abrirEvolucion === 'function') {
-                evento.stopPropagation();
-                window.abrirEvolucion(carta);
-                return;
+            // 5. Evolución del dorso
+            const btnEvo = evento.target.closest?.('#listado-digimons li .c-evo');
+            if (btnEvo) {
+                const carta = btnEvo.closest('#listado-digimons li');
+                if (carta && typeof window.abrirEvolucion === 'function') {
+                    evento.stopPropagation();
+                    window.abrirEvolucion(carta);
+                    return;
+                }
             }
-        }
-    }, true);
+        },
+        true,
+    );
 
     // Accesibilidad por teclado: Enter o Espacio sobre la gema, el nivel, los chips o los botones del dorso activa el clic
-    document.addEventListener('keydown', (evento) => {
+    document.addEventListener('keydown', evento => {
         if (evento.key !== 'Enter' && evento.key !== ' ') return;
-        const boton = evento.target.closest?.('#listado-digimons li .c-gema, #listado-digimons li .c-nivel, #listado-digimons li .c-tipo, #listado-digimons li .c-elem, #listado-digimons li .c-ataques, #listado-digimons li .c-evo');
+        const boton = evento.target.closest?.(
+            '#listado-digimons li .c-gema, #listado-digimons li .c-nivel, #listado-digimons li .c-tipo, #listado-digimons li .c-elem, #listado-digimons li .c-ataques, #listado-digimons li .c-evo',
+        );
         if (!boton) return;
         evento.preventDefault();
         boton.click();
@@ -4281,7 +4448,7 @@ activarArrastreDeZoomExtra();
 activarReflejoQuieto();
 activarAvisosDeAyuda();
 activarAvisoDeInclinacion(); // después de los avisos de ayuda: usa el contador de visitas que ellos cuentan
-activarAvisoDeZoomExtra();   // (este también)
+activarAvisoDeZoomExtra(); // (este también)
 gestionarVisitasYFlechasMovil();
 activarDesbloqueoAudio();
 activarVoltearConDedo();
@@ -4292,11 +4459,15 @@ activarVibracion();
 
 // Las cartas de nivel 7 y 8 tienen un marco que gira. Si giran todas a la vez (hasta las que están lejos), la página se
 // pone lenta: por eso solo giran las que están en pantalla. Esto les pone o les saca la clase "en-pantalla" (la usa el CSS).
-const observadorDeMarcos = 'IntersectionObserver' in window
-    ? new IntersectionObserver(entradas => {
-        entradas.forEach(entrada => entrada.target.classList.toggle('en-pantalla', entrada.isIntersecting));
-    }, { rootMargin: '150px' })
-    : null;
+const observadorDeMarcos =
+    'IntersectionObserver' in window
+        ? new IntersectionObserver(
+              entradas => {
+                  entradas.forEach(entrada => entrada.target.classList.toggle('en-pantalla', entrada.isIntersecting));
+              },
+              { rootMargin: '150px' },
+          )
+        : null;
 
 // Crea una carta, la agrega a la lista y avisa a los filtros. La usan los digimons de la API y las cartas propias.
 function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, marca, elemento, datosDorso }) {
@@ -4357,15 +4528,15 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, mar
     // Con el mouse el botón no toma el foco: si no, al hacer clic (sobre todo con Shift apretada: el navegador lo toma como un clic "de teclado")
     // quedaba resaltado con el aro de foco y a la vista hasta hacer clic en otro lado. Con el teclado (Tab y Enter o Espacio) sigue andando igual.
     const botonVoltear = elementoLista.querySelector('.c-flip');
-    botonVoltear.addEventListener('mousedown', (evento) => evento.preventDefault());
-    botonVoltear.addEventListener('click', (evento) => {
+    botonVoltear.addEventListener('mousedown', evento => evento.preventDefault());
+    botonVoltear.addEventListener('click', evento => {
         evento.stopPropagation();
         if (evento.detail > 0) botonVoltear.blur(); // (clic de mouse o de dedo; el de teclado trae detail 0)
         voltearCarta(elementoLista);
     });
 
     // Agregamos el manejador de eventos al <li>
-    elementoLista.addEventListener('click', (evento) => {
+    elementoLista.addEventListener('click', evento => {
         if (cartaEnZoom) return; // con la carta en grande, un clic no la elige para el combate
         if (evento.target.closest('button, [role="button"]')) return; // botones y chips de la carta no la seleccionan para el combate
         // Si este clic es el primero de un doble clic, el zoom deshace lo que haga (ver activarZoom)
@@ -4468,7 +4639,8 @@ async function crearListaDeDigimons() {
             pedirMas();
             const detalles = await pedidos[indice];
             pedidos[indice] = null;
-            if (!detalles) { // si la API falló con este, seguimos con los demás (antes se cortaba toda la carga)
+            if (!detalles) {
+                // si la API falló con este, seguimos con los demás (antes se cortaba toda la carga)
                 contadorDigimons++;
                 continue;
             }
@@ -4681,7 +4853,7 @@ function lanzarConfeti(ventana) {
                 { transform: 'translate(0, -24px) rotate(0deg)', opacity: 1 },
                 { transform: `translate(${lado}px, ${alto + 30}px) rotate(${Math.round(Math.random() * 900 - 450)}deg)`, opacity: 1 },
             ],
-            { duration: 1600 + Math.random() * 1800, delay: Math.random() * 600, easing: 'cubic-bezier(0.25, 0.6, 0.4, 1)', fill: 'both' }
+            { duration: 1600 + Math.random() * 1800, delay: Math.random() * 600, easing: 'cubic-bezier(0.25, 0.6, 0.4, 1)', fill: 'both' },
         );
     }
     setTimeout(() => capa.remove(), 4600);
@@ -4697,7 +4869,7 @@ function cuandoAparece(ventana, accion) {
         clearTimeout(plazo);
         ventana.removeEventListener('animationend', alTerminar);
     };
-    const alTerminar = (evento) => {
+    const alTerminar = evento => {
         if (evento.target !== ventana) return; // las animaciones de adentro del cartel también avisan; solo vale la de la ventana
         if (pendiente) accion();
         cancelar();
@@ -4709,15 +4881,15 @@ function cuandoAparece(ventana, accion) {
 
 // Mientras dura el combate la página de atrás queda quieta (igual que con el zoom de una carta): ni rueda, ni dedo, ni teclas.
 // Lo único que se puede mover es el propio cartel cuando no entra entero en la pantalla (por ejemplo, un celular acostado).
-const frenarRuedaDelCombate = (evento) => {
+const frenarRuedaDelCombate = evento => {
     if (!zonaConScroll(evento.target, evento.deltaY, '.combate-contenedor')) evento.preventDefault();
 };
 
-const frenarToqueDelCombate = (evento) => {
+const frenarToqueDelCombate = evento => {
     if (!zonaConScroll(evento.target, 0, '.combate-contenedor') && evento.cancelable) evento.preventDefault();
 };
 
-const frenarTeclasDelCombate = (evento) => {
+const frenarTeclasDelCombate = evento => {
     if (!TECLAS_DE_DESPLAZAMIENTO.includes(evento.key)) return;
     if (evento.key === ' ' && evento.target.closest?.('button, a, input, textarea, select')) return; // el espacio sobre un botón lo aprieta, no desplaza
     const contenedor = document.querySelector('.combate-contenedor');
@@ -4744,11 +4916,11 @@ async function abrirCartelDeCombate({ didOpen, ...opciones }) {
         closeButtonAriaLabel: t('combate.anular'),
         confirmButtonText: t('aceptar'),
         ...opciones,
-        didOpen: (ventana) => {
+        didOpen: ventana => {
             bloquearFondoDelCombate(true); // queda activo hasta que termina todo el combate (así no hay hueco entre un cartel y el siguiente)
             ventana.querySelector('.swal2-close')?.setAttribute('title', t('combate.anular'));
             didOpen?.(ventana);
-        }
+        },
     });
     return respuesta.isConfirmed;
 }
@@ -4766,15 +4938,14 @@ async function iniciarCombate() {
 }
 
 async function correrCombate() {
-
-    console.log("--- Variables de los digimons seleccionados para el combate 👇 ---")
+    console.log('--- Variables de los digimons seleccionados para el combate 👇 ---');
 
     // Leemos los datos de cada carta seleccionada (nombre, tipo, nivel y elemento)
     const luchador1 = leerLuchador(seleccionados[0]);
     const luchador2 = leerLuchador(seleccionados[1]);
-    console.log(luchador1)
-    console.log(luchador2)
-    console.log("----------------------------------------------------------------------")
+    console.log(luchador1);
+    console.log(luchador2);
+    console.log('----------------------------------------------------------------------');
 
     const ganador = determinarGanador(luchador1, luchador2);
     const cartas = [seleccionados[0], seleccionados[1]]; // las dos cartas que pelean (para mostrarlas en los carteles)
@@ -4784,7 +4955,7 @@ async function correrCombate() {
     // Cuadros de animación
     let anulado = false; // true si en un cartel tocaron la cruz, afuera o Esc: el combate se corta ahí
     try {
-        reproducirSonido(audioMouse)
+        reproducirSonido(audioMouse);
         // El sorbo de la pajita arranca junto con el GIF (ver sincronizarPajita). Si no se puede (por ejemplo, abriendo el
         // archivo sin servidor), queda el plan B: el sonido se repite al mismo ritmo, pero sin alinearlo con el GIF
         const pajita = await prepararPajita();
@@ -4792,7 +4963,9 @@ async function correrCombate() {
         const aceptado = await abrirCartelDeCombate({
             title: `${FASES_COMBATE.preparando.icono} ${t('combate.preparando')}`,
             html: crearCuerpoCartel('preparando', cartas, -1, !pajita),
-            didOpen: (ventana) => { if (pajita) arrancarGifConSorbo(ventana, pajita); }
+            didOpen: ventana => {
+                if (pajita) arrancarGifConSorbo(ventana, pajita);
+            },
         });
         anulado = !aceptado;
         detenerSonido(audioMouse); // Detiene el sonido después de que se cierra la primera ventana
@@ -4809,7 +4982,9 @@ async function correrCombate() {
         const aceptado = await abrirCartelDeCombate({
             title: `${FASES_COMBATE.peleando.icono} ${t('combate.peleando')}`,
             html: crearCuerpoCartel('peleando', cartas, -1, true, ataques),
-            didOpen: (ventana) => { cancelarSonido = cuandoAparece(ventana, () => reproducirSonido(battleMusic)); }
+            didOpen: ventana => {
+                cancelarSonido = cuandoAparece(ventana, () => reproducirSonido(battleMusic));
+            },
         });
         anulado = !aceptado;
         cancelarSonido();
@@ -4821,24 +4996,21 @@ async function correrCombate() {
     if (anulado) return;
 
     try {
-        dialogoAbierto = true; // Marca que el diálogo está abierto
         await abrirCartelDeCombate({
             title: `${FASES_COMBATE.ganador.icono} ${t('combate.ganador', { nombre: ganador })}`,
             html: crearCuerpoCartel('ganador', cartas, indiceGanador),
-            didOpen: (ventana) => {
+            didOpen: ventana => {
                 cancelarSonido = cuandoAparece(ventana, () => {
                     reproducirSonido(winSound);
                     reproducirConDelay(); // Llama a la función con delay para reproducir winMusic
                     lanzarConfeti(ventana);
                 });
-            }
+            },
         });
-        dialogoAbierto = false; // Marca que el diálogo está cerrado
+    } finally {
+        // Se cerró el cartel del ganador (o hubo un error): se corta todo lo que iba a sonar o estaba sonando
         cancelarSonido();
-        detenerSonido(winMusic);
-    } catch (error) {
-        dialogoAbierto = false; // Asegura que el diálogo esté cerrado en caso de error
-        cancelarSonido();
+        cancelarMusicaGanador();
         detenerSonido(winMusic);
     }
 }
@@ -4855,45 +5027,44 @@ function leerLuchador(carta) {
 
 // Probabilidad (de 0 a 1) de que gane el primer luchador, considerando nivel, tipo y elemento
 function calcularProbabilidad(luchador1, luchador2) {
-
-    console.log("--- Cálculos del combate 👇 ---")
+    console.log('--- Cálculos del combate 👇 ---');
 
     // Punto de partida: pelea pareja
     const probabilidadBase = 0.5;
-    console.log("Probabilidad base del primer digimon 👇")
-    console.log(probabilidadBase)
+    console.log('Probabilidad base del primer digimon 👇');
+    console.log(probabilidadBase);
 
     // Ajuste por niveles (si a alguno le falta el nivel, no se ajusta nada). Cuenta el poder en combate, no el número de la carta
     const hayNiveles = luchador1.nivel !== null && luchador2.nivel !== null;
     const diferenciaDeNivel = hayNiveles ? poderEnCombate(luchador1.nivel) - poderEnCombate(luchador2.nivel) : 0;
     const ajusteNivel = diferenciaDeNivel * PESO_NIVEL;
-    console.log("Diferencia de nivel 👇")
-    console.log(diferenciaDeNivel)
-    console.log("Ajuste por nivel 👇")
-    console.log(ajusteNivel)
+    console.log('Diferencia de nivel 👇');
+    console.log(diferenciaDeNivel);
+    console.log('Ajuste por nivel 👇');
+    console.log(ajusteNivel);
 
     // Contra un nivel 7 u 8 con el rival muy por debajo, el tipo y el elemento valen menos (1 = valen todo)
     const brecha = Math.abs(diferenciaDeNivel);
     const hayNivelAlto = hayNiveles && Math.max(luchador1.nivel, luchador2.nivel) >= 7;
     const valorVentajas = hayNivelAlto && brecha > ALCANCE_VENTAJAS ? ALCANCE_VENTAJAS / brecha : 1;
-    console.log("Cuánto valen el tipo y el elemento (1 = todo) 👇")
-    console.log(valorVentajas)
+    console.log('Cuánto valen el tipo y el elemento (1 = todo) 👇');
+    console.log(valorVentajas);
 
     // Ajuste por tipo: +1 si el tipo 1 es fuerte contra el tipo 2, -1 si es débil, 0 si están parejos
     const ventajaTipo = calcularVentaja(TIPO_FUERTE_CONTRA, luchador1.tipo, luchador2.tipo);
     const ajusteTipo = ventajaTipo * PESO_TIPO * valorVentajas;
-    console.log("Ventaja de tipo (+1 a favor, -1 en contra) 👇")
-    console.log(ventajaTipo)
-    console.log("Ajuste por tipo 👇")
-    console.log(ajusteTipo)
+    console.log('Ventaja de tipo (+1 a favor, -1 en contra) 👇');
+    console.log(ventajaTipo);
+    console.log('Ajuste por tipo 👇');
+    console.log(ajusteTipo);
 
     // Ajuste por elemento: +1 a favor, -1 en contra, 0 si están parejos (o alguno es Neutro)
     const ventajaElemento = calcularVentaja(ELEMENTO_FUERTE_CONTRA, luchador1.elemento, luchador2.elemento);
     const ajusteElemento = ventajaElemento * PESO_ELEMENTO * valorVentajas;
-    console.log("Ventaja de elemento (+1 a favor, -1 en contra) 👇")
-    console.log(ventajaElemento)
-    console.log("Ajuste por elemento 👇")
-    console.log(ajusteElemento)
+    console.log('Ventaja de elemento (+1 a favor, -1 en contra) 👇');
+    console.log(ventajaElemento);
+    console.log('Ajuste por elemento 👇');
+    console.log(ajusteElemento);
 
     // Sumamos todo y nos aseguramos de que la probabilidad esté entre 0 y 1 (redondeada a 2 decimales)
     const suma = probabilidadBase + ajusteTipo + ajusteNivel + ajusteElemento;
@@ -4903,14 +5074,14 @@ function calcularProbabilidad(luchador1, luchador2) {
 // Función para determinar el ganador considerando tipo, nivel y elemento
 function determinarGanador(luchador1, luchador2) {
     const probabilidadAjustada = calcularProbabilidad(luchador1, luchador2);
-    console.log("El N° aleatorio debe ser inferior a este 👇 para ganar")
-    console.log(probabilidadAjustada)
+    console.log('El N° aleatorio debe ser inferior a este 👇 para ganar');
+    console.log(probabilidadAjustada);
 
     // Generación de resultado aleatorio
     const random = Math.random();
-    console.log("Número aleatorio 👇")
-    console.log(random)
-    console.log("----------------------------------------------------------------------")
+    console.log('Número aleatorio 👇');
+    console.log(random);
+    console.log('----------------------------------------------------------------------');
 
     if (random < probabilidadAjustada) {
         return luchador1.nombre;
@@ -4961,13 +5132,14 @@ let intervaloSonido;
 
 aplicarSilencio(); // si la persona había dejado el sonido apagado, los archivos de audio arrancan en silencio
 
+// play() devuelve una promesa: si el navegador no deja sonar (por ejemplo, sin un toque previo), se ignora en vez de dejar un error en la consola
 function reproducirSonido(audio) {
-    audio.play();
+    audio.play()?.catch(() => {});
 }
 
 function detenerSonido(audio) {
     audio.pause();
-    audio.currentTime = 0; 
+    audio.currentTime = 0;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -4980,9 +5152,9 @@ function detenerSonido(audio) {
 const PAJITA = {
     gif: './img/Trabajando.gif',
     audio: 'audio/Pajita.mp3',
-    vuelta: 1560,  // ms que dura una vuelta del GIF (22 cuadros)
-    sorbo: 700,    // ms que dura el sorbo: en los cuadros 0 a 9 el chico tiene la pajita en la boca
-    ajuste: 0,     // ms para correr el sonido si en tu compu lo sentís desfasado: negativo = antes, positivo = después
+    vuelta: 1560, // ms que dura una vuelta del GIF (22 cuadros)
+    sorbo: 700, // ms que dura el sorbo: en los cuadros 0 a 9 el chico tiene la pajita en la boca
+    ajuste: 0, // ms para correr el sonido si en tu compu lo sentís desfasado: negativo = antes, positivo = después
 };
 
 let descargasPajita = null; // promesa con el GIF y el sonido ya bajados ({ gif, audio }), o null si no se pudo
@@ -4994,9 +5166,11 @@ const sorbosSonando = new Set();
 // Baja el GIF y el sonido una sola vez (se pide al elegir la primera carta, así ya están cuando empieza el combate)
 function precargarPajita() {
     descargasPajita ||= Promise.all([
-        fetch(PAJITA.gif).then(r => r.ok ? r.blob() : Promise.reject(new Error(r.status))),
-        fetch(PAJITA.audio).then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.status))),
-    ]).then(([gif, audio]) => ({ gif, audio })).catch(() => null);
+        fetch(PAJITA.gif).then(r => (r.ok ? r.blob() : Promise.reject(new Error(r.status)))),
+        fetch(PAJITA.audio).then(r => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.status)))),
+    ])
+        .then(([gif, audio]) => ({ gif, audio }))
+        .catch(() => null);
     return descargasPajita;
 }
 
@@ -5040,11 +5214,14 @@ function sincronizarPajita(inicio) {
         let cuando = inicio + vuelta * PAJITA.vuelta + PAJITA.ajuste;
         while (cuando < performance.now() - 150) cuando = inicio + ++vuelta * PAJITA.vuelta + PAJITA.ajuste; // si la página se trabó, se saltean los sorbos perdidos
         // Se programa con 120 ms de anticipación: Web Audio hace el resto con exactitud
-        temporizadorPajita = setTimeout(() => {
-            sonarSorbo(cuando);
-            vuelta++;
-            programar();
-        }, Math.max(0, cuando - performance.now() - 120));
+        temporizadorPajita = setTimeout(
+            () => {
+                sonarSorbo(cuando);
+                vuelta++;
+                programar();
+            },
+            Math.max(0, cuando - performance.now() - 120),
+        );
     };
     programar();
 }
@@ -5072,7 +5249,7 @@ function sonarSorbo(cuando) {
 function reproducirPajita() {
     const sorbo = () => {
         audioPajita.currentTime = 0;
-        audioPajita.play();
+        reproducirSonido(audioPajita);
         setTimeout(() => audioPajita.pause(), PAJITA.sorbo);
     };
     sorbo();
@@ -5082,7 +5259,13 @@ function reproducirPajita() {
 function detenerSonidoPajita() {
     clearInterval(intervaloSonido);
     clearTimeout(temporizadorPajita);
-    sorbosSonando.forEach(fuente => { try { fuente.stop(); } catch (error) { /* ya había terminado */ } });
+    sorbosSonando.forEach(fuente => {
+        try {
+            fuente.stop();
+        } catch (error) {
+            /* ya había terminado */
+        }
+    });
     sorbosSonando.clear();
     audioPajita.pause();
     audioPajita.currentTime = 0;
@@ -5092,13 +5275,17 @@ function detenerSonidoPajita() {
     }
 }
 
+// La música del ganador entra 2,45 s después del sonido de victoria. Si el cartel se cierra antes, se cancela (cancelarMusicaGanador)
+let temporizadorMusicaGanador = 0;
 
 function reproducirConDelay() {
-    setTimeout(() => {
-        if (dialogoAbierto) {
-            winMusic.play();
-        }
-    }, 2450); 
+    cancelarMusicaGanador();
+    temporizadorMusicaGanador = setTimeout(() => reproducirSonido(winMusic), 2450);
 }
 
-// --------------------------------------------------------------------------------------------------------
+function cancelarMusicaGanador() {
+    clearTimeout(temporizadorMusicaGanador);
+    temporizadorMusicaGanador = 0;
+}
+
+// --------------------------------------------------------------------------------------------------------

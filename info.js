@@ -107,7 +107,7 @@ function mostrarInfo(titulo, descripcion, datos, pie) {
         confirmButtonText: t('aceptar'),
         focusConfirm: false,
         customClass: { popup: 'popup-info' }, // para darle al título la fuente pixelada de la barra (ver styles.scss)
-        didOpen: (popup) => {
+        didOpen: popup => {
             popup.querySelector('.swal2-confirm')?.blur();
         },
     });
@@ -126,7 +126,7 @@ function infoTipo(tipo) {
             [t('info.fuerte'), enLista(fuerte, linkTipo)],
             [t('info.debil'), enLista(debil, linkTipo)],
         ],
-        sinVentajas ? t('tipo.pieSin') : t('tipo.pie', { p: porcentaje(PESO_TIPO) })
+        sinVentajas ? t('tipo.pieSin') : t('tipo.pie', { p: porcentaje(PESO_TIPO) }),
     );
 }
 
@@ -148,7 +148,7 @@ function infoElemento(elemento) {
         conEmojiElemento(elemento),
         t(`elemento.desc.${elemento}`),
         datos,
-        elemento === 'Neutro' ? t('elemento.pieNeutro') : t('elemento.pie', { p: porcentaje(PESO_ELEMENTO) })
+        elemento === 'Neutro' ? t('elemento.pieNeutro') : t('elemento.pie', { p: porcentaje(PESO_ELEMENTO) }),
     );
 }
 
@@ -193,14 +193,16 @@ function infoNivel(nivelApi) {
         poder === undefined ? nombre : t('info.nivelTitulo', { nombre, n: poder }),
         t(`nivel.desc.${nivelApi}`),
         datos,
-        poder === undefined ? t('nivel.pieSin')
-            : poderCombate !== undefined ? t('nivel.pieAlto', { n: poderCombate, p: porcentaje(PESO_NIVEL) })
-            : t('nivel.pie', { p: porcentaje(PESO_NIVEL) })
+        poder === undefined
+            ? t('nivel.pieSin')
+            : poderCombate !== undefined
+              ? t('nivel.pieAlto', { n: poderCombate, p: porcentaje(PESO_NIVEL) })
+              : t('nivel.pie', { p: porcentaje(PESO_NIVEL) }),
     );
 }
 
 // Clics en referencias cruzadas (links)
-document.addEventListener('click', (evento) => {
+document.addEventListener('click', evento => {
     const linkT = evento.target.closest('.info-link-tipo');
     if (linkT) {
         evento.preventDefault();
@@ -276,8 +278,8 @@ function obtenerDigimonsConAtaque(nombreAtaque) {
         const nvA = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[a.dataset.nivelApi]) ?? 99;
         const nvB = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[b.dataset.nivelApi]) ?? 99;
         if (nvA !== nvB) return nvA - nvB;
-        const nomA = typeof nombreCompleto === 'function' ? nombreCompleto(a) : (a.dataset.nombreApi || '');
-        const nomB = typeof nombreCompleto === 'function' ? nombreCompleto(b) : (b.dataset.nombreApi || '');
+        const nomA = typeof nombreCompleto === 'function' ? nombreCompleto(a) : a.dataset.nombreApi || '';
+        const nomB = typeof nombreCompleto === 'function' ? nombreCompleto(b) : b.dataset.nombreApi || '';
         return nomA.localeCompare(nomB);
     });
 
@@ -293,12 +295,13 @@ function crearMiniNodoDigimon(carta) {
 
     const nvOriginal = carta.dataset.nivelApi;
     const nvNumero = typeof numeracionNiveles !== 'undefined' ? numeracionNiveles[nvOriginal] : undefined;
-    const color = (typeof COLOR_NIVEL !== 'undefined' && COLOR_NIVEL[nvNumero])
-        || carta.querySelector('.c-arte')?.style.getPropertyValue('--c')
-        || (typeof COLOR_NIVEL_DESCONOCIDO !== 'undefined' ? COLOR_NIVEL_DESCONOCIDO : '#3a8dde');
+    const color =
+        (typeof COLOR_NIVEL !== 'undefined' && COLOR_NIVEL[nvNumero]) ||
+        carta.querySelector('.c-arte')?.style.getPropertyValue('--c') ||
+        (typeof COLOR_NIVEL_DESCONOCIDO !== 'undefined' ? COLOR_NIVEL_DESCONOCIDO : '#3a8dde');
     nodo.style.setProperty('--c', color);
 
-    const nombreTexto = typeof nombreCompleto === 'function' ? nombreCompleto(carta) : (carta.dataset.nombreApi || '');
+    const nombreTexto = typeof nombreCompleto === 'function' ? nombreCompleto(carta) : carta.dataset.nombreApi || '';
     nodo.title = `${nombreTexto} (${t('ataques.irACarta') || 'Ir a la carta'})`;
 
     const imagen = document.createElement('img');
@@ -316,12 +319,12 @@ function crearMiniNodoDigimon(carta) {
 
     const nivel = document.createElement('span');
     nivel.className = 'evo-nv';
-    nivel.textContent = typeof nombreNivel === 'function' ? nombreNivel(carta.dataset.nivelApi) : (nvOriginal || '');
+    nivel.textContent = typeof nombreNivel === 'function' ? nombreNivel(carta.dataset.nivelApi) : nvOriginal || '';
 
     texto.append(nombre, nivel);
     nodo.append(imagen, texto);
 
-    nodo.addEventListener('click', (e) => {
+    nodo.addEventListener('click', e => {
         e.stopPropagation();
         if (typeof window.irALaCarta === 'function') {
             window.irALaCarta(id);
@@ -335,7 +338,7 @@ function crearListaDeAtaques(habilidades, cartaActual) {
     const lista = document.createElement('ul');
     lista.className = 'ataques-lista';
 
-    const cerrarTodos = (salvo) => {
+    const cerrarTodos = salvo => {
         for (const otro of lista.querySelectorAll('.ataque-boton[aria-expanded="true"]')) {
             if (otro === salvo) continue;
             otro.setAttribute('aria-expanded', 'false');
@@ -448,10 +451,12 @@ function abrirAtaques(carta) {
         focusConfirm: false,
         width: 'min(94vw, 680px)',
         customClass: { popup: 'popup-info popup-ataques' }, // el título con la fuente pixelada, como las otras ventanas de información
-        didOpen: (popup) => {
+        didOpen: popup => {
             popup.querySelector('.swal2-confirm')?.blur();
         },
-        willClose: () => { cartaDeAtaques = null; },
+        willClose: () => {
+            cartaDeAtaques = null;
+        },
     });
 }
 
@@ -499,13 +504,22 @@ function escribirOpciones(idLista, opciones) {
 
 // Se llama al cargar la página y cada vez que cambia el idioma
 function escribirMenus() {
-    escribirOpciones('lista-tipos', ORDEN_TIPOS_MENU.map(tipo => [tipo, conEmojiTipo(tipo)]));
-    escribirOpciones('lista-elementos', ORDEN_ELEMENTOS.map(elemento => [elemento, conEmojiElemento(elemento)]));
-    escribirOpciones('lista-niveles', ORDEN_NIVELES.map(nivelApi => {
-        const poder = numeracionNiveles[nivelApi];
-        const nombre = nombreNivel(nivelApi);
-        return [nivelApi, poder === undefined ? nombre : t('info.nivelItem', { nombre, n: poder })];
-    }));
+    escribirOpciones(
+        'lista-tipos',
+        ORDEN_TIPOS_MENU.map(tipo => [tipo, conEmojiTipo(tipo)]),
+    );
+    escribirOpciones(
+        'lista-elementos',
+        ORDEN_ELEMENTOS.map(elemento => [elemento, conEmojiElemento(elemento)]),
+    );
+    escribirOpciones(
+        'lista-niveles',
+        ORDEN_NIVELES.map(nivelApi => {
+            const poder = numeracionNiveles[nivelApi];
+            const nombre = nombreNivel(nivelApi);
+            return [nivelApi, poder === undefined ? nombre : t('info.nivelItem', { nombre, n: poder })];
+        }),
+    );
 }
 
 // Comportamiento de los menús: un botón que abre y cierra la lista con el clic (también con teclado).
@@ -523,7 +537,7 @@ function activarMenusInfo() {
 
         menu.querySelector('.menu-desplegable').addEventListener('click', () => abrir(menu, !estaAbierto(menu)));
 
-        lista.addEventListener('click', (evento) => {
+        lista.addEventListener('click', evento => {
             const boton = evento.target.closest('button[data-k]');
             if (!boton) return;
             abrir(menu, false);
@@ -531,13 +545,13 @@ function activarMenusInfo() {
         });
     });
 
-    document.addEventListener('pointerdown', (evento) => {
+    document.addEventListener('pointerdown', evento => {
         menus.forEach(menu => {
             if (estaAbierto(menu) && !menu.contains(evento.target)) abrir(menu, false);
         });
     });
 
-    document.addEventListener('keydown', (evento) => {
+    document.addEventListener('keydown', evento => {
         if (evento.key !== 'Escape') return;
         menus.forEach(menu => {
             if (estaAbierto(menu)) {
@@ -555,7 +569,7 @@ function activarMenuMovil() {
     const boton = document.getElementById('abrir-menu');
     const panel = document.getElementById('menu-movil');
     const estaAbierto = () => barra.classList.contains('menu-abierto');
-    const abrir = (abierto) => {
+    const abrir = abierto => {
         barra.classList.toggle('menu-abierto', abierto);
         boton.setAttribute('aria-expanded', String(abierto));
         // Al cerrar el panel también se recogen las listas de información y de filtros: al volver a abrirlo están cerradas
@@ -570,23 +584,27 @@ function activarMenuMovil() {
     boton.addEventListener('click', () => abrir(!estaAbierto()));
 
     // Al elegir una opción de información se abre su ventana: el panel se cierra
-    panel.addEventListener('click', (evento) => {
+    panel.addEventListener('click', evento => {
         if (evento.target.closest('ul button[data-k]')) abrir(false);
     });
 
-    document.addEventListener('pointerdown', (evento) => {
+    document.addEventListener('pointerdown', evento => {
         if (estaAbierto() && !panel.contains(evento.target) && !boton.contains(evento.target)) abrir(false);
     });
 
-    document.addEventListener('keydown', (evento) => {
-        // Si hay una lista de información o de filtros abierta, Esc primero cierra esa lista (lo hacen activarMenusInfo y filtros.js)
-        if (evento.key !== 'Escape' || !estaAbierto() || panel.querySelector('.menu-info.abierto, .f-grupo.abierto')) return;
-        abrir(false);
-        boton.focus();
-    }, true); // en captura: se decide antes de que Esc cierre la lista de información
+    document.addEventListener(
+        'keydown',
+        evento => {
+            // Si hay una lista de información o de filtros abierta, Esc primero cierra esa lista (lo hacen activarMenusInfo y filtros.js)
+            if (evento.key !== 'Escape' || !estaAbierto() || panel.querySelector('.menu-info.abierto, .f-grupo.abierto')) return;
+            abrir(false);
+            boton.focus();
+        },
+        true,
+    ); // en captura: se decide antes de que Esc cierre la lista de información
 
     // Si la ventana se agranda hasta el diseño de computadora, el panel deja de existir: se cierra
-    window.matchMedia('(max-width: 700px)').addEventListener('change', (cambio) => {
+    window.matchMedia('(max-width: 700px)').addEventListener('change', cambio => {
         if (!cambio.matches) abrir(false);
     });
 }
@@ -599,33 +617,37 @@ function activarBarraQueSeEsconde() {
     const barra = document.getElementById('navbar');
     const celular = window.matchMedia('(max-width: 700px)');
     const SIEMPRE_VISIBLE_ARRIBA = 60; // px desde el borde de arriba de la página: ahí la barra siempre se ve
-    const BAJADA_PARA_ESCONDER = 14;   // px seguidos hacia abajo para que se esconda (un temblor del dedo no alcanza)
-    const SUBIDA_PARA_MOSTRAR = 8;     // px seguidos hacia arriba para que aparezca
+    const BAJADA_PARA_ESCONDER = 14; // px seguidos hacia abajo para que se esconda (un temblor del dedo no alcanza)
+    const SUBIDA_PARA_MOSTRAR = 8; // px seguidos hacia arriba para que aparezca
     let ultimoY = window.scrollY;
     let recorrido = 0; // px que se lleva recorridos en la dirección actual (positivo: bajando, negativo: subiendo)
 
     const mostrar = () => barra.classList.remove('barra-escondida');
 
-    window.addEventListener('scroll', () => {
-        if (!celular.matches) {
-            mostrar();
-            return;
-        }
-        // El rebote de iPhone en los extremos pasa de los límites de la página: se recorta para que no cuente como un gesto
-        const y = Math.max(0, Math.min(window.scrollY, document.documentElement.scrollHeight - window.innerHeight));
-        const dy = y - ultimoY;
-        ultimoY = y;
-        if (dy === 0) return;
-        recorrido = (dy > 0) === (recorrido > 0) && recorrido !== 0 ? recorrido + dy : dy;
+    window.addEventListener(
+        'scroll',
+        () => {
+            if (!celular.matches) {
+                mostrar();
+                return;
+            }
+            // El rebote de iPhone en los extremos pasa de los límites de la página: se recorta para que no cuente como un gesto
+            const y = Math.max(0, Math.min(window.scrollY, document.documentElement.scrollHeight - window.innerHeight));
+            const dy = y - ultimoY;
+            ultimoY = y;
+            if (dy === 0) return;
+            recorrido = dy > 0 === recorrido > 0 && recorrido !== 0 ? recorrido + dy : dy;
 
-        if (y <= SIEMPRE_VISIBLE_ARRIBA || barra.classList.contains('menu-abierto')) {
-            mostrar();
-        } else if (recorrido >= BAJADA_PARA_ESCONDER) {
-            barra.classList.add('barra-escondida');
-        } else if (recorrido <= -SUBIDA_PARA_MOSTRAR) {
-            mostrar();
-        }
-    }, { passive: true });
+            if (y <= SIEMPRE_VISIBLE_ARRIBA || barra.classList.contains('menu-abierto')) {
+                mostrar();
+            } else if (recorrido >= BAJADA_PARA_ESCONDER) {
+                barra.classList.add('barra-escondida');
+            } else if (recorrido <= -SUBIDA_PARA_MOSTRAR) {
+                mostrar();
+            }
+        },
+        { passive: true },
+    );
 
     // Si la ventana pasa al diseño de computadora (o vuelve al celular), la barra arranca a la vista
     celular.addEventListener('change', () => {

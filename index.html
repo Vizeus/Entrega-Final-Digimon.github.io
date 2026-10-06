@@ -1,225 +1,328 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Digimon</title>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digimon</title>
+        <link rel="shortcut icon" href="./img/favicon.ico" type="image/png" />
 
-    <link rel="shortcut icon" href="./img/favicon.ico" type="image/png">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- Enlaces a los scripts. El orden importa: primero los idiomas (i18n.js), después la página (main.js) y por último
+        <!-- Enlaces a los scripts. El orden importa: primero los idiomas (i18n.js), después la página (main.js) y por último
          los filtros y las ventanas de información, que usan lo que definen los anteriores -->
-    <script defer src="./i18n.js"></script>
-    <script defer src="./nombres.js"></script>
-    <script defer src="./main.js"></script>
-    <script defer src="./filtros.js"></script>
-    <script defer src="./info.js"></script>
-    <script defer src="./evolucion.js"></script>
-    <script defer src="./baile.js"></script>
+        <script defer src="./i18n.js"></script>
+        <script defer src="./nombres.js"></script>
+        <script defer src="./main.js"></script>
+        <script defer src="./filtros.js"></script>
+        <script defer src="./info.js"></script>
+        <script defer src="./evolucion.js"></script>
+        <script defer src="./baile.js"></script>
 
-    <!-- Fuentes -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Orbitron (nombres), Pixelify Sans (etiquetas y botones), Exo 2 (textos) y DotGothic16 (descripción del dorso) -->
-    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Exo+2:wght@400;500;600;700&family=Orbitron:wght@800;900&family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+        <!-- Fuentes -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <!-- Orbitron (nombres), Pixelify Sans (etiquetas y botones), Exo 2 (textos) y DotGothic16 (descripción del dorso) -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Exo+2:wght@400;500;600;700&family=Orbitron:wght@800;900&family=Pixelify+Sans:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
 
-    <link rel="stylesheet" href="./design/styles.css"/>
-</head>
+        <link rel="stylesheet" href="./design/styles.css" />
+    </head>
 
-<body>
-
-<!-- Los textos que llevan data-i18n (o data-i18n-html / data-i18n-attr) se traducen con i18n.js.
+    <body>
+        <!-- Los textos que llevan data-i18n (o data-i18n-html / data-i18n-attr) se traducen con i18n.js.
      Lo que está escrito acá es el texto en español, que se reemplaza según el idioma de la persona. -->
 
-<!-- Barra de navegación sticky -->
-<nav id="navbar">
-    <img src="./img/DigimonLogo.png" alt="Logo de Digimon" title="Logo de Digimon" class="animate__animated animate__bounce"
-         data-i18n-attr="alt:logo.alt;title:logo.alt">
+        <!-- Barra de navegación sticky -->
+        <nav id="navbar">
+            <img
+                src="./img/DigimonLogo.png"
+                alt="Logo de Digimon"
+                title="Logo de Digimon"
+                class="animate__animated animate__bounce"
+                data-i18n-attr="alt:logo.alt;title:logo.alt"
+            />
 
-    <!-- Panel de combate: la consigna, cuántos digimons van elegidos y el botón principal, todo junto -->
-    <div class="combate">
-        <p class="consigna" data-i18n="combate.consigna">Elige 2 digimons con los que quieras simular un combate</p>
-        <!-- Es un botón: con 1 o 2 digimons elegidos se puede tocar para quitar la selección (la ayuda la escribe main.js) -->
-        <button type="button" id="contador-seleccion" class="contador" disabled title="Digimons elegidos"
-                aria-label="0/2 · Digimons elegidos">0/2</button>
-        <!-- Empieza deshabilitado: se activa al elegir 2 digimons -->
-        <button id="iniciar-combate" class="botones" disabled title="Elige 2 digimons para poder iniciar el combate"
-                data-i18n="combate.iniciar" data-i18n-attr="title:combate.iniciar.ayuda">Iniciar Combate</button>
-    </div>
+            <!-- Panel de combate: la consigna, cuántos digimons van elegidos y el botón principal, todo junto -->
+            <div class="combate">
+                <p class="consigna" data-i18n="combate.consigna">Elige 2 digimons con los que quieras simular un combate</p>
+                <!-- Es un botón: con 1 o 2 digimons elegidos se puede tocar para quitar la selección (la ayuda la escribe main.js) -->
+                <button type="button" id="contador-seleccion" class="contador" disabled title="Digimons elegidos" aria-label="0/2 · Digimons elegidos">
+                    0/2
+                </button>
+                <!-- Empieza deshabilitado: se activa al elegir 2 digimons -->
+                <button
+                    id="iniciar-combate"
+                    class="botones"
+                    disabled
+                    title="Elige 2 digimons para poder iniciar el combate"
+                    data-i18n="combate.iniciar"
+                    data-i18n-attr="title:combate.iniciar.ayuda"
+                >
+                    Iniciar Combate
+                </button>
+            </div>
 
-    <!-- En celular: botón ☰ que abre el menú con la consigna, los ajustes y los menús de información -->
-    <button type="button" id="abrir-menu" class="botones" aria-expanded="false" aria-controls="menu-movil"
-            title="Más opciones" aria-label="Más opciones" data-i18n-attr="title:menu.abrir;aria-label:menu.abrir">
-        <span aria-hidden="true">☰</span>
-    </button>
+            <!-- En celular: botón ☰ que abre el menú con la consigna, los ajustes y los menús de información -->
+            <button
+                type="button"
+                id="abrir-menu"
+                class="botones"
+                aria-expanded="false"
+                aria-controls="menu-movil"
+                title="Más opciones"
+                aria-label="Más opciones"
+                data-i18n-attr="title:menu.abrir;aria-label:menu.abrir"
+            >
+                <span aria-hidden="true">☰</span>
+            </button>
 
-    <!-- En computadora este contenedor no existe para el diseño (display: contents) y todo queda en la barra, como siempre.
+            <!-- En computadora este contenedor no existe para el diseño (display: contents) y todo queda en la barra, como siempre.
          En celular es el panel que se despliega con el botón ☰ -->
-    <div id="menu-movil" class="menu-movil">
-    <p class="menu-consigna" data-i18n="combate.consigna">Elige 2 digimons con los que quieras simular un combate</p>
+            <div id="menu-movil" class="menu-movil">
+                <p class="menu-consigna" data-i18n="combate.consigna">Elige 2 digimons con los que quieras simular un combate</p>
 
-    <!-- Filtros y buscador: van en la barra, así acompañan al bajar por la lista. En computadora son la segunda fila de la barra;
+                <!-- Filtros y buscador: van en la barra, así acompañan al bajar por la lista. En computadora son la segunda fila de la barra;
              en celular, parte del panel que se despliega con ☰. Los botones con las opciones (los "chips") los arma filtros.js -->
-    <section id="filtros" aria-label="Filtros y buscador de digimons" data-i18n-attr="aria-label:filtros.region">
-        <span class="f-titulo"><span aria-hidden="true">🔎</span> <span data-i18n="filtros.titulo">Filtros</span></span>
+                <section id="filtros" aria-label="Filtros y buscador de digimons" data-i18n-attr="aria-label:filtros.region">
+                    <span class="f-titulo"><span aria-hidden="true">🔎</span> <span data-i18n="filtros.titulo">Filtros</span></span>
 
-        <label class="f-buscar">
-            <span class="f-lupa" aria-hidden="true">🔍</span>
-            <input type="text" role="searchbox" autocomplete="off" spellcheck="false"
-                   placeholder="Buscar digimon por nombre o número" aria-label="Buscar digimon por nombre o número"
-                   data-i18n-attr="placeholder:filtros.buscar;aria-label:filtros.buscar">
-            <button type="button" class="f-x" hidden title="Borrar búsqueda" aria-label="Borrar búsqueda"
-                    data-i18n-attr="title:filtros.borrarBusqueda;aria-label:filtros.borrarBusqueda">✕</button>
-        </label>
+                    <label class="f-buscar">
+                        <span class="f-lupa" aria-hidden="true">🔍</span>
+                        <input
+                            type="text"
+                            role="searchbox"
+                            autocomplete="off"
+                            spellcheck="false"
+                            placeholder="Buscar digimon por nombre o número"
+                            aria-label="Buscar digimon por nombre o número"
+                            data-i18n-attr="placeholder:filtros.buscar;aria-label:filtros.buscar"
+                        />
+                        <button
+                            type="button"
+                            class="f-x"
+                            hidden
+                            title="Borrar búsqueda"
+                            aria-label="Borrar búsqueda"
+                            data-i18n-attr="title:filtros.borrarBusqueda;aria-label:filtros.borrarBusqueda"
+                        >
+                            ✕
+                        </button>
+                    </label>
 
-        <div class="f-grupo" data-g="tipo">
-            <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-                <span data-i18n="filtros.tipo">Tipo</span><b class="f-n" hidden>0</b>
-            </button>
-            <div class="f-panel" role="group" aria-label="Filtrar por tipo" data-i18n-attr="aria-label:filtros.porTipo"></div>
-        </div>
+                    <div class="f-grupo" data-g="tipo">
+                        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                            <span data-i18n="filtros.tipo">Tipo</span><b class="f-n" hidden>0</b>
+                        </button>
+                        <div class="f-panel" role="group" aria-label="Filtrar por tipo" data-i18n-attr="aria-label:filtros.porTipo"></div>
+                    </div>
 
-        <div class="f-grupo" data-g="nivel">
-            <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-                <span data-i18n="filtros.nivel">Nivel</span><b class="f-n" hidden>0</b>
-            </button>
-            <div class="f-panel" role="group" aria-label="Filtrar por nivel" data-i18n-attr="aria-label:filtros.porNivel"></div>
-        </div>
+                    <div class="f-grupo" data-g="nivel">
+                        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                            <span data-i18n="filtros.nivel">Nivel</span><b class="f-n" hidden>0</b>
+                        </button>
+                        <div class="f-panel" role="group" aria-label="Filtrar por nivel" data-i18n-attr="aria-label:filtros.porNivel"></div>
+                    </div>
 
-        <div class="f-grupo" data-g="elemento">
-            <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-                <span data-i18n="filtros.elemento">Elemento</span><b class="f-n" hidden>0</b>
-            </button>
-            <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
-        </div>
+                    <div class="f-grupo" data-g="elemento">
+                        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                            <span data-i18n="filtros.elemento">Elemento</span><b class="f-n" hidden>0</b>
+                        </button>
+                        <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
+                    </div>
 
-        <!-- X-Antibody: un solo botón con tres estados. Cada clic pasa al siguiente (indistinto → solo con X-Antibody → solo sin X-Antibody).
+                    <!-- X-Antibody: un solo botón con tres estados. Cada clic pasa al siguiente (indistinto → solo con X-Antibody → solo sin X-Antibody).
              El texto y el estado los escribe filtros.js -->
-        <button type="button" class="f-btn f-xa" data-estado="indistinto" aria-label="X-Antibody">
-            <span class="f-xa-gema" aria-hidden="true">X</span><span class="f-xa-texto">X-Antibody</span>
-        </button>
+                    <button type="button" class="f-btn f-xa" data-estado="indistinto" aria-label="X-Antibody">
+                        <span class="f-xa-gema" aria-hidden="true">X</span><span class="f-xa-texto">X-Antibody</span>
+                    </button>
 
-        <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
-        <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
+                    <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
+                    <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
 
-        <div class="f-resumen">
-            <span class="f-cuenta" aria-live="polite"></span>
-            <button type="button" class="f-limpiar" hidden data-i18n="filtros.limpiar">Limpiar ✕</button>
-        </div>
-    </section>
+                    <div class="f-resumen">
+                        <span class="f-cuenta" aria-live="polite"></span>
+                        <button type="button" class="f-limpiar" hidden data-i18n="filtros.limpiar">Limpiar ✕</button>
+                    </div>
+                </section>
 
-    <!-- Ajustes: sistema de clasificación de niveles (Japón / EE.UU.) e idioma. Van juntos, en el centro de la barra.
+                <!-- Ajustes: sistema de clasificación de niveles (Japón / EE.UU.) e idioma. Van juntos, en el centro de la barra.
          El selector de niveles muestra las dos opciones a la vista, con el rótulo "Niveles" y la activa resaltada (como el de idioma).
          Cada opción lleva un ejemplo del nombre que usa ese sistema, que en celular se ve (ahí no hay "hover" para leer la ayuda).
          El título y el aria-label (el sistema actual y cómo cambiarlo) los escribe main.js -->
-    <div class="ajustes">
-        <button type="button" id="cambiar-niveles" class="botones">
-            <span class="sn-rotulo" data-i18n="niveles.rotulo">Niveles</span>
-            <span class="sn-opcion" data-sistema="japon"><img src="./img/Japon.png" alt="" width="21" height="14"><small>Adult</small></span>
-            <span class="sn-opcion" data-sistema="eeuu"><img src="./img/EEUU.png" alt="" width="27" height="14"><small>Champion</small></span>
-        </button>
+                <div class="ajustes">
+                    <button type="button" id="cambiar-niveles" class="botones">
+                        <span class="sn-rotulo" data-i18n="niveles.rotulo">Niveles</span>
+                        <span class="sn-opcion" data-sistema="japon"><img src="./img/Japon.png" alt="" width="21" height="14" /><small>Adult</small></span>
+                        <span class="sn-opcion" data-sistema="eeuu"><img src="./img/EEUU.png" alt="" width="27" height="14" /><small>Champion</small></span>
+                    </button>
 
-        <!-- Idioma: muestra los dos y resalta el que está activo. Al inicio se elige solo, según el idioma del navegador.
+                    <!-- Idioma: muestra los dos y resalta el que está activo. Al inicio se elige solo, según el idioma del navegador.
              El ícono de dos globos de diálogo (una "A" y un "文") es el símbolo universal de "idioma / traducir": se entiende
              sin leer. Es decorativo (aria-hidden): el botón ya tiene su nombre en el aria-label -->
-        <button type="button" id="cambiar-idioma" title="Cambiar idioma (Español / English)"
-                aria-label="Cambiar idioma (Español / English)"
-                data-i18n-attr="title:idioma.cambiar;aria-label:idioma.cambiar">
-            <svg class="idioma-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
-                 stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4.5 1.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H7L3.5 13.5V10.4A3 3 0 0 1 1.5 7.5v-3a3 3 0 0 1 3-3z"/>
-                <path d="M5.2 8.8 7.5 3.2 9.8 8.8M6 7h3"/>
-                <path d="M13.5 11.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-2 2.83V23l-3.7-2.5H13.5a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3z"/>
-                <path d="M16.5 12.9v.9M13.6 14.4h5.8M15.9 14.5c-.3 1.9-1.1 3.4-2.4 4.4M15.2 16.1c.8 1.5 2 2.6 3.7 3.1"/>
-            </svg>
-            <span data-idioma="es" class="activo">ES</span><span data-idioma="en">EN</span>
-        </button>
+                    <button
+                        type="button"
+                        id="cambiar-idioma"
+                        title="Cambiar idioma (Español / English)"
+                        aria-label="Cambiar idioma (Español / English)"
+                        data-i18n-attr="title:idioma.cambiar;aria-label:idioma.cambiar"
+                    >
+                        <svg
+                            class="idioma-icono"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M4.5 1.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H7L3.5 13.5V10.4A3 3 0 0 1 1.5 7.5v-3a3 3 0 0 1 3-3z" />
+                            <path d="M5.2 8.8 7.5 3.2 9.8 8.8M6 7h3" />
+                            <path d="M13.5 11.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-2 2.83V23l-3.7-2.5H13.5a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3z" />
+                            <path d="M16.5 12.9v.9M13.6 14.4h5.8M15.9 14.5c-.3 1.9-1.1 3.4-2.4 4.4M15.2 16.1c.8 1.5 2 2.6 3.7 3.1" />
+                        </svg>
+                        <span data-idioma="es" class="activo">ES</span><span data-idioma="en">EN</span>
+                    </button>
 
-        <!-- Sonido: botón chiquito y redondo que apaga (o vuelve a prender) el sonido de la página. En computadora queda en la barra,
+                    <!-- Sonido: botón chiquito y redondo que apaga (o vuelve a prender) el sonido de la página. En computadora queda en la barra,
              junto al selector de idioma. En celular main.js lo saca de acá y lo deja suelto en el <body>: flota siempre en la
              esquina de abajo a la derecha (lo dibuja el CSS) y la primera vez que suena algo en la sesión hace una animación para
              que se vea. En celular da tres vueltas (sonido y vibración → solo vibración → nada → todo); en computadora, dos.
              La ayuda y el paso en que está (data-modo) los escribe main.js; la elección queda guardada en el navegador.
              El ícono cambia con el paso: parlante con ondas (suena), celular que vibra (solo vibración) o parlante con una cruz (nada) -->
-        <button type="button" id="silenciar" data-modo="todo" title="Silenciar el sonido" aria-label="Silenciar el sonido">
-            <svg class="audio-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
-                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <!-- El parlante con sus ondas se dibuja centrado en el círculo -->
-                <g transform="translate(1 0)">
-                    <path class="audio-parlante" d="M10.5 5.2 6.4 8.8H3.2a.7.7 0 0 0-.7.7v5a.7.7 0 0 0 .7.7h3.2l4.1 3.6a.5.5 0 0 0 .8-.4V5.6a.5.5 0 0 0-.8-.4z"/>
-                    <path class="audio-ondas" d="M15.2 9a4.2 4.2 0 0 1 0 6M18 6.4a8 8 0 0 1 0 11.2"/>
-                    <path class="audio-cruz" d="m15.6 9.4 5.2 5.2m0-5.2-5.2 5.2"/>
-                </g>
-                <g class="audio-movil"><rect x="8" y="3.5" width="8" height="17" rx="2"/><path d="M11 17.4h2M4.8 9.2v5.6M2.2 10.8v2.4M19.2 9.2v5.6M21.8 10.8v2.4"/></g>
-            </svg>
-        </button>
+                    <button type="button" id="silenciar" data-modo="todo" title="Silenciar el sonido" aria-label="Silenciar el sonido">
+                        <svg
+                            class="audio-icono"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <!-- El parlante con sus ondas se dibuja centrado en el círculo -->
+                            <g transform="translate(1 0)">
+                                <path
+                                    class="audio-parlante"
+                                    d="M10.5 5.2 6.4 8.8H3.2a.7.7 0 0 0-.7.7v5a.7.7 0 0 0 .7.7h3.2l4.1 3.6a.5.5 0 0 0 .8-.4V5.6a.5.5 0 0 0-.8-.4z"
+                                />
+                                <path class="audio-ondas" d="M15.2 9a4.2 4.2 0 0 1 0 6M18 6.4a8 8 0 0 1 0 11.2" />
+                                <path class="audio-cruz" d="m15.6 9.4 5.2 5.2m0-5.2-5.2 5.2" />
+                            </g>
+                            <g class="audio-movil">
+                                <rect x="8" y="3.5" width="8" height="17" rx="2" />
+                                <path d="M11 17.4h2M4.8 9.2v5.6M2.2 10.8v2.4M19.2 9.2v5.6M21.8 10.8v2.4" />
+                            </g>
+                        </svg>
+                    </button>
 
-        <!-- Inclinación de las cartas con el mouse (solo computadora): botón chiquito y redondo, al lado del de sonido, que invierte cuándo
+                    <!-- Inclinación de las cartas con el mouse (solo computadora): botón chiquito y redondo, al lado del de sonido, que invierte cuándo
              se inclinan. Por defecto se inclinan al pasar el mouse y mantener apretada Shift lo anula; con el botón "hundido" es al revés
              (no se inclinan al pasar el mouse y solo lo hacen mientras se mantiene apretada Shift). La elección se guarda en el navegador.
              Está escondido (hidden): main.js lo muestra solo con mouse y sin "reducir movimiento". La ayuda y el estado (aria-pressed)
              los escribe main.js. El ícono es una carta vista en perspectiva; con la inclinación invertida aparece además la flecha de Shift (⇧) -->
-        <button type="button" id="inclinacion-invertida" hidden aria-pressed="false"
-                title="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo"
-                aria-label="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo">
-            <svg class="inclinacion-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
-                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <g class="inclinacion-carta">
-                    <path d="M2.5 6.5 14.5 2.5v19l-12-4z"/>
-                    <!-- Los detalles de la carta (la ventana de la ilustración y una línea de texto), siguiendo la misma perspectiva, más finos -->
-                    <path d="M4.3 8.1 12.7 6.3v7.84L4.3 13.46zM4.3 15.7l5.4 1" stroke-width="1.3"/>
-                </g>
-                <path class="inclinacion-shift" d="M19.6 11.4 16.3 15.6h2.1V20h2.4v-4.4h2.1z" fill="currentColor" stroke-width="1"/>
-            </svg>
-        </button>
-    </div>
+                    <button
+                        type="button"
+                        id="inclinacion-invertida"
+                        hidden
+                        aria-pressed="false"
+                        title="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo"
+                        aria-label="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo"
+                    >
+                        <svg
+                            class="inclinacion-icono"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <g class="inclinacion-carta">
+                                <path d="M2.5 6.5 14.5 2.5v19l-12-4z" />
+                                <!-- Los detalles de la carta (la ventana de la ilustración y una línea de texto), siguiendo la misma perspectiva, más finos -->
+                                <path d="M4.3 8.1 12.7 6.3v7.84L4.3 13.46zM4.3 15.7l5.4 1" stroke-width="1.3" />
+                            </g>
+                            <path class="inclinacion-shift" d="M19.6 11.4 16.3 15.6h2.1V20h2.4v-4.4h2.1z" fill="currentColor" stroke-width="1" />
+                        </svg>
+                    </button>
+                </div>
 
-    <!-- Herramientas de la barra (secundarias): tres menús de información. Cada uno es un botón de verdad, se abre con clic
+                <!-- Herramientas de la barra (secundarias): tres menús de información. Cada uno es un botón de verdad, se abre con clic
          (o Enter/Espacio) y se cierra con Esc o al hacer clic afuera. Las opciones las escribe info.js (así siguen el idioma) -->
-    <div class="herramientas">
-        <div class="menu-info">
-            <button type="button" id="abrir-tipos" class="menu-desplegable" aria-haspopup="true" aria-expanded="false" aria-controls="lista-tipos"
-                    data-i18n="menu.tipos">Info. tipos</button>
-            <ul id="lista-tipos"></ul>
+                <div class="herramientas">
+                    <div class="menu-info">
+                        <button
+                            type="button"
+                            id="abrir-tipos"
+                            class="menu-desplegable"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="lista-tipos"
+                            data-i18n="menu.tipos"
+                        >
+                            Info. tipos
+                        </button>
+                        <ul id="lista-tipos"></ul>
+                    </div>
+
+                    <div class="menu-info">
+                        <button
+                            type="button"
+                            id="abrir-elementos"
+                            class="menu-desplegable"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="lista-elementos"
+                            data-i18n="menu.elementos"
+                        >
+                            Info. elementos
+                        </button>
+                        <ul id="lista-elementos"></ul>
+                    </div>
+
+                    <div class="menu-info">
+                        <button
+                            type="button"
+                            id="abrir-niveles"
+                            class="menu-desplegable"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="lista-niveles"
+                            data-i18n="menu.niveles"
+                        >
+                            Info. niveles
+                        </button>
+                        <ul id="lista-niveles"></ul>
+                    </div>
+                </div>
+            </div>
+            <!-- /menu-movil -->
+
+            <div class="carga">
+                <label for="carga" data-i18n-html="carga.rotulo">Progreso de la carga de <br />digimons:</label>
+                <progress id="carga" value="" max=""></progress>
+            </div>
+        </nav>
+
+        <!-- Aviso cuando ningún digimon cumple los filtros -->
+        <div id="f-vacio" hidden>
+            <p data-i18n="filtros.vacio">😕 Ningún digimon cumple esa combinación.</p>
+            <button type="button" class="f-limpiar" data-i18n="filtros.limpiarTodo">Limpiar filtros</button>
         </div>
 
-        <div class="menu-info">
-            <button type="button" id="abrir-elementos" class="menu-desplegable" aria-haspopup="true" aria-expanded="false" aria-controls="lista-elementos"
-                    data-i18n="menu.elementos">Info. elementos</button>
-            <ul id="lista-elementos"></ul>
-        </div>
-
-        <div class="menu-info">
-            <button type="button" id="abrir-niveles" class="menu-desplegable" aria-haspopup="true" aria-expanded="false" aria-controls="lista-niveles"
-                    data-i18n="menu.niveles">Info. niveles</button>
-            <ul id="lista-niveles"></ul>
-        </div>
-    </div>
-    </div><!-- /menu-movil -->
-
-    <div class="carga">
-        <label for="carga" data-i18n-html="carga.rotulo">Progreso de la carga de <br>digimons:</label>
-        <progress id="carga" value="" max=""></progress>
-    </div>
-</nav>
-
-
-
-<!-- Aviso cuando ningún digimon cumple los filtros -->
-<div id="f-vacio" hidden>
-    <p data-i18n="filtros.vacio">😕 Ningún digimon cumple esa combinación.</p>
-    <button type="button" class="f-limpiar" data-i18n="filtros.limpiarTodo">Limpiar filtros</button>
-</div>
-
-<!-- Listado de digimons -->
-<ul id="listado-digimons"></ul>
-
-</body>
-
+        <!-- Listado de digimons -->
+        <ul id="listado-digimons"></ul>
+    </body>
 </html>

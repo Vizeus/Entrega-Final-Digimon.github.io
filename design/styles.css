@@ -135,7 +135,7 @@ body::before {
 #navbar::before {
   content: "";
   position: absolute;
-  inset: 0 0 50% 0;
+  inset: 0 0 50%;
   z-index: -1;
   pointer-events: none;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.12));
@@ -823,10 +823,7 @@ body::before {
     height: 25px;
   }
   body:has(#zoom-fondo.abierto) > #silenciar {
-    top: calc(12px + env(safe-area-inset-top, 0px));
-    right: auto;
-    bottom: auto;
-    left: 12px;
+    inset: calc(12px + env(safe-area-inset-top, 0px)) auto auto 12px;
   }
   body > #inclinacion-invertida {
     display: none;
@@ -1499,7 +1496,7 @@ body:has(.swal2-container) #avisos-ayuda {
   transition: text-decoration-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 .swal2-html-container .info-link:hover, .swal2-html-container .info-link:focus-visible {
-  text-decoration-color: currentColor;
+  text-decoration-color: currentcolor;
   background: rgba(36, 71, 106, 0.1);
   outline: none;
 }
@@ -1643,7 +1640,7 @@ body:has(.swal2-container) #avisos-ayuda {
   width: 14px;
   height: 14px;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 2.2;
   stroke-linecap: round;
   filter: drop-shadow(0 1px 0 rgba(90, 0, 0, 0.6));
@@ -2632,7 +2629,6 @@ body:has(.swal2-container) #avisos-ayuda {
     pointer-events: none;
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
-    mask-composite: exclude;
     mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   }
   #listado-digimons li[data-nivel]:where(.en-pantalla) .c-marco::before {
@@ -2974,7 +2970,7 @@ body:has(.swal2-container) #avisos-ayuda {
   z-index: 0;
 }
 #listado-digimons li:hover .c-puente, #listado-digimons li.tilt-activo .c-puente {
-  inset: -6px -8px -20px -8px;
+  inset: -6px -8px -20px;
   border-radius: 16px;
   pointer-events: auto;
 }
@@ -3653,7 +3649,7 @@ body:has(.swal2-container) #avisos-ayuda {
   flex: 1 1 82px;
   box-sizing: border-box;
   min-width: 0;
-  padding: 6px 6px;
+  padding: 6px;
   font: 700 12px var(--f-boton), sans-serif;
   white-space: nowrap;
   color: #fff;
@@ -4254,7 +4250,7 @@ body:has(.swal2-container) #avisos-ayuda {
   /* El contenedor de SweetAlert trae unos 25 px de margen a cada lado: en un celular de 320 px dejaba solo 216 px para el árbol (105 px por
      digimon y 38 px de texto, y se partían "Perfect" y las etiquetas). Sin ese margen cada digimon tiene ~140 px. */
   .popup-evo .swal2-html-container {
-    margin: 0.2em 0 0.2em;
+    margin: 0.2em 0;
     padding-left: 0;
     padding-right: 0;
   }
@@ -4280,8 +4276,7 @@ body:has(.swal2-container) #avisos-ayuda {
   .evo-lista,
   .evo-col.abierta .evo-lista {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-flow: row wrap;
     justify-content: center;
     gap: 6px;
     border: 0;

@@ -73,7 +73,7 @@ const GRUPOS = Object.keys(GRUPOS_FILTRO);
 
 // Blanco u oscuro para el texto, según qué tan claro es el color de fondo
 function colorDelTexto(hex) {
-    const canal = (posicion) => {
+    const canal = posicion => {
         const valor = parseInt(hex.slice(posicion, posicion + 2), 16) / 255;
         return valor <= 0.03928 ? valor / 12.92 : ((valor + 0.055) / 1.055) ** 2.4;
     };
@@ -93,7 +93,7 @@ const avisoVacio = document.getElementById('f-vacio');
 
 // ---- Qué está elegido ----------------------------------------------------------------------------------------------
 const elegidos = { tipo: new Set(), nivel: new Set(), elemento: new Set(), x: new Set() };
-let busqueda = '';        // lo que se escribió, ya normalizado (para comparar)
+let busqueda = ''; // lo que se escribió, ya normalizado (para comparar)
 let busquedaEscrita = ''; // lo que se escribió, tal cual (para mostrar en la etiqueta)
 
 // ---- Buscador ------------------------------------------------------------------------------------------------------
@@ -106,8 +106,10 @@ function datosDeFiltro(carta) {
     if (!carta.datosFiltro) {
         // Se busca por los dos nombres del digimon (el original de la API y el occidental), con el "(X-Antibody)" si lo tiene.
         // El que se ve es siempre uno de los dos, así que no hace falta volver a calcularlo si cambia el idioma.
-        const nombres = [...new Set([nombreCompleto(carta), nombreApiCompleto(carta), nombreOccidentalCompleto(carta)].map(normalizar))]
-            .map(nombre => ({ nombre, compacto: compactar(nombre) }));
+        const nombres = [...new Set([nombreCompleto(carta), nombreApiCompleto(carta), nombreOccidentalCompleto(carta)].map(normalizar))].map(nombre => ({
+            nombre,
+            compacto: compactar(nombre),
+        }));
         carta.datosFiltro = {
             tipo: carta.dataset.tipo,
             nivel: carta.dataset.nivelApi,
@@ -134,14 +136,22 @@ function coincideBusqueda(datos, consulta) {
     const palabras = consulta.split(' ');
     const coincideMarca = palabra => {
         if (!datos.marca) return false;
-        if (datos.marca === 'armor') return palabra === 'armor' || palabra === 'armors' || palabra === 'armour' || palabra === 'armours' || palabra === 'armadura' || palabra === 'armaduras';
+        if (datos.marca === 'armor')
+            return (
+                palabra === 'armor' ||
+                palabra === 'armors' ||
+                palabra === 'armour' ||
+                palabra === 'armours' ||
+                palabra === 'armadura' ||
+                palabra === 'armaduras'
+            );
         if (datos.marca === 'hybrid') return palabra === 'hybrid' || palabra === 'hybrids' || palabra === 'hibrido' || palabra === 'hibridos';
         return datos.marca.includes(palabra);
     };
 
-    return datos.nombres.some(({ nombre, compacto }) => palabras.every(palabra =>
-        coincideMarca(palabra) || nombre.includes(palabra) || (/^[a-z0-9]+$/.test(palabra) && compacto.includes(palabra))
-    ));
+    return datos.nombres.some(({ nombre, compacto }) =>
+        palabras.every(palabra => coincideMarca(palabra) || nombre.includes(palabra) || (/^[a-z0-9]+$/.test(palabra) && compacto.includes(palabra))),
+    );
 }
 
 // ---- Opciones (chips) ----------------------------------------------------------------------------------------------
@@ -360,12 +370,12 @@ function activarFiltros() {
     grupos.forEach(grupo => {
         grupo.querySelector('.f-btn').addEventListener('click', () => abrir(grupo, !grupo.classList.contains('abierto')));
     });
-    document.addEventListener('pointerdown', (evento) => {
+    document.addEventListener('pointerdown', evento => {
         grupos.forEach(grupo => {
             if (grupo.classList.contains('abierto') && !grupo.contains(evento.target)) abrir(grupo, false);
         });
     });
-    document.addEventListener('keydown', (evento) => {
+    document.addEventListener('keydown', evento => {
         if (evento.key !== 'Escape') return;
         grupos.forEach(grupo => {
             if (grupo.classList.contains('abierto')) {
@@ -376,7 +386,7 @@ function activarFiltros() {
     });
 
     // Elegir o sacar una opción (el panel queda abierto para poder elegir más)
-    seccionFiltros.addEventListener('click', (evento) => {
+    seccionFiltros.addEventListener('click', evento => {
         const chip = evento.target.closest('.f-chip');
         if (!chip) return;
         const { g: grupo, k: clave } = chip.dataset;
@@ -389,7 +399,7 @@ function activarFiltros() {
     });
 
     // Sacar un filtro desde su etiqueta
-    zonaActivos.addEventListener('click', (evento) => {
+    zonaActivos.addEventListener('click', evento => {
         const etiqueta = evento.target.closest('.f-tag');
         if (!etiqueta) return;
         const { g: grupo, k: clave } = etiqueta.dataset;

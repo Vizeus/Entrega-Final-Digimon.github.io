@@ -47,8 +47,10 @@ Object.assign(DICCIONARIO.es, {
     'evo.et.lateral.ayuda': 'Evolución al mismo nivel: una forma alternativa.',
     // Texto desplegable al pie de la ventana
     'evo.lore.titulo': 'ℹ️ ¿Por qué hay evoluciones raras?',
-    'evo.lore.1': 'Digimon no tiene una sola historia: el anime, cada juego, las cartas y los mangas tienen su propia versión de quién evoluciona a quién. Esta lista junta todas, así que no es una escalera perfecta.',
-    'evo.lore.2': 'Por eso aparecen saltos de nivel, formas del mismo nivel y evoluciones especiales: fusiones (DNA o Jogress, dos digimons que se unen), Armor e Hybrid. Una etiqueta te dice cuál es cada caso.',
+    'evo.lore.1':
+        'Digimon no tiene una sola historia: el anime, cada juego, las cartas y los mangas tienen su propia versión de quién evoluciona a quién. Esta lista junta todas, así que no es una escalera perfecta.',
+    'evo.lore.2':
+        'Por eso aparecen saltos de nivel, formas del mismo nivel y evoluciones especiales: fusiones (DNA o Jogress, dos digimons que se unen), Armor e Hybrid. Una etiqueta te dice cuál es cada caso.',
     'evo.lore.puntero': 'Dejá el puntero quieto sobre un digimon o sobre una etiqueta como “Salto de nivel” para ver un poco más de información.',
 });
 
@@ -85,12 +87,14 @@ Object.assign(DICCIONARIO.en, {
     'evo.et.lateral.ayuda': 'Evolution to the same level: an alternate form.',
     // Expandable text at the bottom of the window
     'evo.lore.titulo': 'ℹ️ Why are there odd evolutions?',
-    'evo.lore.1': 'Digimon doesn\'t have a single story: the anime, each game, the cards and the manga all have their own version of who evolves into whom. This list puts them all together, so it is not a perfect ladder.',
-    'evo.lore.2': 'That is why you will see level jumps, forms of the same level and special evolutions: fusions (DNA or Jogress, two digimons joining), Armor and Hybrid. A tag tells you which case each one is.',
+    'evo.lore.1':
+        "Digimon doesn't have a single story: the anime, each game, the cards and the manga all have their own version of who evolves into whom. This list puts them all together, so it is not a perfect ladder.",
+    'evo.lore.2':
+        'That is why you will see level jumps, forms of the same level and special evolutions: fusions (DNA or Jogress, two digimons joining), Armor and Hybrid. A tag tells you which case each one is.',
     'evo.lore.puntero': 'Rest the pointer on a digimon or on a tag like “Level jump” to see a bit more information.',
 });
 
-const TOPE_RAMAS = 5;    // cuántas ramas se ven de cada lado, como mucho, antes de tocar "ver las restantes"
+const TOPE_RAMAS = 5; // cuántas ramas se ven de cada lado, como mucho, antes de tocar "ver las restantes"
 // Al abrir, de cada lado solo se ven las ramas que están a esta cantidad de niveles o menos del digimon (0 = mismo nivel). El resto
 // (saltos grandes, fusiones lejanas...) queda detrás de "ver las restantes". Si ninguna entra en el rango, se ven las más cercanas.
 const RANGO_DE_NIVELES = 1;
@@ -128,7 +132,11 @@ function pedirEvolucion(id) {
 // ---- Qué ramas se muestran -----------------------------------------------------------------------------------------
 const nivelDe = carta => (carta.dataset.nivel === undefined ? undefined : Number(carta.dataset.nivel));
 const nombreDe = nombreCompleto;
-const sinParentesis = texto => texto.replace(/\s*\(.*$/, '').trim().toLowerCase();
+const sinParentesis = texto =>
+    texto
+        .replace(/\s*\(.*$/, '')
+        .trim()
+        .toLowerCase();
 
 // Qué tipo de evolución "especial" es una rama (o null si sigue la escalera normal). Armor y Hybrid se saben por la marca de la carta
 // (la del digimon que evoluciona: el de destino en "evoluciona a", el actual en "viene de"); la fusión, por el texto de la condición.
@@ -224,10 +232,16 @@ function imagenDe(carta) {
 // A cada digimon le toca uno "al azar", pero siempre el mismo: sale de un número mezclado a partir de su ID.
 const FORMA_HUEVO = 'M20 4 C27 4 33 16 33 25 C33 32 27 37 20 37 C13 37 7 32 7 25 C7 16 13 4 20 4 Z';
 const DISENOS_HUEVO = [
-    { color: '#34b868', dibujo: '<circle cx="15" cy="15" r="3"/><circle cx="23" cy="23" r="3.6"/><circle cx="13" cy="28" r="3.4"/><circle cx="25" cy="32" r="2.4"/><circle cx="27" cy="14" r="1.8"/>' },
+    {
+        color: '#34b868',
+        dibujo: '<circle cx="15" cy="15" r="3"/><circle cx="23" cy="23" r="3.6"/><circle cx="13" cy="28" r="3.4"/><circle cx="25" cy="32" r="2.4"/><circle cx="27" cy="14" r="1.8"/>',
+    },
     { color: '#3a93e0', dibujo: '<path d="M6 14 Q20 20 34 14 V21 Q20 27 6 21 Z"/><path d="M6 26 Q20 32 34 26 V28.6 Q20 34.6 6 28.6 Z"/>' },
     { color: '#f0952b', dibujo: '<path d="M6 10 Q20 14 34 10 V16 Q20 20 6 16 Z"/><path d="M6 23 Q20 27 34 23 V30 Q20 34 6 30 Z"/>' },
-    { color: '#ee5f9f', dibujo: '<circle cx="24" cy="17" r="4.6"/><circle cx="14" cy="27" r="5.2"/><circle cx="26" cy="31" r="1.9"/><circle cx="13" cy="14" r="1.7"/>' },
+    {
+        color: '#ee5f9f',
+        dibujo: '<circle cx="24" cy="17" r="4.6"/><circle cx="14" cy="27" r="5.2"/><circle cx="26" cy="31" r="1.9"/><circle cx="13" cy="14" r="1.7"/>',
+    },
 ];
 
 function disenoDeHuevo(carta) {
@@ -390,7 +404,9 @@ function crearLoreEvo() {
     const detalle = document.createElement('details');
     detalle.className = 'evo-lore';
     detalle.open = Boolean(estadoEvo?.loreAbierto); // al pasar a otro digimon del árbol queda como estaba
-    detalle.addEventListener('toggle', () => { if (estadoEvo) estadoEvo.loreAbierto = detalle.open; });
+    detalle.addEventListener('toggle', () => {
+        if (estadoEvo) estadoEvo.loreAbierto = detalle.open;
+    });
 
     const titulo = document.createElement('summary');
     titulo.textContent = t('evo.lore.titulo');

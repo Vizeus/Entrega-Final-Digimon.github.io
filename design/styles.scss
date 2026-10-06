@@ -13,7 +13,7 @@
     --f-boton: "Pixelify Sans";
     --f-descripcion: "DotGothic16";
 
-    --t-nombre: 11.5px;   // tamaño base del nombre (los cortos se agrandan, ver ajustarNombre() en main.js)
+    --t-nombre: 11.5px; // tamaño base del nombre (los cortos se agrandan, ver ajustarNombre() en main.js)
     --p-titulo: 800;
     --ls-titulo: 0.3px;
     --t-chip: 11px;
@@ -29,7 +29,7 @@ $desenfoque-del-fondo: 10px;
 
 // Variables que se animan (posición del puntero para el brillo y el matiz de la carta seleccionada)
 @property --h {
-    syntax: '<number>';
+    syntax: "<number>";
     inherits: false;
     initial-value: 0;
 }
@@ -37,18 +37,18 @@ $desenfoque-del-fondo: 10px;
 // El color del marco (--aro) puede cambiar de matiz (--h). Si se hereda, cada cambio
 // obliga al navegador a recalcular todos los elementos de adentro de la carta; registrado así solo se recalcula el marco.
 @property --aro {
-    syntax: '*';
+    syntax: "*";
     inherits: false;
 }
 
 @property --mx {
-    syntax: '<percentage>';
+    syntax: "<percentage>";
     inherits: true;
     initial-value: 50%;
 }
 
 @property --my {
-    syntax: '<percentage>';
+    syntax: "<percentage>";
     inherits: true;
     initial-value: 50%;
 }
@@ -102,8 +102,15 @@ body::before {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 100%),
         linear-gradient(180deg, color-mix(in srgb, var(--c) 78%, white) 0%, var(--c) 55%, color-mix(in srgb, var(--c) 82%, black) 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 7px rgba(0, 30, 80, 0.35);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+        0 1px 0 rgba(255, 255, 255, 0.7),
+        0 3px 7px rgba(0, 30, 80, 0.35);
+    transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.15s ease;
 
     &:hover:not(:disabled) {
         filter: brightness(1.08) saturate(1.1);
@@ -113,13 +120,18 @@ body::before {
     &:active:not(:disabled) {
         filter: brightness(0.96);
         transform: translateY(1px);
-        box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.6);
+        box-shadow:
+            inset 0 3px 6px rgba(0, 0, 0, 0.35),
+            0 1px 0 rgba(255, 255, 255, 0.6);
     }
 
     &:focus-visible {
         outline: 3px solid rgba(255, 255, 255, 0.95);
         outline-offset: 2px;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(20, 160, 230, 0.75), 0 3px 7px rgba(0, 30, 80, 0.35);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            0 0 0 5px rgba(20, 160, 230, 0.75),
+            0 3px 7px rgba(0, 30, 80, 0.35);
     }
 
     &:disabled {
@@ -137,7 +149,9 @@ body::before {
         inset: -4px;
         border-radius: 50%;
         border: 3px solid #fff;
-        box-shadow: 0 0 0 1px rgba(10, 110, 200, 0.7), 0 0 12px 2px rgba(60, 170, 255, 0.75);
+        box-shadow:
+            0 0 0 1px rgba(10, 110, 200, 0.7),
+            0 0 12px 2px rgba(60, 170, 255, 0.75);
         opacity: 0;
         pointer-events: none;
     }
@@ -192,7 +206,9 @@ body::before {
     }
 
     &.silenciado {
-        box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
+        box-shadow:
+            inset 0 3px 6px rgba(0, 40, 90, 0.3),
+            0 1px 0 rgba(255, 255, 255, 0.6);
     }
 
     &[data-modo="vibracion"] {
@@ -259,7 +275,9 @@ body::before {
     }
 
     &[aria-pressed="true"] {
-        box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
+        box-shadow:
+            inset 0 3px 6px rgba(0, 40, 90, 0.3),
+            0 1px 0 rgba(255, 255, 255, 0.6);
 
         .inclinacion-carta {
             transform: none;
@@ -272,25 +290,64 @@ body::before {
 }
 
 @keyframes sonido-salto {
-    0%, 50%, 100% { scale: 1; rotate: 0deg; }
-    10% { scale: 1.35; rotate: -14deg; }
-    20% { scale: 1.35; rotate: 12deg; }
-    30% { scale: 1.3; rotate: -9deg; }
-    40% { scale: 1.2; rotate: 6deg; }
-    60% { scale: 1.25; rotate: -10deg; }
-    70% { scale: 1.25; rotate: 8deg; }
-    80% { scale: 1.1; rotate: -4deg; }
-    90% { scale: 1.03; rotate: 2deg; }
+    0%,
+    50%,
+    100% {
+        scale: 1;
+        rotate: 0deg;
+    }
+    10% {
+        scale: 1.35;
+        rotate: -14deg;
+    }
+    20% {
+        scale: 1.35;
+        rotate: 12deg;
+    }
+    30% {
+        scale: 1.3;
+        rotate: -9deg;
+    }
+    40% {
+        scale: 1.2;
+        rotate: 6deg;
+    }
+    60% {
+        scale: 1.25;
+        rotate: -10deg;
+    }
+    70% {
+        scale: 1.25;
+        rotate: 8deg;
+    }
+    80% {
+        scale: 1.1;
+        rotate: -4deg;
+    }
+    90% {
+        scale: 1.03;
+        rotate: 2deg;
+    }
 }
 
 @keyframes sonido-onda {
-    0% { opacity: 0.95; scale: 0.9; }
-    100% { opacity: 0; scale: 2.1; }
+    0% {
+        opacity: 0.95;
+        scale: 0.9;
+    }
+    100% {
+        opacity: 0;
+        scale: 2.1;
+    }
 }
 
 @keyframes sonido-onda-quieta {
-    0% { opacity: 0.95; }
-    100% { opacity: 0; }
+    0% {
+        opacity: 0.95;
+    }
+    100% {
+        opacity: 0;
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -310,14 +367,16 @@ body::before {
     -webkit-backdrop-filter: blur(14px) saturate(1.5);
     backdrop-filter: blur(14px) saturate(1.5);
     border-bottom: 1px solid rgba(0, 70, 130, 0.35);
-    box-shadow: inset 0 1px 0 #fff, 0 8px 22px rgba(0, 25, 90, 0.38);
+    box-shadow:
+        inset 0 1px 0 #fff,
+        0 8px 22px rgba(0, 25, 90, 0.38);
     font-family: var(--f-boton), sans-serif; // toda la barra va con la fuente pixelada (Pixelify Sans)
 
     // Brillo de vidrio en la mitad de arriba
     &::before {
         content: "";
         position: absolute;
-        inset: 0 0 50% 0;
+        inset: 0 0 50%;
         z-index: -1;
         pointer-events: none;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.12));
@@ -342,7 +401,9 @@ body::before {
         border: 1px solid rgba(0, 80, 140, 0.25);
         border-radius: 999px;
         background: linear-gradient(180deg, rgba(0, 80, 140, 0.13), rgba(255, 255, 255, 0.4));
-        box-shadow: inset 0 2px 5px rgba(0, 60, 110, 0.28), 0 1px 0 rgba(255, 255, 255, 0.9);
+        box-shadow:
+            inset 0 2px 5px rgba(0, 60, 110, 0.28),
+            0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
     .consigna {
@@ -375,8 +436,14 @@ body::before {
         color: #2c5a80;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.7);
-        box-shadow: inset 0 1px 3px rgba(0, 50, 100, 0.3), 0 1px 0 rgba(255, 255, 255, 0.8);
-        transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.15s ease, translate 0.15s ease;
+        box-shadow:
+            inset 0 1px 3px rgba(0, 50, 100, 0.3),
+            0 1px 0 rgba(255, 255, 255, 0.8);
+        transition:
+            color 0.2s ease,
+            background-color 0.2s ease,
+            box-shadow 0.15s ease,
+            translate 0.15s ease;
         // También es un botón (quita la selección): se le sacan los estilos del navegador y, con 1 o 2 elegidos, se nota que se puede tocar
         appearance: none;
         box-sizing: content-box; // (los botones miden con el borde incluido; así conserva el tamaño que tenía)
@@ -393,10 +460,16 @@ body::before {
 
         &:not(:disabled) {
             cursor: pointer;
-            box-shadow: inset 0 1px 3px rgba(0, 50, 100, 0.3), 0 0 0 1.5px rgba(44, 90, 128, 0.5), 0 1px 0 rgba(255, 255, 255, 0.8);
+            box-shadow:
+                inset 0 1px 3px rgba(0, 50, 100, 0.3),
+                0 0 0 1.5px rgba(44, 90, 128, 0.5),
+                0 1px 0 rgba(255, 255, 255, 0.8);
 
             &.completo {
-                box-shadow: inset 0 1px 3px rgba(0, 70, 30, 0.3), 0 0 0 1.5px rgba(13, 106, 44, 0.55), 0 1px 0 rgba(255, 255, 255, 0.8);
+                box-shadow:
+                    inset 0 1px 3px rgba(0, 70, 30, 0.3),
+                    0 0 0 1.5px rgba(13, 106, 44, 0.55),
+                    0 1px 0 rgba(255, 255, 255, 0.8);
             }
 
             &:hover {
@@ -409,7 +482,9 @@ body::before {
 
             &:active {
                 translate: 0 1px;
-                box-shadow: inset 0 2px 4px rgba(0, 50, 100, 0.45), 0 0 0 1.5px rgba(44, 90, 128, 0.5);
+                box-shadow:
+                    inset 0 2px 4px rgba(0, 50, 100, 0.45),
+                    0 0 0 1.5px rgba(44, 90, 128, 0.5);
             }
         }
 
@@ -465,7 +540,12 @@ body::before {
         }
 
         &:enabled:not(:active) {
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 0 3px rgba(52, 179, 90, 0.28), 0 0 22px 4px rgba(52, 179, 90, 0.55);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+                0 1px 0 rgba(255, 255, 255, 0.7),
+                0 0 0 3px rgba(52, 179, 90, 0.28),
+                0 0 22px 4px rgba(52, 179, 90, 0.55);
         }
 
         // Mientras se puede pelear (hay 2 digimons elegidos) el botón late cada 2 s: crece un poco y vuelve a su tamaño (1 s) y descansa
@@ -481,7 +561,11 @@ body::before {
             --c: #97a2ad;
             color: rgba(255, 255, 255, 0.85);
             filter: saturate(0.55);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -2px 3px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0, 30, 80, 0.25);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.7),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.12),
+                0 1px 0 rgba(255, 255, 255, 0.6),
+                0 2px 4px rgba(0, 30, 80, 0.25);
         }
     }
 
@@ -536,9 +620,17 @@ body::before {
             &.activo {
                 opacity: 1;
                 background:
-                    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%),
+                    linear-gradient(
+                        180deg,
+                        rgba(255, 255, 255, 0.55) 0%,
+                        rgba(255, 255, 255, 0.15) 49%,
+                        rgba(255, 255, 255, 0) 50%,
+                        rgba(255, 255, 255, 0.1) 100%
+                    ),
                     linear-gradient(180deg, #7cc4f5 0%, #3f97e8 55%, #2a75cf 100%);
-                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 40, 110, 0.4);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                    0 1px 3px rgba(0, 40, 110, 0.4);
 
                 small {
                     color: #fff;
@@ -587,9 +679,17 @@ body::before {
                 color: #fff;
                 text-shadow: 0 1px 1px rgba(0, 40, 110, 0.6);
                 background:
-                    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%),
+                    linear-gradient(
+                        180deg,
+                        rgba(255, 255, 255, 0.55) 0%,
+                        rgba(255, 255, 255, 0.15) 49%,
+                        rgba(255, 255, 255, 0) 50%,
+                        rgba(255, 255, 255, 0.1) 100%
+                    ),
                     linear-gradient(180deg, #7cc4f5 0%, #3f97e8 55%, #2a75cf 100%);
-                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 40, 110, 0.4);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                    0 1px 3px rgba(0, 40, 110, 0.4);
             }
         }
     }
@@ -655,7 +755,9 @@ body::before {
 
         &[aria-expanded="true"] {
             filter: brightness(0.97);
-            box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
+            box-shadow:
+                inset 0 3px 6px rgba(0, 40, 90, 0.3),
+                0 1px 0 rgba(255, 255, 255, 0.6);
 
             &::after {
                 rotate: 180deg;
@@ -674,12 +776,17 @@ body::before {
         border: 1px solid rgba(0, 80, 140, 0.35);
         border-radius: 14px;
         background: linear-gradient(180deg, #ffffff, #eaf4ff);
-        box-shadow: 0 10px 24px rgba(0, 30, 80, 0.4), inset 0 1px 0 #fff;
+        box-shadow:
+            0 10px 24px rgba(0, 30, 80, 0.4),
+            inset 0 1px 0 #fff;
         z-index: 950; // por encima de la fila de filtros (900): su línea divisora tiene que quedar debajo de la lista
         visibility: hidden;
         opacity: 0;
         translate: 0 -6px;
-        transition: opacity 0.18s ease, translate 0.18s ease, visibility 0s 0.18s;
+        transition:
+            opacity 0.18s ease,
+            translate 0.18s ease,
+            visibility 0s 0.18s;
 
         button {
             display: block;
@@ -701,7 +808,9 @@ body::before {
             &:focus-visible {
                 outline: none;
                 background: linear-gradient(180deg, #dcefff, #b8dcfa);
-                box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(0, 110, 190, 0.3);
+                box-shadow:
+                    inset 0 1px 0 #fff,
+                    0 0 0 1px rgba(0, 110, 190, 0.3);
             }
         }
     }
@@ -754,7 +863,9 @@ body::before {
             border-radius: 999px;
             overflow: hidden;
             background: linear-gradient(180deg, #b7d2e6, #e6f2fb);
-            box-shadow: inset 0 2px 4px rgba(0, 50, 100, 0.4), 0 1px 0 #fff;
+            box-shadow:
+                inset 0 2px 4px rgba(0, 50, 100, 0.4),
+                0 1px 0 #fff;
 
             &::-webkit-progress-bar {
                 background: transparent;
@@ -765,7 +876,9 @@ body::before {
                 background:
                     linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0) 51%),
                     linear-gradient(180deg, #7ff0ff, #22c0e8 50%, #0a9ad0);
-                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 8px rgba(40, 200, 255, 0.7);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                    0 0 8px rgba(40, 200, 255, 0.7);
                 transition: width 0.2s ease;
             }
 
@@ -847,7 +960,11 @@ body::before {
         width: 44px;
         height: 44px;
         // Un aro blanco y más sombra, para que se despegue de lo que haya detrás (cartas claras u oscuras)
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(255, 255, 255, 0.85), 0 5px 14px rgba(0, 20, 70, 0.55);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+            0 0 0 2px rgba(255, 255, 255, 0.85),
+            0 5px 14px rgba(0, 20, 70, 0.55);
 
         .audio-icono {
             width: 25px;
@@ -858,10 +975,7 @@ body::before {
     // Con el zoom de una carta abierto pasa a la esquina de arriba a la izquierda: abajo a la derecha queda el pulgar, que es
     // el que desliza las cartas (al empezar a cerrarse el zoom vuelve a su lugar de siempre)
     body:has(#zoom-fondo.abierto) > #silenciar {
-        top: calc(12px + env(safe-area-inset-top, 0px));
-        right: auto;
-        bottom: auto;
-        left: 12px;
+        inset: calc(12px + env(safe-area-inset-top, 0px)) auto auto 12px;
     }
 
     // (El de inclinación no existe en celular; si se achica la ventana justo cuando está afuera de la barra, no se muestra)
@@ -881,7 +995,11 @@ body::before {
         position: fixed;
         z-index: 1800;
         margin: 0;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(255, 255, 255, 0.85), 0 5px 14px rgba(0, 20, 70, 0.55);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+            0 0 0 2px rgba(255, 255, 255, 0.85),
+            0 5px 14px rgba(0, 20, 70, 0.55);
     }
 
     body > #silenciar {
@@ -895,7 +1013,10 @@ body::before {
     // "Hundidos" (sonido apagado, inclinación invertida) siguen con su aro blanco y su sombra para despegarse de la cortina
     body > #silenciar.silenciado,
     body > #inclinacion-invertida[aria-pressed="true"] {
-        box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.85), 0 5px 14px rgba(0, 20, 70, 0.55);
+        box-shadow:
+            inset 0 3px 6px rgba(0, 40, 90, 0.3),
+            0 0 0 2px rgba(255, 255, 255, 0.85),
+            0 5px 14px rgba(0, 20, 70, 0.55);
     }
 }
 
@@ -992,7 +1113,9 @@ body::before {
 
             &[aria-expanded="true"] {
                 filter: brightness(0.97);
-                box-shadow: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
+                box-shadow:
+                    inset 0 3px 6px rgba(0, 40, 90, 0.3),
+                    0 1px 0 rgba(255, 255, 255, 0.6);
             }
         }
 
@@ -1012,11 +1135,16 @@ body::before {
             border: 1px solid rgba(0, 80, 140, 0.35);
             border-radius: 18px;
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(226, 241, 255, 0.96));
-            box-shadow: 0 14px 30px rgba(0, 30, 80, 0.45), inset 0 1px 0 #fff;
+            box-shadow:
+                0 14px 30px rgba(0, 30, 80, 0.45),
+                inset 0 1px 0 #fff;
             visibility: hidden;
             opacity: 0;
             translate: 0 -8px;
-            transition: opacity 0.18s ease, translate 0.18s ease, visibility 0s 0.18s;
+            transition:
+                opacity 0.18s ease,
+                translate 0.18s ease,
+                visibility 0s 0.18s;
         }
 
         &.menu-abierto .menu-movil {
@@ -1309,14 +1437,18 @@ body:has(.swal2-container) #avisos-ayuda {
         justify-content: space-between;
         gap: 10px;
         padding: 10px 14px;
-        font: 600 15px/1.25 var(--f-boton), sans-serif;
+        font:
+            600 15px/1.25 var(--f-boton),
+            sans-serif;
         text-align: left;
         color: #24476a;
         cursor: pointer;
         border: 1px solid rgba(36, 71, 106, 0.25);
         border-radius: 10px;
         background: rgba(36, 71, 106, 0.08);
-        transition: background 0.15s ease, border-color 0.15s ease;
+        transition:
+            background 0.15s ease,
+            border-color 0.15s ease;
 
         &:hover,
         &:focus-visible {
@@ -1385,7 +1517,9 @@ body:has(.swal2-container) #avisos-ayuda {
 
     .ataque-digimons-titulo {
         margin: 0 0 8px;
-        font: 700 13px var(--f-boton), sans-serif;
+        font:
+            700 13px var(--f-boton),
+            sans-serif;
         color: #24476a;
     }
 
@@ -1482,12 +1616,15 @@ body:has(.swal2-container) #avisos-ayuda {
         text-decoration: underline dotted transparent;
         text-underline-offset: 3px;
         text-decoration-thickness: 1.5px;
-        transition: text-decoration-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+        transition:
+            text-decoration-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
 
         &:hover,
         &:focus-visible {
-            text-decoration-color: currentColor;
-            background: rgba(36, 71, 106, 0.10);
+            text-decoration-color: currentcolor;
+            background: rgba(36, 71, 106, 0.1);
             outline: none;
         }
 
@@ -1618,7 +1755,9 @@ body:has(.swal2-container) #avisos-ayuda {
     border: 2px solid rgba(255, 255, 255, 0.9);
     border-radius: 22px;
     background: linear-gradient(180deg, #ffffff 0%, #e8f5ff 55%, #cfe8ff 100%);
-    box-shadow: 0 24px 60px rgba(0, 20, 80, 0.55), inset 0 1px 0 #fff;
+    box-shadow:
+        0 24px 60px rgba(0, 20, 80, 0.55),
+        inset 0 1px 0 #fff;
 
     // Barra de título brillante, como una ventana de Frutiger Aero
     .combate-titulo {
@@ -1630,7 +1769,9 @@ body:has(.swal2-container) #avisos-ayuda {
         line-height: 1.2;
         text-wrap: balance;
         color: #fff;
-        text-shadow: 0 2px 0 rgba(0, 40, 100, 0.55), 0 0 12px rgba(0, 60, 140, 0.45);
+        text-shadow:
+            0 2px 0 rgba(0, 40, 100, 0.55),
+            0 0 12px rgba(0, 60, 140, 0.45);
         background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 48%, #1479d1 52%, #3eb0f5 100%);
         border-bottom: 1px solid rgba(0, 60, 130, 0.6);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -1655,15 +1796,19 @@ body:has(.swal2-container) #avisos-ayuda {
         border-radius: 50%;
         cursor: pointer;
         background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
-        box-shadow: 0 2px 6px rgba(0, 30, 80, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        transition: filter 0.15s ease, translate 0.1s ease;
+        box-shadow:
+            0 2px 6px rgba(0, 30, 80, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition:
+            filter 0.15s ease,
+            translate 0.1s ease;
 
         svg {
             display: block;
             width: 14px;
             height: 14px;
             fill: none;
-            stroke: currentColor;
+            stroke: currentcolor;
             stroke-width: 2.2;
             stroke-linecap: round;
             filter: drop-shadow(0 1px 0 rgba(90, 0, 0, 0.6));
@@ -1674,7 +1819,9 @@ body:has(.swal2-container) #avisos-ayuda {
         &:focus {
             color: #fff;
             background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
-            box-shadow: 0 2px 6px rgba(0, 30, 80, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            box-shadow:
+                0 2px 6px rgba(0, 30, 80, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             transform: none;
         }
 
@@ -1690,7 +1837,9 @@ body:has(.swal2-container) #avisos-ayuda {
         &:focus-visible {
             outline: 3px solid #fff;
             outline-offset: 1px;
-            box-shadow: 0 0 0 5px rgba(20, 121, 209, 0.6), 0 2px 6px rgba(0, 30, 80, 0.4);
+            box-shadow:
+                0 0 0 5px rgba(20, 121, 209, 0.6),
+                0 2px 6px rgba(0, 30, 80, 0.4);
         }
     }
 
@@ -1707,7 +1856,9 @@ body:has(.swal2-container) #avisos-ayuda {
         padding: 9px;
         border-radius: 18px;
         background: linear-gradient(180deg, #4a5a6b, #1f2a36);
-        box-shadow: 0 6px 14px rgba(0, 30, 80, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        box-shadow:
+            0 6px 14px rgba(0, 30, 80, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
 
         img {
             display: block;
@@ -1783,14 +1934,18 @@ body:has(.swal2-container) #avisos-ayuda {
         font-weight: 700;
         line-height: 1;
         color: #ff3b3b;
-        text-shadow: 0 2px 0 #fff, 0 3px 7px rgba(120, 0, 0, 0.45);
+        text-shadow:
+            0 2px 0 #fff,
+            0 3px 7px rgba(120, 0, 0, 0.45);
     }
 
     // Ganador: marco dorado, brillo y corona. Perdedor: se apaga y se achica un poco
     .vs-luchador.ganador {
         img {
             border-color: #ffc928;
-            box-shadow: 0 0 0 3px rgba(255, 201, 40, 0.5), 0 0 22px 6px rgba(255, 201, 40, 0.75);
+            box-shadow:
+                0 0 0 3px rgba(255, 201, 40, 0.5),
+                0 0 22px 6px rgba(255, 201, 40, 0.75);
             scale: 1.14;
         }
 
@@ -1842,8 +1997,12 @@ body:has(.swal2-container) #avisos-ayuda {
         box-shadow: 0 2px 6px rgba(0, 30, 80, 0.15);
         animation: vs-ataque-entra 0.45s ease both;
 
-        &.vs-1 { animation-delay: 0.5s; }
-        &.vs-2 { animation-delay: 0.95s; }
+        &.vs-1 {
+            animation-delay: 0.5s;
+        }
+        &.vs-2 {
+            animation-delay: 0.95s;
+        }
 
         @media (prefers-reduced-motion: reduce) {
             animation: none;
@@ -1898,8 +2057,12 @@ body:has(.swal2-container) #avisos-ayuda {
         border-radius: 14px;
         cursor: pointer;
         background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 50%, #1479d1 54%, #3eb0f5 100%);
-        box-shadow: 0 4px 10px rgba(0, 50, 120, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        transition: filter 0.15s ease, translate 0.1s ease;
+        box-shadow:
+            0 4px 10px rgba(0, 50, 120, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition:
+            filter 0.15s ease,
+            translate 0.1s ease;
 
         &:hover {
             filter: brightness(1.08);
@@ -1913,7 +2076,9 @@ body:has(.swal2-container) #avisos-ayuda {
         &:focus-visible {
             outline: 3px solid #fff;
             outline-offset: 2px;
-            box-shadow: 0 0 0 5px rgba(20, 121, 209, 0.6), 0 4px 10px rgba(0, 50, 120, 0.4);
+            box-shadow:
+                0 0 0 5px rgba(20, 121, 209, 0.6),
+                0 4px 10px rgba(0, 50, 120, 0.4);
         }
     }
 
@@ -1998,31 +2163,36 @@ body:has(.swal2-container) #avisos-ayuda {
 }
 
 @keyframes choque-izq {
-    0%, 100% {
+    0%,
+    100% {
         translate: 0 0;
         rotate: 0deg;
     }
 
-    45%, 55% {
+    45%,
+    55% {
         translate: 18px -2px;
         rotate: 7deg;
     }
 }
 
 @keyframes choque-der {
-    0%, 100% {
+    0%,
+    100% {
         translate: 0 0;
         rotate: 0deg;
     }
 
-    45%, 55% {
+    45%,
+    55% {
         translate: -18px -2px;
         rotate: -7deg;
     }
 }
 
 @keyframes chispa {
-    0%, 100% {
+    0%,
+    100% {
         scale: 0.8;
         rotate: -12deg;
     }
@@ -2069,7 +2239,9 @@ body:has(.swal2-container) #avisos-ayuda {
     }
 
     .f-titulo {
-        font: 700 15px var(--f-boton), sans-serif;
+        font:
+            700 15px var(--f-boton),
+            sans-serif;
         letter-spacing: 0.09em;
         text-transform: uppercase;
         color: #24476a;
@@ -2088,12 +2260,18 @@ body:has(.swal2-container) #avisos-ayuda {
         border: 1px solid rgba(0, 40, 90, 0.35);
         cursor: text;
         background: linear-gradient(rgba(0, 80, 140, 0.12), rgba(255, 255, 255, 0.78));
-        box-shadow: inset 0 2px 4px rgba(0, 60, 110, 0.3), 0 1px 0 rgba(255, 255, 255, 0.9);
-        transition: box-shadow 0.15s, border-color 0.15s;
+        box-shadow:
+            inset 0 2px 4px rgba(0, 60, 110, 0.3),
+            0 1px 0 rgba(255, 255, 255, 0.9);
+        transition:
+            box-shadow 0.15s,
+            border-color 0.15s;
 
         &:focus-within {
             border-color: #2b8fe0;
-            box-shadow: inset 0 2px 4px rgba(0, 60, 110, 0.3), 0 0 0 3px rgba(43, 143, 224, 0.5);
+            box-shadow:
+                inset 0 2px 4px rgba(0, 60, 110, 0.3),
+                0 0 0 3px rgba(43, 143, 224, 0.5);
         }
 
         input {
@@ -2106,7 +2284,9 @@ body:has(.swal2-container) #avisos-ayuda {
             background: none;
             text-overflow: ellipsis;
             color: #1d4468;
-            font: 600 14px var(--f-boton), sans-serif;
+            font:
+                600 14px var(--f-boton),
+                sans-serif;
 
             // El texto de ayuda es más chico para que se lea completo en la caja
             &::placeholder {
@@ -2161,12 +2341,21 @@ body:has(.swal2-container) #avisos-ayuda {
         border: 1px solid rgba(0, 40, 90, 0.4);
         cursor: pointer;
         color: #24476a;
-        font: 600 14px var(--f-boton), sans-serif;
+        font:
+            600 14px var(--f-boton),
+            sans-serif;
         background:
             linear-gradient(rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 100%),
             linear-gradient(#dae5ee 0%, #cfdde9 55%, #aab5bf 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 7px rgba(0, 30, 80, 0.35);
-        transition: filter 0.15s, transform 0.1s, box-shadow 0.15s;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+            0 1px 0 rgba(255, 255, 255, 0.7),
+            0 3px 7px rgba(0, 30, 80, 0.35);
+        transition:
+            filter 0.15s,
+            transform 0.1s,
+            box-shadow 0.15s;
 
         &::after {
             content: "\25BE";
@@ -2185,7 +2374,9 @@ body:has(.swal2-container) #avisos-ayuda {
         &:active,
         &[aria-expanded="true"] {
             transform: translateY(1px);
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.7);
+            box-shadow:
+                inset 0 2px 5px rgba(0, 0, 0, 0.3),
+                0 1px 0 rgba(255, 255, 255, 0.7);
         }
 
         &.tiene {
@@ -2207,7 +2398,9 @@ body:has(.swal2-container) #avisos-ayuda {
         border-radius: 10px;
         background: #fff;
         color: #2a6fc0;
-        font: 700 12px var(--f-boton), sans-serif;
+        font:
+            700 12px var(--f-boton),
+            sans-serif;
         text-shadow: none;
         box-shadow: inset 0 -1px 2px rgba(0, 40, 100, 0.25);
     }
@@ -2224,11 +2417,15 @@ body:has(.swal2-container) #avisos-ayuda {
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            font: 900 12px/1 var(--f-titulo), sans-serif;
+            font:
+                900 12px/1 var(--f-titulo),
+                sans-serif;
             color: #ffffff;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
             background: radial-gradient(circle at 30% 25%, #ffd1dc 0%, #e0245e 52%, #7a0b2f 100%);
-            box-shadow: 0 0 0 1px #7e8791, inset 0 1px 1px rgba(255, 255, 255, 0.7);
+            box-shadow:
+                0 0 0 1px #7e8791,
+                inset 0 1px 1px rgba(255, 255, 255, 0.7);
         }
 
         // Solo con X-Antibody: rojo
@@ -2280,7 +2477,9 @@ body:has(.swal2-container) #avisos-ayuda {
         border-radius: 16px;
         background: linear-gradient(rgba(255, 255, 255, 0.97), rgba(226, 241, 253, 0.95));
         border: 1px solid #fff;
-        box-shadow: 0 14px 34px rgba(0, 25, 80, 0.5), inset 0 1px 0 #fff;
+        box-shadow:
+            0 14px 34px rgba(0, 25, 80, 0.5),
+            inset 0 1px 0 #fff;
         animation: f-abre 0.16s ease-out;
     }
 
@@ -2302,9 +2501,14 @@ body:has(.swal2-container) #avisos-ayuda {
         color: #24476a;
         border: 1px solid color-mix(in srgb, var(--c) 65%, transparent);
         background: linear-gradient(#fff, #eaf3fb);
-        font: 600 14px var(--f-etiqueta), sans-serif;
+        font:
+            600 14px var(--f-etiqueta),
+            sans-serif;
         box-shadow: 0 1px 2px rgba(0, 30, 80, 0.22);
-        transition: filter 0.15s, opacity 0.15s, transform 0.1s;
+        transition:
+            filter 0.15s,
+            opacity 0.15s,
+            transform 0.1s;
 
         &:hover {
             filter: brightness(0.97);
@@ -2331,7 +2535,9 @@ body:has(.swal2-container) #avisos-ayuda {
             color: var(--t);
             border-color: color-mix(in srgb, var(--c) 70%, #000);
             background: linear-gradient(color-mix(in srgb, var(--c) 68%, #fff), var(--c));
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 2px 5px rgba(0, 30, 80, 0.35);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                0 2px 5px rgba(0, 30, 80, 0.35);
 
             i {
                 background: color-mix(in srgb, var(--t) 20%, transparent);
@@ -2359,8 +2565,12 @@ body:has(.swal2-container) #avisos-ayuda {
         border-radius: 50%;
         background: var(--c);
         color: var(--t);
-        font: 700 12px var(--f-etiqueta), sans-serif;
-        box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.7);
+        font:
+            700 12px var(--f-etiqueta),
+            sans-serif;
+        box-shadow:
+            inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255, 255, 255, 0.7);
     }
 
     .f-activos {
@@ -2386,8 +2596,12 @@ body:has(.swal2-container) #avisos-ayuda {
         color: var(--t);
         border: 1px solid color-mix(in srgb, var(--c) 70%, #000);
         background: linear-gradient(color-mix(in srgb, var(--c) 68%, #fff), var(--c));
-        font: 600 13px var(--f-etiqueta), sans-serif;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 3px rgba(0, 30, 80, 0.3);
+        font:
+            600 13px var(--f-etiqueta),
+            sans-serif;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.55),
+            0 1px 3px rgba(0, 30, 80, 0.3);
         transition: filter 0.15s;
 
         .f-k {
@@ -2424,11 +2638,15 @@ body:has(.swal2-container) #avisos-ayuda {
     }
 
     .f-cuenta {
-        font: 400 14px var(--f-boton), sans-serif;
+        font:
+            400 14px var(--f-boton),
+            sans-serif;
         white-space: nowrap;
 
         b {
-            font: 700 16px var(--f-boton), sans-serif;
+            font:
+                700 16px var(--f-boton),
+                sans-serif;
             color: #1f66b8;
         }
     }
@@ -2450,12 +2668,19 @@ body:has(.swal2-container) #avisos-ayuda {
     color: #fff;
     text-shadow: 0 1px 1px rgba(90, 10, 0, 0.55);
     border: 1px solid rgba(120, 20, 10, 0.5);
-    font: 600 14px var(--f-boton), sans-serif;
+    font:
+        600 14px var(--f-boton),
+        sans-serif;
     background:
         linear-gradient(rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.12) 49%, rgba(255, 255, 255, 0) 50%),
         linear-gradient(#ff9d8a 0%, #e2503a 60%, #c53a28 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -2px 3px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 30, 80, 0.35);
-    transition: filter 0.15s, transform 0.1s;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.2),
+        0 3px 6px rgba(0, 30, 80, 0.35);
+    transition:
+        filter 0.15s,
+        transform 0.1s;
 
     &:hover {
         filter: brightness(1.08);
@@ -2474,10 +2699,14 @@ body:has(.swal2-container) #avisos-ayuda {
     text-align: center;
     border-radius: 18px;
     color: #24476a;
-    font: 600 16px var(--f-cuerpo), sans-serif;
+    font:
+        600 16px var(--f-cuerpo),
+        sans-serif;
     background: linear-gradient(rgba(255, 255, 255, 0.88), rgba(215, 238, 252, 0.78));
     border: 1px solid rgba(255, 255, 255, 0.85);
-    box-shadow: inset 0 1px 0 #fff, 0 8px 22px rgba(0, 30, 90, 0.3);
+    box-shadow:
+        inset 0 1px 0 #fff,
+        0 8px 22px rgba(0, 30, 90, 0.3);
 
     p {
         margin: 0 0 14px;
@@ -2587,7 +2816,9 @@ body:has(.swal2-container) #avisos-ayuda {
         height: 19px;
         padding: 0 5px;
         border-radius: 10px;
-        font: 700 12px var(--f-boton), sans-serif;
+        font:
+            700 12px var(--f-boton),
+            sans-serif;
         color: #fff;
         background: linear-gradient(#7cc4f5, #2a75cf);
         border: 1px solid #fff;
@@ -2638,690 +2869,820 @@ body:has(.swal2-container) #avisos-ayuda {
     overflow-x: clip;
 
     li {
-      --tipo: #59616d;                                   // Desconocido / sin tipo: gris oscuro
-      --claro: 12%;                                      // cuánto se aclara hacia blanco (bebés); sin nivel conocido: como un Child
-      --oscuro: 0%;                                      // cuánto se oscurece hacia negro (niveles altos)
-      --fuerza: 64%;                                     // cuánto color lleva el fondo y la placa del nombre (crece con el nivel)
-      --base: color-mix(in srgb, color-mix(in srgb, var(--tipo), white var(--claro)), black var(--oscuro));
-      --tinte: color-mix(in srgb, var(--base) var(--fuerza), white);
+        --tipo: #59616d; // Desconocido / sin tipo: gris oscuro
+        --claro: 12%; // cuánto se aclara hacia blanco (bebés); sin nivel conocido: como un Child
+        --oscuro: 0%; // cuánto se oscurece hacia negro (niveles altos)
+        --fuerza: 64%; // cuánto color lleva el fondo y la placa del nombre (crece con el nivel)
+        --base: color-mix(in srgb, color-mix(in srgb, var(--tipo), white var(--claro)), black var(--oscuro));
+        --tinte: color-mix(in srgb, var(--base) var(--fuerza), white);
 
-      // Marco: un degradé que se pinta detrás del borde transparente. Entre borde y relleno siempre suman 14px,
-      // por eso todas las cartas miden lo mismo aunque el marco sea más grueso.
-      --borde-base: 2px;
-      --borde: var(--borde-base);
-      --aro: linear-gradient(var(--base), var(--base));
-      --fondo: linear-gradient(160deg, var(--tinte) 0%, #ffffff 85%);
+        // Marco: un degradé que se pinta detrás del borde transparente. Entre borde y relleno siempre suman 14px,
+        // por eso todas las cartas miden lo mismo aunque el marco sea más grueso.
+        --borde-base: 2px;
+        --borde: var(--borde-base);
+        --aro: linear-gradient(var(--base), var(--base));
+        --fondo: linear-gradient(160deg, var(--tinte) 0%, #ffffff 85%);
 
-      // Sombras (siempre 3 capas para que se puedan animar entre estados)
-      --anillo: inset 0 0 0 0 transparent;
-      --aura: 0 0 0 0 transparent;
-      --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
-      // El contenido (placa del nombre, imagen, chips) empieza a 14px del borde de la carta y el marco blanco de la imagen
-      // sobresale --halo-arte. El anillo de adentro (borde + --anillo) tiene que terminar antes que eso, si no se mete debajo
-      --halo-arte: 2px;
+        // Sombras (siempre 3 capas para que se puedan animar entre estados)
+        --anillo: inset 0 0 0 0 transparent;
+        --aura: 0 0 0 0 transparent;
+        --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+        // El contenido (placa del nombre, imagen, chips) empieza a 14px del borde de la carta y el marco blanco de la imagen
+        // sobresale --halo-arte. El anillo de adentro (borde + --anillo) tiene que terminar antes que eso, si no se mete debajo
+        --halo-arte: 2px;
 
-      position: relative;
-      width: 194px;
-      box-sizing: content-box;
-      margin: 10px;
-      padding: calc(14px - var(--borde));
-      border: var(--borde) solid transparent;
-      border-radius: 10px;
-      background: var(--fondo) padding-box, var(--aro) border-box;
-      box-shadow: var(--anillo), var(--aura), var(--caida);
-      text-align: center;
-      list-style-type: none;
-      // La inclinación (transform, --mx y --my) NO lleva transición CSS: main.js la suaviza cuadro a cuadro. Una transición
-      // sobre un transform con perspective() hace que el navegador dibuje la carta a menor resolución mientras se mueve.
-      transition: translate 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        width: 194px;
+        box-sizing: content-box;
+        margin: 10px;
+        padding: calc(14px - var(--borde));
+        border: var(--borde) solid transparent;
+        border-radius: 10px;
+        background:
+            var(--fondo) padding-box,
+            var(--aro) border-box;
+        box-shadow: var(--anillo), var(--aura), var(--caida);
+        text-align: center;
+        list-style-type: none;
+        // La inclinación (transform, --mx y --my) NO lleva transición CSS: main.js la suaviza cuadro a cuadro. Una transición
+        // sobre un transform con perspective() hace que el navegador dibuje la carta a menor resolución mientras se mueve.
+        transition:
+            translate 0.3s ease,
+            box-shadow 0.3s ease;
 
-      // Un color distinto para cada tipo
-      &[data-tipo="Vacuna"] { --tipo: #3a8dde; }
-      &[data-tipo="Virus"] { --tipo: #8a4fc7; }
-      &[data-tipo="Datos"] { --tipo: #3fae5a; }
-      &[data-tipo="Libre"] { --tipo: #1fa79f; }
-      &[data-tipo="Variable"] { --tipo: #e2803a; }
-      &[data-tipo="Desconocido"] { --tipo: #59616d; }
-
-      // Un tono por nivel: Baby I es pastel, Baby II y Child van subiendo hasta el color del tipo,
-      // y de Adult en adelante pasan a tonos cada vez más profundos (cada nivel un escalón más oscuro que el anterior,
-      // hasta el nivel 8, el más intenso)
-      &[data-nivel="1"] { --claro: 58%; --fuerza: 45%; }
-      &[data-nivel="2"] { --claro: 34%; --fuerza: 55%; }
-      &[data-nivel="3"] { --claro: 12%; --fuerza: 64%; }
-      &[data-nivel="4"] { --claro: 0%; --oscuro: 6%; --fuerza: 72%; }
-
-      // PERFECT: marco de cromo helado + un rombo en la esquina
-      &[data-nivel="5"] {
-        --claro: 0%;
-        --oscuro: 20%;
-        --fuerza: 80%;
-        --borde-base: 7px;
-        --aro: linear-gradient(135deg, #f3fdff 0%, #7fd0f5 28%, #ffffff 48%, #5cb3e6 72%, #d6f3ff 100%);
-        --anillo: inset 0 0 0 4px var(--base);
-        --aura: 0 0 14px 2px rgba(90, 200, 255, 0.6), 0 0 26px 4px color-mix(in srgb, var(--base) 45%, transparent);
-
-        &::before {
-          content: "◆";
-          position: absolute;
-          z-index: 3;
-          top: 0;
-          left: 6px;
-          font-size: 14px;
-          line-height: 1;
-          color: #ffffff;
-          text-shadow: 0 0 5px #7fc8ff, 0 0 10px #4aa8ff;
+        // Un color distinto para cada tipo
+        &[data-tipo="Vacuna"] {
+            --tipo: #3a8dde;
         }
-      }
-
-      // ULTIMATE: marco dorado + una estrella en la esquina + reflejo de arcoíris en la imagen
-      &[data-nivel="6"] {
-        --claro: 0%;
-        --oscuro: 34%;
-        --fuerza: 88%;
-        --borde-base: 7px;
-        --aro: linear-gradient(135deg, #fff4b8 0%, #e8b52a 28%, #fff1a3 48%, #c98f10 72%, #ffe27a 100%);
-        --anillo: inset 0 0 0 4px var(--base);
-        --aura: 0 0 14px 2px rgba(255, 190, 40, 0.65), 0 0 26px 4px color-mix(in srgb, var(--base) 45%, transparent);
-
-        &::before {
-          content: "✦";
-          position: absolute;
-          z-index: 3;
-          top: -1px;
-          left: 5px;
-          font-size: 17px;
-          line-height: 1;
-          color: #ffffff;
-          text-shadow: 0 0 5px #ffcf3a, 0 0 10px #ffb400;
+        &[data-tipo="Virus"] {
+            --tipo: #8a4fc7;
+        }
+        &[data-tipo="Datos"] {
+            --tipo: #3fae5a;
+        }
+        &[data-tipo="Libre"] {
+            --tipo: #1fa79f;
+        }
+        &[data-tipo="Variable"] {
+            --tipo: #e2803a;
+        }
+        &[data-tipo="Desconocido"] {
+            --tipo: #59616d;
         }
 
-        .c-arte::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          pointer-events: none;
-          mix-blend-mode: multiply;
-          opacity: 0.16;
-          background: linear-gradient(115deg, #ff5fa2, #ffd85f 25%, #5fffb0 50%, #5fc8ff 75%, #b55fff);
+        // Un tono por nivel: Baby I es pastel, Baby II y Child van subiendo hasta el color del tipo,
+        // y de Adult en adelante pasan a tonos cada vez más profundos (cada nivel un escalón más oscuro que el anterior,
+        // hasta el nivel 8, el más intenso)
+        &[data-nivel="1"] {
+            --claro: 58%;
+            --fuerza: 45%;
         }
-      }
-
-      // SUPER ULTIMATE (nivel 7): marco holográfico de arcoíris que gira + corona + aura violeta + reflejo de prisma fuerte
-      &[data-nivel="7"] {
-        --claro: 0%;
-        --oscuro: 46%;
-        --fuerza: 95%;
-        --borde-base: 8px;
-        --colores-marco: #ff5fa2, #ffd85f, #5fffb0, #5fc8ff, #b55fff, #ff5fa2;
-        --vuelta-marco: 6s;
-        --aro: conic-gradient(from 0deg, var(--colores-marco));
-        --anillo: inset 0 0 0 3px var(--base), inset 0 0 0 4px rgba(255, 255, 255, 0.85); // borde 8 + anillo 4 = 12px
-        --halo-arte: 1px;
-        --aura: 0 0 16px 3px rgba(190, 110, 255, 0.75), 0 0 34px 8px color-mix(in srgb, var(--base) 55%, transparent);
-
-        &::before {
-          content: "♛";
-          position: absolute;
-          z-index: 3;
-          top: -1px;
-          left: 5px;
-          font-size: 19px;
-          line-height: 1;
-          color: #ffffff;
-          text-shadow: 0 0 5px #e39bff, 0 0 11px #a24dff;
+        &[data-nivel="2"] {
+            --claro: 34%;
+            --fuerza: 55%;
+        }
+        &[data-nivel="3"] {
+            --claro: 12%;
+            --fuerza: 64%;
+        }
+        &[data-nivel="4"] {
+            --claro: 0%;
+            --oscuro: 6%;
+            --fuerza: 72%;
         }
 
-        .c-arte::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          pointer-events: none;
-          mix-blend-mode: multiply;
-          opacity: 0.28;
-          background: linear-gradient(115deg, #ff5fa2, #ffd85f 25%, #5fffb0 50%, #5fc8ff 75%, #b55fff);
-        }
-
-        .c-gema {
-          background: radial-gradient(circle at 30% 25%, #ffe3f4 0%, #e0489b 52%, #5e1d86 100%);
-        }
-      }
-
-      // ABSOLUTE (nivel 8): marco estrellado en violeta y oro que gira + sol + aura dorada + velo cósmico en la imagen
-      &[data-nivel="8"] {
-        --claro: 0%;
-        --oscuro: 58%;
-        --fuerza: 100%;
-        --borde-base: 9px;
-        --colores-marco: #12082e, #6a3dff 16%, #fff7c9 28%, #ffd24a 38%, #12082e 52%, #6a3dff 68%, #fff7c9 80%, #ffd24a 90%, #12082e;
-        --vuelta-marco: 5s;
-        --aro: conic-gradient(from 0deg, var(--colores-marco));
-        --anillo: inset 0 0 0 2px var(--base), inset 0 0 0 3px rgba(255, 233, 150, 0.95); // borde 9 + anillo 3 = 12px
-        --halo-arte: 1px;
-        --aura: 0 0 18px 4px rgba(255, 218, 110, 0.9), 0 0 40px 10px rgba(120, 80, 255, 0.6);
-
-        &::before {
-          content: "✺";
-          position: absolute;
-          z-index: 3;
-          top: -2px;
-          left: 4px;
-          font-size: 21px;
-          line-height: 1;
-          color: #fff7c9;
-          text-shadow: 0 0 5px #ffd24a, 0 0 12px #ffb400, 0 0 18px #8a5cff;
-        }
-
-        .c-arte::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          pointer-events: none;
-          mix-blend-mode: multiply;
-          opacity: 0.3;
-          background: radial-gradient(circle at 72% 18%, #ffe27a 0%, transparent 55%),
-                      linear-gradient(115deg, #7b52ff, #ffd24a 55%, #7b52ff);
-        }
-
-        .c-gema {
-          background: radial-gradient(circle at 30% 25%, #fff7c9 0%, #f0b400 50%, #5a3a00 100%);
-        }
-      }
-
-      // MARCO QUE GIRA (niveles 7 y 8). Es un <span class="c-marco"> que arma main.js solo en esas cartas.
-      // Antes el giro cambiaba el fondo de la carta en cada cuadro, y el navegador tenía que volver a dibujar la carta entera
-      // (con su halo) 60 veces por segundo: con una sola carta de estas en pantalla, toda la página bajaba de fluidez.
-      // Ahora el degradé es una capa cuadrada, más grande que la carta, que solo se rota (eso lo hace la placa gráfica sin
-      // redibujar nada), y la carta la recorta con forma de marco (máscara): se ve igual, pero casi no cuesta.
-      // Solo gira mientras se ve en pantalla (la clase "en-pantalla" la pone main.js) y si la persona no pidió menos movimiento;
-      // si no, queda el marco quieto que dibuja la propia carta (--aro).
-      .c-marco {
-        display: none;
-      }
-
-      @media (prefers-reduced-motion: no-preference) {
-        &[data-nivel]:where(.en-pantalla) { // ([data-nivel] para ganarle al --aro de cada nivel)
-          // El marco lo dibuja la capa que gira: el de la carta se saca para que no asome en los bordes
-          --aro: linear-gradient(transparent, transparent);
-
-          .c-marco {
-            display: block;
-            position: absolute;
-            inset: calc(var(--borde) * -1); // tapa justo el borde de la carta
-            box-sizing: border-box;
-            padding: var(--borde);
-            border-radius: 10px;
-            overflow: hidden;
-            pointer-events: none;
-            // Solo se ve el borde: se resta el interior (content-box) a la caja entera
-            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+        // PERFECT: marco de cromo helado + un rombo en la esquina
+        &[data-nivel="5"] {
+            --claro: 0%;
+            --oscuro: 20%;
+            --fuerza: 80%;
+            --borde-base: 7px;
+            --aro: linear-gradient(135deg, #f3fdff 0%, #7fd0f5 28%, #ffffff 48%, #5cb3e6 72%, #d6f3ff 100%);
+            --anillo: inset 0 0 0 4px var(--base);
+            --aura: 0 0 14px 2px rgba(90, 200, 255, 0.6), 0 0 26px 4px color-mix(in srgb, var(--base) 45%, transparent);
 
             &::before {
-              content: "";
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              width: 440px; // más que la diagonal de la carta (390px), así el degradé la cubre en cualquier ángulo
-              height: 440px;
-              margin: -220px 0 0 -220px;
-              background: conic-gradient(from 0deg, var(--colores-marco));
-              will-change: transform;
-              animation: girar-marco var(--vuelta-marco) linear infinite;
+                content: "◆";
+                position: absolute;
+                z-index: 3;
+                top: 0;
+                left: 6px;
+                font-size: 14px;
+                line-height: 1;
+                color: #ffffff;
+                text-shadow:
+                    0 0 5px #7fc8ff,
+                    0 0 10px #4aa8ff;
             }
-          }
-        }
-      }
-
-      // Color de la etiqueta de cada elemento
-      &[data-elemento="Fuego"] .c-elem { --c: #e8552b; }
-      &[data-elemento="Agua"] .c-elem { --c: #2f8fe0; }
-      &[data-elemento="Planta"] .c-elem { --c: #4aa84f; }
-      &[data-elemento="Hielo"] .c-elem { --c: #58c7ea; }
-      &[data-elemento="Rayo"] .c-elem { --c: #f0b400; }
-      &[data-elemento="Viento"] .c-elem { --c: #7cc9b0; }
-      &[data-elemento="Tierra"] .c-elem { --c: #a17a4a; }
-      &[data-elemento="Luz"] .c-elem { --c: #f5c542; color: #4a3a00; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
-      &[data-elemento="Oscuridad"] .c-elem { --c: #6a4c93; }
-      &[data-elemento="Metal"] .c-elem { --c: #8a96a3; }
-      &[data-elemento="Veneno"] .c-elem { --c: #a24fc4; }
-      &[data-elemento="Neutro"] .c-elem { --c: #aab2bb; }
-
-      // Frente y dorso comparten la misma disposición en columna
-      .c-frente,
-      .c-dorso {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .c-dorso {
-        display: none;
-      }
-
-      &.de-dorso {
-        .c-frente { display: none; }
-        .c-dorso { display: flex; }
-        .c-puente { pointer-events: none !important; }
-      }
-
-      // Cabecera con el nombre: una placa metálica con un toque del color del tipo
-      .c-cab {
-        box-sizing: border-box;
-        min-height: 40px;
-        padding: 4px 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid rgba(0, 0, 0, 0.28);
-        border-radius: 6px;
-        background: linear-gradient(180deg, #ffffff 0%,
-                                    color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.55), #e6e9ed) 52%,
-                                    color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.9), #bfc6ce) 100%);
-        box-shadow: inset 0 1px 0 #ffffff, 0 1px 2px rgba(0, 0, 0, 0.25);
-      }
-
-      // Nombre: la variable --k (que calcula el main.js) agranda los nombres cortos.
-      // Lo que va entre paréntesis (.c-aparte) pasa a una segunda línea más chica (--sp).
-      .c-cab h4,
-      .c-nombre {
-        margin: 0;
-        font-family: var(--f-titulo), sans-serif;
-        font-size: calc(var(--t-nombre) * var(--k, 1));
-        font-weight: var(--p-titulo);
-        letter-spacing: var(--ls-titulo);
-        line-height: 1.15;
-        color: #1d2733;
-        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
-      }
-
-      .c-aparte {
-        display: block;
-        margin-top: 1px;
-        font-size: var(--sp, 9px);
-        line-height: 1.15;
-        opacity: 0.8;
-      }
-
-      // Imagen: va en un marco blanco (las imágenes de la API tienen fondo blanco)
-      .c-arte {
-        position: relative;
-        box-sizing: border-box;
-        width: 100%;
-        aspect-ratio: 1;
-        overflow: hidden;
-        background: #ffffff;
-        border: 2px solid var(--base);
-        border-radius: 6px;
-        box-shadow: 0 0 0 var(--halo-arte) rgba(255, 255, 255, 0.85), 0 2px 5px rgba(0, 0, 0, 0.25);
-
-        img {
-          display: block;
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
         }
 
-        // Brillo suave en la parte de arriba, como una tapa de vidrio
-        &::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 42%);
-        }
-      }
+        // ULTIMATE: marco dorado + una estrella en la esquina + reflejo de arcoíris en la imagen
+        &[data-nivel="6"] {
+            --claro: 0%;
+            --oscuro: 34%;
+            --fuerza: 88%;
+            --borde-base: 7px;
+            --aro: linear-gradient(135deg, #fff4b8 0%, #e8b52a 28%, #fff1a3 48%, #c98f10 72%, #ffe27a 100%);
+            --anillo: inset 0 0 0 4px var(--base);
+            --aura: 0 0 14px 2px rgba(255, 190, 40, 0.65), 0 0 26px 4px color-mix(in srgb, var(--base) 45%, transparent);
 
-      // Gema con el nivel (número del 1 al 8, o "?" si es desconocido)
-      .c-gema {
-        position: absolute;
-        z-index: 2;
-        top: 6px;
-        right: 6px;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font: 900 15px/1 var(--f-titulo), sans-serif;
-        color: #ffffff;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        border-radius: 50%;
-        background: radial-gradient(circle at 30% 25%,
-                                    color-mix(in srgb, var(--tipo) 45%, white) 0%,
-                                    var(--tipo) 55%,
-                                    color-mix(in srgb, var(--tipo) 65%, black) 100%);
-        box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.7);
-        cursor: pointer;
-        user-select: none;
-        transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+            &::before {
+                content: "✦";
+                position: absolute;
+                z-index: 3;
+                top: -1px;
+                left: 5px;
+                font-size: 17px;
+                line-height: 1;
+                color: #ffffff;
+                text-shadow:
+                    0 0 5px #ffcf3a,
+                    0 0 10px #ffb400;
+            }
 
-        &:hover {
-          filter: brightness(1.15);
-          transform: scale(1.08);
-          box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #9ba5b0, 0 3px 6px rgba(0, 0, 0, 0.5),
-                      inset 0 1px 2px rgba(255, 255, 255, 0.8);
+            .c-arte::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: 1;
+                pointer-events: none;
+                mix-blend-mode: multiply;
+                opacity: 0.16;
+                background: linear-gradient(115deg, #ff5fa2, #ffd85f 25%, #5fffb0 50%, #5fc8ff 75%, #b55fff);
+            }
         }
 
-        &:active {
-          transform: scale(0.95);
+        // SUPER ULTIMATE (nivel 7): marco holográfico de arcoíris que gira + corona + aura violeta + reflejo de prisma fuerte
+        &[data-nivel="7"] {
+            --claro: 0%;
+            --oscuro: 46%;
+            --fuerza: 95%;
+            --borde-base: 8px;
+            --colores-marco: #ff5fa2, #ffd85f, #5fffb0, #5fc8ff, #b55fff, #ff5fa2;
+            --vuelta-marco: 6s;
+            --aro: conic-gradient(from 0deg, var(--colores-marco));
+            --anillo: inset 0 0 0 3px var(--base), inset 0 0 0 4px rgba(255, 255, 255, 0.85); // borde 8 + anillo 4 = 12px
+            --halo-arte: 1px;
+            --aura: 0 0 16px 3px rgba(190, 110, 255, 0.75), 0 0 34px 8px color-mix(in srgb, var(--base) 55%, transparent);
+
+            &::before {
+                content: "♛";
+                position: absolute;
+                z-index: 3;
+                top: -1px;
+                left: 5px;
+                font-size: 19px;
+                line-height: 1;
+                color: #ffffff;
+                text-shadow:
+                    0 0 5px #e39bff,
+                    0 0 11px #a24dff;
+            }
+
+            .c-arte::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: 1;
+                pointer-events: none;
+                mix-blend-mode: multiply;
+                opacity: 0.28;
+                background: linear-gradient(115deg, #ff5fa2, #ffd85f 25%, #5fffb0 50%, #5fc8ff 75%, #b55fff);
+            }
+
+            .c-gema {
+                background: radial-gradient(circle at 30% 25%, #ffe3f4 0%, #e0489b 52%, #5e1d86 100%);
+            }
         }
 
-        small {
-          font-size: 7px;
-          letter-spacing: 0.6px;
-        }
-      }
+        // ABSOLUTE (nivel 8): marco estrellado en violeta y oro que gira + sol + aura dorada + velo cósmico en la imagen
+        &[data-nivel="8"] {
+            --claro: 0%;
+            --oscuro: 58%;
+            --fuerza: 100%;
+            --borde-base: 9px;
+            --colores-marco: #12082e, #6a3dff 16%, #fff7c9 28%, #ffd24a 38%, #12082e 52%, #6a3dff 68%, #fff7c9 80%, #ffd24a 90%, #12082e;
+            --vuelta-marco: 5s;
+            --aro: conic-gradient(from 0deg, var(--colores-marco));
+            --anillo: inset 0 0 0 2px var(--base), inset 0 0 0 3px rgba(255, 233, 150, 0.95); // borde 9 + anillo 3 = 12px
+            --halo-arte: 1px;
+            --aura: 0 0 18px 4px rgba(255, 218, 110, 0.9), 0 0 40px 10px rgba(120, 80, 255, 0.6);
 
-      // Gema de la X-Antibody (solo en las cartas que la tienen): del lado opuesto a la del nivel
-      .c-x {
-        position: absolute;
-        z-index: 2;
-        top: 6px;
-        left: 6px;
-        width: 26px;
-        height: 26px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font: 900 16px/1 var(--f-titulo), sans-serif;
-        color: #ffffff;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        border-radius: 50%;
-        background: radial-gradient(circle at 30% 25%, #ffd1dc 0%, #e0245e 52%, #7a0b2f 100%);
-        box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.7);
-        cursor: help;
-      }
+            &::before {
+                content: "✺";
+                position: absolute;
+                z-index: 3;
+                top: -2px;
+                left: 4px;
+                font-size: 21px;
+                line-height: 1;
+                color: #fff7c9;
+                text-shadow:
+                    0 0 5px #ffd24a,
+                    0 0 12px #ffb400,
+                    0 0 18px #8a5cff;
+            }
 
-      // Marca de los digimons que la API trae como Armor (rojo, "A") o Hybrid (verde, "H"): igual que la gema de la X-Antibody
-      // y en el mismo lugar. Al pasar el mouse dice cuál es. Si una carta tuviera las dos, la marca va justo debajo de la X.
-      // El rojo de Armor es un bermellón (tira a naranja); el de la X-Antibody es un carmesí rosado: con la letra y el lugar no se confunden.
-      .c-marca {
-        position: absolute;
-        z-index: 2;
-        top: 6px;
-        left: 6px;
-        width: 26px;
-        height: 26px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font: 900 16px/1 var(--f-titulo), sans-serif;
-        color: #ffffff;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        border-radius: 50%;
-        background: radial-gradient(circle at 30% 25%, #ffd6c9 0%, #f22f12 52%, #7d1204 100%); // Armor: bermellón
-        box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.7);
-        cursor: help;
-      }
+            .c-arte::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: 1;
+                pointer-events: none;
+                mix-blend-mode: multiply;
+                opacity: 0.3;
+                background: radial-gradient(circle at 72% 18%, #ffe27a 0%, transparent 55%), linear-gradient(115deg, #7b52ff, #ffd24a 55%, #7b52ff);
+            }
 
-      &[data-marca="Hybrid"] .c-marca {
-        background: radial-gradient(circle at 30% 25%, #c9ffe9 0%, #14b87a 52%, #045239 100%);
-      }
-
-      .c-x ~ .c-marca {
-        top: 36px;
-      }
-
-      // Nivel (izquierda) e ID (derecha)
-      .c-sub {
-        display: flex;
-        justify-content: space-between;
-        padding: 0 2px;
-        font-family: var(--f-etiqueta), sans-serif;
-        font-size: var(--t-sub);
-        font-weight: 700;
-        letter-spacing: var(--ls-sub);
-        text-transform: uppercase;
-        color: #56606b;
-
-        .c-nivel {
-          cursor: pointer;
-          user-select: none;
-          border-radius: 4px;
-          padding: 0 4px;
-          margin: 0 -4px;
-          transition: color 0.15s ease, background 0.15s ease;
-
-          &:hover {
-            color: #1a222a;
-            background: rgba(0, 0, 0, 0.08);
-            text-decoration: underline dotted 1px;
-          }
-
-          &:active {
-            background: rgba(0, 0, 0, 0.15);
-          }
-        }
-      }
-
-      // Etiquetas de tipo y elemento: píldoras brillantes estilo Frutiger Aero
-      .c-chips {
-        display: flex;
-        gap: 5px;
-      }
-
-      .chip {
-        --c: var(--tipo);
-        flex: 1;
-        min-width: 0;
-        padding: 3px 4px;
-        white-space: nowrap; // "Desconocido ❓" tiene que entrar en una sola línea
-        font-family: var(--f-etiqueta), sans-serif;
-        font-size: var(--t-chip);
-        font-weight: var(--p-chip);
-        color: #ffffff;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-        border-radius: 999px;
-        background: linear-gradient(180deg,
-                                    color-mix(in srgb, var(--c) 55%, white) 0%,
-                                    var(--c) 50%,
-                                    color-mix(in srgb, var(--c) 82%, black) 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(0, 0, 0, 0.3);
-        cursor: pointer;
-        user-select: none;
-        transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
-
-        &:hover {
-          filter: brightness(1.14);
-          transform: translateY(-1px);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 2px 4px rgba(0, 0, 0, 0.35);
+            .c-gema {
+                background: radial-gradient(circle at 30% 25%, #fff7c9 0%, #f0b400 50%, #5a3a00 100%);
+            }
         }
 
-        &:active {
-          transform: translateY(0) scale(0.97);
+        // MARCO QUE GIRA (niveles 7 y 8). Es un <span class="c-marco"> que arma main.js solo en esas cartas.
+        // Antes el giro cambiaba el fondo de la carta en cada cuadro, y el navegador tenía que volver a dibujar la carta entera
+        // (con su halo) 60 veces por segundo: con una sola carta de estas en pantalla, toda la página bajaba de fluidez.
+        // Ahora el degradé es una capa cuadrada, más grande que la carta, que solo se rota (eso lo hace la placa gráfica sin
+        // redibujar nada), y la carta la recorta con forma de marco (máscara): se ve igual, pero casi no cuesta.
+        // Solo gira mientras se ve en pantalla (la clase "en-pantalla" la pone main.js) y si la persona no pidió menos movimiento;
+        // si no, queda el marco quieto que dibuja la propia carta (--aro).
+        .c-marco {
+            display: none;
         }
-      }
 
-      // Dorso: datos y descripción (en inglés, tal cual la devuelve la API)
-      .c-cuerpo {
-        flex: 1;
-        min-height: 0;
-        box-sizing: border-box;
-        overflow: auto;
-        // La descripción se comporta como cualquier lista con scroll, con el dedo y con la rueda del mouse: el gesto que la lleva hasta el
-        // fondo (o el tope) se queda en ella y no mueve la página, pero el gesto siguiente en esa dirección, con la descripción ya en el
-        // borde, sí mueve la página (con la rueda, el gesto siguiente es volver a girarla después de una pausa de un instante).
-        // Con "contain" ese segundo gesto no hacía nada y la carta se volvía una trampa para el dedo y para el mouse.
-        overscroll-behavior: auto;
-        padding: 8px 9px;
-        text-align: left;
-        font-family: var(--f-descripcion), sans-serif;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.4;
-        color: #26303a;
-        background: rgba(255, 255, 255, 0.88);
-        border: 2px solid var(--base);
-        border-radius: 6px;
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+        @media (prefers-reduced-motion: no-preference) {
+            &[data-nivel]:where(.en-pantalla) {
+                // ([data-nivel] para ganarle al --aro de cada nivel)
+                // El marco lo dibuja la capa que gira: el de la carta se saca para que no asome en los bordes
+                --aro: linear-gradient(transparent, transparent);
 
-        .dato {
-          margin: 0 0 4px;
+                .c-marco {
+                    display: block;
+                    position: absolute;
+                    inset: calc(var(--borde) * -1); // tapa justo el borde de la carta
+                    box-sizing: border-box;
+                    padding: var(--borde);
+                    border-radius: 10px;
+                    overflow: hidden;
+                    pointer-events: none;
+                    // Solo se ve el borde: se resta el interior (content-box) a la caja entera
+                    -webkit-mask:
+                        linear-gradient(#000 0 0) content-box,
+                        linear-gradient(#000 0 0);
+                    -webkit-mask-composite: xor;
+                    mask:
+                        linear-gradient(#000 0 0) content-box exclude,
+                        linear-gradient(#000 0 0);
 
-          b {
+                    &::before {
+                        content: "";
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        width: 440px; // más que la diagonal de la carta (390px), así el degradé la cubre en cualquier ángulo
+                        height: 440px;
+                        margin: -220px 0 0 -220px;
+                        background: conic-gradient(from 0deg, var(--colores-marco));
+                        will-change: transform;
+                        animation: girar-marco var(--vuelta-marco) linear infinite;
+                    }
+                }
+            }
+        }
+
+        // Color de la etiqueta de cada elemento
+        &[data-elemento="Fuego"] .c-elem {
+            --c: #e8552b;
+        }
+        &[data-elemento="Agua"] .c-elem {
+            --c: #2f8fe0;
+        }
+        &[data-elemento="Planta"] .c-elem {
+            --c: #4aa84f;
+        }
+        &[data-elemento="Hielo"] .c-elem {
+            --c: #58c7ea;
+        }
+        &[data-elemento="Rayo"] .c-elem {
+            --c: #f0b400;
+        }
+        &[data-elemento="Viento"] .c-elem {
+            --c: #7cc9b0;
+        }
+        &[data-elemento="Tierra"] .c-elem {
+            --c: #a17a4a;
+        }
+        &[data-elemento="Luz"] .c-elem {
+            --c: #f5c542;
+            color: #4a3a00;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        &[data-elemento="Oscuridad"] .c-elem {
+            --c: #6a4c93;
+        }
+        &[data-elemento="Metal"] .c-elem {
+            --c: #8a96a3;
+        }
+        &[data-elemento="Veneno"] .c-elem {
+            --c: #a24fc4;
+        }
+        &[data-elemento="Neutro"] .c-elem {
+            --c: #aab2bb;
+        }
+
+        // Frente y dorso comparten la misma disposición en columna
+        .c-frente,
+        .c-dorso {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .c-dorso {
+            display: none;
+        }
+
+        &.de-dorso {
+            .c-frente {
+                display: none;
+            }
+            .c-dorso {
+                display: flex;
+            }
+            .c-puente {
+                pointer-events: none !important;
+            }
+        }
+
+        // Cabecera con el nombre: una placa metálica con un toque del color del tipo
+        .c-cab {
+            box-sizing: border-box;
+            min-height: 40px;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(0, 0, 0, 0.28);
+            border-radius: 6px;
+            background: linear-gradient(
+                180deg,
+                #ffffff 0%,
+                color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.55), #e6e9ed) 52%,
+                color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.9), #bfc6ce) 100%
+            );
+            box-shadow:
+                inset 0 1px 0 #ffffff,
+                0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+
+        // Nombre: la variable --k (que calcula el main.js) agranda los nombres cortos.
+        // Lo que va entre paréntesis (.c-aparte) pasa a una segunda línea más chica (--sp).
+        .c-cab h4,
+        .c-nombre {
+            margin: 0;
+            font-family: var(--f-titulo), sans-serif;
+            font-size: calc(var(--t-nombre) * var(--k, 1));
+            font-weight: var(--p-titulo);
+            letter-spacing: var(--ls-titulo);
+            line-height: 1.15;
+            color: #1d2733;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .c-aparte {
+            display: block;
+            margin-top: 1px;
+            font-size: var(--sp, 9px);
+            line-height: 1.15;
+            opacity: 0.8;
+        }
+
+        // Imagen: va en un marco blanco (las imágenes de la API tienen fondo blanco)
+        .c-arte {
+            position: relative;
+            box-sizing: border-box;
+            width: 100%;
+            aspect-ratio: 1;
+            overflow: hidden;
+            background: #ffffff;
+            border: 2px solid var(--base);
+            border-radius: 6px;
+            box-shadow:
+                0 0 0 var(--halo-arte) rgba(255, 255, 255, 0.85),
+                0 2px 5px rgba(0, 0, 0, 0.25);
+
+            img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+            // Brillo suave en la parte de arriba, como una tapa de vidrio
+            &::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 42%);
+            }
+        }
+
+        // Gema con el nivel (número del 1 al 8, o "?" si es desconocido)
+        .c-gema {
+            position: absolute;
+            z-index: 2;
+            top: 6px;
+            right: 6px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font:
+                900 15px/1 var(--f-titulo),
+                sans-serif;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            background: radial-gradient(
+                circle at 30% 25%,
+                color-mix(in srgb, var(--tipo) 45%, white) 0%,
+                var(--tipo) 55%,
+                color-mix(in srgb, var(--tipo) 65%, black) 100%
+            );
+            box-shadow:
+                0 0 0 2px #e4e8ed,
+                0 0 0 3px #7e8791,
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            user-select: none;
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease,
+                box-shadow 0.15s ease;
+
+            &:hover {
+                filter: brightness(1.15);
+                transform: scale(1.08);
+                box-shadow:
+                    0 0 0 2px #ffffff,
+                    0 0 0 3px #9ba5b0,
+                    0 3px 6px rgba(0, 0, 0, 0.5),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+            }
+
+            &:active {
+                transform: scale(0.95);
+            }
+
+            small {
+                font-size: 7px;
+                letter-spacing: 0.6px;
+            }
+        }
+
+        // Gema de la X-Antibody (solo en las cartas que la tienen): del lado opuesto a la del nivel
+        .c-x {
+            position: absolute;
+            z-index: 2;
+            top: 6px;
+            left: 6px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font:
+                900 16px/1 var(--f-titulo),
+                sans-serif;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, #ffd1dc 0%, #e0245e 52%, #7a0b2f 100%);
+            box-shadow:
+                0 0 0 2px #e4e8ed,
+                0 0 0 3px #7e8791,
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            cursor: help;
+        }
+
+        // Marca de los digimons que la API trae como Armor (rojo, "A") o Hybrid (verde, "H"): igual que la gema de la X-Antibody
+        // y en el mismo lugar. Al pasar el mouse dice cuál es. Si una carta tuviera las dos, la marca va justo debajo de la X.
+        // El rojo de Armor es un bermellón (tira a naranja); el de la X-Antibody es un carmesí rosado: con la letra y el lugar no se confunden.
+        .c-marca {
+            position: absolute;
+            z-index: 2;
+            top: 6px;
+            left: 6px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font:
+                900 16px/1 var(--f-titulo),
+                sans-serif;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, #ffd6c9 0%, #f22f12 52%, #7d1204 100%); // Armor: bermellón
+            box-shadow:
+                0 0 0 2px #e4e8ed,
+                0 0 0 3px #7e8791,
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            cursor: help;
+        }
+
+        &[data-marca="Hybrid"] .c-marca {
+            background: radial-gradient(circle at 30% 25%, #c9ffe9 0%, #14b87a 52%, #045239 100%);
+        }
+
+        .c-x ~ .c-marca {
+            top: 36px;
+        }
+
+        // Nivel (izquierda) e ID (derecha)
+        .c-sub {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px;
+            font-family: var(--f-etiqueta), sans-serif;
+            font-size: var(--t-sub);
             font-weight: 700;
-            color: color-mix(in srgb, var(--tipo) 70%, black);
-          }
+            letter-spacing: var(--ls-sub);
+            text-transform: uppercase;
+            color: #56606b;
+
+            .c-nivel {
+                cursor: pointer;
+                user-select: none;
+                border-radius: 4px;
+                padding: 0 4px;
+                margin: 0 -4px;
+                transition:
+                    color 0.15s ease,
+                    background 0.15s ease;
+
+                &:hover {
+                    color: #1a222a;
+                    background: rgba(0, 0, 0, 0.08);
+                    text-decoration: underline dotted 1px;
+                }
+
+                &:active {
+                    background: rgba(0, 0, 0, 0.15);
+                }
+            }
         }
 
-        .c-desc {
-          margin: 8px 0 4px;
+        // Etiquetas de tipo y elemento: píldoras brillantes estilo Frutiger Aero
+        .c-chips {
+            display: flex;
+            gap: 5px;
         }
 
-        .c-idioma {
-          margin: 6px 0 0;
-          font-size: 9.5px;
-          color: #7a848f;
+        .chip {
+            --c: var(--tipo);
+            flex: 1;
+            min-width: 0;
+            padding: 3px 4px;
+            white-space: nowrap; // "Desconocido ❓" tiene que entrar en una sola línea
+            font-family: var(--f-etiqueta), sans-serif;
+            font-size: var(--t-chip);
+            font-weight: var(--p-chip);
+            color: #ffffff;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+            border-radius: 999px;
+            background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, white) 0%, var(--c) 50%, color-mix(in srgb, var(--c) 82%, black) 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.7),
+                0 1px 2px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            user-select: none;
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease,
+                box-shadow 0.15s ease;
+
+            &:hover {
+                filter: brightness(1.14);
+                transform: translateY(-1px);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                    0 2px 4px rgba(0, 0, 0, 0.35);
+            }
+
+            &:active {
+                transform: translateY(0) scale(0.97);
+            }
         }
-      }
 
-      // Con el zoom abierto la página no se mueve: la descripción siempre se queda con el scroll
-      &.zoom-activa .c-cuerpo {
-        overscroll-behavior: contain !important;
-      }
+        // Dorso: datos y descripción (en inglés, tal cual la devuelve la API)
+        .c-cuerpo {
+            flex: 1;
+            min-height: 0;
+            box-sizing: border-box;
+            overflow: auto;
+            // La descripción se comporta como cualquier lista con scroll, con el dedo y con la rueda del mouse: el gesto que la lleva hasta el
+            // fondo (o el tope) se queda en ella y no mueve la página, pero el gesto siguiente en esa dirección, con la descripción ya en el
+            // borde, sí mueve la página (con la rueda, el gesto siguiente es volver a girarla después de una pausa de un instante).
+            // Con "contain" ese segundo gesto no hacía nada y la carta se volvía una trampa para el dedo y para el mouse.
+            overscroll-behavior: auto;
+            padding: 8px 9px;
+            text-align: left;
+            font-family: var(--f-descripcion), sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.4;
+            color: #26303a;
+            background: rgba(255, 255, 255, 0.88);
+            border: 2px solid var(--base);
+            border-radius: 6px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
 
-      // Botón de dar vuelta la carta: aparece solo al pasar el mouse, asomando por la esquina superior izquierda.
-      // Se coloca respecto del borde de afuera de la carta y no del de adentro (la posición absoluta cuenta desde adentro del borde):
-      // así asoma lo mismo (8 px) en las cartas comunes (borde de 2 px) y en las de nivel 5 en adelante, que tienen marco (de 7 a 9 px)
-      .c-flip {
-        position: absolute;
-        z-index: 10;
-        top: calc(-1 * (var(--borde) + 8px));
-        left: calc(-1 * (var(--borde) + 8px));
-        width: 30px;
-        height: 30px;
-        box-sizing: border-box;
-        padding: 0;
-        display: grid;
-        place-items: center;
-        font-size: 17px;
-        line-height: 1;
-        color: #1b4f82;
-        cursor: pointer;
-        border: 1px solid rgba(27, 79, 130, 0.45);
-        border-radius: 50%;
-        background: linear-gradient(180deg, #ffffff 0%, #cfe9ff 45%, #8cc4f2 100%);
-        background-clip: padding-box;
-        box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.95), 0 2px 4px rgba(0, 0, 0, 0.3);
-        opacity: 0;
-        scale: 0.4;
-        rotate: -140deg;
-        pointer-events: none;
-        overflow: hidden;
-        transition: opacity 0.15s ease, scale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), rotate 0.3s ease-out;
+            .dato {
+                margin: 0 0 4px;
 
-        &:active {
-          background: linear-gradient(180deg, #8cc4f2 0%, #cfe9ff 100%);
-          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+                b {
+                    font-weight: 700;
+                    color: color-mix(in srgb, var(--tipo) 70%, black);
+                }
+            }
+
+            .c-desc {
+                margin: 8px 0 4px;
+            }
+
+            .c-idioma {
+                margin: 6px 0 0;
+                font-size: 9.5px;
+                color: #7a848f;
+            }
         }
-      }
 
-      // (Con el teclado, el botón se ve cuando recibe el foco. Con el mouse NO: después de un clic el botón queda con el foco y la carta
-      // lo mostraría pegado hasta hacer clic en otro lado. Por eso es ":focus-visible" y no ":focus-within".)
-      &:hover .c-flip,
-      &.tilt-activo .c-flip,
-      .c-flip:focus-visible {
-        opacity: 1;
-        scale: 1;
-        rotate: 0deg;
-        pointer-events: auto;
-      }
+        // Con el zoom abierto la página no se mueve: la descripción siempre se queda con el scroll
+        &.zoom-activa .c-cuerpo {
+            overscroll-behavior: contain !important;
+        }
 
-      // Puente invisible que acompaña el levante de la carta (-8px) en hover e inclinación.
-      // Al entrar despacio desde cualquier borde o en diagonal, el levante de la carta vacía unos píxeles;
-      // este puente mantiene el área de interacción sólida en los 4 bordes y las 4 esquinas,
-      // eliminando de raíz cualquier oscilación o vibración de :hover.
-      .c-puente {
-        position: absolute;
-        inset: 0;
-        border-radius: 10px;
-        pointer-events: none;
-        z-index: 0;
-      }
+        // Botón de dar vuelta la carta: aparece solo al pasar el mouse, asomando por la esquina superior izquierda.
+        // Se coloca respecto del borde de afuera de la carta y no del de adentro (la posición absoluta cuenta desde adentro del borde):
+        // así asoma lo mismo (8 px) en las cartas comunes (borde de 2 px) y en las de nivel 5 en adelante, que tienen marco (de 7 a 9 px)
+        .c-flip {
+            position: absolute;
+            z-index: 10;
+            top: calc(-1 * (var(--borde) + 8px));
+            left: calc(-1 * (var(--borde) + 8px));
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+            padding: 0;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            line-height: 1;
+            color: #1b4f82;
+            cursor: pointer;
+            border: 1px solid rgba(27, 79, 130, 0.45);
+            border-radius: 50%;
+            background: linear-gradient(180deg, #ffffff 0%, #cfe9ff 45%, #8cc4f2 100%);
+            background-clip: padding-box;
+            box-shadow:
+                inset 0 1px 1.5px rgba(255, 255, 255, 0.95),
+                0 2px 4px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            scale: 0.4;
+            rotate: -140deg;
+            pointer-events: none;
+            overflow: hidden;
+            transition:
+                opacity 0.15s ease,
+                scale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                rotate 0.3s ease-out;
 
-      &:hover .c-puente,
-      &.tilt-activo .c-puente {
-        inset: -6px -8px -20px -8px;
-        border-radius: 16px;
-        pointer-events: auto;
-      }
+            &:active {
+                background: linear-gradient(180deg, #8cc4f2 0%, #cfe9ff 100%);
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+            }
+        }
 
-      // Reflejo que cruza la carta al pasar el mouse.
-      // (Si hay inclinación con el mouse, se reemplaza por el reflejo que sigue al puntero: ver más abajo.)
-      // Va por encima de las gemas (nivel y X-Antibody) y de los símbolos de las esquinas: el reflejo cruza toda la carta.
-      // (Queda debajo del botón de dar vuelta, que tiene z-index 10, y no frena los clics: pointer-events none.)
-      &::after {
-        content: "";
-        position: absolute;
-        z-index: 4;
-        inset: 0;
-        border-radius: calc(10px - var(--borde));
-        pointer-events: none;
-        opacity: 0;
-        background: linear-gradient(115deg, transparent 38%, rgba(0, 200, 255, 0.24) 44%,
-                                    rgba(255, 255, 255, 0.55) 50%, rgba(255, 60, 200, 0.2) 56%, transparent 62%)
-                    no-repeat;
-        background-size: 300% 100%;
-        background-position: 100% 0;
-      }
+        // (Con el teclado, el botón se ve cuando recibe el foco. Con el mouse NO: después de un clic el botón queda con el foco y la carta
+        // lo mostraría pegado hasta hacer clic en otro lado. Por eso es ":focus-visible" y no ":focus-within".)
+        &:hover .c-flip,
+        &.tilt-activo .c-flip,
+        .c-flip:focus-visible {
+            opacity: 1;
+            scale: 1;
+            rotate: 0deg;
+            pointer-events: auto;
+        }
 
-      &:hover,
-      &.tilt-activo {
-        --caida: 0 8px 16px rgba(0, 0, 0, 0.85);
-        translate: 0 -8px;
+        // Puente invisible que acompaña el levante de la carta (-8px) en hover e inclinación.
+        // Al entrar despacio desde cualquier borde o en diagonal, el levante de la carta vacía unos píxeles;
+        // este puente mantiene el área de interacción sólida en los 4 bordes y las 4 esquinas,
+        // eliminando de raíz cualquier oscilación o vibración de :hover.
+        .c-puente {
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 0;
+        }
 
+        &:hover .c-puente,
+        &.tilt-activo .c-puente {
+            inset: -6px -8px -20px;
+            border-radius: 16px;
+            pointer-events: auto;
+        }
+
+        // Reflejo que cruza la carta al pasar el mouse.
+        // (Si hay inclinación con el mouse, se reemplaza por el reflejo que sigue al puntero: ver más abajo.)
+        // Va por encima de las gemas (nivel y X-Antibody) y de los símbolos de las esquinas: el reflejo cruza toda la carta.
+        // (Queda debajo del botón de dar vuelta, que tiene z-index 10, y no frena los clics: pointer-events none.)
         &::after {
-          opacity: 1;
-          background-position: 0 0;
-          transition: background-position 0.9s ease, opacity 0.2s;
+            content: "";
+            position: absolute;
+            z-index: 4;
+            inset: 0;
+            border-radius: calc(10px - var(--borde));
+            pointer-events: none;
+            opacity: 0;
+            background: linear-gradient(
+                    115deg,
+                    transparent 38%,
+                    rgba(0, 200, 255, 0.24) 44%,
+                    rgba(255, 255, 255, 0.55) 50%,
+                    rgba(255, 60, 200, 0.2) 56%,
+                    transparent 62%
+                )
+                no-repeat;
+            background-size: 300% 100%;
+            background-position: 100% 0;
         }
-      }
 
-      // Carta seleccionada para el combate: flota y el halo de afuera cambia de matiz de forma pareja (una vuelta cada 6 s).
-      // El marco queda como es, así no se confunde con el marco multicolor de las cartas de nivel 7.
-      // Con el zoom (doble clic) la carta se ve como una común, sin el halo: eso es solo para cuando está chica.
-      &.seleccionado:not(.zoom-activa) {
-        translate: 0 -2px;
-        animation: matiz 6s linear infinite, flota-brilla 1.5s ease-in-out infinite;
-      }
+        &:hover,
+        &.tilt-activo {
+            --caida: 0 8px 16px rgba(0, 0, 0, 0.85);
+            translate: 0 -8px;
+
+            &::after {
+                opacity: 1;
+                background-position: 0 0;
+                transition:
+                    background-position 0.9s ease,
+                    opacity 0.2s;
+            }
+        }
+
+        // Carta seleccionada para el combate: flota y el halo de afuera cambia de matiz de forma pareja (una vuelta cada 6 s).
+        // El marco queda como es, así no se confunde con el marco multicolor de las cartas de nivel 7.
+        // Con el zoom (doble clic) la carta se ve como una común, sin el halo: eso es solo para cuando está chica.
+        &.seleccionado:not(.zoom-activa) {
+            translate: 0 -2px;
+            animation:
+                matiz 6s linear infinite,
+                flota-brilla 1.5s ease-in-out infinite;
+        }
     }
 
     // Con inclinación (solo mouse o dedo): el reflejo sigue al puntero: la franja diagonal de luz (celeste, blanca y magenta) corre
     // con él. En ninguna carta hay un destello redondo y claro alrededor del puntero (se sacó de las de 1 a 6 y después también
     // de las holográficas de 6, 7 y 8; en esas, la textura y el brillo irisado de más abajo quedan como estaban).
     &.tilt-on li {
-      &::after {
-        background: linear-gradient(115deg, transparent 41%, rgba(0, 200, 255, 0.13) 46%,
-                                    rgba(255, 255, 255, 0.26) 50%, rgba(255, 60, 200, 0.1) 54%, transparent 59%);
-        background-repeat: no-repeat;
-        background-size: 300% 100%;
-        background-position: calc(75% - var(--mx) / 2) 0;
-        transition: opacity 0.25s ease;
-      }
+        &::after {
+            background: linear-gradient(
+                115deg,
+                transparent 41%,
+                rgba(0, 200, 255, 0.13) 46%,
+                rgba(255, 255, 255, 0.26) 50%,
+                rgba(255, 60, 200, 0.1) 54%,
+                transparent 59%
+            );
+            background-repeat: no-repeat;
+            background-size: 300% 100%;
+            background-position: calc(75% - var(--mx) / 2) 0;
+            transition: opacity 0.25s ease;
+        }
 
-      &:hover::after,
-      &.tilt-activo::after {
-        opacity: 1;
-        background-position: calc(75% - var(--mx) / 2) 0;
-        transition: opacity 0.25s ease;
-      }
+        &:hover::after,
+        &.tilt-activo::after {
+            opacity: 1;
+            background-position: calc(75% - var(--mx) / 2) 0;
+            transition: opacity 0.25s ease;
+        }
     }
 
     // Del lado del dorso no hay reflejo, para poder leer tranquilo
     li.de-dorso::after {
-      opacity: 0 !important;
+        opacity: 0 !important;
     }
 
     // TEXTURA HOLOGRÁFICA (como en las cartas de colección con foil). Se suma al reflejo de arriba: el brillo es la luz que
@@ -3337,67 +3698,102 @@ body:has(.swal2-container) #avisos-ayuda {
     $holo-niveles: '[data-nivel="6"], [data-nivel="7"], [data-nivel="8"]';
 
     li:is(#{$holo-niveles}) .c-frente {
-      position: relative;
+        position: relative;
     }
 
     &.tilt-on li:is(#{$holo-niveles}) .c-frente {
-      &::before,
-      &::after {
-        content: "";
-        position: absolute;
-        z-index: 3;
-        // Mismo recuadro que el reflejo (li::after): así la franja del foil cae justo sobre la franja del brillo
-        inset: calc(var(--borde) - 14px);
-        border-radius: calc(10px - var(--borde));
-        pointer-events: none;
-        opacity: 0;
-      }
+        &::before,
+        &::after {
+            content: "";
+            position: absolute;
+            z-index: 3;
+            // Mismo recuadro que el reflejo (li::after): así la franja del foil cae justo sobre la franja del brillo
+            inset: calc(var(--borde) - 14px);
+            border-radius: calc(10px - var(--borde));
+            pointer-events: none;
+            opacity: 0;
+        }
 
-      // La zona iluminada es la franja diagonal del reflejo (misma inclinación y mismo desplazamiento), más angosta, y se apaga
-      // hacia arriba y abajo del puntero. El centro del óvalo corre sobre la diagonal: la franja se inclina ~0.67 puntos de ancho
-      // por cada punto de alto (115°, carta de 218 × 314).
-      // Tramado de líneas finas con un velo de arcoíris
-      // (las líneas blancas están al 15 %: antes al 30 % resaltaban demasiado sobre las ilustraciones oscuras)
-      &::before {
-        background:
-          repeating-linear-gradient(115deg, rgba(255, 255, 255, 0) 0 3px, rgba(255, 255, 255, 0.15) 3px 4px),
-          linear-gradient(115deg, rgba(255, 95, 162, 0.4), rgba(255, 216, 95, 0.4) 25%, rgba(95, 255, 176, 0.4) 50%,
-                          rgba(95, 200, 255, 0.4) 75%, rgba(181, 95, 255, 0.4)) var(--mx) var(--my) / 200% 200%;
-        $franja: linear-gradient(115deg, transparent 43%, #000 50%, transparent 57%);
-        $punta: radial-gradient(ellipse 100% 30% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
-                                #000 0, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
-        -webkit-mask-image: $franja, $punta;
-        mask-image: $franja, $punta;
-        -webkit-mask-size: 300% 100%, 100% 100%;
-        mask-size: 300% 100%, 100% 100%;
-        -webkit-mask-position: calc(75% - var(--mx) / 2) 0, 0 0;
-        mask-position: calc(75% - var(--mx) / 2) 0, 0 0;
-        -webkit-mask-repeat: no-repeat;
-        mask-repeat: no-repeat;
-        -webkit-mask-composite: source-in;
-        mask-composite: intersect;
-      }
+        // La zona iluminada es la franja diagonal del reflejo (misma inclinación y mismo desplazamiento), más angosta, y se apaga
+        // hacia arriba y abajo del puntero. El centro del óvalo corre sobre la diagonal: la franja se inclina ~0.67 puntos de ancho
+        // por cada punto de alto (115°, carta de 218 × 314).
+        // Tramado de líneas finas con un velo de arcoíris
+        // (las líneas blancas están al 15 %: antes al 30 % resaltaban demasiado sobre las ilustraciones oscuras)
+        &::before {
+            background:
+                repeating-linear-gradient(115deg, rgba(255, 255, 255, 0) 0 3px, rgba(255, 255, 255, 0.15) 3px 4px),
+                linear-gradient(
+                        115deg,
+                        rgba(255, 95, 162, 0.4),
+                        rgba(255, 216, 95, 0.4) 25%,
+                        rgba(95, 255, 176, 0.4) 50%,
+                        rgba(95, 200, 255, 0.4) 75%,
+                        rgba(181, 95, 255, 0.4)
+                    )
+                    var(--mx) var(--my) / 200% 200%;
+            $franja: linear-gradient(115deg, transparent 43%, #000 50%, transparent 57%);
+            $punta: radial-gradient(
+                ellipse 100% 30% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                #000 0,
+                rgba(0, 0, 0, 0.55) 45%,
+                transparent 100%
+            );
+            -webkit-mask-image: $franja, $punta;
+            mask-image: $franja, $punta;
+            -webkit-mask-size:
+                300% 100%,
+                100% 100%;
+            mask-size:
+                300% 100%,
+                100% 100%;
+            -webkit-mask-position:
+                calc(75% - var(--mx) / 2) 0,
+                0 0;
+            mask-position:
+                calc(75% - var(--mx) / 2) 0,
+                0 0;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-composite: source-in;
+            mask-composite: intersect;
+        }
 
-      // Signos grabados diminutos (baldosa de 30px, cada signo de ~9px), pintados con los colores del arcoíris
-      &::after {
-        background: linear-gradient(115deg, #ff5fa2, #ffd85f 20%, #5fffb0 40%, #5fc8ff 60%, #b55fff 80%, #ff5fa2) var(--mx) var(--my) / 170% 170%;
-        $franja-fina: linear-gradient(115deg, transparent 44.5%, #000 50%, transparent 55.5%);
-        $punta-fina: radial-gradient(ellipse 100% 28% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
-                                     #000 0, rgba(0, 0, 0, 0.6) 45%, transparent 100%);
-        -webkit-mask-image: $holo-signos, $franja-fina, $punta-fina;
-        mask-image: $holo-signos, $franja-fina, $punta-fina;
-        -webkit-mask-size: 30px 30px, 300% 100%, 100% 100%;
-        mask-size: 30px 30px, 300% 100%, 100% 100%;
-        -webkit-mask-position: 0 0, calc(75% - var(--mx) / 2) 0, 0 0;
-        mask-position: 0 0, calc(75% - var(--mx) / 2) 0, 0 0;
-        -webkit-mask-repeat: repeat, no-repeat, no-repeat;
-        mask-repeat: repeat, no-repeat, no-repeat;
-        -webkit-mask-composite: source-in;
-        mask-composite: intersect;
-        // Al entrar o salir del zoom los signos cambian de tamaño con un suave encogerse/agrandarse, no de golpe
-        // (solo transiciona el tamaño de la máscara; la opacidad sigue sin transición, ver arriba)
-        transition: mask-size 0.35s ease;
-      }
+        // Signos grabados diminutos (baldosa de 30px, cada signo de ~9px), pintados con los colores del arcoíris
+        &::after {
+            background: linear-gradient(115deg, #ff5fa2, #ffd85f 20%, #5fffb0 40%, #5fc8ff 60%, #b55fff 80%, #ff5fa2) var(--mx) var(--my) / 170% 170%;
+            $franja-fina: linear-gradient(115deg, transparent 44.5%, #000 50%, transparent 55.5%);
+            $punta-fina: radial-gradient(
+                ellipse 100% 28% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                #000 0,
+                rgba(0, 0, 0, 0.6) 45%,
+                transparent 100%
+            );
+            -webkit-mask-image: $holo-signos, $franja-fina, $punta-fina;
+            mask-image: $holo-signos, $franja-fina, $punta-fina;
+            -webkit-mask-size:
+                30px 30px,
+                300% 100%,
+                100% 100%;
+            mask-size:
+                30px 30px,
+                300% 100%,
+                100% 100%;
+            -webkit-mask-position:
+                0 0,
+                calc(75% - var(--mx) / 2) 0,
+                0 0;
+            mask-position:
+                0 0,
+                calc(75% - var(--mx) / 2) 0,
+                0 0;
+            -webkit-mask-repeat: repeat, no-repeat, no-repeat;
+            mask-repeat: repeat, no-repeat, no-repeat;
+            -webkit-mask-composite: source-in;
+            mask-composite: intersect;
+            // Al entrar o salir del zoom los signos cambian de tamaño con un suave encogerse/agrandarse, no de golpe
+            // (solo transiciona el tamaño de la máscara; la opacidad sigue sin transición, ver arriba)
+            transition: mask-size 0.35s ease;
+        }
     }
 
     // CON EL DEDO (pantallas táctiles) la zona holográfica es bastante más grande: con el mouse el puntero es una flechita y la franja
@@ -3407,23 +3803,31 @@ body:has(.swal2-container) #avisos-ayuda {
     // Solo vale para la carta chica de la lista: con el zoom (.zoom-activa) la carta ya se ve enorme y el dedo no la tapa, así que
     // ahí queda la zona de siempre.
     @media (hover: none) {
-      &.tilt-on li:is(#{$holo-niveles}):not(.zoom-activa) .c-frente {
-        &::before {
-          $franja-dedo: linear-gradient(115deg, transparent 36%, #000 50%, transparent 64%);
-          $punta-dedo: radial-gradient(ellipse 100% 48% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
-                                       #000 0, rgba(0, 0, 0, 0.7) 55%, transparent 100%);
-          -webkit-mask-image: $franja-dedo, $punta-dedo;
-          mask-image: $franja-dedo, $punta-dedo;
-        }
+        &.tilt-on li:is(#{$holo-niveles}):not(.zoom-activa) .c-frente {
+            &::before {
+                $franja-dedo: linear-gradient(115deg, transparent 36%, #000 50%, transparent 64%);
+                $punta-dedo: radial-gradient(
+                    ellipse 100% 48% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                    #000 0,
+                    rgba(0, 0, 0, 0.7) 55%,
+                    transparent 100%
+                );
+                -webkit-mask-image: $franja-dedo, $punta-dedo;
+                mask-image: $franja-dedo, $punta-dedo;
+            }
 
-        &::after {
-          $franja-fina-dedo: linear-gradient(115deg, transparent 38%, #000 50%, transparent 62%);
-          $punta-fina-dedo: radial-gradient(ellipse 100% 46% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
-                                            #000 0, rgba(0, 0, 0, 0.75) 55%, transparent 100%);
-          -webkit-mask-image: $holo-signos, $franja-fina-dedo, $punta-fina-dedo;
-          mask-image: $holo-signos, $franja-fina-dedo, $punta-fina-dedo;
+            &::after {
+                $franja-fina-dedo: linear-gradient(115deg, transparent 38%, #000 50%, transparent 62%);
+                $punta-fina-dedo: radial-gradient(
+                    ellipse 100% 46% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                    #000 0,
+                    rgba(0, 0, 0, 0.75) 55%,
+                    transparent 100%
+                );
+                -webkit-mask-image: $holo-signos, $franja-fina-dedo, $punta-fina-dedo;
+                mask-image: $holo-signos, $franja-fina-dedo, $punta-fina-dedo;
+            }
         }
-      }
     }
 
     // Con el zoom (doble clic) la carta se ve enorme y los signos de 30px se verían grandotes y toscos: la baldosa se achica
@@ -3433,73 +3837,81 @@ body:has(.swal2-container) #avisos-ayuda {
     $holo-signos-zoom: 12px;
 
     &.tilt-on li:is(#{$holo-niveles}).zoom-activa .c-frente::after {
-      -webkit-mask-size: $holo-signos-zoom $holo-signos-zoom, 300% 100%, 100% 100%;
-      mask-size: $holo-signos-zoom $holo-signos-zoom, 300% 100%, 100% 100%;
+        -webkit-mask-size:
+            $holo-signos-zoom $holo-signos-zoom,
+            300% 100%,
+            100% 100%;
+        mask-size:
+            $holo-signos-zoom $holo-signos-zoom,
+            300% 100%,
+            100% 100%;
     }
 
     &.tilt-on li:is(#{$holo-niveles}):hover .c-frente,
     &.tilt-on li:is(#{$holo-niveles}).tilt-activo .c-frente {
-      &::before {
-        opacity: 0.75;
-      }
+        &::before {
+            opacity: 0.75;
+        }
 
-      &::after {
-        opacity: 0.85;
-      }
+        &::after {
+            opacity: 0.85;
+        }
     }
-  }
+}
 
 // En pantallas táctiles no hay hover: el botón de dar vuelta queda siempre a la vista
 @media (hover: none) {
-  #listado-digimons li .c-flip {
-    opacity: 1;
-    scale: 1;
-    rotate: 0deg;
-    pointer-events: auto;
-  }
+    #listado-digimons li .c-flip {
+        opacity: 1;
+        scale: 1;
+        rotate: 0deg;
+        pointer-events: auto;
+    }
 }
 
 // En móvil: tras 4 flips con el dedo en una sesión, desaparecen las flechas hasta la próxima sesión.
 // Al completar ese aprendizaje en 5 sesiones distintas, quedan ocultas de forma permanente.
 @media (hover: none), (max-width: 768px) {
-  body.sin-flechas-flip-movil #listado-digimons li .c-flip {
-    opacity: 0 !important;
-    scale: 0 !important;
-    pointer-events: none !important;
-    transition: opacity 0.35s ease, scale 0.35s ease !important;
-  }
+    body.sin-flechas-flip-movil #listado-digimons li .c-flip {
+        opacity: 0 !important;
+        scale: 0 !important;
+        pointer-events: none !important;
+        transition:
+            opacity 0.35s ease,
+            scale 0.35s ease !important;
+    }
 }
 
 // En pantallas táctiles el "hover" queda pegado en la última carta tocada: ahí no se levanta ni brilla.
 // El brillo con el dedo aparece solo al mantener apretada la carta (inclinación con el dedo, clase .tilt-activo).
 // Además, al mantener apretada una carta no se abre el menú del sistema ni se selecciona texto.
 @media (hover: none) {
-  #listado-digimons > li {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
+    #listado-digimons > li {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
 
-    img {
-      -webkit-user-drag: none;
+        img {
+            -webkit-user-drag: none;
+        }
     }
-  }
 
-  #listado-digimons > li:is(:hover, .tilt-activo):not(.seleccionado):not(.evo-resaltada) {
-    --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
-    translate: 0 0;
-  }
+    #listado-digimons > li:is(:hover, .tilt-activo):not(.seleccionado):not(.evo-resaltada) {
+        --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+        translate: 0 0;
+    }
 
-  #listado-digimons > li .c-puente {
-    display: none;
-  }
+    #listado-digimons > li .c-puente {
+        display: none;
+    }
 
-  #listado-digimons > li:hover:not(.tilt-activo)::after,
-  #listado-digimons.tilt-on > li:hover:not(.tilt-activo)::after,
-  #listado-digimons.tilt-on > li:hover:not(.tilt-activo) .c-frente::before,
-  #listado-digimons.tilt-on > li:hover:not(.tilt-activo) .c-frente::after {
-    opacity: 0;
-  }
+    #listado-digimons > li:hover:not(.tilt-activo)::after,
+    #listado-digimons.tilt-on > li:hover:not(.tilt-activo)::after,
+    #listado-digimons.tilt-on > li:hover:not(.tilt-activo) .c-frente::before,
+    #listado-digimons.tilt-on > li:hover:not(.tilt-activo) .c-frente::after {
+        opacity: 0;
+    }
 }
 
 // En computadora, mientras se mantiene apretada Shift (main.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)
@@ -3510,7 +3922,7 @@ body:has(.swal2-container) #avisos-ayuda {
 #listado-digimons.inclinacion-anulada > li:hover::after,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::before,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::after {
-  opacity: 0 !important;
+    opacity: 0 !important;
 }
 
 // La carta ampliada de más (zoom extra, con la rueda del mouse o el pellizco; main.js le pone la clase "zoom-extra-activo") no se inclina
@@ -3518,7 +3930,7 @@ body:has(.swal2-container) #avisos-ayuda {
 #listado-digimons > li.zoom-activa.zoom-extra-activo::after,
 #listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::before,
 #listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::after {
-  opacity: 0 !important;
+    opacity: 0 !important;
 }
 
 // Al pasar de carta en el zoom (con el teclado o con las flechas), la carta nueva queda sin reflejo ni textura holográfica mientras el mouse no
@@ -3527,88 +3939,88 @@ body:has(.swal2-container) #avisos-ayuda {
 #listado-digimons > li.reflejo-quieto::after,
 #listado-digimons.tilt-on > li.reflejo-quieto .c-frente::before,
 #listado-digimons.tilt-on > li.reflejo-quieto .c-frente::after {
-  opacity: 0 !important;
+    opacity: 0 !important;
 }
 
 // Con la carta agrandada de más el mouse la "agarra" (main.js: activarArrastreDeZoomExtra): mano abierta sobre ella y cerrada mientras se
 // arrastra. No se selecciona su texto ni se arrastra la imagen. (Los botones de la carta conservan su cursor.)
 #listado-digimons > li.zoom-activa.zoom-extra-activo {
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #listado-digimons > li.zoom-activa.zoom-extra-activo img {
-  -webkit-user-drag: none;
+    -webkit-user-drag: none;
 }
 
 #listado-digimons > li.zoom-activa.zoom-arrastrando,
 #listado-digimons > li.zoom-activa.zoom-arrastrando * {
-  cursor: grabbing !important;
+    cursor: grabbing !important;
 }
 
 // Una carta bailando (baile.js: "transform" animado) no reacciona al hover: con el puntero quieto y la carta saltando por debajo, el
 // levante y el reflejo aparecerían y desaparecerían a cada rato. Queda como si no tuviera el mouse encima.
 #listado-digimons > li.bailando:hover:not(.seleccionado):not(.evo-resaltada):not(.zoom-activa) {
-  --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
-  translate: 0 0;
+    --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+    translate: 0 0;
 }
 
 #listado-digimons > li.bailando:hover::after,
 #listado-digimons.tilt-on > li.bailando:hover .c-frente::before,
 #listado-digimons.tilt-on > li.bailando:hover .c-frente::after {
-  opacity: 0 !important;
+    opacity: 0 !important;
 }
 
 // CELULAR: dos cartas por fila. Las cartas se achican enteras con "zoom" (texto, marcos, botones y dorso juntos),
 // con un tamaño según el ancho de la pantalla: (ancho - 8px) / 464px, redondeado para abajo.
 @media (max-width: 483px) {
-  #listado-digimons {
-    padding: 4px;
-  }
+    #listado-digimons {
+        padding: 4px;
+    }
 
-  #listado-digimons > li {
-    margin: 5px;
-    zoom: 0.88;
-  }
+    #listado-digimons > li {
+        margin: 5px;
+        zoom: 0.88;
+    }
 }
 
 @media (max-width: 419px) {
-  #listado-digimons > li {
-    zoom: 0.82;
-  }
+    #listado-digimons > li {
+        zoom: 0.82;
+    }
 }
 
 // Lugar al final de la lista (celular) para que el botón de sonido, que flota abajo a la derecha, no tape la última fila de cartas.
 // Va después de los bloques de arriba: ellos fijan "padding: 4px" y esto solo cambia el de abajo.
 @media (max-width: 700px) {
-  #listado-digimons {
-    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
-  }
+    #listado-digimons {
+        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+    }
 }
 
 @media (max-width: 389px) {
-  #listado-digimons > li {
-    zoom: 0.79;
-  }
+    #listado-digimons > li {
+        zoom: 0.79;
+    }
 }
 
 @media (max-width: 374px) {
-  #listado-digimons > li {
-    zoom: 0.75;
-  }
+    #listado-digimons > li {
+        zoom: 0.75;
+    }
 }
 
 @media (max-width: 359px) {
-  #listado-digimons > li {
-    zoom: 0.71;
-  }
+    #listado-digimons > li {
+        zoom: 0.71;
+    }
 }
 
 @media (max-width: 339px) {
-  #listado-digimons > li {
-    zoom: 0.67;
-  }
+    #listado-digimons > li {
+        zoom: 0.67;
+    }
 }
 
 // ESCRITORIO Y CELULAR: una vez cargadas todas, el navegador solo dibuja el frente de las cartas que están en pantalla y las
@@ -3620,60 +4032,74 @@ body:has(.swal2-container) #avisos-ayuda {
 //   · "content-visibility: auto" recorta lo que se sale del frente. Hay brillos y sombras que se salen unos pocos píxeles, y la
 //     textura holográfica de las cartas 6, 7 y 8 llega hasta el marco: "overflow-clip-margin" deja ese margen sin recortar.
 #listado-digimons.lista-completa > li > .c-frente {
-  content-visibility: auto;
-  contain-intrinsic-block-size: auto 290px;
-  overflow-clip-margin: 16px;
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 290px;
+    overflow-clip-margin: 16px;
 }
 
 // Si la persona pidió menos animaciones en su sistema, las desactivamos
 @media (prefers-reduced-motion: reduce) {
-  #navbar img {
-    animation: none;
-  }
+    #navbar img {
+        animation: none;
+    }
 
-  #navbar .botones,
-  #navbar .menu-desplegable,
-  #navbar .menu-info ul,
-  #navbar .contador,
-  #navbar #cambiar-idioma span,
-  #navbar #cambiar-niveles .sn-opcion {
-    transition: none;
-  }
+    #navbar .botones,
+    #navbar .menu-desplegable,
+    #navbar .menu-info ul,
+    #navbar .contador,
+    #navbar #cambiar-idioma span,
+    #navbar #cambiar-niveles .sn-opcion {
+        transition: none;
+    }
 
-  #listado-digimons li,
-  #listado-digimons li::after,
-  #listado-digimons li .c-flip {
-    transition: none;
-  }
+    #listado-digimons li,
+    #listado-digimons li::after,
+    #listado-digimons li .c-flip {
+        transition: none;
+    }
 
-  // La carta seleccionada queda quieta, con un marco fijo
-  #listado-digimons li.seleccionado:not(.zoom-activa) {
-    animation: none;
-    --h: 200;
-    translate: 0 -6px;
-    box-shadow: var(--anillo), 0 0 0 3px #ffffff, 0 0 18px 8px hsl(var(--h) 100% 60% / 0.8), 0 10px 16px rgba(0, 0, 0, 0.4);
-  }
+    // La carta seleccionada queda quieta, con un marco fijo
+    #listado-digimons li.seleccionado:not(.zoom-activa) {
+        animation: none;
+        --h: 200;
+        translate: 0 -6px;
+        box-shadow:
+            var(--anillo),
+            0 0 0 3px #ffffff,
+            0 0 18px 8px hsl(var(--h) 100% 60% / 0.8),
+            0 10px 16px rgba(0, 0, 0, 0.4);
+    }
 }
 
 // Animación del matiz del marco de la carta seleccionada
 @keyframes matiz {
-    to { --h: 360; }
+    to {
+        --h: 360;
+    }
 }
 
 // Animación de la carta seleccionada: flota y brilla
 @keyframes flota-brilla {
-    0%, 100% {
+    0%,
+    100% {
         translate: 0 -2px;
-        box-shadow: var(--anillo), 0 0 0 3px rgba(255, 255, 255, 0.95), 0 0 0 4px rgba(0, 0, 0, 0.35),
-                    0 0 12px 5px hsl(var(--h) 100% 60% / 0.6), 0 6px 12px rgba(0, 0, 0, 0.35);
+        box-shadow:
+            var(--anillo),
+            0 0 0 3px rgba(255, 255, 255, 0.95),
+            0 0 0 4px rgba(0, 0, 0, 0.35),
+            0 0 12px 5px hsl(var(--h) 100% 60% / 0.6),
+            0 6px 12px rgba(0, 0, 0, 0.35);
     }
     50% {
         translate: 0 -12px;
-        box-shadow: var(--anillo), 0 0 0 3px #ffffff, 0 0 0 4px rgba(0, 0, 0, 0.35),
-                    0 0 28px 12px hsl(var(--h) 100% 60% / 0.95), 0 18px 22px rgba(0, 0, 0, 0.5);
+        box-shadow:
+            var(--anillo),
+            0 0 0 3px #ffffff,
+            0 0 0 4px rgba(0, 0, 0, 0.35),
+            0 0 28px 12px hsl(var(--h) 100% 60% / 0.95),
+            0 18px 22px rgba(0, 0, 0, 0.5);
     }
 }
-
 
 // -----------------------------------------------------------------------------------------------------------------
 // ZOOM DE LA CARTA (doble clic): el fondo se oscurece con un resplandor del color de la carta y la carta queda por encima.
@@ -3685,83 +4111,95 @@ body:has(.swal2-container) #avisos-ayuda {
 // hay una carta ampliada (clase "sobre-zoom"): ahí pasan por encima para que se lean. Al irse, el aviso se achica ("saliendo") y
 // los de abajo suben sin saltar (cada consejo es un cartelito aparte y se va cuando la persona ya hizo lo que cuenta).
 #avisos-ayuda {
-  position: fixed;
-  right: 16px;
-  z-index: 800;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  width: min(320px, calc(100vw - 16px));
-  pointer-events: none;
+    position: fixed;
+    right: 16px;
+    z-index: 800;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    width: min(320px, calc(100vw - 16px));
+    pointer-events: none;
 
-  &.sobre-zoom {
-    z-index: 1700; // por encima de la carta ampliada (1600)
-  }
+    &.sobre-zoom {
+        z-index: 1700; // por encima de la carta ampliada (1600)
+    }
 }
 
 .aviso-ayuda {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  box-sizing: border-box;
-  max-width: 100%;
-  max-height: 260px;
-  overflow: hidden;
-  padding: 9px 14px;
-  font: 600 14px/1.3 var(--f-boton), sans-serif;
-  color: #1d4468;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 241, 255, 0.94));
-  border: 1px solid rgba(0, 80, 140, 0.35);
-  border-radius: 14px;
-  box-shadow: 0 8px 20px rgba(0, 30, 80, 0.35), inset 0 1px 0 #fff;
-  opacity: 0;
-  translate: 14px 0;
-  transition: opacity 0.35s ease, translate 0.35s ease, max-height 0.45s ease, padding 0.45s ease, margin 0.45s ease,
-              border-width 0.45s ease;
-
-  &.visible {
-    opacity: 1;
-    translate: 0 0;
-  }
-
-  // Se va achicándose; el margen negativo se come el espacio (gap) que lo separa del aviso de al lado
-  &.saliendo {
-    max-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-width: 0;
-  }
-
-  &.saliendo:not(:last-child) {
-    margin-bottom: -8px;
-  }
-
-  &.saliendo:last-child:not(:first-child) {
-    margin-top: -8px;
-  }
-
-  .aviso-linea {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-    max-height: 180px;
+    flex-direction: column;
+    gap: 7px;
+    box-sizing: border-box;
+    max-width: 100%;
+    max-height: 260px;
     overflow: hidden;
-    transition: opacity 0.3s ease, max-height 0.35s ease, margin 0.35s ease;
-  }
+    padding: 9px 14px;
+    font:
+        600 14px/1.3 var(--f-boton),
+        sans-serif;
+    color: #1d4468;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 241, 255, 0.94));
+    border: 1px solid rgba(0, 80, 140, 0.35);
+    border-radius: 14px;
+    box-shadow:
+        0 8px 20px rgba(0, 30, 80, 0.35),
+        inset 0 1px 0 #fff;
+    opacity: 0;
+    translate: 14px 0;
+    transition:
+        opacity 0.35s ease,
+        translate 0.35s ease,
+        max-height 0.45s ease,
+        padding 0.45s ease,
+        margin 0.45s ease,
+        border-width 0.45s ease;
 
-  .aviso-icono {
-    flex: none;
-    font-size: 18px;
-    line-height: 1;
-  }
+    &.visible {
+        opacity: 1;
+        translate: 0 0;
+    }
+
+    // Se va achicándose; el margen negativo se come el espacio (gap) que lo separa del aviso de al lado
+    &.saliendo {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+    }
+
+    &.saliendo:not(:last-child) {
+        margin-bottom: -8px;
+    }
+
+    &.saliendo:last-child:not(:first-child) {
+        margin-top: -8px;
+    }
+
+    .aviso-linea {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        max-height: 180px;
+        overflow: hidden;
+        transition:
+            opacity 0.3s ease,
+            max-height 0.35s ease,
+            margin 0.35s ease;
+    }
+
+    .aviso-icono {
+        flex: none;
+        font-size: 18px;
+        line-height: 1;
+    }
 }
 
 @media (max-width: 700px) {
-  #avisos-ayuda {
-    right: 8px;
-  }
+    #avisos-ayuda {
+        right: 8px;
+    }
 }
 
 // Globito con flechita que sale de un botón (lo usan el aviso del contador y los de los botones redondos de sonido e inclinación). Arranca
@@ -3769,316 +4207,335 @@ body:has(.swal2-container) #avisos-ayuda {
 // No frena los clics (pointer-events: none). Por defecto va debajo del botón (la flechita arriba); con "sobre-el-boton" va encima de él
 // (la flechita abajo): main.js lo usa para el botón de sonido flotante del celular, que está en la esquina de abajo.
 @mixin globo-de-aviso($capa) {
-  position: fixed;
-  z-index: $capa;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-sizing: border-box;
-  width: max-content;
-  max-width: min(290px, calc(100vw - 16px));
-  padding: 9px 14px;
-  font: 600 14px/1.3 var(--f-boton), sans-serif;
-  color: #1d4468;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(226, 241, 255, 0.96));
-  border: 1px solid rgba(0, 80, 140, 0.35);
-  border-radius: 14px;
-  box-shadow: 0 8px 20px rgba(0, 30, 80, 0.35), inset 0 1px 0 #fff;
-  pointer-events: none;
-  opacity: 0;
-  scale: 0.2;
-  transform-origin: var(--punta, 50%) -8px;
-  transition: opacity 0.3s ease, scale 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+    position: fixed;
+    z-index: $capa;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(290px, calc(100vw - 16px));
+    padding: 9px 14px;
+    font:
+        600 14px/1.3 var(--f-boton),
+        sans-serif;
+    color: #1d4468;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(226, 241, 255, 0.96));
+    border: 1px solid rgba(0, 80, 140, 0.35);
+    border-radius: 14px;
+    box-shadow:
+        0 8px 20px rgba(0, 30, 80, 0.35),
+        inset 0 1px 0 #fff;
+    pointer-events: none;
+    opacity: 0;
+    scale: 0.2;
+    transform-origin: var(--punta, 50%) -8px;
+    transition:
+        opacity 0.3s ease,
+        scale 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.25);
 
-  // La flechita que apunta al botón
-  &::before {
-    content: "";
-    position: absolute;
-    top: -7px;
-    left: var(--punta, 50%);
-    width: 12px;
-    height: 12px;
-    margin-left: -6px;
-    rotate: 45deg;
-    background: rgba(255, 255, 255, 0.98);
-    border-top: 1px solid rgba(0, 80, 140, 0.35);
-    border-left: 1px solid rgba(0, 80, 140, 0.35);
-    border-top-left-radius: 3px;
-  }
-
-  &.sobre-el-boton {
-    transform-origin: var(--punta, 50%) calc(100% + 8px);
-
+    // La flechita que apunta al botón
     &::before {
-      top: auto;
-      bottom: -7px;
-      rotate: 225deg;
-      background: rgba(226, 241, 255, 0.96);
+        content: "";
+        position: absolute;
+        top: -7px;
+        left: var(--punta, 50%);
+        width: 12px;
+        height: 12px;
+        margin-left: -6px;
+        rotate: 45deg;
+        background: rgba(255, 255, 255, 0.98);
+        border-top: 1px solid rgba(0, 80, 140, 0.35);
+        border-left: 1px solid rgba(0, 80, 140, 0.35);
+        border-top-left-radius: 3px;
     }
-  }
 
-  &.visible {
-    opacity: 1;
-    scale: 1;
-  }
+    &.sobre-el-boton {
+        transform-origin: var(--punta, 50%) calc(100% + 8px);
 
-  .aviso-icono {
-    flex: none;
-    font-size: 18px;
-    line-height: 1;
-  }
+        &::before {
+            top: auto;
+            bottom: -7px;
+            rotate: 225deg;
+            background: rgba(226, 241, 255, 0.96);
+        }
+    }
 
-  // Sin movimiento: solo aparece y se va con un desvanecido
-  @media (prefers-reduced-motion: reduce) {
-    scale: 1;
-    transition: opacity 0.3s ease;
-  }
+    &.visible {
+        opacity: 1;
+        scale: 1;
+    }
+
+    .aviso-icono {
+        flex: none;
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    // Sin movimiento: solo aparece y se va con un desvanecido
+    @media (prefers-reduced-motion: reduce) {
+        scale: 1;
+        transition: opacity 0.3s ease;
+    }
 }
 
 // Aviso del contador (main.js, mostrarAvisoDelContador): sale de la bolita "2/2" de la barra. Queda por encima de la barra (1000).
 .aviso-contador {
-  @include globo-de-aviso(1100);
+    @include globo-de-aviso(1100);
 }
 
 // Aviso de un botón redondo (main.js, llamarLaAtencion): por encima del zoom de la carta y sus flechas (1700) y del botón mismo (1800)
 .aviso-globo {
-  @include globo-de-aviso(1850);
+    @include globo-de-aviso(1850);
 }
 
 // En computadora, con cualquier cartel abierto (información, ataques, evolución, combate...) la cortina de SweetAlert (2000) tapa a los
 // botones de sonido e inclinación y a sus globitos: se los sube por encima de ella
 @media (min-width: 701px) {
-  body:has(.swal2-container) > #silenciar,
-  body:has(.swal2-container) > #inclinacion-invertida {
-    z-index: 2100;
-  }
+    body:has(.swal2-container) > #silenciar,
+    body:has(.swal2-container) > #inclinacion-invertida {
+        z-index: 2100;
+    }
 
-  body:has(.swal2-container) > .aviso-globo {
-    z-index: 2150;
-  }
+    body:has(.swal2-container) > .aviso-globo {
+        z-index: 2150;
+    }
 }
 
 // En computadora todos los avisos comparten un tamaño algo más generoso, sin volver al formato grande anterior.
 @media (min-width: 701px) {
-  #avisos-ayuda {
-    right: 28px;
-    gap: 10px;
-    width: min(330px, calc(100vw - 40px));
-  }
-
-  .aviso-ayuda,
-  .aviso-contador,
-  .aviso-globo {
-    gap: 10px;
-    padding: 12px 18px;
-    font-size: 16px;
-    line-height: 1.3;
-    border-radius: 16px;
-    max-width: min(330px, calc(100vw - 40px));
-
-    .aviso-icono {
-      font-size: 22px;
+    #avisos-ayuda {
+        right: 28px;
+        gap: 10px;
+        width: min(330px, calc(100vw - 40px));
     }
-  }
 
-  .aviso-ayuda .aviso-linea {
-    gap: 10px;
-    max-height: 180px;
-  }
+    .aviso-ayuda,
+    .aviso-contador,
+    .aviso-globo {
+        gap: 10px;
+        padding: 12px 18px;
+        font-size: 16px;
+        line-height: 1.3;
+        border-radius: 16px;
+        max-width: min(330px, calc(100vw - 40px));
+
+        .aviso-icono {
+            font-size: 22px;
+        }
+    }
+
+    .aviso-ayuda .aviso-linea {
+        gap: 10px;
+        max-height: 180px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aviso-ayuda {
-    translate: none;
-    transition: none;
+    .aviso-ayuda {
+        translate: none;
+        transition: none;
 
-    .aviso-linea {
-      transition: none;
+        .aviso-linea {
+            transition: none;
+        }
     }
-  }
 }
 
 // En celulares el zoom de la carta es el gesto de pellizco (dos dedos): sobre las cartas se puede desplazar hacia arriba y abajo,
 // pero el navegador no amplía la página con ese gesto, así que le llega a main.js. El fondo del zoom no se desplaza ni se amplía.
 #listado-digimons li {
-  touch-action: pan-y;
+    touch-action: pan-y;
 }
 
 #zoom-fondo {
-  touch-action: none;
+    touch-action: none;
 }
 
 #listado-digimons li.zoom-activa {
-  z-index: 1600; // por encima del fondo del zoom (1500) y de la barra de arriba (1000)
+    z-index: 1600; // por encima del fondo del zoom (1500) y de la barra de arriba (1000)
 }
 
 // Con el zoom la sombra no cambia con el hover y no corren las transiciones de sombra ni de levante: la carta grande no se
 // vuelve a dibujar entera cada vez que el mouse entra o sale.
 #listado-digimons li.zoom-activa,
 #listado-digimons li.zoom-activa:hover {
-  --caida: 0 6px 14px rgba(0, 0, 0, 0.5);
-  transition: none;
+    --caida: 0 6px 14px rgba(0, 0, 0, 0.5);
+    transition: none;
 }
 
 // El reflejo y el botón de dar vuelta de la carta grande aparecen y se van sin transición: una transición de opacidad los
 // convierte un instante en capas aparte, y con la carta inclinada esas capas se dibujaban a baja resolución (pixeladas).
 #listado-digimons li.zoom-activa::after,
 #listado-digimons li.zoom-activa .c-flip {
-  transition: none !important;
+    transition: none !important;
 }
 
 // Solo para medir dónde está la carta en la grilla, sin el levante del hover ni la inclinación (dura un instante)
 #listado-digimons li.zoom-midiendo {
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
-  transform: none !important;
-  transition: none !important;
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
+    transform: none !important;
+    transition: none !important;
 }
 
 #zoom-fondo {
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  background:
-    radial-gradient(ellipse 44% 58% at 50% 50%, color-mix(in srgb, var(--zc, #3a8dde) 62%, transparent) 0%, transparent 74%),
-    radial-gradient(ellipse at 50% 50%, rgba(8, 14, 44, 0.8) 0%, rgba(1, 3, 14, 0.94) 100%);
-  backdrop-filter: blur($desenfoque-del-fondo); // el mismo desenfoque que los carteles del combate; el color oscuro queda igual
-  -webkit-backdrop-filter: blur($desenfoque-del-fondo);
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    background:
+        radial-gradient(ellipse 44% 58% at 50% 50%, color-mix(in srgb, var(--zc, #3a8dde) 62%, transparent) 0%, transparent 74%),
+        radial-gradient(ellipse at 50% 50%, rgba(8, 14, 44, 0.8) 0%, rgba(1, 3, 14, 0.94) 100%);
+    backdrop-filter: blur($desenfoque-del-fondo); // el mismo desenfoque que los carteles del combate; el color oscuro queda igual
+    -webkit-backdrop-filter: blur($desenfoque-del-fondo);
 
-  &.abierto {
-    opacity: 1;
-  }
-
-  // ✕ de vidrio arriba a la derecha
-  .zoom-cerrar {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    display: grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    font: 700 19px/1 var(--f-boton), sans-serif;
-    color: #0b3a66;
-    cursor: pointer;
-    border: 1px solid #fff;
-    border-radius: 50%;
-    background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 #fff;
-    transition: scale 0.15s ease, filter 0.15s ease;
-
-    &:hover {
-      scale: 1.08;
-      filter: brightness(1.06);
+    &.abierto {
+        opacity: 1;
     }
 
-    &:active {
-      scale: 0.95;
-    }
-  }
+    // ✕ de vidrio arriba a la derecha
+    .zoom-cerrar {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        font:
+            700 19px/1 var(--f-boton),
+            sans-serif;
+        color: #0b3a66;
+        cursor: pointer;
+        border: 1px solid #fff;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 #fff;
+        transition:
+            scale 0.15s ease,
+            filter 0.15s ease;
 
-  .zoom-ayuda {
-    position: absolute;
-    left: 50%;
-    bottom: 14px;
-    translate: -50% 0;
-    margin: 0;
-    padding: 5px 14px;
-    font: 600 13px var(--f-boton), sans-serif;
-    color: rgba(255, 255, 255, 0.85);
-    white-space: nowrap;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-  }
+        &:hover {
+            scale: 1.08;
+            filter: brightness(1.06);
+        }
+
+        &:active {
+            scale: 0.95;
+        }
+    }
+
+    .zoom-ayuda {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        translate: -50% 0;
+        margin: 0;
+        padding: 5px 14px;
+        font:
+            600 13px var(--f-boton),
+            sans-serif;
+        color: rgba(255, 255, 255, 0.85);
+        white-space: nowrap;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+    }
 }
 
 // Flechas para pasar a la carta anterior / siguiente sin salir del zoom.
 // Viven fuera del fondo (que tiene su propio apilamiento, por debajo de la carta) para quedar por encima.
 #zoom-flechas {
-  position: fixed;
-  inset: 0;
-  z-index: 1700;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-
-  &.abierto {
-    opacity: 1;
-  }
-
-  // Con el zoom extra (la carta agrandada de más, ver main.js) la carta puede llegar hasta las flechas: se esconden
-  &.zoom-extra {
+    position: fixed;
+    inset: 0;
+    z-index: 1700;
+    pointer-events: none;
     opacity: 0;
+    transition: opacity 0.3s ease;
+
+    &.abierto {
+        opacity: 1;
+    }
+
+    // Con el zoom extra (la carta agrandada de más, ver main.js) la carta puede llegar hasta las flechas: se esconden
+    &.zoom-extra {
+        opacity: 0;
+
+        .zoom-flecha {
+            pointer-events: none;
+        }
+    }
 
     .zoom-flecha {
-      pointer-events: none;
-    }
-  }
+        position: absolute;
+        top: 50%;
+        translate: 0 -50%;
+        display: grid;
+        place-items: center;
+        width: var(--flecha, 48px);
+        height: var(--flecha, 48px);
+        padding: 0;
+        color: #0b3a66;
+        cursor: pointer;
+        pointer-events: auto;
+        border: 1px solid #fff;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 #fff;
+        transition:
+            scale 0.15s ease,
+            filter 0.15s ease,
+            opacity 0.15s ease;
 
-  .zoom-flecha {
-    position: absolute;
-    top: 50%;
-    translate: 0 -50%;
-    display: grid;
-    place-items: center;
-    width: var(--flecha, 48px);
-    height: var(--flecha, 48px);
-    padding: 0;
-    color: #0b3a66;
-    cursor: pointer;
-    pointer-events: auto;
-    border: 1px solid #fff;
-    border-radius: 50%;
-    background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 #fff;
-    transition: scale 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+        svg {
+            width: 55%;
+            height: 55%;
+        }
 
-    svg {
-      width: 55%;
-      height: 55%;
-    }
+        &:hover:not(:disabled) {
+            scale: 1.08;
+            filter: brightness(1.06);
+        }
 
-    &:hover:not(:disabled) {
-      scale: 1.08;
-      filter: brightness(1.06);
-    }
+        &:active:not(:disabled) {
+            scale: 0.95;
+        }
 
-    &:active:not(:disabled) {
-      scale: 0.95;
-    }
+        &:disabled {
+            opacity: 0.28;
+            cursor: default;
+        }
 
-    &:disabled {
-      opacity: 0.28;
-      cursor: default;
-    }
+        &.zoom-anterior {
+            left: var(--fl-izq, 8px);
+        }
 
-    &.zoom-anterior {
-      left: var(--fl-izq, 8px);
+        &.zoom-siguiente {
+            right: var(--fl-der, 8px);
+        }
     }
-
-    &.zoom-siguiente {
-      right: var(--fl-der, 8px);
-    }
-  }
 }
 
 // En pantallas táctiles no hay tecla Esc
 @media (hover: none) {
-  #zoom-fondo .zoom-ayuda {
-    display: none;
-  }
+    #zoom-fondo .zoom-ayuda {
+        display: none;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #zoom-fondo,
-  #zoom-flechas {
-    transition: none;
-  }
+    #zoom-fondo,
+    #zoom-flechas {
+        transition: none;
+    }
 }
 
 /* Botones del pie del dorso de la carta: "⚔️ Ataques" (info.js) y "🧬 Evolución" (evolucion.js), del color del tipo.
@@ -4100,20 +4557,24 @@ body:has(.swal2-container) #avisos-ayuda {
     flex: 1 1 82px;
     box-sizing: border-box;
     min-width: 0;
-    padding: 6px 6px;
-    font: 700 12px var(--f-boton), sans-serif;
+    padding: 6px;
+    font:
+        700 12px var(--f-boton),
+        sans-serif;
     white-space: nowrap;
     color: #fff;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
     cursor: pointer;
     border: 1px solid color-mix(in srgb, var(--tipo) 55%, black);
     border-radius: 8px;
-    background: linear-gradient(180deg,
-        color-mix(in srgb, var(--tipo) 55%, white) 0%,
-        var(--tipo) 50%,
-        color-mix(in srgb, var(--tipo) 88%, black) 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px color-mix(in srgb, var(--tipo) 35%, rgba(0, 0, 0, 0.2));
-    transition: transform 0.07s ease, box-shadow 0.07s ease, filter 0.07s ease; // el hundimiento (y el soltar) se ven como un movimiento
+    background: linear-gradient(180deg, color-mix(in srgb, var(--tipo) 55%, white) 0%, var(--tipo) 50%, color-mix(in srgb, var(--tipo) 88%, black) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        0 1px 2px color-mix(in srgb, var(--tipo) 35%, rgba(0, 0, 0, 0.2));
+    transition:
+        transform 0.07s ease,
+        box-shadow 0.07s ease,
+        filter 0.07s ease; // el hundimiento (y el soltar) se ven como un movimiento
 }
 
 #listado-digimons li .c-evo:hover,
@@ -4138,26 +4599,47 @@ body:has(.swal2-container) #avisos-ayuda {
     z-index: 30;
     outline: 7px solid rgba(255, 240, 90, 0);
     outline-offset: 5px;
-    animation: evo-parpadeo 0.525s ease-in-out 4, evo-zoom 2.1s ease-in-out 1;
+    animation:
+        evo-parpadeo 0.525s ease-in-out 4,
+        evo-zoom 2.1s ease-in-out 1;
 }
 
 @keyframes evo-parpadeo {
-    0%, 100% {
+    0%,
+    100% {
         outline-color: rgba(255, 240, 90, 0);
-        box-shadow: var(--anillo), var(--aura), 0 0 0 0 rgba(255, 245, 120, 0), 0 0 0 0 rgba(255, 190, 0, 0);
+        box-shadow:
+            var(--anillo),
+            var(--aura),
+            0 0 0 0 rgba(255, 245, 120, 0),
+            0 0 0 0 rgba(255, 190, 0, 0);
     }
     50% {
         outline-color: #fff04d;
-        box-shadow: var(--anillo), var(--aura), 0 0 24px 9px rgba(255, 246, 130, 1), 0 0 64px 28px rgba(255, 190, 0, 0.8);
+        box-shadow:
+            var(--anillo),
+            var(--aura),
+            0 0 24px 9px rgba(255, 246, 130, 1),
+            0 0 64px 28px rgba(255, 190, 0, 0.8);
     }
 }
 
 @keyframes evo-zoom {
-    0% { scale: 1; }
-    14% { scale: 1.22; }
-    32% { scale: 1.1; }
-    76% { scale: 1.1; }
-    100% { scale: 1; }
+    0% {
+        scale: 1;
+    }
+    14% {
+        scale: 1.22;
+    }
+    32% {
+        scale: 1.1;
+    }
+    76% {
+        scale: 1.1;
+    }
+    100% {
+        scale: 1;
+    }
 }
 
 /* Ventana de la línea evolutiva */
@@ -4202,7 +4684,9 @@ body:has(.swal2-container) #avisos-ayuda {
 .evo-volver,
 .evo-reintentar {
     padding: 4px 11px;
-    font: 600 12px var(--f-boton), sans-serif;
+    font:
+        600 12px var(--f-boton),
+        sans-serif;
     color: #24476a;
     cursor: pointer;
     border: 1px solid #9fb4c8;
@@ -4249,7 +4733,9 @@ body:has(.swal2-container) #avisos-ayuda {
     left: 50%;
     margin: 0;
     transform: translateX(-50%);
-    font: 700 11px var(--f-boton), sans-serif;
+    font:
+        700 11px var(--f-boton),
+        sans-serif;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -4279,7 +4765,9 @@ body:has(.swal2-container) #avisos-ayuda {
     left: 50%;
     transform: translateX(-50%);
     padding: 4px 12px;
-    font: 600 12px var(--f-boton), sans-serif;
+    font:
+        600 12px var(--f-boton),
+        sans-serif;
     white-space: nowrap;
     color: #24476a;
     cursor: pointer;
@@ -4321,7 +4809,9 @@ body:has(.swal2-container) #avisos-ayuda {
     border-radius: 11px;
     background: linear-gradient(180deg, #ffffff, #eef4fa);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease;
 }
 
 .evo-nodo:hover,
@@ -4350,7 +4840,9 @@ body:has(.swal2-container) #avisos-ayuda {
 .evo-nombre {
     display: block;
     overflow: hidden;
-    font: 700 12px var(--f-cuerpo), sans-serif;
+    font:
+        700 12px var(--f-cuerpo),
+        sans-serif;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -4369,7 +4861,9 @@ body:has(.swal2-container) #avisos-ayuda {
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-top: 2px;
-    font: 600 10px var(--f-boton), sans-serif;
+    font:
+        600 10px var(--f-boton),
+        sans-serif;
     color: color-mix(in srgb, var(--c) 65%, black);
 }
 
@@ -4382,7 +4876,9 @@ body:has(.swal2-container) #avisos-ayuda {
     text-overflow: ellipsis;
     margin-top: 3px;
     padding: 1px 6px;
-    font: 600 9px var(--f-boton), sans-serif;
+    font:
+        600 9px var(--f-boton),
+        sans-serif;
     line-height: 1.3;
     white-space: nowrap;
     color: color-mix(in srgb, var(--e) 80%, black);
@@ -4391,11 +4887,21 @@ body:has(.swal2-container) #avisos-ayuda {
     background: color-mix(in srgb, var(--e) 14%, white);
 }
 
-.evo-et-armor { --e: #c98a0b; }
-.evo-et-hybrid { --e: #8a4fd0; }
-.evo-et-fusion { --e: #1f9d74; }
-.evo-et-salto { --e: #e0662b; }
-.evo-et-lateral { --e: #5b7f9e; }
+.evo-et-armor {
+    --e: #c98a0b;
+}
+.evo-et-hybrid {
+    --e: #8a4fd0;
+}
+.evo-et-fusion {
+    --e: #1f9d74;
+}
+.evo-et-salto {
+    --e: #e0662b;
+}
+.evo-et-lateral {
+    --e: #5b7f9e;
+}
 
 /* Texto desplegable al pie de la ventana de evolución (por qué las líneas evolutivas de Digimon no son una escalera perfecta) */
 .evo-lore {
@@ -4409,7 +4915,9 @@ body:has(.swal2-container) #avisos-ayuda {
 
 .evo-lore > summary {
     padding: 7px 12px;
-    font: 600 12.5px var(--f-boton), sans-serif;
+    font:
+        600 12.5px var(--f-boton),
+        sans-serif;
     color: #24476a;
     cursor: pointer;
     list-style: none;
@@ -4421,7 +4929,7 @@ body:has(.swal2-container) #avisos-ayuda {
 }
 
 .evo-lore > summary::after {
-    content: '▾';
+    content: "▾";
     float: right;
     transition: transform 0.2s ease;
 }
@@ -4512,7 +5020,9 @@ body:has(.swal2-container) #avisos-ayuda {
     border: 3px solid var(--c);
     border-radius: 14px;
     background: linear-gradient(180deg, #ffffff, #e9f1f9);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 22%, transparent), 0 3px 8px rgba(0, 0, 0, 0.25);
+    box-shadow:
+        0 0 0 4px color-mix(in srgb, var(--c) 22%, transparent),
+        0 3px 8px rgba(0, 0, 0, 0.25);
 }
 
 .evo-actual img {
@@ -4526,7 +5036,9 @@ body:has(.swal2-container) #avisos-ayuda {
 
 .evo-actual .evo-nombre {
     max-width: 100%;
-    font: 800 14px var(--f-titulo), sans-serif;
+    font:
+        800 14px var(--f-titulo),
+        sans-serif;
 }
 
 .evo-actual .evo-nv {
@@ -4544,14 +5056,18 @@ body:has(.swal2-container) #avisos-ayuda {
     left: 50%;
     transform: translateX(-50%);
     padding: 4px 12px;
-    font: 600 12px var(--f-boton), sans-serif;
+    font:
+        600 12px var(--f-boton),
+        sans-serif;
     white-space: nowrap;
     color: #ffffff;
     cursor: pointer;
     border: 1px solid rgba(0, 0, 0, 0.3);
     border-radius: 999px;
     background: linear-gradient(180deg, #6fb8f0 0%, #2f7fd0 55%, #1f63aa 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .evo-ir:hover {
@@ -4686,7 +5202,7 @@ body:has(.swal2-container) #avisos-ayuda {
     /* El contenedor de SweetAlert trae unos 25 px de margen a cada lado: en un celular de 320 px dejaba solo 216 px para el árbol (105 px por
        digimon y 38 px de texto, y se partían "Perfect" y las etiquetas). Sin ese margen cada digimon tiene ~140 px. */
     .popup-evo .swal2-html-container {
-        margin: 0.2em 0 0.2em;
+        margin: 0.2em 0;
         padding-left: 0;
         padding-right: 0;
     }
@@ -4717,8 +5233,7 @@ body:has(.swal2-container) #avisos-ayuda {
     .evo-lista,
     .evo-col.abierta .evo-lista {
         display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-flow: row wrap;
         justify-content: center;
         gap: 6px;
         border: 0;
@@ -4779,8 +5294,13 @@ body:has(.swal2-container) #avisos-ayuda {
     #listado-digimons > li.evo-resaltada {
         animation: none;
         outline-color: #fff04d;
-        box-shadow: var(--anillo), var(--aura), 0 0 24px 9px rgba(255, 246, 130, 1);
+        box-shadow:
+            var(--anillo),
+            var(--aura),
+            0 0 24px 9px rgba(255, 246, 130, 1);
     }
 }
 
-.popup-evo .info-pie { text-align: center; }
+.popup-evo .info-pie {
+    text-align: center;
+}

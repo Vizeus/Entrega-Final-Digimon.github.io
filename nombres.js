@@ -204,7 +204,12 @@ const NOMBRES_OCCIDENTALES = {
 };
 
 // "War Greymon", "war-greymon" y "WAR GREYMON" son lo mismo: se comparan sin mayúsculas, acentos, espacios ni signos
-const claveDeNombre = nombre => nombre.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const claveDeNombre = nombre =>
+    nombre
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
 
 const TABLA_DE_NOMBRES = new Map(Object.entries(NOMBRES_OCCIDENTALES).map(([original, occidental]) => [claveDeNombre(original), occidental]));
 

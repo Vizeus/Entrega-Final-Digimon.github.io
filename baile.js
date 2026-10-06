@@ -26,10 +26,10 @@
 const BAILE_PUNTERO = { espera: 60 * 1000, duracion: 20 * 1000 };
 const BAILE_TODAS = { espera: 4 * 60 * 1000, duracion: 60 * 1000 };
 const BAILE_ZOOM = { espera: 3 * 60 * 1000, duracion: 30 * 1000 };
-const BAILE_REVISION = 1000;      // ms entre revisiones del reloj
-const BAILE_VUELTA_RAPIDA = 160;  // ms que tarda una carta en volver a su lugar cuando algo corta el baile
-const BAILE_VUELTA_SUAVE = 380;   // ms que tarda cuando el baile termina solo
-const BAILE_MAX_CARTAS = 80;      // tope de cartas bailando a la vez (sobra: en una pantalla grande se ven unas 30)
+const BAILE_REVISION = 1000; // ms entre revisiones del reloj
+const BAILE_VUELTA_RAPIDA = 160; // ms que tarda una carta en volver a su lugar cuando algo corta el baile
+const BAILE_VUELTA_SUAVE = 380; // ms que tarda cuando el baile termina solo
+const BAILE_MAX_CARTAS = 80; // tope de cartas bailando a la vez (sobra: en una pantalla grande se ven unas 30)
 
 // Una pose de la carta como "transform". Todas llevan las mismas funciones en el mismo orden, así el navegador mueve cada una por separado
 // (por ejemplo, una vuelta de 360° en "v" da la vuelta entera en vez de quedarse quieta)
@@ -42,34 +42,87 @@ const pose = ({ x = 0, y = 0, r = 0, v = 0, rx = 0, sx = 1, sy = 1 } = {}) =>
 // Las figuras de baile. Cada una empieza y termina en reposo (para poder encadenarlas). "peso" es cuántos "tiempos" dura la figura.
 // "pasos": [qué parte de la figura (0 a 1), pose, suavizado hasta el paso que sigue]
 const FIGURAS = {
-    salto: { peso: 1, pasos: [ // se agacha, salta (se estira arriba) y cae aplastándose un poco
-        [0, {}, 'ease-out'], [0.15, { sx: 1.07, sy: 0.9 }, 'ease-out'], [0.42, { y: -20, sx: 0.96, sy: 1.07 }, 'ease-in'],
-        [0.72, { sx: 1.06, sy: 0.92 }, 'ease-out'], [0.86, { sx: 0.98, sy: 1.03 }, 'ease-in-out'], [1, {}],
-    ] },
-    meneo: { peso: 1, pasos: [ // se menea de un lado al otro, como bailando cumbia
-        [0, {}, 'ease-in-out'], [0.2, { r: -7, y: -3 }, 'ease-in-out'], [0.4, { r: 7, y: -3 }, 'ease-in-out'],
-        [0.6, { r: -6, y: -2 }, 'ease-in-out'], [0.8, { r: 6, y: -2 }, 'ease-in-out'], [1, {}],
-    ] },
-    balanceo: { peso: 1.2, pasos: [ // un paso para cada lado, apoyando el peso
-        [0, {}, 'ease-in-out'], [0.25, { x: -14, r: -5, y: -4 }, 'ease-in-out'], [0.5, {}, 'ease-in-out'],
-        [0.75, { x: 14, r: 5, y: -4 }, 'ease-in-out'], [1, {}],
-    ] },
-    latido: { peso: 0.7, pasos: [ // late como un corazón
-        [0, {}, 'ease-out'], [0.3, { sx: 1.1, sy: 1.1 }, 'ease-in-out'], [0.5, { sx: 0.98, sy: 0.98 }, 'ease-out'],
-        [0.7, { sx: 1.07, sy: 1.07 }, 'ease-in-out'], [1, {}],
-    ] },
-    pirueta: { peso: 2, pasos: [ // salta y da una vuelta entera sobre sí misma, como un trompo (siempre de frente)
-        [0, {}, 'ease-out'], [0.12, { sx: 1.04, sy: 0.93 }, 'ease-out'], [0.3, { y: -16, v: 120 }, 'linear'], [0.55, { y: -20, v: 240 }, 'linear'],
-        [0.8, { y: -6, v: 340 }, 'ease-out'], [1, { v: 360 }],
-    ] },
-    cabeceo: { peso: 1, pasos: [ // asiente con la cabeza al ritmo, como en un recital
-        [0, {}, 'ease-in-out'], [0.25, { rx: 14, y: 2 }, 'ease-in-out'], [0.5, { rx: -4 }, 'ease-in-out'],
-        [0.75, { rx: 14, y: 2 }, 'ease-in-out'], [1, {}],
-    ] },
-    paso: { peso: 1.2, pasos: [ // dos pasitos: uno a la izquierda y otro a la derecha, y vuelve
-        [0, {}, 'ease-out'], [0.2, { x: -10, r: -3, y: -6 }, 'ease-in'], [0.4, { x: -10, r: -3 }, 'ease-out'],
-        [0.6, { x: 10, r: 3, y: -6 }, 'ease-in'], [0.8, { x: 10, r: 3 }, 'ease-in-out'], [1, {}],
-    ] },
+    salto: {
+        peso: 1,
+        pasos: [
+            // se agacha, salta (se estira arriba) y cae aplastándose un poco
+            [0, {}, 'ease-out'],
+            [0.15, { sx: 1.07, sy: 0.9 }, 'ease-out'],
+            [0.42, { y: -20, sx: 0.96, sy: 1.07 }, 'ease-in'],
+            [0.72, { sx: 1.06, sy: 0.92 }, 'ease-out'],
+            [0.86, { sx: 0.98, sy: 1.03 }, 'ease-in-out'],
+            [1, {}],
+        ],
+    },
+    meneo: {
+        peso: 1,
+        pasos: [
+            // se menea de un lado al otro, como bailando cumbia
+            [0, {}, 'ease-in-out'],
+            [0.2, { r: -7, y: -3 }, 'ease-in-out'],
+            [0.4, { r: 7, y: -3 }, 'ease-in-out'],
+            [0.6, { r: -6, y: -2 }, 'ease-in-out'],
+            [0.8, { r: 6, y: -2 }, 'ease-in-out'],
+            [1, {}],
+        ],
+    },
+    balanceo: {
+        peso: 1.2,
+        pasos: [
+            // un paso para cada lado, apoyando el peso
+            [0, {}, 'ease-in-out'],
+            [0.25, { x: -14, r: -5, y: -4 }, 'ease-in-out'],
+            [0.5, {}, 'ease-in-out'],
+            [0.75, { x: 14, r: 5, y: -4 }, 'ease-in-out'],
+            [1, {}],
+        ],
+    },
+    latido: {
+        peso: 0.7,
+        pasos: [
+            // late como un corazón
+            [0, {}, 'ease-out'],
+            [0.3, { sx: 1.1, sy: 1.1 }, 'ease-in-out'],
+            [0.5, { sx: 0.98, sy: 0.98 }, 'ease-out'],
+            [0.7, { sx: 1.07, sy: 1.07 }, 'ease-in-out'],
+            [1, {}],
+        ],
+    },
+    pirueta: {
+        peso: 2,
+        pasos: [
+            // salta y da una vuelta entera sobre sí misma, como un trompo (siempre de frente)
+            [0, {}, 'ease-out'],
+            [0.12, { sx: 1.04, sy: 0.93 }, 'ease-out'],
+            [0.3, { y: -16, v: 120 }, 'linear'],
+            [0.55, { y: -20, v: 240 }, 'linear'],
+            [0.8, { y: -6, v: 340 }, 'ease-out'],
+            [1, { v: 360 }],
+        ],
+    },
+    cabeceo: {
+        peso: 1,
+        pasos: [
+            // asiente con la cabeza al ritmo, como en un recital
+            [0, {}, 'ease-in-out'],
+            [0.25, { rx: 14, y: 2 }, 'ease-in-out'],
+            [0.5, { rx: -4 }, 'ease-in-out'],
+            [0.75, { rx: 14, y: 2 }, 'ease-in-out'],
+            [1, {}],
+        ],
+    },
+    paso: {
+        peso: 1.2,
+        pasos: [
+            // dos pasitos: uno a la izquierda y otro a la derecha, y vuelve
+            [0, {}, 'ease-out'],
+            [0.2, { x: -10, r: -3, y: -6 }, 'ease-in'],
+            [0.4, { x: -10, r: -3 }, 'ease-out'],
+            [0.6, { x: 10, r: 3, y: -6 }, 'ease-in'],
+            [0.8, { x: 10, r: 3 }, 'ease-in-out'],
+            [1, {}],
+        ],
+    },
 };
 const NOMBRES_DE_FIGURAS = Object.keys(FIGURAS);
 
@@ -91,7 +144,13 @@ function mezclar(lista) {
 function keyframesDeFiguras(nombres, fuerza = 1) {
     const total = nombres.reduce((suma, nombre) => suma + FIGURAS[nombre].peso, 0);
     const ajustar = ({ x = 0, y = 0, r = 0, v = 0, rx = 0, sx = 1, sy = 1 }) => ({
-        x: x * fuerza, y: y * fuerza, r: r * fuerza, v, rx: rx * fuerza, sx: 1 + (sx - 1) * fuerza, sy: 1 + (sy - 1) * fuerza,
+        x: x * fuerza,
+        y: y * fuerza,
+        r: r * fuerza,
+        v,
+        rx: rx * fuerza,
+        sx: 1 + (sx - 1) * fuerza,
+        sy: 1 + (sy - 1) * fuerza,
     });
     const frames = [];
     let inicio = 0;
@@ -142,7 +201,10 @@ function sacarDeBailar(carta, rapido) {
         terminar();
         return;
     }
-    const vuelta = carta.animate([{ transform: pose }, { transform: 'none' }], { duration: rapido ? BAILE_VUELTA_RAPIDA : BAILE_VUELTA_SUAVE, easing: 'ease-out' });
+    const vuelta = carta.animate([{ transform: pose }, { transform: 'none' }], {
+        duration: rapido ? BAILE_VUELTA_RAPIDA : BAILE_VUELTA_SUAVE,
+        easing: 'ease-out',
+    });
     vuelta.onfinish = terminar;
     vuelta.oncancel = terminar;
 }
@@ -186,16 +248,19 @@ function bailarTodas(cartas) {
     for (const carta of cartas.slice(0, BAILE_MAX_CARTAS)) {
         const suerte = Math.random();
         const fuerza = azar(0.8, 1.3);
-        if (suerte < 0.55) { // en sincro
+        if (suerte < 0.55) {
+            // en sincro
             const { figuras, compas } = elegir(grupos);
             const periodo = pulso * keyframesDeFiguras(figuras).tiempos * compas;
             const retraso = enOla ? (carta.getBoundingClientRect().left / ancho) * pulso * 3 : 0;
             ponerABailar(carta, figuras, periodo, { retraso, fuerza });
-        } else if (suerte < 0.8) { // en compás
+        } else if (suerte < 0.8) {
+            // en compás
             const figura = elegir(NOMBRES_DE_FIGURAS);
             const periodo = pulso * FIGURAS[figura].peso * elegir([0.5, 1, 1, 2]);
             ponerABailar(carta, [figura], periodo, { retraso: -pulso * elegir([0, 0.5, 1, 2]), fuerza });
-        } else { // libres
+        } else {
+            // libres
             const figura = elegir(NOMBRES_DE_FIGURAS);
             const periodo = pulso * FIGURAS[figura].peso * azar(0.75, 1.65);
             ponerABailar(carta, [figura], periodo, { retraso: -azar(0, periodo), fuerza });
@@ -210,7 +275,7 @@ function cartasQueSeVen() {
     const alto = window.innerHeight;
     const ancho = document.documentElement.clientWidth;
     const barra = document.getElementById('navbar')?.getBoundingClientRect().bottom ?? 0;
-    return [...listaDigimons.children].filter((carta) => {
+    return [...listaDigimons.children].filter(carta => {
         if (carta.tagName !== 'LI' || carta.classList.contains('filtrada') || carta.girando) return false;
         const caja = carta.getBoundingClientRect();
         return caja.width > 0 && caja.bottom > barra + 20 && caja.top < alto - 20 && caja.right > 0 && caja.left < ancho;
@@ -303,18 +368,24 @@ function activarBaileDeCartas() {
     };
 
     // --- Qué cuenta como actividad ---
-    document.addEventListener('pointermove', (evento) => {
-        // El navegador manda "movimientos" falsos (en el mismo lugar) cuando algo se mueve bajo el puntero quieto, por ejemplo una carta
-        // bailando: esos no cuentan
-        const mismoLugar = puntero && Math.abs(evento.clientX - puntero.x) < 1 && Math.abs(evento.clientY - puntero.y) < 1;
-        puntero = { x: evento.clientX, y: evento.clientY };
-        if (!mismoLugar) actividad();
-    }, { capture: true, passive: true });
+    document.addEventListener(
+        'pointermove',
+        evento => {
+            // El navegador manda "movimientos" falsos (en el mismo lugar) cuando algo se mueve bajo el puntero quieto, por ejemplo una carta
+            // bailando: esos no cuentan
+            const mismoLugar = puntero && Math.abs(evento.clientX - puntero.x) < 1 && Math.abs(evento.clientY - puntero.y) < 1;
+            puntero = { x: evento.clientX, y: evento.clientY };
+            if (!mismoLugar) actividad();
+        },
+        { capture: true, passive: true },
+    );
     for (const tipo of ['pointerdown', 'wheel', 'keydown', 'touchstart']) {
         document.addEventListener(tipo, actividad, { capture: true, passive: true });
     }
     window.addEventListener('scroll', actividad, { capture: true, passive: true });
-    document.documentElement.addEventListener('mouseleave', () => { puntero = null; });
+    document.documentElement.addEventListener('mouseleave', () => {
+        puntero = null;
+    });
     document.addEventListener('visibilitychange', actividad); // al ocultarse corta los bailes y al volver empieza de cero
 
     actividad();

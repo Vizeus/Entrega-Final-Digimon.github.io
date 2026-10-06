@@ -80,7 +80,8 @@ const DICCIONARIO = {
         'aviso.inclinacion.invertida.boton': 'Con este botón podés cambiar cómo se inclinan las cartas',
         'aviso.audio': 'Con este botón podés silenciar el sonido de la página',
         'aviso.audio.vibracion': 'Con este botón podés apagar el sonido y la vibración de la página',
-        'aviso.zoomExtra': 'Girá la rueda hacia arriba con el mouse sobre la carta para acercarte todavía más, y hacia abajo para volver. Ya acercada, agarrala y arrastrala para moverla',
+        'aviso.zoomExtra':
+            'Girá la rueda hacia arriba con el mouse sobre la carta para acercarte todavía más, y hacia abajo para volver. Ya acercada, agarrala y arrastrala para moverla',
         'carta.especie': 'Especie',
         'carta.campos': 'Grupos',
         'carta.estreno': 'Estreno',
@@ -136,7 +137,8 @@ const DICCIONARIO = {
         'elemento.pie': 'Cada ventaja de elemento suma un {p}% de probabilidad de ganar.',
         'elemento.pieNeutro': 'El elemento Neutro no suma ni resta probabilidad en el combate.',
         'nivel.pie': 'Cada nivel de diferencia con el rival suma o resta un {p}% de probabilidad de ganar.',
-        'nivel.pieAlto': 'Rompe la escala: en el combate pesa como un nivel {n}. Cada nivel de diferencia con el rival suma o resta un {p}% de probabilidad de ganar, y contra un rival muy por debajo casi no cuentan el tipo ni el elemento.',
+        'nivel.pieAlto':
+            'Rompe la escala: en el combate pesa como un nivel {n}. Cada nivel de diferencia con el rival suma o resta un {p}% de probabilidad de ganar, y contra un rival muy por debajo casi no cuentan el tipo ni el elemento.',
         'nivel.pieSin': 'Sin nivel no se suma ni se resta probabilidad en el combate.',
         'tipo.desc.Datos': 'Los Datos son digimon con habilidades equilibradas.',
         'tipo.desc.Virus': 'Los Virus tienen habilidades ofensivas.',
@@ -159,10 +161,14 @@ const DICCIONARIO = {
         'nivel.desc.Baby I': 'Los recién nacidos: los más frágiles de todos.',
         'nivel.desc.Baby II': 'Bebés que ya empiezan a moverse y a defenderse un poco.',
         'nivel.desc.Child': 'La primera forma "de combate": ágiles, pero todavía de poco poder.',
-        'nivel.desc.Adult': 'Forma madura con ataques propios; la más común en la serie. Acá también están los Armor (círculo rojo con una "A" en la carta) y las formas humanas de los Hybrid (círculo verde con una "H").',
-        'nivel.desc.Perfect': 'Gran poder y ataques devastadores; muy por encima de un {nivel:Adult}. Acá también están las formas bestia de los Hybrid (círculo verde con una "H" en la carta).',
-        'nivel.desc.Ultimate': 'Los más poderosos de una evolución normal, como WarGreymon o MetalGarurumon. Acá también están las fusiones y formas supremas de los Hybrid (círculo verde con una "H" en la carta).',
-        'nivel.desc.Super Ultimate': 'Nivel inventado para este simulador: por encima del {nivel:Ultimate}. Reyes Reales, Soberanos y Lores Demonio, cuyo poder rompe la escala normal.',
+        'nivel.desc.Adult':
+            'Forma madura con ataques propios; la más común en la serie. Acá también están los Armor (círculo rojo con una "A" en la carta) y las formas humanas de los Hybrid (círculo verde con una "H").',
+        'nivel.desc.Perfect':
+            'Gran poder y ataques devastadores; muy por encima de un {nivel:Adult}. Acá también están las formas bestia de los Hybrid (círculo verde con una "H" en la carta).',
+        'nivel.desc.Ultimate':
+            'Los más poderosos de una evolución normal, como WarGreymon o MetalGarurumon. Acá también están las fusiones y formas supremas de los Hybrid (círculo verde con una "H" en la carta).',
+        'nivel.desc.Super Ultimate':
+            'Nivel inventado para este simulador: por encima del {nivel:Ultimate}. Reyes Reales, Soberanos y Lores Demonio, cuyo poder rompe la escala normal.',
         'nivel.desc.Absolute': 'Nivel inventado para este simulador: lo más alto de todo. Seres capaces de destruir o de gobernar el mundo digital entero.',
         'nivel.desc.Desconocido': 'La API no informa su nivel.',
 
@@ -256,9 +262,10 @@ const DICCIONARIO = {
         'aviso.inclinacion.normal.boton': 'Use this button to invert how the cards tilt',
         'aviso.inclinacion.invertida': 'Move the mouse over the cards while holding Shift to tilt them, and use this button to change it',
         'aviso.inclinacion.invertida.boton': 'Use this button to change how the cards tilt',
-        'aviso.audio': 'Use this button to mute the page\'s sound',
-        'aviso.audio.vibracion': 'Use this button to turn off the page\'s sound and vibration',
-        'aviso.zoomExtra': 'With the mouse over the card, scroll up to zoom in even closer, and scroll down to go back. Once zoomed in, grab the card and drag it around',
+        'aviso.audio': "Use this button to mute the page's sound",
+        'aviso.audio.vibracion': "Use this button to turn off the page's sound and vibration",
+        'aviso.zoomExtra':
+            'With the mouse over the card, scroll up to zoom in even closer, and scroll down to go back. Once zoomed in, grab the card and drag it around',
         'carta.especie': 'Species',
         'carta.campos': 'Groups',
         'carta.estreno': 'Release',
@@ -266,7 +273,7 @@ const DICCIONARIO = {
         'carta.nombreOccidental': 'Western name',
         'ataques.boton': '⚔️ Attacks',
         'ataques.boton.ayuda': 'See all its attacks',
-        'ataques.titulo': '⚔️ {nombre}\'s attacks',
+        'ataques.titulo': "⚔️ {nombre}'s attacks",
         'ataques.ayuda': 'Tap an attack to see what it does and who uses it',
         'ataques.quienesUsan': 'Other Digimons that use this attack ({n}):',
         'ataques.quienesUsan.uno': 'Another Digimon that uses this attack (1):',
@@ -314,7 +321,8 @@ const DICCIONARIO = {
         'elemento.pie': 'Each element advantage adds {p}% to the chance of winning.',
         'elemento.pieNeutro': 'The Neutral element neither adds nor subtracts chance in battle.',
         'nivel.pie': 'Each level of difference with the rival adds or subtracts {p}% to the chance of winning.',
-        'nivel.pieAlto': 'It breaks the scale: in battle it weighs as much as a level {n}. Each level of difference with the rival adds or subtracts {p}% to the chance of winning, and against a rival far below, type and element barely count.',
+        'nivel.pieAlto':
+            'It breaks the scale: in battle it weighs as much as a level {n}. Each level of difference with the rival adds or subtracts {p}% to the chance of winning, and against a rival far below, type and element barely count.',
         'nivel.pieSin': 'Without a level, no chance is added or subtracted in battle.',
         'tipo.desc.Datos': 'Data Digimon have balanced abilities.',
         'tipo.desc.Virus': 'Virus Digimon have offensive abilities.',
@@ -337,10 +345,14 @@ const DICCIONARIO = {
         'nivel.desc.Baby I': 'Newborns: the most fragile of all.',
         'nivel.desc.Baby II': 'Babies that are starting to move around and defend themselves a little.',
         'nivel.desc.Child': 'The first "battle" form: agile, but still low on power.',
-        'nivel.desc.Adult': 'A mature form with attacks of its own; the most common in the series. The Armor digimon (red circle with an "A" on the card) and the human forms of the Hybrids (green circle with an "H") are here too.',
-        'nivel.desc.Perfect': 'Great power and devastating attacks; far above the {nivel:Adult} level. The beast forms of the Hybrids (green circle with an "H" on the card) are here too.',
-        'nivel.desc.Ultimate': 'The most powerful of a normal evolution, like WarGreymon or MetalGarurumon. The fusions and supreme forms of the Hybrids (green circle with an "H" on the card) are here too.',
-        'nivel.desc.Super Ultimate': 'A level made up for this simulator: above {nivel:Ultimate}. Royal Knights, Sovereigns and Demon Lords, whose power breaks the normal scale.',
+        'nivel.desc.Adult':
+            'A mature form with attacks of its own; the most common in the series. The Armor digimon (red circle with an "A" on the card) and the human forms of the Hybrids (green circle with an "H") are here too.',
+        'nivel.desc.Perfect':
+            'Great power and devastating attacks; far above the {nivel:Adult} level. The beast forms of the Hybrids (green circle with an "H" on the card) are here too.',
+        'nivel.desc.Ultimate':
+            'The most powerful of a normal evolution, like WarGreymon or MetalGarurumon. The fusions and supreme forms of the Hybrids (green circle with an "H" on the card) are here too.',
+        'nivel.desc.Super Ultimate':
+            'A level made up for this simulator: above {nivel:Ultimate}. Royal Knights, Sovereigns and Demon Lords, whose power breaks the normal scale.',
         'nivel.desc.Absolute': 'A level made up for this simulator: the highest of all. Beings able to destroy or to rule the whole digital world.',
         'nivel.desc.Desconocido': 'The API does not report its level.',
 
