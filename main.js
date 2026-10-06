@@ -2576,6 +2576,78 @@ function registrarFlipConDedo() {
     } catch (error) {}
 }
 
+// ---- Botones del dorso con el dedo ("⚔️ Ataques" y "🧬 Evolución") ----------------------------------------------------------------
+// En el celular estos botones no esperan al "click" del navegador: el navegador lo manda tarde (a veces cientos de milisegundos después de
+// levantar el dedo) y, justo después de dar vuelta la carta, a veces ni lo manda y había que tocar dos veces. Con el dedo, el botón se activa
+// al LEVANTARLO (si no se movió: si se arrastró, era para desplazar la página) y se frena el "click" que mandaría el navegador, que ya
+// no hace falta. Con el mouse y con el teclado sigue andando el "click" de siempre.
+// Además el botón se hunde (clase "hundido", mismos estilos que :active): el :active del navegador no alcanza en celular, porque en un
+// toque corto casi no llega a verse. Así el hundimiento dura como mínimo TOQUE_HUNDIDO_MINIMO ms y la ventana se abre un instante
+// después de que se ve.
+const TOQUE_HUNDIDO_MINIMO = 120; // ms que el botón se ve hundido, aunque el toque haya sido más corto
+const TOQUE_TOLERANCIA = 12;      // px que puede moverse el dedo y que siga contando como toque (más es un desplazamiento)
+
+function activarBotonDelDorso(boton, accion) {
+    let toque = null;      // { x, y, desde } mientras el dedo está apoyado en el botón
+    let sinClicHasta = 0;  // hasta cuándo se ignora el "click" que manda el navegador después de un toque (ya se atendió al levantar el dedo)
+    let levantando = 0;
+
+    const hundir = () => {
+        clearTimeout(levantando);
+        boton.classList.add('hundido');
+    };
+    const levantar = (desde) => {
+        clearTimeout(levantando);
+        levantando = setTimeout(() => boton.classList.remove('hundido'), Math.max(0, TOQUE_HUNDIDO_MINIMO - (performance.now() - desde)));
+    };
+    const abrir = () => {
+        if (cartaEnZoom && zoomOcupado) return; // con la carta ampliada yendo o viniendo, el toque se ignora (como el "click" en la fase de captura)
+        accion();
+    };
+    const soltarToque = () => {
+        if (!toque) return;
+        levantar(toque.desde);
+        toque = null;
+    };
+
+    boton.addEventListener('touchstart', (evento) => {
+        if (evento.touches.length !== 1) {
+            soltarToque();
+            return;
+        }
+        const dedo = evento.touches[0];
+        toque = { x: dedo.clientX, y: dedo.clientY, desde: performance.now() };
+        hundir();
+    }, { passive: true });
+
+    boton.addEventListener('touchmove', (evento) => {
+        if (!toque) return;
+        const dedo = evento.touches[0];
+        if (Math.hypot(dedo.clientX - toque.x, dedo.clientY - toque.y) > TOQUE_TOLERANCIA) soltarToque();
+    }, { passive: true });
+
+    boton.addEventListener('touchend', (evento) => {
+        if (!toque) return;
+        const { desde } = toque;
+        toque = null;
+        levantar(desde);
+        if (evento.cancelable) evento.preventDefault(); // sin "click" ni mouse simulado después
+        sinClicHasta = performance.now() + 800;
+        setTimeout(abrir, Math.max(0, TOQUE_HUNDIDO_MINIMO * 0.6 - (performance.now() - desde)));
+    });
+
+    boton.addEventListener('touchcancel', soltarToque);
+
+    boton.addEventListener('click', (evento) => {
+        evento.stopPropagation(); // que no cuente como elegir la carta para el combate
+        if (performance.now() < sinClicHasta) { // el toque ya lo atendió: este "click" es el que el navegador manda de todos modos
+            evento.preventDefault();
+            return;
+        }
+        abrir();
+    });
+}
+
 function activarVoltearConDedo() {
     if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
     let gesto = null;        // { carta, x0, y0, muestras, resuelto }: el dedo que está apoyado en una carta
@@ -3077,13 +3149,14 @@ const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
 // =================================================================================================================
 // PERFILES DE AUDIO DIFERENCIADOS: CELULAR VS ESCRITORIO
 // =================================================================================================================
-// En celular, los parlantes suelen saturar con facilidad y están muy próximos al usuario; un volumen de 0.4
-// resulta equilibrado y confortable.
+// En celular, los parlantes suelen saturar con facilidad y están muy próximos al usuario: el volumen general es mucho más bajo que en
+// computadora (0.4 se seguía escuchando alto; 0.2 es la mitad de amplitud, unos 6 dB menos, y vale para todo: teclas, giro, zoom y
+// la música y los efectos del combate, porque todo se multiplica por este número).
 // En computadora (parlantes integrados o externos, auriculares), 0.4 se percibe demasiado bajo; con 0.85 recupera
 // presencia, volumen y pegada en los clics, los efectos de las cartas y la música de batalla.
 const PERFIL_AUDIO = {
     movil: {
-        volumenGeneral: 0.4,
+        volumenGeneral: 0.2,
         volumenTeclas: 0.15,
     },
     escritorio: {

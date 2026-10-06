@@ -3383,6 +3383,30 @@ body:has(.swal2-container) #avisos-ayuda {
       }
     }
 
+    // CON EL DEDO (pantallas táctiles) la zona holográfica es bastante más grande: con el mouse el puntero es una flechita y la franja
+    // angosta alrededor se aprecia entera, pero el pulgar tapa unos 70 px de una carta de ~180 px, es decir casi toda esa franja. Acá la
+    // franja diagonal se ensancha (la mitad del ancho pasa de 7 % / 5,5 % a 14 % / 12 %: el doble) y la mancha alrededor del dedo se
+    // estira hacia arriba y abajo (30 % / 28 % → 48 % / 46 % del alto). Así, alrededor del pulgar queda mucho más textura a la vista.
+    @media (hover: none) {
+      &.tilt-on li:is(#{$holo-niveles}) .c-frente {
+        &::before {
+          $franja-dedo: linear-gradient(115deg, transparent 36%, #000 50%, transparent 64%);
+          $punta-dedo: radial-gradient(ellipse 100% 48% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                                       #000 0, rgba(0, 0, 0, 0.7) 55%, transparent 100%);
+          -webkit-mask-image: $franja-dedo, $punta-dedo;
+          mask-image: $franja-dedo, $punta-dedo;
+        }
+
+        &::after {
+          $franja-fina-dedo: linear-gradient(115deg, transparent 38%, #000 50%, transparent 62%);
+          $punta-fina-dedo: radial-gradient(ellipse 100% 46% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                                            #000 0, rgba(0, 0, 0, 0.75) 55%, transparent 100%);
+          -webkit-mask-image: $holo-signos, $franja-fina-dedo, $punta-fina-dedo;
+          mask-image: $holo-signos, $franja-fina-dedo, $punta-fina-dedo;
+        }
+      }
+    }
+
     // Con el zoom (doble clic) la carta se ve enorme y los signos de 30px se verían grandotes y toscos: la baldosa se achica
     // para que entren muchos más (la mitad de ancho = el cuádruple de signos), finitos como en un foil de verdad.
     // Chica, en la grilla, queda como estaba (30px). Probado a 20, 15 y 10px: a 15 se ven claramente más chicos y siguen
@@ -3802,13 +3826,15 @@ body:has(.swal2-container) #avisos-ayuda {
   @include globo-de-aviso(1850);
 }
 
+// En computadora, con cualquier cartel abierto (información, ataques, evolución, combate...) la cortina de SweetAlert (2000) tapa a los
+// botones de sonido e inclinación y a sus globitos: se los sube por encima de ella
 @media (min-width: 701px) {
-  body:has(.popup-info) > #silenciar,
-  body:has(.popup-info) > #inclinacion-invertida {
+  body:has(.swal2-container) > #silenciar,
+  body:has(.swal2-container) > #inclinacion-invertida {
     z-index: 2100;
   }
 
-  body:has(.popup-info) > .aviso-globo {
+  body:has(.swal2-container) > .aviso-globo {
     z-index: 2150;
   }
 }
@@ -4068,6 +4094,7 @@ body:has(.swal2-container) #avisos-ayuda {
         var(--tipo) 50%,
         color-mix(in srgb, var(--tipo) 88%, black) 100%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px color-mix(in srgb, var(--tipo) 35%, rgba(0, 0, 0, 0.2));
+    transition: transform 0.07s ease, box-shadow 0.07s ease, filter 0.07s ease; // el hundimiento (y el soltar) se ven como un movimiento
 }
 
 #listado-digimons li .c-evo:hover,
@@ -4077,9 +4104,13 @@ body:has(.swal2-container) #avisos-ayuda {
     filter: brightness(1.1);
 }
 
+// Hundido: con el mouse es :active; con el dedo la clase "hundido" (main.js, activarBotonDelDorso), que dura un mínimo para que se alcance a ver
 #listado-digimons li .c-evo:active,
-#listado-digimons li .c-ataques:active {
-    transform: translateY(1px);
+#listado-digimons li .c-ataques:active,
+#listado-digimons li .c-evo.hundido,
+#listado-digimons li .c-ataques.hundido {
+    transform: translateY(1px) scale(0.97);
+    filter: brightness(0.94);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
@@ -4318,6 +4349,79 @@ body:has(.swal2-container) #avisos-ayuda {
     margin-top: 2px;
     font: 600 10px var(--f-boton), sans-serif;
     color: color-mix(in srgb, var(--c) 65%, black);
+}
+
+/* Etiqueta de las ramas "especiales" (Armor, Hybrid, fusión, salto de nivel, mismo nivel): una pastillita bajo el nivel */
+.evo-etiqueta {
+    --e: #5b6b7b;
+    align-self: flex-start;
+    margin-top: 3px;
+    padding: 1px 6px;
+    font: 600 9px var(--f-boton), sans-serif;
+    line-height: 1.3;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--e) 80%, black);
+    border: 1px solid color-mix(in srgb, var(--e) 55%, white);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--e) 14%, white);
+}
+
+.evo-et-armor { --e: #c98a0b; }
+.evo-et-hybrid { --e: #8a4fd0; }
+.evo-et-fusion { --e: #1f9d74; }
+.evo-et-salto { --e: #e0662b; }
+.evo-et-lateral { --e: #5b7f9e; }
+
+/* Texto desplegable al pie de la ventana de evolución (por qué las líneas evolutivas de Digimon no son una escalera perfecta) */
+.evo-lore {
+    margin: 12px auto 0;
+    max-width: 600px;
+    text-align: left;
+    border: 1px solid #c9d6e2;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #f8fbfe, #eef4fa);
+}
+
+.evo-lore > summary {
+    padding: 7px 12px;
+    font: 600 12.5px var(--f-boton), sans-serif;
+    color: #24476a;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.evo-lore > summary::-webkit-details-marker {
+    display: none;
+}
+
+.evo-lore > summary::after {
+    content: '▾';
+    float: right;
+    transition: transform 0.2s ease;
+}
+
+.evo-lore[open] > summary::after {
+    transform: rotate(180deg);
+}
+
+.evo-lore > summary:hover {
+    color: #17324d;
+}
+
+.evo-lore-texto {
+    padding: 0 14px 10px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #34495e;
+}
+
+.evo-lore-texto p {
+    margin: 6px 0 0;
+}
+
+.evo-lore + .info-pie {
+    margin-top: 12px;
 }
 
 /* Digitama (huevo) del "viene de" de los Baby I: una cajita igual a las demás, pero que no se toca */

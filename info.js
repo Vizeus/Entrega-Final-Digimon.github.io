@@ -255,10 +255,7 @@ function crearBotonAtaques(carta) {
     boton.className = 'c-ataques';
     boton.textContent = t('ataques.boton');
     boton.title = t('ataques.boton.ayuda');
-    boton.addEventListener('click', evento => {
-        evento.stopPropagation(); // que no cuente como elegir la carta para el combate
-        abrirAtaques(carta);
-    });
+    activarBotonDelDorso(boton, () => abrirAtaques(carta)); // toque rápido con el dedo y hundimiento (main.js)
     return boton;
 }
 

@@ -34,6 +34,25 @@ Object.assign(DICCIONARIO.es, {
     'evo.reintentar': 'Reintentar',
     'evo.condicion': 'Condición (en inglés): {c}',
     'evo.pie': 'Tocá uno para ver su propia línea.',
+    // Etiquetas de las ramas que no siguen la "escalera" normal (y lo que dicen al pasar el mouse)
+    'evo.et.armor': '🛡️ Armor',
+    'evo.et.armor.ayuda': 'Evolución Armor: se logra con un Digihuevo, sin seguir los niveles normales.',
+    'evo.et.hybrid': '🌀 Hybrid',
+    'evo.et.hybrid.ayuda': 'Forma Hybrid: se obtiene con un Spirit, no por la evolución normal.',
+    'evo.et.fusion': '🧬 Fusión',
+    'evo.et.fusion.ayuda': 'Fusión de dos o más digimons (DNA o Jogress).',
+    'evo.et.salto': '⏩ Salto de nivel',
+    'evo.et.salto.ayuda': 'Se saltea uno o más niveles.',
+    'evo.et.lateral': '↔️ Mismo nivel',
+    'evo.et.lateral.ayuda': 'Evolución al mismo nivel: una forma alternativa.',
+    // Texto desplegable al pie de la ventana
+    'evo.lore.titulo': 'ℹ️ ¿Por qué hay evoluciones raras?',
+    'evo.lore.1': 'Digimon no tiene una sola historia: el anime, cada juego, las cartas y los mangas tienen su propia versión de quién evoluciona a quién. Esta lista junta todas (los datos vienen de digi-api.com), así que no es una escalera perfecta.',
+    'evo.lore.2': 'Por eso aparecen saltos de nivel, formas del mismo nivel y evoluciones especiales: fusiones (DNA o Jogress, dos digimons que se unen), Armor y Hybrid. Una etiqueta te dice cuál es cada caso.',
+    'evo.lore.3': 'Primero se ven las más cercanas: hasta {rango} de diferencia (y como mucho {tope}). El resto está en “Ver las restantes”.',
+    'evo.lore.rango.uno': 'un nivel',
+    'evo.lore.rango': '{n} niveles',
+    'evo.lore.4': 'Los niveles son los de este simulador: los Armor cuentan como Adult y algunos digimons muy poderosos (como Magnamon) están más arriba que en la API.',
 });
 
 Object.assign(DICCIONARIO.en, {
@@ -56,9 +75,33 @@ Object.assign(DICCIONARIO.en, {
     'evo.reintentar': 'Retry',
     'evo.condicion': 'Condition: {c}',
     'evo.pie': 'Tap one to see its own line.',
+    // Tags for the branches that don't follow the normal "ladder" (and what they say on hover)
+    'evo.et.armor': '🛡️ Armor',
+    'evo.et.armor.ayuda': 'Armor evolution: it happens with a Digi-Egg, without following the normal levels.',
+    'evo.et.hybrid': '🌀 Hybrid',
+    'evo.et.hybrid.ayuda': 'Hybrid form: it is obtained with a Spirit, not through normal evolution.',
+    'evo.et.fusion': '🧬 Fusion',
+    'evo.et.fusion.ayuda': 'Fusion of two or more digimons (DNA or Jogress).',
+    'evo.et.salto': '⏩ Level jump',
+    'evo.et.salto.ayuda': 'It skips one or more levels.',
+    'evo.et.lateral': '↔️ Same level',
+    'evo.et.lateral.ayuda': 'Evolution to the same level: an alternate form.',
+    // Expandable text at the bottom of the window
+    'evo.lore.titulo': 'ℹ️ Why are there odd evolutions?',
+    'evo.lore.1': 'Digimon doesn\'t have a single story: the anime, each game, the cards and the manga all have their own version of who evolves into whom. This list puts them all together (the data comes from digi-api.com), so it is not a perfect ladder.',
+    'evo.lore.2': 'That is why you will see level jumps, forms of the same level and special evolutions: fusions (DNA or Jogress, two digimons joining), Armor and Hybrid. A tag tells you which case each one is.',
+    'evo.lore.3': 'The closest ones come first: up to {rango} of difference (and at most {tope}). The rest is under “Show the other”.',
+    'evo.lore.rango.uno': 'one level',
+    'evo.lore.rango': '{n} levels',
+    'evo.lore.4': 'The levels are this simulator\'s own: Armor counts as Adult and some very powerful digimons (like Magnamon) sit higher than in the API.',
 });
 
-const TOPE_RAMAS = 5;    // cuántas ramas se ven de cada lado antes de tocar "ver las restantes"
+const TOPE_RAMAS = 5;    // cuántas ramas se ven de cada lado, como mucho, antes de tocar "ver las restantes"
+// Al abrir, de cada lado solo se ven las ramas que están a esta cantidad de niveles o menos del digimon (0 = mismo nivel). El resto
+// (saltos grandes, fusiones lejanas...) queda detrás de "ver las restantes". Si ninguna entra en el rango, se ven las más cercanas.
+const RANGO_DE_NIVELES = 1;
+// Las fusiones (DNA, Jogress...) la API no las marca como tales: se reconocen por el texto de la condición (en inglés)
+const CONDICION_DE_FUSION = /\b(dna|jogress|fusion|fuse[ds]?|biomerge|matrix|mix|combine[ds]?)\b/i;
 const URL_DETALLE_EVOLUCION = 'https://digi-api.com/api/v1/digimon/';
 
 // ---- Datos ---------------------------------------------------------------------------------------------------------
@@ -93,6 +136,32 @@ const nivelDe = carta => (carta.dataset.nivel === undefined ? undefined : Number
 const nombreDe = nombreCompleto;
 const sinParentesis = texto => texto.replace(/\s*\(.*$/, '').trim().toLowerCase();
 
+// Qué tipo de evolución "especial" es una rama (o null si sigue la escalera normal). Armor y Hybrid se saben por la marca de la carta
+// (la del digimon que evoluciona: el de destino en "evoluciona a", el actual en "viene de"); la fusión, por el texto de la condición.
+function etiquetaDeRama(carta, otra, condicion, distancia, sentido) {
+    const marca = (sentido > 0 ? otra : carta).dataset.marca;
+    if (marca === 'Armor') return 'armor';
+    if (marca === 'Hybrid') return 'hybrid';
+    if (/armor/i.test(condicion)) return 'armor';
+    if (CONDICION_DE_FUSION.test(condicion)) return 'fusion';
+    if (distancia === undefined) return null;
+    if (distancia >= 2) return 'salto';
+    if (distancia === 0) return 'lateral';
+    return null;
+}
+
+// Cuántas ramas se ven sin tocar "ver las restantes" (las ya vienen ordenadas de la más cercana a la más lejana)
+function cuantasSeVen(ramas) {
+    const conNivel = ramas.filter(rama => rama.distancia !== undefined);
+    if (conNivel.length === 0) return Math.min(ramas.length, TOPE_RAMAS);
+    let cercanas = conNivel.filter(rama => rama.distancia <= RANGO_DE_NIVELES).length;
+    if (cercanas === 0) {
+        const minima = Math.min(...conNivel.map(rama => rama.distancia));
+        cercanas = conNivel.filter(rama => rama.distancia === minima).length;
+    }
+    return Math.min(cercanas, TOPE_RAMAS);
+}
+
 // sentido: -1 = "viene de", +1 = "evoluciona a". Devuelve las cartas del simulador que sirven, las más cercanas primero.
 function armarRamas(lista, carta, sentido) {
     const nivel = nivelDe(carta);
@@ -112,7 +181,8 @@ function armarRamas(lista, carta, sentido) {
             if ((nivelOtra - nivel) * sentido < 0) continue; // va para el lado contrario
             if (nivelOtra === nivel && sinParentesis(nombreDe(otra)) === base) continue; // variante del mismo digimon
         }
-        ramas.push({ carta: otra, nivel: nivelOtra, condicion });
+        const distancia = nivel !== undefined && nivelOtra !== undefined ? Math.abs(nivelOtra - nivel) : undefined;
+        ramas.push({ carta: otra, nivel: nivelOtra, condicion, distancia, etiqueta: etiquetaDeRama(carta, otra, condicion, distancia, sentido) });
     }
 
     // "evoluciona a": de menor a mayor nivel; "viene de": de mayor a menor (el más cercano primero). Sin nivel, al final.
@@ -204,18 +274,27 @@ function crearNodoHuevo(carta) {
     return nodo;
 }
 
-function crearNodo({ carta, nivel, condicion, huevo }) {
+function crearNodo({ carta, nivel, condicion, etiqueta, huevo }) {
     if (huevo) return crearNodoHuevo(carta);
     const nodo = document.createElement('button');
     nodo.type = 'button';
     nodo.className = 'evo-nodo';
     nodo.dataset.id = carta.dataset.id;
     nodo.style.setProperty('--c', colorDelNivel(nivel));
-    nodo.title = condicion ? `${nombreDe(carta)}\n${t('evo.condicion', { c: condicion })}` : nombreDe(carta);
+    const lineas = [nombreDe(carta)];
+    if (etiqueta) lineas.push(t(`evo.et.${etiqueta}.ayuda`));
+    if (condicion) lineas.push(t('evo.condicion', { c: condicion }));
+    nodo.title = lineas.join('\n');
 
     const texto = document.createElement('span');
     texto.className = 'evo-txt';
     texto.append(crearNombreEvo(nombreDe(carta)), crearNivelEvo(carta));
+    if (etiqueta) {
+        const marca = document.createElement('span');
+        marca.className = `evo-etiqueta evo-et-${etiqueta}`;
+        marca.textContent = t(`evo.et.${etiqueta}`);
+        texto.append(marca);
+    }
     nodo.append(imagenDe(carta), texto);
     return nodo;
 }
@@ -262,12 +341,12 @@ function crearColumna(clase, rotulo, ramas) {
         return columna;
     }
 
-    const visibles = Math.min(ramas.length, TOPE_RAMAS);
+    const visibles = cuantasSeVen(ramas);
     const lista = document.createElement('ul');
     lista.className = 'evo-lista';
     ramas.forEach((rama, posicion) => {
         const item = document.createElement('li');
-        item.classList.toggle('extra', posicion >= TOPE_RAMAS);
+        item.classList.toggle('extra', posicion >= visibles);
         item.classList.toggle('primera', posicion === 0);
         item.classList.toggle('ultima', posicion === visibles - 1);
         item.classList.toggle('unica', visibles === 1);
@@ -276,13 +355,13 @@ function crearColumna(clase, rotulo, ramas) {
     });
     columna.append(lista);
 
-    if (ramas.length > TOPE_RAMAS) {
+    if (ramas.length > visibles) {
         const mas = document.createElement('button');
         mas.type = 'button';
         mas.className = 'evo-mas';
-        mas.dataset.extras = ramas.length - TOPE_RAMAS;
+        mas.dataset.extras = ramas.length - visibles;
         mas.setAttribute('aria-expanded', 'false');
-        mas.textContent = t('evo.masN', { n: ramas.length - TOPE_RAMAS });
+        mas.textContent = t('evo.masN', { n: ramas.length - visibles });
         columna.append(mas);
     }
     return columna;
@@ -310,6 +389,30 @@ function crearBarraVolver() {
     volver.textContent = t('evo.volver');
     barra.append(volver);
     return barra;
+}
+
+// El texto desplegable que explica por qué las líneas evolutivas de Digimon no son una escalera perfecta
+function crearLoreEvo() {
+    const detalle = document.createElement('details');
+    detalle.className = 'evo-lore';
+    detalle.open = Boolean(estadoEvo?.loreAbierto); // al pasar a otro digimon del árbol queda como estaba
+    detalle.addEventListener('toggle', () => { if (estadoEvo) estadoEvo.loreAbierto = detalle.open; });
+
+    const titulo = document.createElement('summary');
+    titulo.textContent = t('evo.lore.titulo');
+
+    const rango = RANGO_DE_NIVELES === 1 ? t('evo.lore.rango.uno') : t('evo.lore.rango', { n: RANGO_DE_NIVELES });
+    const parrafos = [t('evo.lore.1'), t('evo.lore.2'), t('evo.lore.3', { rango, tope: TOPE_RAMAS }), t('evo.lore.4')];
+    const cuerpo = document.createElement('div');
+    cuerpo.className = 'evo-lore-texto';
+    for (const texto of parrafos) {
+        const parrafo = document.createElement('p');
+        parrafo.textContent = texto;
+        cuerpo.append(parrafo);
+    }
+
+    detalle.append(titulo, cuerpo);
+    return detalle;
 }
 
 function crearPieEvo() {
@@ -369,7 +472,7 @@ async function pintarEvolucion() {
     if (siguientes.length) arbol.append(crearFlechaVertical());
     arbol.append(crearColumna('evo-sig', t('evo.va'), siguientes));
 
-    contenedor.replaceChildren(...barra, arbol, crearPieEvo());
+    contenedor.replaceChildren(...barra, arbol, crearLoreEvo(), crearPieEvo());
 }
 
 // ---- Ir a la carta: se cierra la ventana, se centra la carta en la parte visible de la pantalla y se la resalta ----
@@ -485,7 +588,7 @@ function alTocarEnEvolucion(evento) {
 }
 
 function abrirEvolucion(carta) {
-    estadoEvo = { historial: [Number(carta.dataset.id)], marca: 0 };
+    estadoEvo = { historial: [Number(carta.dataset.id)], marca: 0, loreAbierto: false };
     Swal.fire({
         title: t('evo.titulo'),
         html: '<div class="evo"></div>',
@@ -524,10 +627,7 @@ function crearBotonEvolucion(carta) {
     boton.className = 'c-evo';
     boton.textContent = t('evo.boton');
     boton.title = t('evo.boton.ayuda');
-    boton.addEventListener('click', evento => {
-        evento.stopPropagation(); // que no cuente como elegir la carta para el combate
-        abrirEvolucion(carta);
-    });
+    activarBotonDelDorso(boton, () => abrirEvolucion(carta)); // toque rápido con el dedo y hundimiento (main.js)
     return boton;
 }
 
