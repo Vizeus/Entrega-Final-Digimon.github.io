@@ -16,14 +16,14 @@ const botonIniciarCombate = document.getElementById('iniciar-combate');
 // Seleccionar el contador de digimons elegidos (junto a la consigna, arriba)
 const contadorSeleccion = document.getElementById('contador-seleccion');
 
-// Número total de Digimons 
+// Número total de digimons 
 const totalDigimons = 1488; // todos los que tiene la API (digi-api.com)
 
 // Número de páginas a recuperar (con pageSize=100 son solo 15 páginas en vez de 298)
 const DIGIMONS_POR_PAGINA = 100;
 const totalPaginas = Math.ceil(totalDigimons / DIGIMONS_POR_PAGINA);
 
-// Tipo (atributo) de cada Digimon: la API lo trae en inglés y por dentro lo guardamos con estos nombres en español.
+// Tipo (atributo) de cada digimon: la API lo trae en inglés y por dentro lo guardamos con estos nombres en español.
 // Lo que se ve en pantalla ("Datos" o "Data") lo decide i18n.js según el idioma, ver nombreTipo().
 const tipoDeLaApi = {
     'Data': 'Datos',
@@ -326,7 +326,7 @@ const ELEMENTO_FUERTE_CONTRA = {
     'Viento': ['Tierra'],
 };
 
-// La API no trae el elemento, así que lo deducimos buscando palabras clave en las habilidades del Digimon.
+// La API no trae el elemento, así que lo deducimos buscando palabras clave en las habilidades del digimon.
 // El elemento con más coincidencias gana; si hay empate o ninguna coincidencia, es Neutro.
 const REGLAS_ELEMENTO = {
     'Fuego': /\b(fire|flame|flames|flaming|blaze|blazing|burn|burning|inferno|heat|lava|magma|scorch|ember)\b/g,
@@ -342,7 +342,7 @@ const REGLAS_ELEMENTO = {
     'Veneno': /\b(poison|toxic|venom|acid)\b/g,
 };
 
-// Correcciones a mano (id del Digimon → elemento) para los casos en que la deducción automática no acierta
+// Correcciones a mano (id del digimon → elemento) para los casos en que la deducción automática no acierta
 const ELEMENTOS_MANUALES = {
     4: 'Rayo', // Betamon: sus habilidades empatan entre Rayo y Agua, pero es eléctrico
     457: 'Oscuridad', // Zeed Millenniumon: la deducción le daba Hielo por la palabra "freeze" de una habilidad, pero por lore es oscuridad y destrucción
@@ -367,7 +367,7 @@ const EMOJIS_ELEMENTO = {
 // Orden en que se muestran los elementos en los menús y en los filtros
 const ORDEN_ELEMENTOS = Object.keys(EMOJIS_ELEMENTO);
 
-// Deduce el elemento de un Digimon a partir de los detalles que devuelve la API
+// Deduce el elemento de un digimon a partir de los detalles que devuelve la API
 function deducirElemento(id, detalles) {
     if (ELEMENTOS_MANUALES[id]) {
         return ELEMENTOS_MANUALES[id];
@@ -405,7 +405,7 @@ function calcularVentaja(tabla, a, b) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-// Caché en IndexedDB para los detalles de los Digimons (así cargan al instante en visitas posteriores y no saturan la API)
+// Caché en IndexedDB para los detalles de los digimons (así cargan al instante en visitas posteriores y no saturan la API)
 // -----------------------------------------------------------------------------------------------------------------
 const CACHE_DB_NOMBRE = 'digimon-cache-v1';
 const CACHE_STORE_DETALLES = 'detalles';
@@ -464,7 +464,7 @@ async function guardarDetalleCache(url, datos) {
     }
 }
 
-// Función para obtener los Digimons de una página con pageSize=100 y reintentos automáticos
+// Función para obtener los digimons de una página con pageSize=100 y reintentos automáticos
 async function obtenerPagina(numeroPagina, reintentos = 3) {
     for (let intento = 1; intento <= reintentos; intento++) {
         try {
@@ -483,7 +483,7 @@ async function obtenerPagina(numeroPagina, reintentos = 3) {
     return [];
 }
 
-// Función para obtener los detalles de un Digimon específico con caché y reintentos
+// Función para obtener los detalles de un digimon específico con caché y reintentos
 async function obtenerDetallesDigimon(url, reintentos = 3) {
     // 1. Intentar desde caché local IndexedDB
     try {
@@ -506,7 +506,7 @@ async function obtenerDetallesDigimon(url, reintentos = 3) {
             return datos;
         } catch (error) {
             if (intento === reintentos) {
-                console.warn('Aviso al obtener detalles del Digimon:', url, error.message);
+                console.warn('Aviso al obtener detalles del digimon:', url, error.message);
                 return null;
             }
             await new Promise(r => setTimeout(r, 500 * intento));
@@ -515,7 +515,7 @@ async function obtenerDetallesDigimon(url, reintentos = 3) {
     return null;
 }
 
-// Función para obtener los Digimons de todas las páginas
+// Función para obtener los digimons de todas las páginas
 async function crearArrayDeDatos() {
     try {
         // Generar array de promesas para todas las páginas (15 páginas en vez de 298)
@@ -530,9 +530,9 @@ async function crearArrayDeDatos() {
         // Combinar todos los sub-arrays de cada página en un solo array
         const digimons = paginas.flat();
 
-        return digimons; // Devolvemos el array aplanado de Digimons
+        return digimons; // Devolvemos el array aplanado de digimons
     } catch (error) {
-        console.warn('Aviso al obtener todos los Digimons:', error.message);
+        console.warn('Aviso al obtener todos los digimons:', error.message);
         return [];
     }
 }
@@ -591,14 +591,14 @@ function mostrarSistemaDeNiveles() {
 
 document.addEventListener('DOMContentLoaded', () => {
     mostrarSistemaDeNiveles();
-    // Llamar a la función para cargar los Digimons después de inicializar la configuración
+    // Llamar a la función para cargar los digimons después de inicializar la configuración
     crearListaDeDigimons();
 });
 
 // Si se cambia el idioma, la ayuda del selector se vuelve a escribir en el idioma nuevo
 document.addEventListener('idioma-cambiado', mostrarSistemaDeNiveles);
 
-let contadorDigimons = 0; // Contador de Digimons cargados
+let contadorDigimons = 0; // Contador de digimons cargados
 const PEDIDOS_A_LA_VEZ = 6; // detalles que se piden a la API al mismo tiempo mientras carga la página
 
 // Array para almacenar los elementos seleccionados
@@ -4301,7 +4301,7 @@ function colocarCartas() {
     if (!cartasEnEspera.length) return;
     const tanda = cartasEnEspera.splice(0);
 
-    // Agregamos los <li> a la lista de Digimons (<ul>), todos de una vez
+    // Agregamos los <li> a la lista de digimons (<ul>), todos de una vez
     listaDigimons.append(...tanda.map(({ carta }) => carta));
     for (const { carta, conMarco } of tanda) {
         ajustarNombre(carta); // ya está en la página: ahora se puede medir su nombre
@@ -4324,10 +4324,10 @@ document.addEventListener('idioma-cambiado', () => {
     }
 });
 
-// Función para crear la lista de Digimons
+// Función para crear la lista de digimons
 async function crearListaDeDigimons() {
     try {
-        // Obtenemos el array de Digimons
+        // Obtenemos el array de digimons
         const digimons = await crearArrayDeDatos();
 
         // Las cartas miden sus nombres con las tipografías nuevas: esperamos a que carguen
@@ -4344,9 +4344,9 @@ async function crearListaDeDigimons() {
             }
         };
 
-        // Recorremos toda la lista de Digimons
+        // Recorremos toda la lista de digimons
         for (const [indice, digimon] of digimons.entries()) {
-            // Obtenemos los detalles de cada Digimon
+            // Obtenemos los detalles de cada digimon
             pedirMas();
             const detalles = await pedidos[indice];
             pedidos[indice] = null;
@@ -4399,7 +4399,7 @@ async function crearListaDeDigimons() {
         // Ya están todas las cartas (y sus nombres medidos): en celular, el navegador puede dejar de dibujar las que no se ven
         listaDigimons.classList.add('lista-completa');
     } catch (error) {
-        console.error('Error al crear la lista de Digimons:', error);
+        console.error('Error al crear la lista de digimons:', error);
     }
 }
 

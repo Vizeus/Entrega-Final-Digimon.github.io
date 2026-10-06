@@ -77,12 +77,15 @@ const MENCIONES_NIVEL_MAP = {
     'Mega': 'Ultimate',
 };
 
-const REGEX_NIVELES = /\b(Super Ultimate|Absolute|Baby II|Baby I|Child|Adult|Perfect|Ultimate|Mega)\b/g;
+// Los textos de i18n.js nombran a otros niveles con una marca {nivel:Adult} (con el nombre original de la API): así se escriben con
+// los nombres del sistema vigente (Japón o EE.UU.) y siguen siendo un enlace al nivel. Lo que no lleve la marca, se enlaza tal cual está escrito.
+const REGEX_NIVELES = /\{nivel:([^}]+)\}|\b(Super Ultimate|Absolute|Baby II|Baby I|Child|Adult|Perfect|Ultimate|Mega)\b/g;
 
 // Enlaza menciones de niveles, tipos o elementos que aparezcan en el texto de las descripciones
 function enlazarTexto(texto) {
     if (!texto) return '';
-    return texto.replace(REGEX_NIVELES, (match) => {
+    return texto.replace(REGEX_NIVELES, (match, marca) => {
+        if (marca) return linkNivel(marca);
         const nivel = MENCIONES_NIVEL_MAP[match];
         const ayuda = t('info.verInfoDe', { nombre: match });
         return `<button type="button" class="info-link info-link-nivel" data-info-nivel="${nivel}" title="${ayuda}" aria-label="${ayuda}">${match}</button>`;

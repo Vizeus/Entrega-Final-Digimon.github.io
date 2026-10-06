@@ -10,7 +10,7 @@
 //   4. Al cambiar de idioma se vuelven a escribir todos los textos y se avisa con el evento "idioma-cambiado",
 //      así cada parte de la página (cartas, filtros, menús) se traduce sin recargar.
 //
-// Ojo: por dentro, el tipo y el elemento de cada Digimon siguen guardados en español ("Datos", "Fuego"...) porque el combate
+// Ojo: por dentro, el tipo y el elemento de cada digimon siguen guardados en español ("Datos", "Fuego"...) porque el combate
 // y los filtros los usan como identificadores. Lo que cambia con el idioma es solo el nombre que se muestra.
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ const DICCIONARIO = {
         'menu.niveles': 'Info. niveles',
         'menu.abrir': 'Más opciones',
         'idioma.cambiar': 'Cambiar idioma (Español / English)',
-        'carga.rotulo': 'Progreso de la carga de <br>Digimons:',
+        'carga.rotulo': 'Progreso de la carga de <br>digimons:',
 
         // Nombres que se muestran
         'tipo.Datos': 'Datos',
@@ -90,9 +90,9 @@ const DICCIONARIO = {
         'ataques.boton.ayuda': 'Ver todos sus ataques',
         'ataques.titulo': '⚔️ Ataques de {nombre}',
         'ataques.ayuda': 'Tocá un ataque para ver qué hace y quiénes lo usan',
-        'ataques.quienesUsan': 'Otros Digimons que usan este ataque ({n}):',
-        'ataques.quienesUsan.uno': 'Otro Digimon que usa este ataque (1):',
-        'ataques.soloEste': 'Solo este Digimon usa este ataque específico.',
+        'ataques.quienesUsan': 'Otros digimons que usan este ataque ({n}):',
+        'ataques.quienesUsan.uno': 'Otro digimon que usa este ataque (1):',
+        'ataques.soloEste': 'Solo este digimon usa este ataque específico.',
         'ataques.sinDescripcion': 'Este ataque no tiene descripción detallada.',
         'ataques.irACarta': 'Ir a la carta',
         'combate.usa': 'usa',
@@ -108,7 +108,7 @@ const DICCIONARIO = {
 
         // Combate
         'combate.preparando': 'Preparando combate...',
-        'combate.peleando': '¡Los Digimons están peleando!',
+        'combate.peleando': '¡Los digimons están peleando!',
         'combate.ganador': '¡El ganador es {nombre}!',
         'combate.anular': 'Anular el combate',
         'aceptar': 'Aceptar',
@@ -138,7 +138,7 @@ const DICCIONARIO = {
         'nivel.pie': 'Cada nivel de diferencia con el rival suma o resta un {p}% de probabilidad de ganar.',
         'nivel.pieAlto': 'Rompe la escala: en el combate pesa como un nivel {n}. Cada nivel de diferencia con el rival suma o resta un {p}% de probabilidad de ganar, y contra un rival muy por debajo casi no cuentan el tipo ni el elemento.',
         'nivel.pieSin': 'Sin nivel no se suma ni se resta probabilidad en el combate.',
-        'tipo.desc.Datos': 'Los Datos son Digimon con habilidades equilibradas.',
+        'tipo.desc.Datos': 'Los Datos son digimon con habilidades equilibradas.',
         'tipo.desc.Virus': 'Los Virus tienen habilidades ofensivas.',
         'tipo.desc.Vacuna': 'Los Vacuna se destacan por sus habilidades defensivas.',
         'tipo.desc.Libre': 'Los Libres no tienen atributos definidos, por lo que son equilibrados en combate.',
@@ -160,9 +160,9 @@ const DICCIONARIO = {
         'nivel.desc.Baby II': 'Bebés que ya empiezan a moverse y a defenderse un poco.',
         'nivel.desc.Child': 'La primera forma "de combate": ágiles, pero todavía de poco poder.',
         'nivel.desc.Adult': 'Forma madura con ataques propios; la más común en la serie. Acá también están los Armor (círculo rojo con una "A" en la carta) y las formas humanas de los Hybrid (círculo verde con una "H").',
-        'nivel.desc.Perfect': 'Gran poder y ataques devastadores; muy por encima de un Adult. Acá también están las formas bestia de los Hybrid (círculo verde con una "H" en la carta).',
+        'nivel.desc.Perfect': 'Gran poder y ataques devastadores; muy por encima de un {nivel:Adult}. Acá también están las formas bestia de los Hybrid (círculo verde con una "H" en la carta).',
         'nivel.desc.Ultimate': 'Los más poderosos de una evolución normal, como WarGreymon o MetalGarurumon. Acá también están las fusiones y formas supremas de los Hybrid (círculo verde con una "H" en la carta).',
-        'nivel.desc.Super Ultimate': 'Nivel inventado para este simulador: por encima del Mega. Reyes Reales, Soberanos y Lores Demonio, cuyo poder rompe la escala normal.',
+        'nivel.desc.Super Ultimate': 'Nivel inventado para este simulador: por encima del {nivel:Ultimate}. Reyes Reales, Soberanos y Lores Demonio, cuyo poder rompe la escala normal.',
         'nivel.desc.Absolute': 'Nivel inventado para este simulador: lo más alto de todo. Seres capaces de destruir o de gobernar el mundo digital entero.',
         'nivel.desc.Desconocido': 'La API no informa su nivel.',
 
@@ -338,9 +338,9 @@ const DICCIONARIO = {
         'nivel.desc.Baby II': 'Babies that are starting to move around and defend themselves a little.',
         'nivel.desc.Child': 'The first "battle" form: agile, but still low on power.',
         'nivel.desc.Adult': 'A mature form with attacks of its own; the most common in the series. The Armor digimon (red circle with an "A" on the card) and the human forms of the Hybrids (green circle with an "H") are here too.',
-        'nivel.desc.Perfect': 'Great power and devastating attacks; far above an Adult. The beast forms of the Hybrids (green circle with an "H" on the card) are here too.',
+        'nivel.desc.Perfect': 'Great power and devastating attacks; far above the {nivel:Adult} level. The beast forms of the Hybrids (green circle with an "H" on the card) are here too.',
         'nivel.desc.Ultimate': 'The most powerful of a normal evolution, like WarGreymon or MetalGarurumon. The fusions and supreme forms of the Hybrids (green circle with an "H" on the card) are here too.',
-        'nivel.desc.Super Ultimate': 'A level made up for this simulator: above Mega. Royal Knights, Sovereigns and Demon Lords, whose power breaks the normal scale.',
+        'nivel.desc.Super Ultimate': 'A level made up for this simulator: above {nivel:Ultimate}. Royal Knights, Sovereigns and Demon Lords, whose power breaks the normal scale.',
         'nivel.desc.Absolute': 'A level made up for this simulator: the highest of all. Beings able to destroy or to rule the whole digital world.',
         'nivel.desc.Desconocido': 'The API does not report its level.',
 
