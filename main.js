@@ -3492,10 +3492,14 @@ function solicitarReanudacionAudio(contexto) {
     return pendiente;
 }
 
+// Los navegadores solo dejan arrancar el audio dentro de un gesto "de verdad": con el dedo eso es al LEVANTARLO (touchend / pointerup /
+// click), no al apoyarlo ni al deslizarlo (touchstart / pointerdown / touchmove no cuentan, ni en Chrome ni en Safari). Por eso se prepara
+// en todos esos momentos: apoyar el dedo crea el audio y levantarlo es lo que lo destraba de verdad.
 function activarDesbloqueoAudio() {
     const preparar = () => prepararAudioAlTocar();
-    document.addEventListener('pointerdown', preparar, { capture: true });
-    document.addEventListener('touchstart', preparar, { capture: true, passive: true });
+    for (const tipo of ['pointerdown', 'touchstart', 'touchend', 'pointerup', 'click', 'keydown']) {
+        document.addEventListener(tipo, preparar, { capture: true, passive: true });
+    }
 }
 
 function prepararAudioAlTocar() {
@@ -3508,11 +3512,42 @@ function prepararAudioAlTocar() {
             fuenteSilenciosa.connect(destinoDeAudio(contextoAudio));
             fuenteSilenciosa.onended = () => fuenteSilenciosa.disconnect();
             fuenteSilenciosa.start();
+            // resume() directo (no el pedido compartido de solicitarReanudacionAudio): si quedó uno pendiente de un toque que todavía no
+            // contaba como gesto (apoyar el dedo), ese no sirve; el que vale es el que se pide dentro de este gesto
+            contextoAudio.resume().catch(() => {});
         }
-        solicitarReanudacionAudio(contextoAudio);
     } catch (error) {
         console.warn('No se pudo preparar el audio al tocar la página:', error);
     }
+}
+
+// En el celular el primer giro casi siempre es con el dedo, a mitad del deslizamiento: en ese instante el navegador todavía no deja
+// sonar nada (lo permite recién al levantar el dedo, un momento después) y el sonido se perdía. Así que si el audio todavía no está
+// andando, el sonido espera a que arranque y suena apenas lo hace. Si tarda más de ESPERA_DEL_PRIMER_SONIDO, ya no suena (llegaría
+// tarde, con la carta quieta). El aviso del botón de sonido también espera: sale cuando el sonido suena de verdad.
+const ESPERA_DEL_PRIMER_SONIDO = 1000;
+const sonidosEnEspera = [];
+
+function sonarCuandoElAudioEsteListo(sonar) {
+    try {
+        contextoAudio = contextoAudio || new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+        return;
+    }
+    const contexto = contextoAudio;
+    if (contexto.state === 'running') return sonar();
+    sonidosEnEspera.push({ sonar, desde: performance.now() });
+    if (!contexto.atiendeSonidosEnEspera) {
+        contexto.atiendeSonidosEnEspera = true;
+        contexto.addEventListener('statechange', () => {
+            if (contexto.state !== 'running') return;
+            const ahora = performance.now();
+            for (const pedido of sonidosEnEspera.splice(0)) {
+                if (ahora - pedido.desde <= ESPERA_DEL_PRIMER_SONIDO) pedido.sonar();
+            }
+        });
+    }
+    solicitarReanudacionAudio(contexto); // por si ya está permitido (en la computadora, o después del primer toque)
 }
 
 function obtenerContextoAudio() {
@@ -3732,6 +3767,10 @@ function sonidoSeleccion(elegida) {
 
 // Carta que se da vuelta: un "fshh" de papel cortando el aire mientras gira y, al terminar, el toquecito de apoyarse
 function sonidoVuelta() {
+    sonarCuandoElAudioEsteListo(sonidoVueltaAhora);
+}
+
+function sonidoVueltaAhora() {
     try {
         const contexto = obtenerContextoAudio();
         const t = contexto.currentTime;
@@ -4871,4 +4910,4 @@ function reproducirConDelay() {
     }, 2450); 
 }
 
-// --------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------

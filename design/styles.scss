@@ -24,6 +24,9 @@
     --t-nav: 14px;
 }
 
+// Cuánto se desenfoca la página de atrás cuando hay un cartel encima: lo usan los carteles del combate y el fondo del zoom de la carta
+$desenfoque-del-fondo: 10px;
+
 // Variables que se animan (posición del puntero para el brillo y el matiz de la carta seleccionada)
 @property --h {
     syntax: '<number>';
@@ -1582,9 +1585,6 @@ body:has(.swal2-container) #avisos-ayuda {
         translate: 0 0;
     }
 }
-
-// Cuánto se desenfoca la página de atrás cuando hay un cartel encima: lo usan los carteles del combate y el fondo del zoom de la carta
-$desenfoque-del-fondo: 10px;
 
 .combate-contenedor {
     overscroll-behavior: contain; // si el cartel se desplaza (pantalla baja), al llegar al final no arrastra a la página de atrás

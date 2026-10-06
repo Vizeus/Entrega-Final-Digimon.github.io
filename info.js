@@ -273,8 +273,8 @@ function obtenerDigimonsConAtaque(nombreAtaque) {
 
     // Ordenamos por nivel (menor a mayor poder) y luego por nombre
     encontradas.sort((a, b) => {
-        const nvA = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[a.dataset.nivelOriginal]) ?? 99;
-        const nvB = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[b.dataset.nivelOriginal]) ?? 99;
+        const nvA = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[a.dataset.nivelApi]) ?? 99;
+        const nvB = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[b.dataset.nivelApi]) ?? 99;
         if (nvA !== nvB) return nvA - nvB;
         const nomA = typeof nombreCompleto === 'function' ? nombreCompleto(a) : (a.dataset.nombreApi || '');
         const nomB = typeof nombreCompleto === 'function' ? nombreCompleto(b) : (b.dataset.nombreApi || '');
@@ -291,7 +291,7 @@ function crearMiniNodoDigimon(carta) {
     nodo.className = 'evo-nodo ataque-digimon-nodo';
     nodo.dataset.id = id;
 
-    const nvOriginal = carta.dataset.nivelOriginal;
+    const nvOriginal = carta.dataset.nivelApi;
     const nvNumero = typeof numeracionNiveles !== 'undefined' ? numeracionNiveles[nvOriginal] : undefined;
     const color = (typeof COLOR_NIVEL !== 'undefined' && COLOR_NIVEL[nvNumero])
         || carta.querySelector('.c-arte')?.style.getPropertyValue('--c')
