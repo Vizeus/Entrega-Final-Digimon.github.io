@@ -1374,6 +1374,15 @@ body:has(.swal2-container) #avisos-ayuda {
         border-top: 1px dashed rgba(36, 71, 106, 0.25);
     }
 
+    // Cuando solo este digimon usa el ataque: un aviso corto, sin imágenes
+    .ataque-solo-este {
+        margin: 0;
+        font-family: var(--f-descripcion), sans-serif;
+        font-size: 0.95rem;
+        font-style: italic;
+        color: #6a7989;
+    }
+
     .ataque-digimons-titulo {
         margin: 0 0 8px;
         font: 700 13px var(--f-boton), sans-serif;
@@ -1400,6 +1409,14 @@ body:has(.swal2-container) #avisos-ayuda {
         .ataque-digimons-grid .ataque-digimon-nodo {
             flex: 0 1 calc(33.333% - 6px);
             width: calc(33.333% - 6px);
+        }
+    }
+
+    // En celular el contenedor de SweetAlert trae ~29 px de relleno a cada lado y los nombres de los digimons se cortaban enseguida
+    @media (max-width: 700px) {
+        .swal2-html-container {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
         }
     }
 
@@ -4346,6 +4363,9 @@ body:has(.swal2-container) #avisos-ayuda {
 }
 
 .evo-nv {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     margin-top: 2px;
     font: 600 10px var(--f-boton), sans-serif;
     color: color-mix(in srgb, var(--c) 65%, black);
@@ -4355,6 +4375,9 @@ body:has(.swal2-container) #avisos-ayuda {
 .evo-etiqueta {
     --e: #5b6b7b;
     align-self: flex-start;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     margin-top: 3px;
     padding: 1px 6px;
     font: 600 9px var(--f-boton), sans-serif;
@@ -4656,6 +4679,23 @@ body:has(.swal2-container) #avisos-ayuda {
 
     .popup-evo .swal2-title {
         font-size: 1.2em;
+    }
+
+    /* El contenedor de SweetAlert trae unos 25 px de margen a cada lado: en un celular de 320 px dejaba solo 216 px para el árbol (105 px por
+       digimon y 38 px de texto, y se partían "Perfect" y las etiquetas). Sin ese margen cada digimon tiene ~140 px. */
+    .popup-evo .swal2-html-container {
+        margin: 0.2em 0 0.2em;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .evo-nodo {
+        gap: 6px;
+    }
+
+    .evo-nodo img {
+        width: 34px;
+        height: 34px;
     }
 
     .evo-arbol {

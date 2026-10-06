@@ -47,12 +47,9 @@ Object.assign(DICCIONARIO.es, {
     'evo.et.lateral.ayuda': 'Evolución al mismo nivel: una forma alternativa.',
     // Texto desplegable al pie de la ventana
     'evo.lore.titulo': 'ℹ️ ¿Por qué hay evoluciones raras?',
-    'evo.lore.1': 'Digimon no tiene una sola historia: el anime, cada juego, las cartas y los mangas tienen su propia versión de quién evoluciona a quién. Esta lista junta todas (los datos vienen de digi-api.com), así que no es una escalera perfecta.',
-    'evo.lore.2': 'Por eso aparecen saltos de nivel, formas del mismo nivel y evoluciones especiales: fusiones (DNA o Jogress, dos digimons que se unen), Armor y Hybrid. Una etiqueta te dice cuál es cada caso.',
-    'evo.lore.3': 'Primero se ven las más cercanas: hasta {rango} de diferencia (y como mucho {tope}). El resto está en “Ver las restantes”.',
-    'evo.lore.rango.uno': 'un nivel',
-    'evo.lore.rango': '{n} niveles',
-    'evo.lore.4': 'Los niveles son los de este simulador: los Armor cuentan como Adult y algunos digimons muy poderosos (como Magnamon) están más arriba que en la API.',
+    'evo.lore.1': 'Digimon no tiene una sola historia: el anime, cada juego, las cartas y los mangas tienen su propia versión de quién evoluciona a quién. Esta lista junta todas, así que no es una escalera perfecta.',
+    'evo.lore.2': 'Por eso aparecen saltos de nivel, formas del mismo nivel y evoluciones especiales: fusiones (DNA o Jogress, dos digimons que se unen), Armor e Hybrid. Una etiqueta te dice cuál es cada caso.',
+    'evo.lore.puntero': 'Dejá el puntero quieto sobre un digimon o sobre una etiqueta como “Salto de nivel” para ver un poco más de información.',
 });
 
 Object.assign(DICCIONARIO.en, {
@@ -88,12 +85,9 @@ Object.assign(DICCIONARIO.en, {
     'evo.et.lateral.ayuda': 'Evolution to the same level: an alternate form.',
     // Expandable text at the bottom of the window
     'evo.lore.titulo': 'ℹ️ Why are there odd evolutions?',
-    'evo.lore.1': 'Digimon doesn\'t have a single story: the anime, each game, the cards and the manga all have their own version of who evolves into whom. This list puts them all together (the data comes from digi-api.com), so it is not a perfect ladder.',
+    'evo.lore.1': 'Digimon doesn\'t have a single story: the anime, each game, the cards and the manga all have their own version of who evolves into whom. This list puts them all together, so it is not a perfect ladder.',
     'evo.lore.2': 'That is why you will see level jumps, forms of the same level and special evolutions: fusions (DNA or Jogress, two digimons joining), Armor and Hybrid. A tag tells you which case each one is.',
-    'evo.lore.3': 'The closest ones come first: up to {rango} of difference (and at most {tope}). The rest is under “Show the other”.',
-    'evo.lore.rango.uno': 'one level',
-    'evo.lore.rango': '{n} levels',
-    'evo.lore.4': 'The levels are this simulator\'s own: Armor counts as Adult and some very powerful digimons (like Magnamon) sit higher than in the API.',
+    'evo.lore.puntero': 'Rest the pointer on a digimon or on a tag like “Level jump” to see a bit more information.',
 });
 
 const TOPE_RAMAS = 5;    // cuántas ramas se ven de cada lado, como mucho, antes de tocar "ver las restantes"
@@ -401,8 +395,9 @@ function crearLoreEvo() {
     const titulo = document.createElement('summary');
     titulo.textContent = t('evo.lore.titulo');
 
-    const rango = RANGO_DE_NIVELES === 1 ? t('evo.lore.rango.uno') : t('evo.lore.rango', { n: RANGO_DE_NIVELES });
-    const parrafos = [t('evo.lore.1'), t('evo.lore.2'), t('evo.lore.3', { rango, tope: TOPE_RAMAS }), t('evo.lore.4')];
+    const parrafos = [t('evo.lore.1'), t('evo.lore.2')];
+    // Solo con mouse: el dato extra de cada digimon (qué es la etiqueta, la condición) está en el texto que aparece al dejar el puntero encima
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) parrafos.push(t('evo.lore.puntero'));
     const cuerpo = document.createElement('div');
     cuerpo.className = 'evo-lore-texto';
     for (const texto of parrafos) {

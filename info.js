@@ -328,7 +328,7 @@ function crearMiniNodoDigimon(carta) {
     return nodo;
 }
 
-function crearListaDeAtaques(habilidades) {
+function crearListaDeAtaques(habilidades, cartaActual) {
     const lista = document.createElement('ul');
     lista.className = 'ataques-lista';
 
@@ -380,25 +380,32 @@ function crearListaDeAtaques(habilidades) {
             detalle.append(sinDesc);
         }
 
-        const digimonsConAtaque = obtenerDigimonsConAtaque(habilidad.nombre);
-        if (digimonsConAtaque.length > 0) {
-            const seccion = document.createElement('div');
-            seccion.className = 'ataque-digimons-seccion';
+        // Los otros digimons que usan el mismo ataque (el dueño de la ventana no cuenta: sería repetirlo)
+        const otrosConAtaque = obtenerDigimonsConAtaque(habilidad.nombre).filter(c => c.dataset.id !== cartaActual?.dataset.id);
+        const seccion = document.createElement('div');
+        seccion.className = 'ataque-digimons-seccion';
 
+        if (otrosConAtaque.length === 0) {
+            // Solo lo usa este digimon: un aviso corto, sin imágenes
+            const soloEste = document.createElement('p');
+            soloEste.className = 'ataque-solo-este';
+            soloEste.textContent = t('ataques.soloEste');
+            seccion.append(soloEste);
+        } else {
             const titulo = document.createElement('h6');
             titulo.className = 'ataque-digimons-titulo';
-            titulo.textContent = t(digimonsConAtaque.length === 1 ? 'ataques.quienesUsan.uno' : 'ataques.quienesUsan', { n: digimonsConAtaque.length });
+            titulo.textContent = t(otrosConAtaque.length === 1 ? 'ataques.quienesUsan.uno' : 'ataques.quienesUsan', { n: otrosConAtaque.length });
 
             const grid = document.createElement('div');
             grid.className = 'ataque-digimons-grid';
 
-            for (const c of digimonsConAtaque) {
+            for (const c of otrosConAtaque) {
                 grid.append(crearMiniNodoDigimon(c));
             }
 
             seccion.append(titulo, grid);
-            detalle.append(seccion);
         }
+        detalle.append(seccion);
 
         boton.addEventListener('click', () => {
             const abrir = boton.getAttribute('aria-expanded') !== 'true';
@@ -423,7 +430,7 @@ function abrirAtaques(carta) {
     const ayuda = document.createElement('p');
     ayuda.className = 'ataques-ayuda';
     ayuda.textContent = t('ataques.ayuda');
-    cuerpo.append(ayuda, crearListaDeAtaques(habilidades));
+    cuerpo.append(ayuda, crearListaDeAtaques(habilidades, carta));
     const pie = document.createElement('p');
     pie.className = 'info-pie ataques-pie';
     pie.textContent = t('carta.idiomaOriginal'); // las descripciones de la API vienen en inglés (en inglés no hace falta avisar)
