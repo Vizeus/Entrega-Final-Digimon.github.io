@@ -415,6 +415,7 @@ function crearListaDeAtaques(habilidades, cartaActual) {
             cerrarTodos(boton);
             boton.setAttribute('aria-expanded', String(abrir));
             detalle.hidden = !abrir;
+            if (typeof sonidoFichero === 'function') sonidoFichero(abrir, FICHERO_DE_ATAQUES); // el fichero que se abre o se cierra (main.js): sin tecla
             if (abrir) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         });
 
