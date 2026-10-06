@@ -3948,6 +3948,121 @@ function sonidoZoom(abrir) {
     }
 }
 
+// ---- Sonido de fichero (papeles) ---------------------------------------------------------------------------------------
+// Dos sonidos muy sutiles de papeles que se abren y se vuelven a cerrar, como los de un fichero. Los usan:
+//   · los botones de cada ataque (se despliega o se recoge la descripción): suenan SOLOS, sin la tecla;
+//   · los desplegables de los filtros (Tipo, Nivel, Elemento) y de los menús "Info.": suenan después de la tecla del botón, más bajito.
+// Abrir: un golpecito de tapa, un barrido de aire que sube y un crujido de hojas. Cerrar: el barrido baja, el crujido se apaga y las hojas se apoyan.
+const FICHERO_DE_ATAQUES = 1;         // fuerza con que suena en los botones de los ataques (el sonido de referencia)
+const FICHERO_DE_DESPLEGABLES = 0.5;  // en los desplegables de los filtros y de "Info.": la mitad, más bajito aún
+const RETRASO_FICHERO_DESPLEGABLES = 0.001; // segundos: el fichero entra un milisegundo después del sonido del botón
+
+// Arma el sonido en el instante t. fuerza multiplica todos los volúmenes (1 = el de los ataques)
+function armarFichero(contexto, destino, t, abrir, fuerza = 1) {
+    const afinacion = 0.95 + Math.random() * 0.1; // cada vez suena apenas distinto, como un papel de verdad
+    const duracion = abrir ? 0.2 : 0.17;
+
+    // Una ráfaga corta de ruido filtrado: un crujido de hoja (o el golpecito de la tapa)
+    const rafaga = (retraso, frecuencia, q, pico, largo) => {
+        const inicio = t + retraso;
+        const fuente = contexto.createBufferSource();
+        fuente.buffer = obtenerRuido(contexto);
+        const filtro = contexto.createBiquadFilter();
+        filtro.type = 'bandpass';
+        filtro.frequency.value = frecuencia * afinacion;
+        filtro.Q.value = q;
+        const volumen = contexto.createGain();
+        volumen.gain.setValueAtTime(0.0001, inicio);
+        volumen.gain.exponentialRampToValueAtTime(Math.max(pico * fuerza, 0.0002), inicio + 0.002);
+        volumen.gain.exponentialRampToValueAtTime(0.0001, inicio + largo);
+        fuente.connect(filtro);
+        filtro.connect(volumen);
+        volumen.connect(destino);
+        fuente.start(inicio, Math.random() * 0.04);
+        fuente.stop(inicio + largo + 0.01);
+    };
+
+    // El aire que mueven las hojas: ruido filtrado que barre hacia arriba (al abrir) o hacia abajo (al cerrar)
+    const aire = contexto.createBufferSource();
+    aire.buffer = obtenerRuido(contexto);
+    aire.loop = true;
+    const agudos = contexto.createBiquadFilter();
+    agudos.type = 'highpass';
+    agudos.frequency.value = 600;
+    const banda = contexto.createBiquadFilter();
+    banda.type = 'bandpass';
+    banda.Q.value = 0.7;
+    banda.frequency.setValueAtTime((abrir ? 1500 : 3200) * afinacion, t);
+    banda.frequency.exponentialRampToValueAtTime((abrir ? 3400 : 1400) * afinacion, t + duracion);
+    const volumenAire = contexto.createGain();
+    volumenAire.gain.setValueAtTime(0.0001, t);
+    volumenAire.gain.exponentialRampToValueAtTime(Math.max((abrir ? 0.1 : 0.08) * fuerza, 0.0002), t + duracion * 0.3);
+    volumenAire.gain.exponentialRampToValueAtTime(0.0001, t + duracion);
+    aire.connect(agudos);
+    agudos.connect(banda);
+    banda.connect(volumenAire);
+    volumenAire.connect(destino);
+    aire.start(t);
+    aire.stop(t + duracion + 0.02);
+
+    // El crujido de las hojas: granitos de ruido con tonos distintos. Al abrir se reparten al principio; al cerrar, hacia el final
+    const granos = abrir ? 6 : 5;
+    for (let i = 0; i < granos; i++) {
+        const lugar = (i + Math.random() * 0.6) / granos; // 0..1 a lo largo del sonido
+        const retraso = abrir ? 0.015 + lugar * 0.13 : 0.02 + Math.pow(lugar, 0.6) * 0.1;
+        rafaga(retraso, 2200 + Math.random() * 4300, 2 + Math.random() * 2, 0.045 + Math.random() * 0.03, 0.008 + Math.random() * 0.012);
+    }
+
+    if (abrir) {
+        rafaga(0, 900, 1.2, 0.06, 0.02); // el golpecito de la tapa al levantarse
+    } else {
+        // Las hojas se apoyan: el mismo toquecito de papel de la carta, pero más bajito
+        rafaga(0.15, 1700, 1, 0.07, 0.03);
+        const cuerpo = contexto.createOscillator();
+        const volumenCuerpo = contexto.createGain();
+        cuerpo.type = 'sine';
+        cuerpo.frequency.setValueAtTime(170 * afinacion, t + 0.15);
+        cuerpo.frequency.exponentialRampToValueAtTime(105 * afinacion, t + 0.2);
+        volumenCuerpo.gain.setValueAtTime(0.0001, t + 0.15);
+        volumenCuerpo.gain.exponentialRampToValueAtTime(Math.max(0.022 * fuerza, 0.0002), t + 0.153);
+        volumenCuerpo.gain.exponentialRampToValueAtTime(0.0001, t + 0.21);
+        cuerpo.connect(volumenCuerpo);
+        volumenCuerpo.connect(destino);
+        cuerpo.start(t + 0.15);
+        cuerpo.stop(t + 0.22);
+    }
+}
+
+// Suena el fichero abriéndose (abrir = true) o cerrándose. retraso: segundos de espera desde ahora
+function sonidoFichero(abrir = true, fuerza = FICHERO_DE_ATAQUES, retraso = 0) {
+    try {
+        const contexto = obtenerContextoAudio();
+        armarFichero(contexto, destinoDeAudio(contexto), contexto.currentTime + retraso, abrir, fuerza);
+    } catch (error) {
+        // Si el navegador no permite audio, simplemente no suena
+    }
+}
+
+// Los desplegables de los filtros y de los menús "Info." marcan con la clase "abierto" que están desplegados. Se mira ese cambio en vez de
+// los clics: así suena igual cuando se abren con el botón, con el teclado, o cuando se cierran con un toque afuera, con Esc, al elegir una
+// opción o al cerrarse el menú ☰ del celular. Solo cuenta el cambio de abierto a cerrado (o al revés), no cualquier otra clase que se toque.
+function activarSonidoDeDesplegables() {
+    const estaba = new WeakMap(); // si cada desplegable estaba abierto la última vez que se miró
+    const observador = new MutationObserver((cambios) => {
+        for (const cambio of cambios) {
+            const desplegable = cambio.target;
+            const abierto = desplegable.classList.contains('abierto');
+            if (estaba.get(desplegable) === abierto) continue;
+            estaba.set(desplegable, abierto);
+            sonidoFichero(abierto, FICHERO_DE_DESPLEGABLES, RETRASO_FICHERO_DESPLEGABLES);
+        }
+    });
+    document.querySelectorAll('.f-grupo, .menu-info').forEach((desplegable) => {
+        estaba.set(desplegable, desplegable.classList.contains('abierto'));
+        observador.observe(desplegable, { attributes: true, attributeFilter: ['class'] });
+    });
+}
+
 // Sonido de tecla al tocar los botones de la barra de arriba, los menús de información y los filtros. Los botones "⚔️ Ataques" y
 // "🧬 Evolución" del reverso de las cartas suenan igual, pero con la tecla de las cartas (un poco más bajita y más aguda).
 // Suena al apretar (se siente inmediato y no lo corta el reload del botón de niveles) y, si se llegó a apretar, también al soltar.
@@ -3985,6 +4100,8 @@ function activarSonidoBotones() {
         if (boton.id === 'inclinacion-invertida') return TECLA_SIN_AVISO;
         // El botón de hacer flip de la carta no debe hacer sonido
         if (boton.closest('.c-flip')) return null;
+        // Los botones de cada ataque (desplegar la descripción) no suenan a tecla: suena el fichero (info.js)
+        if (boton.classList.contains('ataque-boton')) return null;
         // Todos los botones de la carta (los de info: gema, nivel, tipo, elemento; y los de ataque y evolución):
         // suenan todos con la tecla de cartas (un toque más agudo y bajo)
         if (boton.closest('.c-gema, .c-nivel, .c-tipo, .c-elem, .c-ataques, .c-evo, .c-botones') || boton.closest('#listado-digimons li')) {
@@ -4169,6 +4286,7 @@ gestionarVisitasYFlechasMovil();
 activarDesbloqueoAudio();
 activarVoltearConDedo();
 activarSonidoBotones();
+activarSonidoDeDesplegables();
 activarBotonDeAudio();
 activarVibracion();
 
