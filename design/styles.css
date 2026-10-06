@@ -1584,6 +1584,48 @@ body:has(.swal2-container) #avisos-ayuda {
     translate: 0 0;
   }
 }
+@keyframes combate-entra {
+  from {
+    opacity: 0;
+    transform: scale3d(0.3, 0.3, 0.3);
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes combate-sale {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.combate-entra,
+.combate-sale {
+  animation-duration: 0.5s;
+  animation-fill-mode: both;
+}
+
+.combate-entra {
+  animation-name: combate-entra;
+}
+
+.combate-sale {
+  animation-name: combate-sale;
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .combate-entra,
+  .combate-sale {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  .combate-sale {
+    opacity: 0;
+  }
+}
 .combate-contenedor {
   overscroll-behavior: contain;
 }

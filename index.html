@@ -6,21 +6,35 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Digimon</title>
 
-        <link rel="shortcut icon" href="./img/favicon.ico" type="image/png" />
+        <meta
+            name="description"
+            content="Simulador de combates Digimon: elegí dos cartas entre más de 1400 digimons y mirá quién gana según su tipo, su nivel y su elemento."
+        />
+        <link rel="icon" href="./img/favicon.ico" type="image/x-icon" />
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <!-- SweetAlert2 (las ventanas emergentes). La versión va fija: con "@11" a secas entraba sola cualquier versión nueva, que podía
+             cambiar cómo se ven o se comportan las ventanas sin que nadie tocara la página. "integrity" es la huella del archivo: si el
+             archivo que llega no es exactamente ese, el navegador no lo usa. Para actualizarla: cambiar el número y la huella juntos. -->
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.all.min.js"
+            integrity="sha384-nLoOnA/BDh8A/jxqtckg4DumuCGOBYUnNJLZdQz/zfYNp3wcjGSoWTAzgko06G/2"
+            crossorigin="anonymous"
+        ></script>
 
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-        <!-- Enlaces a los scripts. El orden importa: primero los idiomas (i18n.js), después la página (main.js) y por último
-         los filtros y las ventanas de información, que usan lo que definen los anteriores -->
-        <script defer src="./i18n.js"></script>
-        <script defer src="./nombres.js"></script>
-        <script defer src="./main.js"></script>
-        <script defer src="./filtros.js"></script>
-        <script defer src="./info.js"></script>
-        <script defer src="./evolucion.js"></script>
-        <script defer src="./baile.js"></script>
+        <!-- Los scripts de la página. "defer": se bajan mientras se dibuja la página y corren en este orden cuando terminó de armarse.
+             El orden importa: primero los idiomas (i18n.js), después la página (main.js) y por último los filtros, las ventanas de
+             información, la barra del celular, la evolución y el baile, que usan lo que definen los anteriores.
+             El "?v=" es la versión: al cambiarla, los navegadores bajan los archivos nuevos en vez de usar los que tenían guardados
+             (el caché). Se cambia sola con "npm run nueva-version" antes de subir cambios a GitHub. -->
+        <script defer src="./i18n.js?v=20261006-1942"></script>
+        <script defer src="./nombres.js?v=20261006-1942"></script>
+        <script defer src="./main.js?v=20261006-1942"></script>
+        <script defer src="./filtros.js?v=20261006-1942"></script>
+        <script defer src="./info.js?v=20261006-1942"></script>
+        <script defer src="./barra.js?v=20261006-1942"></script>
+        <script defer src="./evolucion.js?v=20261006-1942"></script>
+        <script defer src="./baile.js?v=20261006-1942"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,7 +45,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261006-1942" />
     </head>
 
     <body>

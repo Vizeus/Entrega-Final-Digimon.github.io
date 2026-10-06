@@ -4732,8 +4732,8 @@ const CARTEL_COMBATE = {
         confirmButton: 'combate-boton',
         closeButton: 'combate-cerrar',
     },
-    showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
-    hideClass: { popup: 'animate__animated animate__fadeOut animate__faster' },
+    showClass: { popup: 'combate-entra' }, // animaciones de entrada y salida (en el SCSS)
+    hideClass: { popup: 'combate-sale' },
     backdrop: 'rgba(6, 28, 90, 0.6)',
 };
 
