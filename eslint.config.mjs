@@ -5,7 +5,7 @@ import globals from 'globals';
 import { readFileSync } from 'node:fs';
 
 // Los scripts de la página (en el orden en que los carga el index.html)
-const SCRIPTS = ['i18n.js', 'nombres.js', 'main.js', 'filtros.js', 'info.js', 'barra.js', 'evolucion.js', 'baile.js'];
+const SCRIPTS = ['util.js', 'datos.js', 'i18n.js', 'nombres.js', 'main.js', 'filtros.js', 'info.js', 'barra.js', 'evolucion.js', 'baile.js'];
 
 // Hoy los scripts son "clásicos" (no módulos): lo que uno declara arriba de todo (funciones, const, let) lo pueden usar los demás.
 // ESLint revisa cada archivo por separado y no lo sabe, así que se le avisa cuáles son esos nombres compartidos: se leen de los

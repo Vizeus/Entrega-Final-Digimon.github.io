@@ -29,9 +29,6 @@ Object.assign(DICCIONARIO.es, {
     'evo.menos': 'Ver menos',
     'evo.volver': '← Volver',
     'evo.irCarta': '📍 Ir a la carta',
-    'evo.cargando': 'Buscando evoluciones…',
-    'evo.error': 'No se pudo cargar la línea evolutiva.',
-    'evo.reintentar': 'Reintentar',
     'evo.condicion': 'Condición (en inglés): {c}',
     'evo.pie': 'Tocá uno para ver su propia línea.',
     // Etiquetas de las ramas que no siguen la "escalera" normal (y lo que dicen al pasar el mouse)
@@ -69,9 +66,6 @@ Object.assign(DICCIONARIO.en, {
     'evo.menos': 'Show less',
     'evo.volver': '← Back',
     'evo.irCarta': '📍 Go to the card',
-    'evo.cargando': 'Looking up evolutions…',
-    'evo.error': 'The evolution line could not be loaded.',
-    'evo.reintentar': 'Retry',
     'evo.condicion': 'Condition: {c}',
     'evo.pie': 'Tap one to see its own line.',
     // Tags for the branches that don't follow the normal "ladder" (and what they say on hover)
@@ -100,34 +94,11 @@ const TOPE_RAMAS = 5; // cuántas ramas se ven de cada lado, como mucho, antes d
 const RANGO_DE_NIVELES = 1;
 // Las fusiones (DNA, Jogress...) la API no las marca como tales: se reconocen por el texto de la condición (en inglés)
 const CONDICION_DE_FUSION = /\b(dna|jogress|fusion|fuse[ds]?|biomerge|matrix|mix|combine[ds]?)\b/i;
-const URL_DETALLE_EVOLUCION = 'https://digi-api.com/api/v1/digimon/';
 
 // ---- Datos ---------------------------------------------------------------------------------------------------------
-const cacheEvolucion = new Map(); // id → promesa con { previas: [{ id, condicion }], siguientes: [{ id, condicion }] }
-
-function cartaPorId(id) {
-    return listaDigimons.querySelector(`:scope > li[data-id="${id}"]`);
-}
-
-function pedirEvolucion(id) {
-    const guardada = cartaPorId(id)?.datosDorso?.evo; // si main.js ya la trajo con la carta, no hace falta pedirla
-    if (guardada) return Promise.resolve(guardada);
-
-    if (!cacheEvolucion.has(id)) {
-        const promesa = fetch(URL_DETALLE_EVOLUCION + id)
-            .then(respuesta => {
-                if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
-                return respuesta.json();
-            })
-            .then(datos => {
-                const simplificar = lista => (lista || []).map(item => ({ id: item.id, condicion: item.condition || '' }));
-                return { previas: simplificar(datos.priorEvolutions), siguientes: simplificar(datos.nextEvolutions) };
-            });
-        promesa.catch(() => cacheEvolucion.delete(id)); // si falló, la próxima vez se vuelve a intentar
-        cacheEvolucion.set(id, promesa);
-    }
-    return cacheEvolucion.get(id);
-}
+// Las evoluciones de cada digimon ya vienen con su carta: main.js las trae junto con el resto de los datos (todas las cartas las
+// tienen, también las propias), así que acá no se pide nada a la API. Forma: { previas: [{ id, condicion }], siguientes: [...] }
+const evolucionesDe = carta => carta.datosDorso.evo;
 
 // ---- Qué ramas se muestran -----------------------------------------------------------------------------------------
 const nivelDe = carta => (carta.dataset.nivel === undefined ? undefined : Number(carta.dataset.nivel));
@@ -384,7 +355,7 @@ function crearFlechaVertical() {
 }
 
 // ---- La ventana ----------------------------------------------------------------------------------------------------
-let estadoEvo = null; // { historial: [ids de los digimons por los que se fue pasando], marca: número de dibujo vigente }
+let estadoEvo = null; // { historial: [ids de los digimons por los que se fue pasando] }
 
 const contenedorEvo = () => document.querySelector('.swal2-html-container .evo');
 
@@ -413,7 +384,7 @@ function crearLoreEvo() {
 
     const parrafos = [t('evo.lore.1'), t('evo.lore.2')];
     // Solo con mouse: el dato extra de cada digimon (qué es la etiqueta, la condición) está en el texto que aparece al dejar el puntero encima
-    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) parrafos.push(t('evo.lore.puntero'));
+    if (CON_MOUSE.matches) parrafos.push(t('evo.lore.puntero'));
     const cuerpo = document.createElement('div');
     cuerpo.className = 'evo-lore-texto';
     for (const texto of parrafos) {
@@ -433,39 +404,14 @@ function crearPieEvo() {
     return pie;
 }
 
-async function pintarEvolucion() {
+function pintarEvolucion() {
     const contenedor = contenedorEvo();
     if (!contenedor || !estadoEvo) return;
 
-    const marca = ++estadoEvo.marca;
     const id = estadoEvo.historial[estadoEvo.historial.length - 1];
     const carta = cartaPorId(id);
     const barra = estadoEvo.historial.length > 1 ? [crearBarraVolver()] : [];
-
-    // Primero se ve el digimon al que pertenece la línea; las ramas aparecen cuando llegan los datos
-    const arbolCargando = document.createElement('div');
-    arbolCargando.className = 'evo-arbol';
-    arbolCargando.append(crearCentro(carta));
-    const aviso = document.createElement('p');
-    aviso.className = 'evo-aviso';
-    aviso.textContent = t('evo.cargando');
-    contenedor.replaceChildren(...barra, arbolCargando, aviso);
-
-    let datos;
-    try {
-        datos = await pedirEvolucion(id);
-    } catch (error) {
-        if (!estadoEvo || marca !== estadoEvo.marca) return;
-        aviso.textContent = t('evo.error');
-        aviso.classList.add('evo-error');
-        const reintentar = document.createElement('button');
-        reintentar.type = 'button';
-        reintentar.className = 'evo-reintentar';
-        reintentar.textContent = t('evo.reintentar');
-        aviso.append(' ', reintentar);
-        return;
-    }
-    if (!estadoEvo || marca !== estadoEvo.marca) return; // mientras tanto se cerró o se pasó a otro digimon
+    const datos = evolucionesDe(carta);
 
     const previas = armarRamas(datos.previas, carta, -1);
     if (previas.length === 0 && carta.dataset.nivelApi === 'Baby I') previas.push({ huevo: true, carta });
@@ -582,9 +528,6 @@ function alTocarEnEvolucion(evento) {
         estadoEvo.historial.pop();
         return pintarEvolucion();
     }
-    if (objetivo.closest('.evo-reintentar')) {
-        return pintarEvolucion();
-    }
     const ir = objetivo.closest('.evo-ir');
     if (ir) {
         return irALaCarta(ir.dataset.ir);
@@ -599,7 +542,7 @@ function alTocarEnEvolucion(evento) {
 }
 
 function abrirEvolucion(carta) {
-    estadoEvo = { historial: [Number(carta.dataset.id)], marca: 0, loreAbierto: false };
+    estadoEvo = { historial: [Number(carta.dataset.id)], loreAbierto: false };
     Swal.fire({
         title: t('evo.titulo'),
         html: '<div class="evo"></div>',

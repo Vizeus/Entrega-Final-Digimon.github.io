@@ -195,7 +195,7 @@ function sacarDeBailar(carta, rapido) {
     const terminar = () => {
         if (bailarinas.has(carta)) return; // ya volvió a bailar: la clase sigue haciendo falta
         carta.classList.remove('bailando');
-        document.dispatchEvent(new CustomEvent('baile-terminado')); // la inclinación retoma si el mouse sigue encima
+        emitir('baile-terminado'); // la inclinación retoma si el mouse sigue encima
     };
     if (!pose || pose === 'none' || !carta.isConnected) {
         terminar();
@@ -286,7 +286,7 @@ function cartasQueSeVen() {
 // El reloj: cuánto lleva todo quieto, y qué baile toca
 // -----------------------------------------------------------------------------------------------------------------
 function activarBaileDeCartas() {
-    if (reducirMovimiento || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return; // solo computadora
+    if (reducirMovimiento || !CON_MOUSE.matches) return; // solo computadora
 
     // Cada baile: "desde" es desde cuándo cuenta su espera, "fin" cuándo termina el que está en marcha (0: no hay uno) y "cartas" las que bailan
     const bailes = {
@@ -307,7 +307,7 @@ function activarBaileDeCartas() {
         const baile = bailes[nombre];
         baile.cartas = cartas;
         baile.fin = ahora + baile.duracion;
-        document.dispatchEvent(new CustomEvent('baile-empezo')); // la inclinación suelta la carta que seguía al mouse
+        emitir('baile-empezo'); // la inclinación suelta la carta que seguía al mouse
     };
 
     // Cualquier actividad corta todos los bailes y empieza de nuevo la espera

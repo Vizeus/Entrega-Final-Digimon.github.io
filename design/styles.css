@@ -3793,8 +3793,7 @@ body:has(.swal2-container) #avisos-ayuda {
   margin: 0 0 4px;
 }
 
-.evo-volver,
-.evo-reintentar {
+.evo-volver {
   padding: 4px 11px;
   font: 600 12px var(--f-boton), sans-serif;
   color: #24476a;
@@ -3804,8 +3803,7 @@ body:has(.swal2-container) #avisos-ayuda {
   background: linear-gradient(180deg, #ffffff, #e3eef8);
 }
 
-.evo-volver:hover,
-.evo-reintentar:hover {
+.evo-volver:hover {
   background: linear-gradient(180deg, #ffffff, #d2e6f6);
 }
 
@@ -3817,13 +3815,6 @@ body:has(.swal2-container) #avisos-ayuda {
   gap: var(--g);
   padding: 30px 6px 46px;
   overflow-x: auto;
-}
-
-.evo-aviso {
-  margin: 0 0 10px;
-  font-size: 0.85em;
-  color: #5b6b7b;
-  text-align: center;
 }
 
 .evo-flecha-v {

@@ -4,6 +4,11 @@ const urlBase = 'https://digi-api.com/api/v1/digimon';
 // Seleccionar el elemento <ul> (unordered list) donde agregaremos los digimons
 const listaDigimons = document.getElementById('listado-digimons');
 
+// Las cartas que ya están en la página, por su id (el de la API): buscar una es instantáneo, sin recorrer la lista.
+// Cada carta se anota cuando entra a la página (colocarCartas); las que todavía esperan su turno no están.
+const cartasPorId = new Map();
+const cartaPorId = id => cartasPorId.get(String(id));
+
 // Seleccionar la barra de progreso
 const barraProgreso = document.getElementById('carga');
 
@@ -23,41 +28,8 @@ const totalDigimons = 1488; // todos los que tiene la API (digi-api.com)
 const DIGIMONS_POR_PAGINA = 100;
 const totalPaginas = Math.ceil(totalDigimons / DIGIMONS_POR_PAGINA);
 
-// Tipo (atributo) de cada digimon: la API lo trae en inglés y por dentro lo guardamos con estos nombres en español.
-// Lo que se ve en pantalla ("Datos" o "Data") lo decide i18n.js según el idioma, ver nombreTipo().
-const tipoDeLaApi = {
-    'Data': 'Datos',
-    'Vaccine': 'Vacuna',
-    'Virus': 'Virus',
-    'Free': 'Libre',
-    'Variable': 'Variable',
-    'Unknown': 'Desconocido',
-};
-
-// Emoji de cada tipo para mostrar en la carta, en los filtros y en los menús
-const EMOJIS_TIPO = {
-    'Datos': '🔢',
-    'Vacuna': '💉',
-    'Virus': '👾',
-    'Libre': '🕊️',
-    'Variable': '🔀',
-    'Desconocido': '❓',
-};
-
-// Mapeo de niveles para el cambio de sistema de clasificación de niveles
-const nivelesAlternativos = {
-    'Baby I': 'Fresh/Slime',
-    'Baby II': 'In-Training',
-    'Child': 'Rookie',
-    'Adult': 'Champion',
-    'Perfect': 'Ultimate ',
-    'Ultimate': 'Mega',
-    'Super Ultimate': 'Ultra', // nivel 7 (inventado para este simulador): por encima del Mega
-    'Absolute': 'Apex', // nivel 8 (inventado para este simulador): lo más alto
-};
-
 // Qué sistema de clasificación de niveles se está mostrando (lo guarda el botón de la banderita)
-let clasificacionAlternativa = sessionStorage.getItem('clasificacionAlternativa') === 'true';
+let clasificacionAlternativa = leerTexto('clasificacionAlternativa', 'sesion') === 'true';
 
 // Nombre de un nivel para mostrar, según el sistema de clasificación vigente.
 // Recibe el nombre original de la API ('Adult'); si no tiene nivel, es 'Desconocido' y se traduce según el idioma.
@@ -82,20 +54,6 @@ const PESO_TIPO = 0.2;
 const PESO_NIVEL = 0.15;
 const PESO_ELEMENTO = 0.1;
 
-// Fuerza de cada nivel, usando el nombre original de la API (así no importa qué sistema de clasificación se muestre).
-// Son 8 niveles, del 1 al 8, sin saltos. (Los "Armor" y los "Hybrid" que trae la API no son niveles de acá: cada uno de esos
-// digimons queda en uno de estos 8 y la carta lleva una marca; ver MARCAS_DE_NIVEL más abajo.)
-const numeracionNiveles = {
-    'Baby I': 1,
-    'Baby II': 2,
-    'Child': 3,
-    'Adult': 4,
-    'Perfect': 5,
-    'Ultimate': 6,
-    'Super Ultimate': 7,
-    'Absolute': 8,
-};
-
 // Poder en combate: del 1 al 6 es el mismo número que se ve en la carta, pero los niveles 7 y 8 rompen la escala.
 // Del 6 al 7 y del 7 al 8 hay 3 niveles de distancia (6 → 9 → 12): un Mega apenas le puede hacer cosquillas a un Ultra
 // (lo mismo que un Ultra a un Apex), y entre un Mega y un Apex la diferencia es tan grande que no tiene forma de ganar.
@@ -105,149 +63,6 @@ const poderEnCombate = nivel => PODER_EN_COMBATE[nivel] ?? nivel;
 // Si uno de los dos es nivel 7 u 8 y el otro está muy por debajo, el tipo y el elemento valen cada vez menos:
 // hasta 1,5 niveles de diferencia valen todo; más allá valen 1,5 ÷ diferencia (con 3 niveles de diferencia, la mitad).
 const ALCANCE_VENTAJAS = 1.5;
-
-// Digimons que la API lista con dos niveles (el Perfect y el Ultimate): el simulador toma siempre el primero, que acá es el más
-// bajo, y por su lore les corresponde el más alto. Se corrigen a mano. La clave es el ID de la API.
-const NIVELES_CORREGIDOS = {
-    1064: 'Ultimate', // Omega Shoutmon: recibió el poder de Omegamon y está al nivel de las formas Mega de Shoutmon (X7, DX, EX6)
-    1278: 'Ultimate', // Omega Shoutmon (X-Antibody)
-};
-
-// Niveles inventados para este simulador. La API pone a todos estos digimons como "Ultimate" (el Mega), pero por su lore
-// están por encima: acá se los sube de nivel. La clave es el ID de la API; el nombre va en el comentario.
-// El 7 son Reyes Reales, Soberanos, Lores Demonio y otros seres excepcionales; el 8 es lo más alto de todo.
-// (Los X-Antibody y algunos más solo aparecen cuando se carga la API completa.)
-const ASCENSOS = {
-    // Nivel 7 (Super Ultimate) · Reyes Reales
-    183: 'Super Ultimate', // Omegamon
-    636: 'Super Ultimate', // Alphamon
-    637: 'Super Ultimate', // Alphamon (Ouryuken)
-    434: 'Super Ultimate', // Dukemon
-    435: 'Super Ultimate', // Dukemon (Crimson Mode)
-    658: 'Super Ultimate', // Dukemon (X-Antibody)
-    430: 'Super Ultimate', // Chaos Dukemon (forma oscura de Dukemon)
-    543: 'Super Ultimate', // Gallantmon Chaos Mode (el mismo Chaos Dukemon, con su nombre en inglés)
-    545: 'Super Ultimate', // Dynasmon
-    659: 'Super Ultimate', // Dynasmon (X-Antibody)
-    760: 'Super Ultimate', // Craniummon
-    1228: 'Super Ultimate', // Craniummon (X-Antibody)
-    776: 'Super Ultimate', // Sleipmon
-    1237: 'Super Ultimate', // Sleipmon (X-Antibody)
-    916: 'Super Ultimate', // Sleipmon (Burst Mode)
-    315: 'Super Ultimate', // Magnamon
-    588: 'Super Ultimate', // Ulforce V-dramon
-    700: 'Super Ultimate', // Ulforce V-dramon (X-Antibody)
-    699: 'Super Ultimate', // Ulforce V-dramon Future Mode
-    554: 'Super Ultimate', // Lord Knightmon
-    1233: 'Super Ultimate', // Lord Knightmon (X-Antibody)
-    895: 'Super Ultimate', // Examon
-    1262: 'Super Ultimate', // Examon (X-Antibody)
-    1135: 'Super Ultimate', // Gankoomon
-    1263: 'Super Ultimate', // Gankoomon (X-Antibody)
-    892: 'Super Ultimate', // Duftmon
-    893: 'Super Ultimate', // Duftmon (X-Antibody)
-    894: 'Super Ultimate', // Duftmon (Leopard Mode)
-    1187: 'Super Ultimate', // JESmon
-    1250: 'Super Ultimate', // JESmon (X-Antibody)
-    1295: 'Super Ultimate', // JESmon GX
-    961: 'Super Ultimate', // Omegamon Zwart
-    686: 'Super Ultimate', // Omegamon (X-Antibody)
-    1196: 'Super Ultimate', // Omegamon Alter-B
-    1197: 'Super Ultimate', // Omegamon Zwart Defeat
-    1209: 'Super Ultimate', // Omegamon Alter-S
-    1235: 'Super Ultimate', // Omegamon (Merciful Mode)
-    // Nivel 7 · Los 5 Soberanos
-    272: 'Super Ultimate', // Baihumon
-    361: 'Super Ultimate', // Zhuqiaomon
-    357: 'Super Ultimate', // Xuanwumon
-    374: 'Super Ultimate', // Qinglongmon
-    620: 'Super Ultimate', // Huanglongmon
-    1428: 'Super Ultimate', // Huanglongmon (Ruin Mode)
-    // Nivel 7 · Los 7 Lores Demonio
-    667: 'Super Ultimate', // Leviamon
-    1264: 'Super Ultimate', // Leviamon (X-Antibody)
-    640: 'Super Ultimate', // Barbamon
-    1254: 'Super Ultimate', // Barbamon (X-Antibody)
-    739: 'Super Ultimate', // Belphemon (Rage Mode)
-    1255: 'Super Ultimate', // Belphemon (X-Antibody)
-    422: 'Super Ultimate', // Beelzebumon (Blast Mode)
-    753: 'Super Ultimate', // Beelzebumon (X-Antibody)
-    154: 'Super Ultimate', // Demon
-    1261: 'Super Ultimate', // Demon (X-Antibody)
-    648: 'Super Ultimate', // Demon Super Ultimate
-    639: 'Super Ultimate', // Arkadimon Super Ultimate (su forma final se llama así: es el nivel que está por encima del Mega)
-    552: 'Super Ultimate', // Lilithmon
-    1265: 'Super Ultimate', // Lilithmon (X-Antibody)
-    556: 'Super Ultimate', // Lucemon (Falldown Mode): el más fuerte de los 7 Lores Demonio
-    1267: 'Super Ultimate', // Lucemon (X-Antibody)
-    // Nivel 7 · Excepcionales
-    576: 'Super Ultimate', // Susanoomon
-    132: 'Super Ultimate', // Apocalymon
-    384: 'Super Ultimate', // Seraphimon
-    445: 'Super Ultimate', // Ofanimon
-    1275: 'Super Ultimate', // Ofanimon (X-Antibody)
-    1061: 'Super Ultimate', // Ofanimon (Falldown Mode)
-    1276: 'Super Ultimate', // Ofanimon (Falldown Mode, X-Antibody)
-    287: 'Super Ultimate', // Cherubimon (Vice): el tercero de los Tres Arcángeles, igual que Seraphimon y Ofanimon
-    288: 'Super Ultimate', // Cherubimon (Virtue)
-    1256: 'Super Ultimate', // Cherubimon (Vice) (X-Antibody)
-    1257: 'Super Ultimate', // Cherubimon (Virtue) (X-Antibody)
-    904: 'Super Ultimate', // Ogudomon (la versión X-Antibody queda en el nivel 8)
-    // Nivel 8 (Absolute)
-    457: 'Absolute', // Zeed Millenniumon
-    1277: 'Absolute', // Ogudomon (X-Antibody)
-    557: 'Absolute', // Lucemon (Satan Mode)
-};
-
-// ARMOR e HYBRID: la API los trae como niveles propios, pero son solo 34 digimons (4 Armor y 30 Hybrid) y ensuciaban el filtro y
-// la info de niveles. Acá no son un nivel: cada uno se queda en uno de los 8 normales y la carta lleva un circulito (A o H) en la
-// esquina, como el de la X-Antibody, que al pasar el mouse dice "Armor" o "Hybrid".
-//   · Armor (Digimon Adventure 02): los 4 tienen el poder de un Adult.
-//   · Hybrid (Digimon Frontier): según la forma van de Adult a Ultimate. Las formas humanas son Adult, las bestia son Perfect y
-//     las fusiones (y las formas supremas) son Ultimate. Se asignaron a mano, uno por uno, mirando Wikimon y la Digimon Wiki.
-//     La clave es el nombre de la API sin tildes, mayúsculas ni símbolos (claveDeNombre, de nombres.js: 'Löwemon' → 'lowemon', 'Jet Silphymon' → 'jetsilphymon').
-const NIVEL_DE_LOS_HYBRID = {
-    // Formas humanas (los Human Spirits) → Adult
-    agunimon: 'Adult', // fuego
-    kazemon: 'Adult', // viento
-    lobomon: 'Adult', // luz
-    lanamon: 'Adult', // agua (Ranamon)
-    arbormon: 'Adult', // madera
-    blitzmon: 'Adult', // trueno
-    chackmon: 'Adult', // hielo
-    mercuremon: 'Adult', // acero
-    grumblemon: 'Adult', // tierra
-    duskmon: 'Adult', // oscuridad (el poder de Duskmon es de fusión, pero todos lo ponen en la clase Adult)
-    lowemon: 'Adult', // oscuridad (Löwemon): el techo de la clase Adult
-    // Formas bestia (los Beast Spirits) → Perfect
-    burninggreymon: 'Perfect', // fuego (Vritramon)
-    shutumon: 'Perfect', // viento
-    kendogarurumon: 'Perfect', // luz (Garummon)
-    calamaramon: 'Perfect', // agua
-    petaldramon: 'Perfect', // madera
-    bolgmon: 'Perfect', // trueno
-    blizzarmon: 'Perfect', // hielo
-    sephirothmon: 'Perfect', // acero
-    gigasmon: 'Perfect', // tierra
-    velgrmon: 'Perfect', // oscuridad (la bestia corrupta de Duskmon)
-    kaiserleomon: 'Perfect', // oscuridad (la bestia purificada de Löwemon)
-    // Fusiones y formas supremas → Ultimate
-    aldamon: 'Ultimate', // fusión de fuego
-    beowolfmon: 'Ultimate', // fusión de luz
-    daipenmon: 'Ultimate', // fusión de hielo
-    raihimon: 'Ultimate', // fusión de oscuridad (Löwemon + Kaiser Leomon)
-    rhinokabuterimon: 'Ultimate', // fusión de trueno
-    jetsilphymon: 'Ultimate', // fusión de viento
-    magnagarurumon: 'Ultimate', // forma suprema de luz
-    emperorgreymon: 'Ultimate', // forma suprema de fuego
-};
-const NIVEL_HYBRID_SIN_DATO = 'Perfect'; // para un Hybrid que no esté en la lista (si la API algún día suma uno): el punto medio
-
-// Las marcas de la carta: qué letra lleva el círculo y cómo se llama (es lo que dice al pasar el mouse)
-const MARCAS_DE_NIVEL = {
-    'Armor': { letra: 'A', nombre: 'Armor' },
-    'Hybrid': { letra: 'H', nombre: 'Hybrid' },
-};
 
 // Pasa el nivel que trae la API al nivel con el que se juega. Devuelve { nivel, marca }: la marca ('Armor' o 'Hybrid') solo
 // existe si el digimon venía con ese nivel.
@@ -260,114 +75,6 @@ function resolverNivelDeLaApi(nombre, nivelApi) {
     }
     return { nivel: nivelApi };
 }
-
-// Cartas que no están en la API: las agrega el simulador (después de las de la API). Su ID es alto para no chocar con los de ella.
-const CARTAS_PROPIAS = [
-    {
-        id: 9001,
-        etiquetaId: '★',
-        nombre: 'Yggdrasil',
-        imagen: './img/yggdrasil.webp',
-        tipo: 'Datos',
-        elemento: 'Planta',
-        nivelOriginal: 'Absolute',
-        datosDorso: {
-            especie: 'Host Computer',
-            campos: '–',
-            estreno: '–',
-            habilidades: [],
-            descripcion:
-                'The host computer that rules over the Digital World, treated in many adaptations as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
-            evo: { previas: [], siguientes: [] },
-        },
-    },
-    {
-        id: 9002,
-        etiquetaId: '★',
-        nombre: 'Homeostasis (Kami)',
-        imagen: './img/homeostasis.webp',
-        tipo: 'Vacuna',
-        elemento: 'Luz',
-        nivelOriginal: 'Absolute',
-        datosDorso: {
-            especie: 'Security System',
-            campos: '–',
-            estreno: '–',
-            habilidades: [],
-            descripcion:
-                'The security system of the Digital World, which keeps the balance between good and evil. In some stories it takes the place of Yggdrasil as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
-            evo: { previas: [], siguientes: [] },
-        },
-    },
-];
-
-// Orden en que se muestran los niveles en los menús y en los filtros (el último, 'Desconocido', es el que no tiene nivel)
-const ORDEN_NIVELES = ['Baby I', 'Baby II', 'Child', 'Adult', 'Perfect', 'Ultimate', 'Super Ultimate', 'Absolute', 'Desconocido'];
-
-// Triángulo de tipos: cada tipo es fuerte contra el que tiene en su lista
-const TIPO_FUERTE_CONTRA = {
-    'Vacuna': ['Virus'],
-    'Virus': ['Datos'],
-    'Datos': ['Vacuna'],
-};
-
-// Elementos: cada elemento es fuerte contra los que tiene en su lista.
-// Si dos elementos se tienen ventaja mutuamente (Luz y Oscuridad), se cancelan.
-// Tipo Libre, Variable, Desconocido y elemento Neutro no dan ni quitan nada.
-const ELEMENTO_FUERTE_CONTRA = {
-    'Agua': ['Fuego', 'Tierra'],
-    'Fuego': ['Planta', 'Hielo', 'Oscuridad'],
-    'Hielo': ['Planta', 'Viento', 'Agua'],
-    'Luz': ['Oscuridad', 'Veneno'],
-    'Metal': ['Hielo', 'Luz'],
-    'Oscuridad': ['Luz', 'Metal'],
-    'Planta': ['Agua', 'Tierra'],
-    'Rayo': ['Agua'],
-    'Tierra': ['Rayo', 'Fuego', 'Veneno'],
-    'Veneno': ['Agua'],
-    'Viento': ['Tierra'],
-};
-
-// La API no trae el elemento, así que lo deducimos buscando palabras clave en las habilidades del digimon.
-// El elemento con más coincidencias gana; si hay empate o ninguna coincidencia, es Neutro.
-const REGLAS_ELEMENTO = {
-    'Fuego': /\b(fire|flame|flames|flaming|blaze|blazing|burn|burning|inferno|heat|lava|magma|scorch|ember)\b/g,
-    'Agua': /\b(water|aqua|bubble|bubbles|wave|ocean|torrent|tide|splash|hydro|rain|sea)\b/g,
-    'Planta': /\b(plant|leaf|leaves|vine|vines|thorn|thorns|flower|petal|petals|seed|seeds|tree|forest|pollen|rose|spore|spores)\b/g,
-    'Hielo': /\b(ice|icy|frost|freeze|freezing|frozen|snow|blizzard|cold|glacier)\b/g,
-    'Rayo': /\b(thunder|lightning|electric|electricity|bolt|shock|spark|volt|plasma)\b/g,
-    'Viento': /\b(wind|tornado|gale|cyclone|hurricane|storm|tempest|whirlwind|air|breeze)\b/g,
-    'Tierra': /\b(earth|rock|rocks|stone|sand|quake|earthquake|ground|mud|boulder)\b/g,
-    'Luz': /\b(light|holy|sacred|heaven|heavenly|divine|shining|radiant|sun|solar)\b/g,
-    'Oscuridad': /\b(dark|darkness|shadow|shadows|evil|nightmare|death|hell|abyss|curse|cursed)\b/g,
-    'Metal': /\b(metal|steel|iron|chrome|gatling|missile|cannon|laser)\b/g,
-    'Veneno': /\b(poison|toxic|venom|acid)\b/g,
-};
-
-// Correcciones a mano (id del digimon → elemento) para los casos en que la deducción automática no acierta
-const ELEMENTOS_MANUALES = {
-    4: 'Rayo', // Betamon: sus habilidades empatan entre Rayo y Agua, pero es eléctrico
-    457: 'Oscuridad', // Zeed Millenniumon: la deducción le daba Hielo por la palabra "freeze" de una habilidad, pero por lore es oscuridad y destrucción
-};
-
-// Emoji de cada elemento para mostrar en la carta
-const EMOJIS_ELEMENTO = {
-    'Fuego': '🔥',
-    'Agua': '💧',
-    'Planta': '🌿',
-    'Hielo': '❄️',
-    'Rayo': '⚡',
-    'Viento': '🌪️',
-    'Tierra': '🪨',
-    'Luz': '✨',
-    'Oscuridad': '🌑',
-    'Metal': '⚙️',
-    'Veneno': '☠️',
-    'Neutro': '⚪',
-};
-
-// Orden en que se muestran los elementos en los menús y en los filtros
-const ORDEN_ELEMENTOS = Object.keys(EMOJIS_ELEMENTO);
 
 // Deduce el elemento de un digimon a partir de los detalles que devuelve la API
 function deducirElemento(id, detalles) {
@@ -560,11 +267,11 @@ function retirarBloqueDeCarga() {
     const barra = document.getElementById('navbar');
     const bloque = barra.querySelector('.carga');
     // En celular la carga es una línea finita que solo se apaga (CSS): ahí no hay nada que retirar
-    if (retirandoCarga || !bloque || bloque.hidden || window.matchMedia('(max-width: 700px)').matches) return;
+    if (retirandoCarga || !bloque || bloque.hidden || PANTALLA_DE_CELULAR.matches) return;
     retirandoCarga = true;
     setTimeout(() => {
         retirandoCarga = false;
-        if (!barra.classList.contains('carga-completa') || window.matchMedia('(max-width: 700px)').matches) return;
+        if (!barra.classList.contains('carga-completa') || PANTALLA_DE_CELULAR.matches) return;
         const piezas = [...barra.querySelectorAll(':scope > img, .combate, .ajustes, .herramientas')];
         const antes = piezas.map(pieza => pieza.getBoundingClientRect());
         bloque.hidden = true;
@@ -587,8 +294,7 @@ function mostrarSistemaDeNiveles() {
         opcion.classList.toggle('activo', opcion.dataset.sistema === sistema);
     });
     const ayuda = t(`niveles.ayuda.${sistema}`);
-    botonCambiarNiveles.title = ayuda;
-    botonCambiarNiveles.setAttribute('aria-label', ayuda);
+    ponerAyuda(botonCambiarNiveles, ayuda);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -614,7 +320,7 @@ function verificarSeleccion() {
     mostrarAyudaDelContador();
     botonIniciarCombate.disabled = seleccionados.length !== 2;
     // El color del botón (verde si se puede pelear, gris si no) y su latido cada 2 s (solo mientras se puede pelear) los pone el CSS según :disabled
-    document.dispatchEvent(new CustomEvent('seleccion-cambio')); // el aviso de ayuda del inicio se va cuando ya eligió las 2
+    emitir('seleccion-cambio'); // el aviso de ayuda del inicio se va cuando ya eligió las 2
 }
 
 // El contador de elegidos también es un botón: sin ninguno elegido está apagado; con 1 o 2 se puede tocar para quitar la selección
@@ -622,8 +328,7 @@ function mostrarAyudaDelContador() {
     const hayElegidos = seleccionados.length > 0;
     const ayuda = t(hayElegidos ? 'combate.contador.limpiar' : 'combate.contador');
     contadorSeleccion.disabled = !hayElegidos;
-    contadorSeleccion.title = ayuda;
-    contadorSeleccion.setAttribute('aria-label', `${seleccionados.length}/2 · ${ayuda}`);
+    ponerAyuda(contadorSeleccion, ayuda, `${seleccionados.length}/2 · ${ayuda}`);
 }
 
 function quitarSeleccion() {
@@ -657,15 +362,11 @@ let avisoDelContador = null;
 let temporizadorAvisoContador = 0;
 let vigilanteDeLaBarra = null;
 
-try {
-    avisoContadorVisto = sessionStorage.getItem(AVISO_CONTADOR_SESION) === '1';
-} catch (error) {
-    // Sin sessionStorage solo se recuerda mientras la página siga abierta
-}
+avisoContadorVisto = hayMarcaDeSesion(AVISO_CONTADOR_SESION); // sin memoria solo se recuerda mientras la página siga abierta
 
 function escribirAvisoDelContador() {
     if (!avisoDelContador) return;
-    const conDedo = window.matchMedia('(hover: none)').matches;
+    const conDedo = CON_DEDO.matches;
     avisoDelContador.querySelector('.aviso-texto').textContent = t(conDedo ? 'aviso.contador.dedos' : 'aviso.contador.mouse');
 }
 
@@ -704,11 +405,7 @@ function mostrarAvisoDelContador(reintentos = 15) {
     const barra = document.getElementById('navbar');
     if (barra.classList.contains('barra-escondida')) return; // el contador no se ve: queda para el próximo combate
     avisoContadorVisto = true;
-    try {
-        sessionStorage.setItem(AVISO_CONTADOR_SESION, '1');
-    } catch (error) {
-        // Sin sessionStorage solo se recuerda mientras la página siga abierta
-    }
+    ponerMarcaDeSesion(AVISO_CONTADOR_SESION);
 
     avisoDelContador = document.createElement('div');
     avisoDelContador.id = 'aviso-contador';
@@ -955,32 +652,27 @@ function traducirCarta(carta) {
     if (gema) {
         gema.querySelector('small').textContent = t('carta.nv');
         const ayudaNivel = t('carta.infoNivel', { nivel: textoNivel });
-        gema.title = ayudaNivel;
-        gema.setAttribute('aria-label', ayudaNivel);
+        ponerAyuda(gema, ayudaNivel);
     }
     if (nivel) {
         nivel.textContent = textoNivel;
         const ayudaNivel = t('carta.infoNivel', { nivel: textoNivel });
-        nivel.title = ayudaNivel;
-        nivel.setAttribute('aria-label', ayudaNivel);
+        ponerAyuda(nivel, ayudaNivel);
     }
     if (chipTipo) {
         chipTipo.textContent = `${textoTipo} ${EMOJIS_TIPO[tipo]}`;
         const ayudaTipo = t('carta.infoTipo', { tipo: textoTipo });
-        chipTipo.title = ayudaTipo;
-        chipTipo.setAttribute('aria-label', ayudaTipo);
+        ponerAyuda(chipTipo, ayudaTipo);
     }
     if (chipElem) {
         chipElem.textContent = `${textoElem} ${EMOJIS_ELEMENTO[elemento]}`;
         const ayudaElem = t('carta.infoElemento', { elemento: textoElem });
-        chipElem.title = ayudaElem;
-        chipElem.setAttribute('aria-label', ayudaElem);
+        ponerAyuda(chipElem, ayudaElem);
     }
 
     const botonVoltear = carta.querySelector('.c-flip');
     if (botonVoltear) {
-        botonVoltear.title = t('carta.voltear');
-        botonVoltear.setAttribute('aria-label', t('carta.voltear'));
+        ponerAyuda(botonVoltear, t('carta.voltear'));
     }
 
     const dorsoViejo = carta.querySelector('.c-dorso');
@@ -1002,7 +694,7 @@ const PERSPECTIVA = 'perspective(800px) ';
 // direccion: 1 gira hacia un lado y -1 hacia el otro (con el barrido del dedo, la carta gira hacia donde va el dedo)
 async function voltearCarta(carta, direccion = 1) {
     if (carta.girando || (zoomOcupado && carta === cartaEnZoom)) return;
-    document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { accion: 'voltear' } }));
+    emitir('click-chip-carta', { accion: 'voltear' });
     carta.girando = true;
     if (carta === cartaEnZoom && zoomExtra) await volverAlZoomNormal(carta); // el zoom extra es solo del frente
 
@@ -1047,7 +739,7 @@ async function voltearCarta(carta, direccion = 1) {
     await segundaMitad.finished;
 
     carta.girando = false;
-    document.dispatchEvent(new CustomEvent('giro-terminado', { detail: carta })); // la inclinación retoma si el mouse sigue encima
+    emitir('giro-terminado', carta); // la inclinación retoma si el mouse sigue encima
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -1070,7 +762,7 @@ let zoomEsperaMovimiento = false; // true mientras se espera ese movimiento (la 
 let ultimoPuntero = null; // dónde estuvo el mouse la última vez que mandó un evento
 
 function pedirMovimientoDelPuntero(carta) {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return; // solo con mouse: con el dedo no hay hover
+    if (!CON_MOUSE.matches) return; // solo con mouse: con el dedo no hay hover
     zoomEsperaMovimiento = true;
     carta.classList.add('reflejo-quieto');
 }
@@ -1149,8 +841,7 @@ function crearFondoZoom(carta) {
     fondo.id = 'zoom-fondo';
     fondo.innerHTML = '<button type="button" class="zoom-cerrar">✕</button><p class="zoom-ayuda"></p>';
     const cerrar = fondo.querySelector('.zoom-cerrar');
-    cerrar.title = t('zoom.cerrar');
-    cerrar.setAttribute('aria-label', t('zoom.cerrar'));
+    ponerAyuda(cerrar, t('zoom.cerrar'));
     fondo.querySelector('.zoom-ayuda').textContent = t('zoom.ayuda');
     fondo.style.setProperty('--zc', colorDeCarta(carta));
     fondo.addEventListener('click', () => {
@@ -1232,7 +923,7 @@ const alRedimensionarConZoom = () => {
     cartaEnZoom.datosZoom = calcularZoom(cartaEnZoom);
     fijarZoom(cartaEnZoom);
     actualizarFlechasZoom();
-    document.dispatchEvent(new CustomEvent('zoom-cambio'));
+    emitir('zoom-cambio');
 };
 
 function bloquearDesplazamiento(bloquear) {
@@ -1306,7 +997,7 @@ function avisarZoomExtra() {
     zoomExtra = ahora;
     document.getElementById('zoom-flechas')?.classList.toggle('zoom-extra', zoomExtra);
     marcarCartaConZoomExtra(zoomExtra ? cartaEnZoom : null);
-    document.dispatchEvent(new CustomEvent('zoom-extra'));
+    emitir('zoom-extra');
 }
 
 // La carta agrandada de más lleva la clase "zoom-extra-activo": con ella el CSS le apaga el reflejo y la textura holográfica (igual que
@@ -1458,7 +1149,7 @@ function limpiarZoomExtra() {
         zoomExtra = false;
         document.getElementById('zoom-flechas')?.classList.remove('zoom-extra');
         marcarCartaConZoomExtra(null);
-        document.dispatchEvent(new CustomEvent('zoom-extra'));
+        emitir('zoom-extra');
     }
 }
 
@@ -1531,10 +1222,8 @@ function crearFlechasZoom() {
         `<button type="button" class="zoom-flecha zoom-siguiente">${ICONO_FLECHA('M9 5l7 7-7 7')}</button>`;
     const anterior = flechas.querySelector('.zoom-anterior');
     const siguiente = flechas.querySelector('.zoom-siguiente');
-    anterior.title = t('zoom.anterior');
-    anterior.setAttribute('aria-label', t('zoom.anterior'));
-    siguiente.title = t('zoom.siguiente');
-    siguiente.setAttribute('aria-label', t('zoom.siguiente'));
+    ponerAyuda(anterior, t('zoom.anterior'));
+    ponerAyuda(siguiente, t('zoom.siguiente'));
     anterior.addEventListener('click', () => cambiarZoom(-1));
     siguiente.addEventListener('click', () => cambiarZoom(1));
     document.body.appendChild(flechas);
@@ -1583,7 +1272,7 @@ async function cambiarZoom(direccion, repetida = false) {
     if (!nueva) return;
     zoomOcupado = true;
     let terminarCambio = null;
-    document.dispatchEvent(new CustomEvent('zoom-cambio'));
+    emitir('zoom-cambio');
     sonidoZoom(true);
 
     const zoomCss = parseFloat(getComputedStyle(vieja).zoom) || 1;
@@ -1658,7 +1347,7 @@ async function cambiarZoom(direccion, repetida = false) {
     zoomOcupado = false;
     cambioEnCurso = null;
     terminarCambio?.();
-    document.dispatchEvent(new CustomEvent('zoom-cambio'));
+    emitir('zoom-cambio');
     if (cierrePendiente) cerrarZoom();
 }
 
@@ -1669,7 +1358,7 @@ async function abrirZoom(carta) {
     cierrePendiente = false; // un pedido de cierre viejo no tiene que cerrar este zoom nuevo apenas llegue
     document.activeElement?.blur?.();
     soltarReflejoQuieto();
-    document.dispatchEvent(new CustomEvent('zoom-cambio')); // la inclinación suelta la carta
+    emitir('zoom-cambio'); // la inclinación suelta la carta
 
     const fondo = crearFondoZoom(carta);
     carta.classList.add('zoom-activa');
@@ -1706,7 +1395,7 @@ async function abrirZoom(carta) {
     crearFlechasZoom();
     zoomOcupado = false;
     fondo.querySelector('.zoom-cerrar').focus({ preventScroll: true });
-    document.dispatchEvent(new CustomEvent('zoom-cambio')); // ahora la inclinación mide la carta ya grande
+    emitir('zoom-cambio'); // ahora la inclinación mide la carta ya grande
     if (cierrePendiente) cerrarZoom();
 }
 
@@ -1724,7 +1413,7 @@ async function cerrarZoom({ rapido = false } = {}) {
     cierrePendiente = false;
     zoomOcupado = true;
     zoomCerrando = true;
-    document.dispatchEvent(new CustomEvent('zoom-cambio'));
+    emitir('zoom-cambio');
 
     const { escala, dx, dy } = zoomVigente(carta.datosZoom); // vuelve desde donde está, con el zoom extra que tenga
     limpiarZoomExtra();
@@ -1761,7 +1450,7 @@ async function cerrarZoom({ rapido = false } = {}) {
     zoomOcupado = false;
     zoomCerrando = false;
     cierrePendiente = false;
-    document.dispatchEvent(new CustomEvent('zoom-cambio'));
+    emitir('zoom-cambio');
 }
 
 window.cerrarZoom = cerrarZoom;
@@ -1838,31 +1527,18 @@ const AVISOS_VISITAS_MAXIMAS = 7;
 let memoriaAvisos = { visitas: 0, hecho: {} };
 
 function guardarMemoriaAvisos() {
-    try {
-        localStorage.setItem(AVISOS_ALMACEN, JSON.stringify(memoriaAvisos));
-    } catch (error) {
-        // Sin almacenamiento no se recuerda nada, pero no pasa nada más
-    }
+    guardarJSON(AVISOS_ALMACEN, memoriaAvisos);
 }
 
 // Lee lo guardado y suma la visita. Devuelve true si todavía hay que mostrar avisos
 function registrarVisitaDeAvisos() {
-    try {
-        const guardado = JSON.parse(localStorage.getItem(AVISOS_ALMACEN));
-        if (guardado && typeof guardado === 'object') {
-            memoriaAvisos.visitas = Number.isFinite(guardado.visitas) ? guardado.visitas : 0;
-            if (guardado.hecho && typeof guardado.hecho === 'object') memoriaAvisos.hecho = guardado.hecho;
-        }
-    } catch (error) {
-        // Si no se puede leer (o está dañado), se empieza de cero
+    const guardado = leerJSON(AVISOS_ALMACEN); // si no se puede leer (o está dañado), se empieza de cero
+    if (guardado && typeof guardado === 'object') {
+        memoriaAvisos.visitas = Number.isFinite(guardado.visitas) ? guardado.visitas : 0;
+        if (guardado.hecho && typeof guardado.hecho === 'object') memoriaAvisos.hecho = guardado.hecho;
     }
-    let visitaNueva = true;
-    try {
-        visitaNueva = !sessionStorage.getItem(AVISOS_ALMACEN); // una por sesión: recargar no cuenta
-        sessionStorage.setItem(AVISOS_ALMACEN, '1');
-    } catch (error) {
-        // Sin sessionStorage cuenta cada carga
-    }
+    const visitaNueva = !hayMarcaDeSesion(AVISOS_ALMACEN); // una por sesión: recargar no cuenta (sin memoria de sesión cuenta cada carga)
+    ponerMarcaDeSesion(AVISOS_ALMACEN);
     if (visitaNueva) {
         memoriaAvisos.visitas += 1;
         guardarMemoriaAvisos();
@@ -1959,7 +1635,7 @@ function activarAvisosDeAyuda() {
 // táctiles el textito de "Esc para cerrar" no se muestra). Solo pantallas táctiles, y una sola vez por visita: si la persona cierra la
 // carta antes de que entre, todavía no lo vio y sale con la próxima que amplíe.
 function activarAvisoGestosDelZoom() {
-    if (!window.matchMedia('(hover: none)').matches) return;
+    if (!CON_DEDO.matches) return;
     let yaSeMostro = avisoHecho('gestos'); // también si salió en una visita anterior
     let enZoom = false; // hay una carta ampliada (y no se está cerrando)
     let espera = 0;
@@ -2031,25 +1707,15 @@ const SHIFT_CONOCIDA_TIEMPO = 3000; // la conoce si la mantuvo apretada más de 
 const SHIFT_CONOCIDA_VECES = 2; // ...o la apretó más de 2 veces
 
 function inclinacionAvisoYaSalio() {
-    try {
-        return sessionStorage.getItem(INCLINACION_AVISO_SESION) === '1';
-    } catch (error) {
-        return false;
-    }
+    return hayMarcaDeSesion(INCLINACION_AVISO_SESION);
 }
 
 function inclinacionAnimacionSolaYaSalio() {
-    try {
-        return sessionStorage.getItem(INCLINACION_ANIMACION_SOLA_SESION) === '1';
-    } catch (error) {
-        return false;
-    }
+    return hayMarcaDeSesion(INCLINACION_ANIMACION_SOLA_SESION);
 }
 
 function marcarInclinacionAnimacionSolaHecha() {
-    try {
-        sessionStorage.setItem(INCLINACION_ANIMACION_SOLA_SESION, '1');
-    } catch (error) {}
+    ponerMarcaDeSesion(INCLINACION_ANIMACION_SOLA_SESION);
 }
 
 function activarAvisoDeInclinacion() {
@@ -2120,11 +1786,7 @@ function activarAvisoDeInclinacion() {
         terminado = true;
         clearTimeout(esperaCarga);
         clearTimeout(esperaTilt);
-        try {
-            sessionStorage.setItem(INCLINACION_AVISO_SESION, '1');
-        } catch (error) {
-            // Sin sessionStorage, vale mientras no se recargue la página
-        }
+        ponerMarcaDeSesion(INCLINACION_AVISO_SESION);
         marcarInclinacionAnimacionSolaHecha();
         const sabeShift = conoceShift();
         const clave = `aviso.inclinacion.${estaInvertida() ? 'invertida' : 'normal'}${sabeShift ? '.boton' : ''}`; // (la variante queda fija aunque se invierta mientras está)
@@ -2232,16 +1894,9 @@ const ZOOM_EXTRA_AVISO_ESPERA = 1500; // ms desde que se abre el zoom (la carta 
 const ZOOM_EXTRA_AVISO_DURACION = 8000; // ms a la vista
 
 function activarAvisoDeZoomExtra() {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return; // en celular no
+    if (!CON_MOUSE.matches) return; // en celular no
     if (memoriaAvisos.visitas > ZOOM_EXTRA_AVISO_ULTIMA_SESION) return;
-    const yaSalio = () => {
-        try {
-            return sessionStorage.getItem(ZOOM_EXTRA_AVISO_SESION) === '1';
-        } catch (error) {
-            return false;
-        }
-    };
-    let salio = yaSalio();
+    let salio = hayMarcaDeSesion(ZOOM_EXTRA_AVISO_SESION);
     let enZoom = false; // hay una carta ampliada (y no se está cerrando)
     let espera = 0;
     let cierre = 0;
@@ -2267,11 +1922,7 @@ function activarAvisoDeZoomExtra() {
         espera = setTimeout(() => {
             if (!enZoom || salio) return;
             salio = true;
-            try {
-                sessionStorage.setItem(ZOOM_EXTRA_AVISO_SESION, '1');
-            } catch (error) {
-                // Sin sessionStorage, vale mientras no se recargue la página
-            }
+            ponerMarcaDeSesion(ZOOM_EXTRA_AVISO_SESION);
             aviso = crearAviso('aviso-zoom-extra', [{ clave: 'zoom-extra', icono: '🔍', texto: 'aviso.zoomExtra' }]);
             escribirAviso(aviso);
             ponerAviso(aviso);
@@ -2287,7 +1938,6 @@ function activarAvisoDeZoomExtra() {
 
 // Primero: qué hay que hacer. Solo en celular (hasta 700px, donde la consigna queda escondida dentro del menú ☰)
 function activarAvisoCombate() {
-    const celular = window.matchMedia('(max-width: 700px)');
     let aviso = null;
     let temporizador = 0;
     let cerrado = false;
@@ -2296,7 +1946,7 @@ function activarAvisoCombate() {
     const finalizarSecuencia = () => {
         if (secuenciaFinalizada) return;
         secuenciaFinalizada = true;
-        document.dispatchEvent(new Event('aviso-combate-finalizado'));
+        emitir('aviso-combate-finalizado');
     };
 
     const cerrar = () => {
@@ -2314,7 +1964,7 @@ function activarAvisoCombate() {
 
     const mostrar = () => {
         if (cerrado || aviso) return;
-        if (!celular.matches || avisoHecho('combate') || seleccionados.length >= 2) {
+        if (!PANTALLA_DE_CELULAR.matches || avisoHecho('combate') || seleccionados.length >= 2) {
             // en computadora ya se ve en la barra; si ya eligió las 2 (ahora o en otra visita), no hay nada que pedirle
             cerrado = true;
             finalizarSecuencia();
@@ -2338,7 +1988,7 @@ function activarAvisoCombate() {
 // Después: cómo ampliar una carta (y en pantallas táctiles, cómo inclinarla y darla vuelta). Cada consejo es un cartelito aparte:
 // se apilan (el primero arriba), tienen su propio tiempo y cada uno se va cuando la persona ya hizo lo que cuenta.
 function activarAvisoZoom() {
-    const conDedo = window.matchMedia('(hover: none)').matches;
+    const conDedo = CON_DEDO.matches;
     // "clave" es lo que la persona tiene que hacer; "texto" es la clave de la traducción
     const consejos = conDedo
         ? [
@@ -2657,7 +2307,7 @@ function gestionarVisitasYFlechasMovil() {
 }
 
 function registrarFlipConDedo() {
-    document.dispatchEvent(new Event('flip-con-dedo'));
+    emitir('flip-con-dedo');
     try {
         let flips = Number.parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
         if (!Number.isFinite(flips)) flips = 0;
@@ -2840,19 +2490,11 @@ function activarVoltearConDedo() {
 const INCLINACION_ALMACEN = 'digimon-inclinacion';
 
 function leerInclinacionInvertida() {
-    try {
-        return JSON.parse(localStorage.getItem(INCLINACION_ALMACEN))?.invertida === true;
-    } catch (error) {
-        return false; // sin memoria (o con un dato roto) queda como siempre
-    }
+    return leerJSON(INCLINACION_ALMACEN)?.invertida === true; // sin memoria (o con un dato roto) queda como siempre
 }
 
 function guardarInclinacionInvertida(invertida) {
-    try {
-        localStorage.setItem(INCLINACION_ALMACEN, JSON.stringify({ invertida }));
-    } catch (error) {
-        // Si el navegador no deja guardar, la elección vale solo mientras la página siga abierta
-    }
+    guardarJSON(INCLINACION_ALMACEN, { invertida });
 }
 
 // Inclinación 3D: la carta se inclina hacia donde apunta y el reflejo sigue al puntero (--mx y --my). Con mouse se inclina
@@ -2864,7 +2506,7 @@ function guardarInclinacionInvertida(invertida) {
 // Con el dedo: se mantiene apretada la carta un instante y, sin soltar, al mover el dedo se inclina (mientras tanto la
 // página no se desplaza). Un toque corto sigue siendo un toque normal (elegir la carta para el combate).
 function activarInclinacion() {
-    const conMouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const conMouse = CON_MOUSE.matches;
     const conDedo = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
     if (reducirMovimiento || (!conMouse && !conDedo)) return;
 
@@ -2893,7 +2535,7 @@ function activarInclinacion() {
         const activa = !!cartaActual;
         if (activa === inclinacionAvisada) return;
         inclinacionAvisada = activa;
-        document.dispatchEvent(new CustomEvent('inclinacion-cambio', { detail: { activa } }));
+        emitir('inclinacion-cambio', { activa });
     }
 
     function pintar(carta, suave) {
@@ -3086,8 +2728,7 @@ function activarInclinacion() {
             const mostrarModo = () => {
                 const ayuda = t(invertida ? 'inclinacion.invertida' : 'inclinacion.normal');
                 botonInversion.setAttribute('aria-pressed', String(invertida));
-                botonInversion.title = ayuda;
-                botonInversion.setAttribute('aria-label', ayuda);
+                ponerAyuda(botonInversion, ayuda);
             };
             botonInversion.hidden = false;
             botonInversion.addEventListener('click', () => {
@@ -3163,7 +2804,7 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
                 tomar(carta);
                 seguir(inicio.x, inicio.y);
                 vibrar(10);
-                document.dispatchEvent(new CustomEvent('inclinacion-con-dedo')); // el cartel de ayuda ya no tiene que contar cómo se hace
+                emitir('inclinacion-con-dedo'); // el cartel de ayuda ya no tiene que contar cómo se hace
             }, ESPERA_DEDO);
         },
         { passive: true },
@@ -3262,28 +2903,18 @@ const AUDIO_ALMACEN = 'digimon-audio';
 
 // Mismo criterio que usa la página para lo que es solo del celular: pantalla táctil sin "hover" y con navigator.vibrate
 // (Android; en iPhone el navegador no deja vibrar y en computadora no hay con qué)
-const VIBRACION_DISPONIBLE = Boolean(navigator.vibrate) && window.matchMedia('(hover: none)').matches;
+const VIBRACION_DISPONIBLE = Boolean(navigator.vibrate) && CON_DEDO.matches;
 
 function leerAudioGuardado() {
-    try {
-        const guardado = JSON.parse(localStorage.getItem(AUDIO_ALMACEN));
-        const sinSonido = guardado?.sonido === false || guardado?.silenciado === true;
-        // "Sin vibración" solo tiene sentido con el sonido apagado (es el paso 3); con sonido, todo está activado
-        return { sinSonido, sinVibracion: sinSonido && guardado?.vibracion === false };
-    } catch (error) {
-        return { sinSonido: false, sinVibracion: false }; // sin memoria (o con un dato roto) queda todo activado
-    }
+    const guardado = leerJSON(AUDIO_ALMACEN); // sin memoria (o con un dato roto) queda todo activado
+    const sinSonido = guardado?.sonido === false || guardado?.silenciado === true;
+    // "Sin vibración" solo tiene sentido con el sonido apagado (es el paso 3); con sonido, todo está activado
+    return { sinSonido, sinVibracion: sinSonido && guardado?.vibracion === false };
 }
 
 function guardarAudio() {
-    try {
-        localStorage.setItem(AUDIO_ALMACEN, JSON.stringify({ sonido: !silenciado, vibracion: !vibracionApagada }));
-    } catch (error) {
-        // Si el navegador no deja guardar, la elección vale solo mientras la página siga abierta
-    }
+    guardarJSON(AUDIO_ALMACEN, { sonido: !silenciado, vibracion: !vibracionApagada });
 }
-
-const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
 
 // =================================================================================================================
 // PERFILES DE AUDIO DIFERENCIADOS: CELULAR VS ESCRITORIO
@@ -3406,8 +3037,7 @@ function mostrarEstadoDelAudio() {
     const ayuda = t(AYUDA_DEL_AUDIO[modo]);
     boton.dataset.modo = modo; // el ícono: parlante con ondas, celular que vibra o parlante con cruz
     boton.classList.toggle('silenciado', silenciado); // el botón "hundido" mientras no suena
-    boton.title = ayuda;
-    boton.setAttribute('aria-label', ayuda);
+    ponerAyuda(boton, ayuda);
 }
 
 // En celular el botón no vive en la barra ni en el menú ☰: flota en la esquina de abajo a la derecha (lo dibuja el CSS cuando el botón
@@ -3448,23 +3078,11 @@ function ubicarBotonDeAudio() {
 const AUDIO_AVISO_SESION = 'digimon-audio-aviso';
 const AUDIO_AVISO_DURACION = 2600; // ms: un poco más que la animación del CSS (2,4 s)
 
-function leerMarcaDelAviso() {
-    try {
-        return sessionStorage.getItem(AUDIO_AVISO_SESION) === '1';
-    } catch (error) {
-        return false;
-    }
-}
-
-let botonDeAudioYaMostrado = leerMarcaDelAviso();
+let botonDeAudioYaMostrado = hayMarcaDeSesion(AUDIO_AVISO_SESION);
 
 function marcarBotonDeAudioMostrado() {
     botonDeAudioYaMostrado = true;
-    try {
-        sessionStorage.setItem(AUDIO_AVISO_SESION, '1');
-    } catch (error) {
-        // Sin sessionStorage la marca vale solo mientras no se recargue la página
-    }
+    ponerMarcaDeSesion(AUDIO_AVISO_SESION);
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -4372,7 +3990,7 @@ function activarCartelesDeInfoEnCartas() {
                 const carta = chipTipo.closest('#listado-digimons li');
                 if (carta?.dataset.tipo) {
                     evento.stopPropagation();
-                    document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { tipo: carta.dataset.tipo } }));
+                    emitir('click-chip-carta', { tipo: carta.dataset.tipo });
                     if (typeof window.infoTipo === 'function') window.infoTipo(carta.dataset.tipo);
                     return;
                 }
@@ -4384,7 +4002,7 @@ function activarCartelesDeInfoEnCartas() {
                 const carta = chipElem.closest('#listado-digimons li');
                 if (carta?.dataset.elemento) {
                     evento.stopPropagation();
-                    document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { elemento: carta.dataset.elemento } }));
+                    emitir('click-chip-carta', { elemento: carta.dataset.elemento });
                     if (typeof window.infoElemento === 'function') window.infoElemento(carta.dataset.elemento);
                     return;
                 }
@@ -4396,7 +4014,7 @@ function activarCartelesDeInfoEnCartas() {
                 const carta = nivelTarget.closest('#listado-digimons li');
                 if (carta?.dataset.nivelApi) {
                     evento.stopPropagation();
-                    document.dispatchEvent(new CustomEvent('click-chip-carta', { detail: { nivel: carta.dataset.nivelApi } }));
+                    emitir('click-chip-carta', { nivel: carta.dataset.nivelApi });
                     if (typeof window.infoNivel === 'function') window.infoNivel(carta.dataset.nivelApi);
                     return;
                 }
@@ -4593,11 +4211,12 @@ function colocarCartas() {
     // Agregamos los <li> a la lista de digimons (<ul>), todos de una vez
     listaDigimons.append(...tanda.map(({ carta }) => carta));
     for (const { carta, conMarco } of tanda) {
+        if (!cartasPorId.has(carta.dataset.id)) cartasPorId.set(carta.dataset.id, carta);
         ajustarNombre(carta); // ya está en la página: ahora se puede medir su nombre
         if (conMarco) observadorDeMarcos?.observe(carta); // su marco gira solo mientras se ve
 
         // Avisamos que hay una carta nueva (los filtros la cuentan y, si corresponde, la esconden)
-        document.dispatchEvent(new CustomEvent('carta-agregada', { detail: { carta } }));
+        emitir('carta-agregada', { carta });
     }
     actualizarBarraProgreso(contadorDigimons);
 }
@@ -4697,13 +4316,9 @@ async function crearListaDeDigimons() {
 // Las cartas lo hacen acá; los filtros (filtros.js), los menús (info.js) y la línea evolutiva (evolucion.js) escuchan el mismo aviso.
 botonCambiarNiveles.addEventListener('click', () => {
     clasificacionAlternativa = !clasificacionAlternativa;
-    try {
-        sessionStorage.setItem('clasificacionAlternativa', String(clasificacionAlternativa));
-    } catch (error) {
-        // si no se puede guardar, igual cambia mientras la página esté abierta
-    }
+    guardarTexto('clasificacionAlternativa', String(clasificacionAlternativa), 'sesion'); // si no se puede guardar, igual cambia mientras la página esté abierta
     mostrarSistemaDeNiveles();
-    document.dispatchEvent(new CustomEvent('niveles-cambiados'));
+    emitir('niveles-cambiados');
 });
 
 document.addEventListener('niveles-cambiados', () => {

@@ -11,34 +11,6 @@
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 
-// Color de cada opción (el mismo que usan las cartas)
-const COLOR_TIPO = {
-    'Vacuna': '#3a8dde',
-    'Virus': '#8a4fc7',
-    'Datos': '#3fae5a',
-    'Libre': '#1fa79f',
-    'Variable': '#e2803a',
-    'Desconocido': '#59616d',
-};
-const COLOR_ELEMENTO = {
-    'Fuego': '#e8552b',
-    'Agua': '#2f8fe0',
-    'Planta': '#4aa84f',
-    'Hielo': '#58c7ea',
-    'Rayo': '#f0b400',
-    'Viento': '#7cc9b0',
-    'Tierra': '#a17a4a',
-    'Luz': '#f5c542',
-    'Oscuridad': '#6a4c93',
-    'Metal': '#8a96a3',
-    'Veneno': '#a24fc4',
-    'Neutro': '#aab2bb',
-};
-const COLOR_NIVEL = { 1: '#a9b8c9', 2: '#7fb3e6', 3: '#4f9be0', 4: '#2f7fd0', 5: '#6a5fd8', 6: '#d9a520', 7: '#d6409a', 8: '#3a2f9e' }; // según el poder del nivel
-const COLOR_NIVEL_DESCONOCIDO = '#59616d';
-const COLOR_BUSQUEDA = '#2f7fd0';
-const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas
-
 // Cada filtro: qué opciones tiene (con el nombre interno), cómo se llama cada una y qué lleva de ícono
 const GRUPOS_FILTRO = {
     tipo: {
@@ -361,7 +333,7 @@ function activarFiltros() {
         // En celular los filtros están al final del panel del menú: si las opciones quedan más abajo de lo que se ve, se las acerca
         // (se mueve solo el panel del menú, no la página: por eso no se usa scrollIntoView)
         const menu = grupo.closest('.menu-movil');
-        if (abierto && menu && window.matchMedia('(max-width: 700px)').matches) {
+        if (abierto && menu && PANTALLA_DE_CELULAR.matches) {
             const limite = Math.min(menu.getBoundingClientRect().bottom, window.innerHeight) - 14;
             const falta = grupo.querySelector('.f-panel').getBoundingClientRect().bottom - limite;
             if (falta > 0) menu.scrollBy({ top: falta, behavior: 'smooth' });

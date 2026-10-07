@@ -388,12 +388,8 @@ const DICCIONARIO = {
 
 // ---- Elección del idioma -------------------------------------------------------------------------------------------
 function idiomaGuardado() {
-    try {
-        const guardado = localStorage.getItem('idioma');
-        return IDIOMAS.includes(guardado) ? guardado : null;
-    } catch (error) {
-        return null; // el navegador no deja guardar (modo privado, por ejemplo)
-    }
+    const guardado = leerTexto('idioma'); // null si no hay nada o si el navegador no deja leer (modo privado, por ejemplo)
+    return IDIOMAS.includes(guardado) ? guardado : null;
 }
 
 function detectarIdioma() {
@@ -446,13 +442,9 @@ function aplicarTextos(raiz = document) {
 function cambiarIdioma(nuevo) {
     if (!IDIOMAS.includes(nuevo) || nuevo === idioma) return;
     idioma = nuevo;
-    try {
-        localStorage.setItem('idioma', idioma);
-    } catch (error) {
-        // si no se puede guardar, igual cambia mientras la página esté abierta
-    }
+    guardarTexto('idioma', idioma); // si no se puede guardar, igual cambia mientras la página esté abierta
     aplicarTextos();
-    document.dispatchEvent(new CustomEvent('idioma-cambiado', { detail: { idioma } }));
+    emitir('idioma-cambiado', { idioma });
 }
 
 // Nombres para mostrar (el valor interno sigue siendo el de español)

@@ -47,7 +47,7 @@ function activarMenuMovil() {
     ); // en captura: se decide antes de que Esc cierre la lista de información
 
     // Si la ventana se agranda hasta el diseño de computadora, el panel deja de existir: se cierra
-    window.matchMedia('(max-width: 700px)').addEventListener('change', cambio => {
+    PANTALLA_DE_CELULAR.addEventListener('change', cambio => {
         if (!cambio.matches) abrir(false);
     });
 }
@@ -58,7 +58,6 @@ function activarMenuMovil() {
 // (El CSS hace el movimiento: la clase "barra-escondida" la desliza hacia arriba, fuera de la pantalla.)
 function activarBarraQueSeEsconde() {
     const barra = document.getElementById('navbar');
-    const celular = window.matchMedia('(max-width: 700px)');
     const SIEMPRE_VISIBLE_ARRIBA = 60; // px desde el borde de arriba de la página: ahí la barra siempre se ve
     const BAJADA_PARA_ESCONDER = 14; // px seguidos hacia abajo para que se esconda (un temblor del dedo no alcanza)
     const SUBIDA_PARA_MOSTRAR = 8; // px seguidos hacia arriba para que aparezca
@@ -70,7 +69,7 @@ function activarBarraQueSeEsconde() {
     window.addEventListener(
         'scroll',
         () => {
-            if (!celular.matches) {
+            if (!PANTALLA_DE_CELULAR.matches) {
                 mostrar();
                 return;
             }
@@ -93,7 +92,7 @@ function activarBarraQueSeEsconde() {
     );
 
     // Si la ventana pasa al diseño de computadora (o vuelve al celular), la barra arranca a la vista
-    celular.addEventListener('change', () => {
+    PANTALLA_DE_CELULAR.addEventListener('change', () => {
         recorrido = 0;
         ultimoY = window.scrollY;
         mostrar();

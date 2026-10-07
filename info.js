@@ -13,42 +13,17 @@ const conEmojiTipo = tipo => `${nombreTipo(tipo)} ${EMOJIS_TIPO[tipo]}`;
 const conEmojiElemento = elemento => `${nombreElemento(elemento)} ${EMOJIS_ELEMENTO[elemento]}`;
 const porcentaje = peso => Math.round(peso * 100);
 
-// Colores temáticos para los enlaces interactivos
-const COLORES_TIPO = {
-    'Vacuna': '#2563eb',
-    'Virus': '#7c3aed',
-    'Datos': '#16a34a',
-    'Libre': '#0d9488',
-    'Variable': '#ea580c',
-    'Desconocido': '#4b5563',
-};
-
-const COLORES_ELEMENTO = {
-    'Fuego': '#dc2626',
-    'Agua': '#2563eb',
-    'Planta': '#16a34a',
-    'Hielo': '#0284c7',
-    'Rayo': '#d97706',
-    'Viento': '#059669',
-    'Tierra': '#92400e',
-    'Luz': '#ca8a04',
-    'Oscuridad': '#6b21a8',
-    'Metal': '#475569',
-    'Veneno': '#9333ea',
-    'Neutro': '#64748b',
-};
-
 // Genera un botón con enlace de referencia cruzada (línea punteada al pasar el puntero)
 function linkTipo(tipo) {
     const texto = conEmojiTipo(tipo);
-    const color = COLORES_TIPO[tipo] || 'currentColor';
+    const color = COLOR_TIPO_ENLACE[tipo] || 'currentColor';
     const ayuda = t('info.verInfoDe', { nombre: nombreTipo(tipo) });
     return `<button type="button" class="info-link info-link-tipo" data-info-tipo="${tipo}" style="--link-c: ${color};" title="${ayuda}" aria-label="${ayuda}">${texto}</button>`;
 }
 
 function linkElemento(elemento) {
     const texto = conEmojiElemento(elemento);
-    const color = COLORES_ELEMENTO[elemento] || 'currentColor';
+    const color = COLOR_ELEMENTO_ENLACE[elemento] || 'currentColor';
     const ayuda = t('info.verInfoDe', { nombre: nombreElemento(elemento) });
     return `<button type="button" class="info-link info-link-elemento" data-info-elemento="${elemento}" style="--link-c: ${color};" title="${ayuda}" aria-label="${ayuda}">${texto}</button>`;
 }
@@ -275,11 +250,11 @@ function obtenerDigimonsConAtaque(nombreAtaque) {
 
     // Ordenamos por nivel (menor a mayor poder) y luego por nombre
     encontradas.sort((a, b) => {
-        const nvA = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[a.dataset.nivelApi]) ?? 99;
-        const nvB = (typeof numeracionNiveles !== 'undefined' && numeracionNiveles[b.dataset.nivelApi]) ?? 99;
+        const nvA = numeracionNiveles[a.dataset.nivelApi] ?? 99;
+        const nvB = numeracionNiveles[b.dataset.nivelApi] ?? 99;
         if (nvA !== nvB) return nvA - nvB;
-        const nomA = typeof nombreCompleto === 'function' ? nombreCompleto(a) : a.dataset.nombreApi || '';
-        const nomB = typeof nombreCompleto === 'function' ? nombreCompleto(b) : b.dataset.nombreApi || '';
+        const nomA = nombreCompleto(a);
+        const nomB = nombreCompleto(b);
         return nomA.localeCompare(nomB);
     });
 
@@ -294,14 +269,11 @@ function crearMiniNodoDigimon(carta) {
     nodo.dataset.id = id;
 
     const nvOriginal = carta.dataset.nivelApi;
-    const nvNumero = typeof numeracionNiveles !== 'undefined' ? numeracionNiveles[nvOriginal] : undefined;
-    const color =
-        (typeof COLOR_NIVEL !== 'undefined' && COLOR_NIVEL[nvNumero]) ||
-        carta.querySelector('.c-arte')?.style.getPropertyValue('--c') ||
-        (typeof COLOR_NIVEL_DESCONOCIDO !== 'undefined' ? COLOR_NIVEL_DESCONOCIDO : '#3a8dde');
+    const nvNumero = numeracionNiveles[nvOriginal];
+    const color = COLOR_NIVEL[nvNumero] || carta.querySelector('.c-arte')?.style.getPropertyValue('--c') || COLOR_NIVEL_DESCONOCIDO;
     nodo.style.setProperty('--c', color);
 
-    const nombreTexto = typeof nombreCompleto === 'function' ? nombreCompleto(carta) : carta.dataset.nombreApi || '';
+    const nombreTexto = nombreCompleto(carta);
     nodo.title = `${nombreTexto} (${t('ataques.irACarta') || 'Ir a la carta'})`;
 
     const imagen = document.createElement('img');
@@ -319,7 +291,7 @@ function crearMiniNodoDigimon(carta) {
 
     const nivel = document.createElement('span');
     nivel.className = 'evo-nv';
-    nivel.textContent = typeof nombreNivel === 'function' ? nombreNivel(carta.dataset.nivelApi) : nvOriginal || '';
+    nivel.textContent = nombreNivel(carta.dataset.nivelApi);
 
     texto.append(nombre, nivel);
     nodo.append(imagen, texto);
