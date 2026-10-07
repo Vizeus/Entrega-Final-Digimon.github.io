@@ -2,9 +2,9 @@
 @use "mixins" as *;
 
 // -----------------------------------------------------------------------------------------------------------------
-// AVISOS DE AYUDA Y GLOBITOS DE LOS BOTONES (main.js)
+// AVISOS DE AYUDA Y GLOBITOS DE LOS BOTONES (avisos.js)
 // -----------------------------------------------------------------------------------------------------------------
-// Avisos de ayuda del inicio (main.js, activarAvisosDeAyuda): cartelitos discretos arriba a la derecha, debajo de la barra. Van
+// Avisos de ayuda del inicio (avisos.js, activarAvisosDeAyuda): cartelitos discretos arriba a la derecha, debajo de la barra. Van
 // dentro de un contenedor (#avisos-ayuda) que los apila, así que si coinciden se ven uno debajo del otro.
 // No frenan los clics ni el mouse (pointer-events: none) y quedan por debajo de la barra (1000) y del zoom (1500), salvo mientras
 // hay una carta ampliada (clase "sobre-zoom"): ahí pasan por encima para que se lean. Al irse, el aviso se achica ("saliendo") y
@@ -102,9 +102,9 @@
 }
 
 // Globito con flechita que sale de un botón (lo usan el aviso del contador y los de los botones redondos de sonido e inclinación). Arranca
-// chiquito, desde la punta de la flecha (--punta, que pone main.js), y crece hasta su tamaño; al irse vuelve a achicarse hacia el botón.
+// chiquito, desde la punta de la flecha (--punta, que pone avisos.js), y crece hasta su tamaño; al irse vuelve a achicarse hacia el botón.
 // No frena los clics (pointer-events: none). Por defecto va debajo del botón (la flechita arriba); con "sobre-el-boton" va encima de él
-// (la flechita abajo): main.js lo usa para el botón de sonido flotante del celular, que está en la esquina de abajo.
+// (la flechita abajo): avisos.js lo usa para el botón de sonido flotante del celular, que está en la esquina de abajo.
 @mixin globo-de-aviso($capa) {
     position: fixed;
     z-index: $capa;
@@ -178,12 +178,12 @@
     }
 }
 
-// Aviso del contador (main.js, mostrarAvisoDelContador): sale de la bolita "2/2" de la barra. Queda por encima de la barra (1000).
+// Aviso del contador (avisos.js, mostrarAvisoDelContador): sale de la bolita "2/2" de la barra. Queda por encima de la barra (1000).
 .aviso-contador {
     @include globo-de-aviso(capa(aviso-del-contador));
 }
 
-// Aviso de un botón redondo (main.js, llamarLaAtencion): por encima del zoom de la carta y sus flechas (1700) y del botón mismo (1800)
+// Aviso de un botón redondo (avisos.js, llamarLaAtencion): por encima del zoom de la carta y sus flechas (1700) y del botón mismo (1800)
 .aviso-globo {
     @include globo-de-aviso(capa(globo-de-boton));
 }

@@ -18,7 +18,7 @@
 // momento (las cartas vuelven a su lugar en un instante, no de golpe) y vuelve a empezar la espera desde cero. Con la pestaña oculta no baila nada.
 //
 // Cada carta baila con una animación de "transform" hecha con la Web Animations API (así no pisa el levante del hover, que usa "translate", ni
-// el zoom, que usa "translate" y "scale"). Mientras baila lleva la clase "bailando": la inclinación con el mouse la deja en paz (main.js) y el
+// el zoom, que usa "translate" y "scale"). Mientras baila lleva la clase "bailando": la inclinación con el mouse la deja en paz (inclinacion.js) y el
 // CSS le quita el levante y el reflejo del hover (que, con la carta saltando bajo un puntero quieto, parpadearían).
 // Eventos que manda para la inclinación: "baile-empezo" (que suelte la carta que seguía al puntero) y "baile-terminado" (que retome).
 // -----------------------------------------------------------------------------------------------------------------

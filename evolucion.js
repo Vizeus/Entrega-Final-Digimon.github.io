@@ -96,7 +96,7 @@ const RANGO_DE_NIVELES = 1;
 const CONDICION_DE_FUSION = /\b(dna|jogress|fusion|fuse[ds]?|biomerge|matrix|mix|combine[ds]?)\b/i;
 
 // ---- Datos ---------------------------------------------------------------------------------------------------------
-// Las evoluciones de cada digimon ya vienen con su carta: main.js las trae junto con el resto de los datos (todas las cartas las
+// Las evoluciones de cada digimon ya vienen con su carta: api.js las trae junto con el resto de los datos (todas las cartas las
 // tienen, también las propias), así que acá no se pide nada a la API. Forma: { previas: [{ id, condicion }], siguientes: [...] }
 const evolucionesDe = carta => carta.datosDorso.evo;
 
@@ -581,7 +581,7 @@ function crearBotonEvolucion(carta) {
     boton.className = 'c-evo';
     boton.textContent = t('evo.boton');
     boton.title = t('evo.boton.ayuda');
-    activarBotonDelDorso(boton, () => abrirEvolucion(carta)); // toque rápido con el dedo y hundimiento (main.js)
+    activarBotonDelDorso(boton, () => abrirEvolucion(carta)); // toque rápido con el dedo y hundimiento (gestos.js)
     return boton;
 }
 

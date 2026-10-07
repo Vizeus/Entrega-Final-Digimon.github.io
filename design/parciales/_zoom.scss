@@ -3,10 +3,10 @@
 
 // -----------------------------------------------------------------------------------------------------------------
 // ZOOM DE LA CARTA (doble clic): el fondo se oscurece con un resplandor del color de la carta y la carta queda por encima.
-//   La carta no sale del <ul>: main.js la traslada y la agranda (translate y scale), por eso en su lugar queda un hueco.
+//   La carta no sale del <ul>: zoom.js la traslada y la agranda (translate y scale), por eso en su lugar queda un hueco.
 // -----------------------------------------------------------------------------------------------------------------
 // En celulares el zoom de la carta es el gesto de pellizco (dos dedos): sobre las cartas se puede desplazar hacia arriba y abajo,
-// pero el navegador no amplía la página con ese gesto, así que le llega a main.js. El fondo del zoom no se desplaza ni se amplía.
+// pero el navegador no amplía la página con ese gesto, así que le llega a gestos.js. El fondo del zoom no se desplaza ni se amplía.
 #listado-digimons li {
     touch-action: pan-y;
 }
@@ -126,7 +126,7 @@
         opacity: 1;
     }
 
-    // Con el zoom extra (la carta agrandada de más, ver main.js) la carta puede llegar hasta las flechas: se esconden
+    // Con el zoom extra (la carta agrandada de más, ver zoom.js) la carta puede llegar hasta las flechas: se esconden
     &.zoom-extra {
         opacity: 0;
 

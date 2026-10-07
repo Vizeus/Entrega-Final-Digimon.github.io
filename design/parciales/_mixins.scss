@@ -77,7 +77,7 @@
 }
 
 // "llamando": el botón salta y lanza ondas para que la persona vea dónde está (lo usan el botón de sonido, la primera vez que suena algo
-// en la sesión, y el de inclinación, cuando aparece el cartel que lo explica). main.js pone y saca la clase.
+// en la sesión, y el de inclinación, cuando aparece el cartel que lo explica). avisos.js pone y saca la clase.
 @mixin boton-que-llama {
     // Las ondas del aviso: un aro que nace en el botón y se agranda mientras se desvanece (invisible el resto del tiempo)
     &::after {
@@ -139,7 +139,7 @@
 }
 
 // Botón de sonido: chiquito y redondo, del mismo vidrio claro que el de idioma. Su ícono sigue el paso en que está (data-modo, lo
-// escribe main.js): parlante con ondas (sonido y vibración), celular que vibra (solo vibración, únicamente en celulares) o
+// escribe audio.js): parlante con ondas (sonido y vibración), celular que vibra (solo vibración, únicamente en celulares) o
 // parlante con cruz roja (nada). Mientras no suena queda "hundido", para que se note de un vistazo.
 // (La animación "llamando" de la primera vez que suena algo en la sesión sale del mixin boton-que-llama.)
 @mixin boton-de-sonido {

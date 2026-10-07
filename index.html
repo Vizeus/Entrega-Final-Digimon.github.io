@@ -23,21 +23,31 @@
         ></script>
 
         <!-- Los scripts de la página. "defer": se bajan mientras se dibuja la página y corren en este orden cuando terminó de armarse.
-             El orden importa: primero las funciones de uso general (util.js), los datos (datos.js) y los idiomas (i18n.js), después la página (main.js) y
-             por último los filtros, las ventanas de información, la barra del celular, la evolución y el baile, que usan lo que
-             definen los anteriores.
+             El orden importa: primero las funciones de uso general (util.js), los datos (datos.js) y los idiomas (i18n.js); después
+             las partes de la página (de pagina.js a sonidos.js), una por archivo; main.js las pone en marcha; y por último
+             los filtros, las ventanas de información, la barra del celular, la evolución y el baile, que usan todo lo anterior.
              El "?v=" es la versión: al cambiarla, los navegadores bajan los archivos nuevos en vez de usar los que tenían guardados
              (el caché). Se cambia sola con "npm run nueva-version" antes de subir cambios a GitHub. -->
-        <script defer src="./util.js?v=20261006-2150"></script>
-        <script defer src="./datos.js?v=20261006-2150"></script>
-        <script defer src="./i18n.js?v=20261006-2150"></script>
-        <script defer src="./nombres.js?v=20261006-2150"></script>
-        <script defer src="./main.js?v=20261006-2150"></script>
-        <script defer src="./filtros.js?v=20261006-2150"></script>
-        <script defer src="./info.js?v=20261006-2150"></script>
-        <script defer src="./barra.js?v=20261006-2150"></script>
-        <script defer src="./evolucion.js?v=20261006-2150"></script>
-        <script defer src="./baile.js?v=20261006-2150"></script>
+        <script defer src="./util.js?v=20261006-2209"></script>
+        <script defer src="./datos.js?v=20261006-2209"></script>
+        <script defer src="./i18n.js?v=20261006-2209"></script>
+        <script defer src="./nombres.js?v=20261006-2209"></script>
+        <script defer src="./pagina.js?v=20261006-2209"></script>
+        <script defer src="./api.js?v=20261006-2209"></script>
+        <script defer src="./combate.js?v=20261006-2209"></script>
+        <script defer src="./avisos.js?v=20261006-2209"></script>
+        <script defer src="./cartas.js?v=20261006-2209"></script>
+        <script defer src="./zoom.js?v=20261006-2209"></script>
+        <script defer src="./gestos.js?v=20261006-2209"></script>
+        <script defer src="./inclinacion.js?v=20261006-2209"></script>
+        <script defer src="./audio.js?v=20261006-2209"></script>
+        <script defer src="./sonidos.js?v=20261006-2209"></script>
+        <script defer src="./main.js?v=20261006-2209"></script>
+        <script defer src="./filtros.js?v=20261006-2209"></script>
+        <script defer src="./info.js?v=20261006-2209"></script>
+        <script defer src="./barra.js?v=20261006-2209"></script>
+        <script defer src="./evolucion.js?v=20261006-2209"></script>
+        <script defer src="./baile.js?v=20261006-2209"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -48,7 +58,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261006-2150" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261006-2209" />
     </head>
 
     <body>
@@ -68,7 +78,7 @@
             <!-- Panel de combate: la consigna, cuántos digimons van elegidos y el botón principal, todo junto -->
             <div class="combate">
                 <p class="consigna" data-i18n="combate.consigna">Elige 2 digimons con los que quieras simular un combate</p>
-                <!-- Es un botón: con 1 o 2 digimons elegidos se puede tocar para quitar la selección (la ayuda la escribe main.js) -->
+                <!-- Es un botón: con 1 o 2 digimons elegidos se puede tocar para quitar la selección (la ayuda la escribe combate.js) -->
                 <button type="button" id="contador-seleccion" class="contador" disabled title="Digimons elegidos" aria-label="0/2 · Digimons elegidos">
                     0/2
                 </button>
@@ -171,7 +181,7 @@
                 <!-- Ajustes: sistema de clasificación de niveles (Japón / EE.UU.) e idioma. Van juntos, en el centro de la barra.
          El selector de niveles muestra las dos opciones a la vista, con el rótulo "Niveles" y la activa resaltada (como el de idioma).
          Cada opción lleva un ejemplo del nombre que usa ese sistema, que en celular se ve (ahí no hay "hover" para leer la ayuda).
-         El título y el aria-label (el sistema actual y cómo cambiarlo) los escribe main.js -->
+         El título y el aria-label (el sistema actual y cómo cambiarlo) los escribe pagina.js -->
                 <div class="ajustes">
                     <button type="button" id="cambiar-niveles" class="botones">
                         <span class="sn-rotulo" data-i18n="niveles.rotulo">Niveles</span>
@@ -209,10 +219,10 @@
                     </button>
 
                     <!-- Sonido: botón chiquito y redondo que apaga (o vuelve a prender) el sonido de la página. En computadora queda en la barra,
-             junto al selector de idioma. En celular main.js lo saca de acá y lo deja suelto en el <body>: flota siempre en la
+             junto al selector de idioma. En celular audio.js lo saca de acá y lo deja suelto en el <body>: flota siempre en la
              esquina de abajo a la derecha (lo dibuja el CSS) y la primera vez que suena algo en la sesión hace una animación para
              que se vea. En celular da tres vueltas (sonido y vibración → solo vibración → nada → todo); en computadora, dos.
-             La ayuda y el paso en que está (data-modo) los escribe main.js; la elección queda guardada en el navegador.
+             La ayuda y el paso en que está (data-modo) los escribe audio.js; la elección queda guardada en el navegador.
              El ícono cambia con el paso: parlante con ondas (suena), celular que vibra (solo vibración) o parlante con una cruz (nada) -->
                     <button type="button" id="silenciar" data-modo="todo" title="Silenciar el sonido" aria-label="Silenciar el sonido">
                         <svg
@@ -245,8 +255,8 @@
                     <!-- Inclinación de las cartas con el mouse (solo computadora): botón chiquito y redondo, al lado del de sonido, que invierte cuándo
              se inclinan. Por defecto se inclinan al pasar el mouse y mantener apretada Shift lo anula; con el botón "hundido" es al revés
              (no se inclinan al pasar el mouse y solo lo hacen mientras se mantiene apretada Shift). La elección se guarda en el navegador.
-             Está escondido (hidden): main.js lo muestra solo con mouse y sin "reducir movimiento". La ayuda y el estado (aria-pressed)
-             los escribe main.js. El ícono es una carta vista en perspectiva; con la inclinación invertida aparece además la flecha de Shift (⇧) -->
+             Está escondido (hidden): inclinacion.js lo muestra solo con mouse y sin "reducir movimiento". La ayuda y el estado (aria-pressed)
+             los escribe inclinacion.js. El ícono es una carta vista en perspectiva; con la inclinación invertida aparece además la flecha de Shift (⇧) -->
                     <button
                         type="button"
                         id="inclinacion-invertida"

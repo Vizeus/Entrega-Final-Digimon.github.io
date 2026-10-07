@@ -11,7 +11,7 @@
 //   Los niveles 7 (Super Ultimate) y 8 (Absolute) son inventados para el simulador y tienen un marco que gira:
 //   arcoíris holográfico con corona el 7, y estrellado en violeta y oro con un sol el 8.
 //
-//   Estructura de cada carta (la arma el main.js):
+//   Estructura de cada carta (la arma cartas.js):
 //     li
 //      ├─ .c-frente  → .c-cab (nombre) · .c-arte (imagen + .c-gema con el nivel) · .c-sub · .c-chips
 //      ├─ .c-dorso   → .c-cab (nombre) · .c-cuerpo (especie, campos, estreno y descripción). Se crea al girar la carta.
@@ -65,7 +65,7 @@
         box-shadow: var(--anillo), var(--aura), var(--caida);
         text-align: center;
         list-style-type: none;
-        // La inclinación (transform, --mx y --my) NO lleva transición CSS: main.js la suaviza cuadro a cuadro. Una transición
+        // La inclinación (transform, --mx y --my) NO lleva transición CSS: inclinacion.js la suaviza cuadro a cuadro. Una transición
         // sobre un transform con perspective() hace que el navegador dibuje la carta a menor resolución mientras se mueve.
         transition:
             translate 0.3s ease,
@@ -172,12 +172,12 @@
             }
         }
 
-        // MARCO QUE GIRA (niveles 7 y 8). Es un <span class="c-marco"> que arma main.js solo en esas cartas.
+        // MARCO QUE GIRA (niveles 7 y 8). Es un <span class="c-marco"> que arma cartas.js solo en esas cartas.
         // Antes el giro cambiaba el fondo de la carta en cada cuadro, y el navegador tenía que volver a dibujar la carta entera
         // (con su halo) 60 veces por segundo: con una sola carta de estas en pantalla, toda la página bajaba de fluidez.
         // Ahora el degradé es una capa cuadrada, más grande que la carta, que solo se rota (eso lo hace la placa gráfica sin
         // redibujar nada), y la carta la recorta con forma de marco (máscara): se ve igual, pero casi no cuesta.
-        // Solo gira mientras se ve en pantalla (la clase "en-pantalla" la pone main.js) y si la persona no pidió menos movimiento;
+        // Solo gira mientras se ve en pantalla (la clase "en-pantalla" la pone cartas.js) y si la persona no pidió menos movimiento;
         // si no, queda el marco quieto que dibuja la propia carta (--aro).
         .c-marco {
             display: none;
@@ -281,7 +281,7 @@
                 0 1px 2px rgba(0, 0, 0, 0.25);
         }
 
-        // Nombre: la variable --k (que calcula el main.js) agranda los nombres cortos.
+        // Nombre: la variable --k (que calcula cartas.js) agranda los nombres cortos.
         // Lo que va entre paréntesis (.c-aparte) pasa a una segunda línea más chica (--sp).
         .c-cab h4,
         .c-nombre {
@@ -958,7 +958,7 @@
     }
 }
 
-// En computadora, mientras se mantiene apretada Shift (main.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)
+// En computadora, mientras se mantiene apretada Shift (inclinacion.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)
 // las cartas no se inclinan con el mouse: tampoco muestran el reflejo ni la textura holográfica, que siguen al puntero y sin inclinación
 // quedarían fijos en un lugar. El levante del hover (la carta que se alza un poquito, con su sombra) NO se anula: ese siempre está.
 // Va con !important en la opacidad para ganarle a los reflejos de más arriba, que son más específicos.
@@ -969,7 +969,7 @@
     opacity: 0 !important;
 }
 
-// La carta ampliada de más (zoom extra, con la rueda del mouse o el pellizco; main.js le pone la clase "zoom-extra-activo") no se inclina
+// La carta ampliada de más (zoom extra, con la rueda del mouse o el pellizco; zoom.js le pone la clase "zoom-extra-activo") no se inclina
 // y tampoco muestra el reflejo ni la textura holográfica (los signos): eso va con la inclinación. Al volver al zoom normal vuelven.
 #listado-digimons > li.zoom-activa.zoom-extra-activo::after,
 #listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::before,
@@ -978,7 +978,7 @@
 }
 
 // Al pasar de carta en el zoom (con el teclado o con las flechas), la carta nueva queda sin reflejo ni textura holográfica mientras el mouse no
-// se mueva (main.js le pone la clase "reflejo-quieto" y se la saca con el primer movimiento del mouse; tampoco se inclina). Si no, el "hover" de
+// se mueva (zoom.js le pone la clase "reflejo-quieto" y se la saca con el primer movimiento del mouse; tampoco se inclina). Si no, el "hover" de
 // la carta que aparece justo debajo del puntero la mostraba con el brillo quieto en el medio.
 #listado-digimons > li.reflejo-quieto::after,
 #listado-digimons.tilt-on > li.reflejo-quieto .c-frente::before,
@@ -986,7 +986,7 @@
     opacity: 0 !important;
 }
 
-// Con la carta agrandada de más el mouse la "agarra" (main.js: activarArrastreDeZoomExtra): mano abierta sobre ella y cerrada mientras se
+// Con la carta agrandada de más el mouse la "agarra" (zoom.js: activarArrastreDeZoomExtra): mano abierta sobre ella y cerrada mientras se
 // arrastra. No se selecciona su texto ni se arrastra la imagen. (Los botones de la carta conservan su cursor.)
 #listado-digimons > li.zoom-activa.zoom-extra-activo {
     cursor: grab;

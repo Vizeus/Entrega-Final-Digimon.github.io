@@ -388,7 +388,7 @@
     }
 
     // Sonido (en computadora): botón chiquito y redondo, junto al de idioma (ver el mixin boton-de-sonido).
-    // En celular main.js lo saca de la barra y lo deja flotando en la esquina de abajo a la derecha (más abajo)
+    // En celular audio.js lo saca de la barra y lo deja flotando en la esquina de abajo a la derecha (más abajo)
     #silenciar {
         @include boton-de-sonido;
 
@@ -411,7 +411,7 @@
         }
     }
 
-    // Ver el mixin boton-de-inclinacion (más arriba). main.js lo muestra (hidden) solo con mouse; en el celular no existe.
+    // Ver el mixin boton-de-inclinacion (más arriba). inclinacion.js lo muestra (hidden) solo con mouse; en el celular no existe.
     #inclinacion-invertida {
         @include boton-de-inclinacion;
 
@@ -627,7 +627,7 @@
 
 // En computadora la barra de carga (rótulo + barra) desaparece cuando termina: el JS le pone la clase "carga-completa" a la barra
 // de arriba (la misma que en el celular apaga la línea finita). Medio segundo después de llegar al 100 % —para que se alcance a
-// ver completa— se desvanece y, ya invisible, main.js (retirarBloqueDeCarga) lo saca de la barra (atributo hidden) y desliza el
+// ver completa— se desvanece y, ya invisible, api.js (retirarBloqueDeCarga) lo saca de la barra (atributo hidden) y desliza el
 // resto de la barra al lugar que deja, en vez de que salte.
 @include computadora {
     #navbar.carga-completa .carga {
@@ -637,7 +637,7 @@
     }
 }
 
-// SONIDO EN CELULAR: main.js saca el botón de la barra y lo deja suelto en el <body>. Flota siempre en la esquina de abajo a la
+// SONIDO EN CELULAR: audio.js saca el botón de la barra y lo deja suelto en el <body>. Flota siempre en la esquina de abajo a la
 // derecha, por encima de todo (cartas, ventanas de combate y de información, zoom y sus flechas): se puede apagar el sonido en
 // cualquier momento, también mientras suena la música del combate. En computadora sigue en la barra, junto al idioma.
 @include celular {
@@ -676,8 +676,8 @@
 }
 
 // En computadora los botones redondos de sonido e inclinación viven en la barra. Cuando uno llama la atención (salta, lanza ondas y suelta
-// su globito: ver "LLAMADA DE LOS BOTONES REDONDOS" en main.js) y hay algo por encima de la barra —el zoom de una carta, un cartel del combate
-// o uno de información, todos con una cortina oscura y desenfocada—, main.js lo saca un momento de la barra (con top y left puestos en el
+// su globito: ver "LLAMADA DE LOS BOTONES REDONDOS" en avisos.js) y hay algo por encima de la barra —el zoom de una carta, un cartel del combate
+// o uno de información, todos con una cortina oscura y desenfocada—, avisos.js lo saca un momento de la barra (con top y left puestos en el
 // mismo lugar de la pantalla) para que se vea por encima de la cortina y se pueda tocar. Al terminar vuelve a la barra.
 @include computadora {
     body > #silenciar,

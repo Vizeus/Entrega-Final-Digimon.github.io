@@ -7,7 +7,7 @@
 //   · El buscador ignora mayúsculas, acentos, espacios de más y signos (v-mon = vmon), acepta varias palabras en cualquier orden
 //     y también el número del digimon ("15" o "#15").
 //   · Las cartas que no cumplen se esconden con la clase "filtrada" (el CSS las oculta). Las cartas llegan de a poco
-//     mientras carga la página: main.js avisa con el evento "carta-agregada" y se vuelven a hacer las cuentas.
+//     mientras carga la página: cartas.js avisa con el evento "carta-agregada" y se vuelven a hacer las cuentas.
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 

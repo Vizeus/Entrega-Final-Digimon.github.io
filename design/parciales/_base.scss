@@ -4,7 +4,7 @@
 //   Pixelify Sans  → etiquetas (nivel, ID, tipo, elemento) y botones de la barra
 //   Exo 2          → textos generales (ventanas emergentes y resto de la página; la barra de arriba va toda en Pixelify Sans)
 //   DotGothic16    → descripción del dorso de las cartas
-// Los tamaños viven en variables porque el main.js también los lee para ajustar el largo de los nombres.
+// Los tamaños viven en variables porque cartas.js también los lee para ajustar el largo de los nombres.
 // -----------------------------------------------------------------------------------------------------------------
 :root {
     --f-titulo: "Orbitron";
@@ -13,7 +13,7 @@
     --f-boton: "Pixelify Sans";
     --f-descripcion: "DotGothic16";
 
-    --t-nombre: 11.5px; // tamaño base del nombre (los cortos se agrandan, ver ajustarNombre() en main.js)
+    --t-nombre: 11.5px; // tamaño base del nombre (los cortos se agrandan, ver ajustarNombre() en cartas.js)
     --p-titulo: 800;
     --ls-titulo: 0.3px;
     --t-chip: 11px;

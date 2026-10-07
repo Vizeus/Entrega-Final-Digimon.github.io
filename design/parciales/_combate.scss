@@ -2,7 +2,7 @@
 @use "mixins" as *;
 
 // -----------------------------------------------------------------------------------------------------------------
-// CARTELES DEL COMBATE (main.js, iniciarCombate): preparando → peleando → ganador.
+// CARTELES DEL COMBATE (combate.js, iniciarCombate): preparando → peleando → ganador.
 //   Ventana de vidrio con barra de título brillante, "pantallita" tipo Digivice con el GIF, el VS con las dos cartas
 //   y el botón de gel de la barra de arriba. El ganador lleva corona y confeti.
 // -----------------------------------------------------------------------------------------------------------------
@@ -19,7 +19,7 @@
 }
 
 // Entrada y salida de los carteles: la ventana crece desde chiquita mientras aparece (combate-entra) y al irse se desvanece
-// (combate-sale), en medio segundo. main.js las pide en CARTEL_COMBATE (showClass / hideClass). Antes salían de la librería
+// (combate-sale), en medio segundo. combate.js las pide en CARTEL_COMBATE (showClass / hideClass). Antes salían de la librería
 // animate.css (zoomIn y fadeOut, "faster"), que se cargaba entera para usar solo estas dos: son las mismas animaciones.
 @keyframes combate-entra {
     from {
@@ -193,7 +193,7 @@
         img {
             display: block;
             width: 100%;
-            aspect-ratio: var(--proporcion, 16 / 9); // la del GIF de cada fase (la pone main.js): así no se recorta nada
+            aspect-ratio: var(--proporcion, 16 / 9); // la del GIF de cada fase (la pone combate.js): así no se recorta nada
             object-fit: cover;
             border-radius: 10px;
             background: #fff;
@@ -412,7 +412,7 @@
         }
     }
 
-    // Confeti (lo arma main.js al abrir la ventana del ganador)
+    // Confeti (lo arma combate.js al abrir la ventana del ganador)
     .combate-confeti {
         position: absolute;
         inset: 0;

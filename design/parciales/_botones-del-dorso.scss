@@ -48,7 +48,7 @@
     filter: brightness(1.1);
 }
 
-// Hundido: con el mouse es :active; con el dedo la clase "hundido" (main.js, activarBotonDelDorso), que dura un mínimo para que se alcance a ver
+// Hundido: con el mouse es :active; con el dedo la clase "hundido" (gestos.js, activarBotonDelDorso), que dura un mínimo para que se alcance a ver
 #listado-digimons li .c-evo:active,
 #listado-digimons li .c-ataques:active,
 #listado-digimons li .c-evo.hundido,

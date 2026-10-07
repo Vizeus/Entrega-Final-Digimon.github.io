@@ -3,7 +3,7 @@
 //
 // Los tres menús de la barra tienen el mismo formato: al elegir una opción se abre una ventana con su descripción,
 // contra qué es fuerte o débil y cuánto pesa en el combate. Los números salen de las mismas tablas que usa el combate
-// (main.js), así que lo que dice la ventana siempre coincide con lo que pasa en la pelea.
+// (datos.js y combate.js), así que lo que dice la ventana siempre coincide con lo que pasa en la pelea.
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -225,7 +225,7 @@ document.addEventListener('idioma-cambiado', redibujarInfoAbierta);
 document.addEventListener('niveles-cambiados', redibujarInfoAbierta);
 
 // ---- Ventana de ataques de una carta ---------------------------------------------------------------------------------
-// El botón "⚔️ Ataques" del dorso (lo arma main.js al construir el dorso). Abre una lista con todos los ataques de la carta; al tocar
+// El botón "⚔️ Ataques" del dorso (lo arma cartas.js al construir el dorso). Abre una lista con todos los ataques de la carta; al tocar
 // uno se despliega qué hace (la descripción viene de la API, en inglés). Se abre de a uno, para que la lista no se alargue.
 let cartaDeAtaques = null; // la carta cuya ventana de ataques está abierta (para reescribirla si se cambia el idioma)
 
@@ -235,7 +235,7 @@ function crearBotonAtaques(carta) {
     boton.className = 'c-ataques';
     boton.textContent = t('ataques.boton');
     boton.title = t('ataques.boton.ayuda');
-    activarBotonDelDorso(boton, () => abrirAtaques(carta)); // toque rápido con el dedo y hundimiento (main.js)
+    activarBotonDelDorso(boton, () => abrirAtaques(carta)); // toque rápido con el dedo y hundimiento (gestos.js)
     return boton;
 }
 
@@ -390,7 +390,7 @@ function crearListaDeAtaques(habilidades, cartaActual) {
             cerrarTodos(boton);
             boton.setAttribute('aria-expanded', String(abrir));
             detalle.hidden = !abrir;
-            if (typeof sonidoFichero === 'function') sonidoFichero(abrir, FICHERO_DE_ATAQUES); // el fichero que se abre o se cierra (main.js): sin tecla
+            if (typeof sonidoFichero === 'function') sonidoFichero(abrir, FICHERO_DE_ATAQUES); // el fichero que se abre o se cierra (sonidos.js): sin tecla
             if (abrir) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         });
 

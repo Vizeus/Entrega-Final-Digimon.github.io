@@ -3,7 +3,7 @@
 //
 // Las tablas con la información que usa la página: tipos, niveles, elementos, cartas propias y colores. Son solo datos (no hay
 // funciones): para cambiar algo de lo que sabe el simulador, se cambia acá. Se carga antes que los demás scripts.
-// Las reglas de cómo se usan (el combate, la deducción del elemento...) están en main.js.
+// Las reglas de cómo se usan están en cada parte (por ejemplo, el combate en combate.js y la deducción del elemento en api.js).
 // -----------------------------------------------------------------------------------------------------------------
 
 // ---- Tipos ----------------------------------------------------------------------------------------------------
