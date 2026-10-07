@@ -1,0 +1,382 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+// -----------------------------------------------------------------------------------------------------------------
+// VENTANAS EMERGENTES (SweetAlert2): la cortina, el tamaño común y las ventanas de información y de ataques.
+// -----------------------------------------------------------------------------------------------------------------
+.swal2-container {
+    z-index: capa(ventanas) !important;
+
+    &.swal2-backdrop-show {
+        backdrop-filter: blur($desenfoque-del-fondo);
+        -webkit-backdrop-filter: blur($desenfoque-del-fondo);
+    }
+}
+
+body:has(.swal2-container) #zoom-flechas,
+body:has(.swal2-container) #zoom-fondo .zoom-cerrar,
+body:has(.swal2-container) #zoom-fondo .zoom-ayuda,
+body:has(.swal2-container) #avisos-ayuda {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+// Ventanas emergentes (SweetAlert2): todos los carteles en escritorio tienen el mismo tamaño unificado (punto medio entre los grandes y los chicos)
+.swal2-popup {
+    font-family: var(--f-cuerpo), sans-serif;
+}
+
+@media (min-width: 641px) {
+    .popup-info,
+    .popup-ataques {
+        width: min(94vw, 680px) !important;
+        max-width: 680px !important;
+    }
+}
+
+.swal2-title {
+    font-family: var(--f-titulo), sans-serif;
+}
+
+.swal2-popup button,
+.swal2-styled {
+    font-family: var(--f-boton), sans-serif;
+
+    &:focus,
+    &.swal2-confirm:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    &:focus-visible,
+    &.swal2-confirm:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.8) !important;
+        box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.6) !important;
+    }
+}
+
+// Ventanas de información (tipos, elementos y niveles): las tres tienen el mismo formato.
+// El título lleva la fuente pixelada de la barra de arriba (Pixelify Sans)
+.popup-info .swal2-title {
+    font-family: var(--f-boton), sans-serif;
+}
+
+// Ventana de ataques de una carta (info.js, abrirAtaques): una lista donde cada ataque se despliega al tocarlo (de a uno)
+.popup-ataques {
+    .ataques-ayuda {
+        margin: 0 0 10px;
+        font-family: var(--f-descripcion), sans-serif;
+        font-size: 0.95em;
+        color: #5b6b7b;
+    }
+
+    .ataques-lista {
+        list-style: none;
+        margin: 0;
+        padding: 0 4px 2px 0;
+        max-height: min(65vh, 480px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .ataque-item {
+        border-radius: 10px;
+    }
+
+    .ataque-boton {
+        box-sizing: border-box;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 14px;
+        font:
+            600 15px/1.25 var(--f-boton),
+            sans-serif;
+        text-align: left;
+        color: $tinta;
+        cursor: pointer;
+        border: 1px solid rgba(36, 71, 106, 0.25);
+        border-radius: 10px;
+        background: rgba(36, 71, 106, 0.08);
+        transition:
+            background 0.15s ease,
+            border-color 0.15s ease;
+
+        &:hover,
+        &:focus-visible {
+            background: rgba(36, 71, 106, 0.15);
+        }
+
+        &[aria-expanded="true"] {
+            background: rgba(36, 71, 106, 0.18);
+            border-color: rgba(36, 71, 106, 0.45);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        small {
+            font-weight: 400;
+            font-size: 0.85em;
+            color: #5b6b7b;
+        }
+    }
+
+    .ataque-flecha {
+        flex: none;
+        transition: rotate 0.2s ease;
+    }
+
+    .ataque-boton[aria-expanded="true"] .ataque-flecha {
+        rotate: 180deg;
+    }
+
+    .ataque-detalle {
+        padding: 12px 14px 14px;
+        background: rgba(36, 71, 106, 0.04);
+        border: 1px solid rgba(36, 71, 106, 0.35);
+        border-top: none;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+
+    .ataque-desc {
+        margin: 0 0 10px;
+        font-family: var(--f-descripcion), sans-serif;
+        font-size: 1rem;
+        line-height: 1.45;
+        color: #26303a;
+
+        &.sin-desc-texto {
+            font-style: italic;
+            color: #6a7989;
+        }
+    }
+
+    .ataque-digimons-seccion {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed rgba(36, 71, 106, 0.25);
+    }
+
+    // Cuando solo este digimon usa el ataque: un aviso corto, sin imágenes
+    .ataque-solo-este {
+        margin: 0;
+        font-family: var(--f-descripcion), sans-serif;
+        font-size: 0.95rem;
+        font-style: italic;
+        color: #6a7989;
+    }
+
+    .ataque-digimons-titulo {
+        margin: 0 0 8px;
+        font:
+            700 13px var(--f-boton),
+            sans-serif;
+        color: $tinta;
+    }
+
+    .ataque-digimons-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-height: 230px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 2px;
+    }
+
+    .ataque-digimons-grid .ataque-digimon-nodo {
+        flex: 0 1 calc(50% - 4px);
+        width: calc(50% - 4px);
+        box-sizing: border-box;
+    }
+
+    @media (min-width: 600px) {
+        .ataque-digimons-grid .ataque-digimon-nodo {
+            flex: 0 1 calc(33.333% - 6px);
+            width: calc(33.333% - 6px);
+        }
+    }
+
+    // En celular el contenedor de SweetAlert trae ~29 px de relleno a cada lado y los nombres de los digimons se cortaban enseguida
+    @include celular {
+        .swal2-html-container {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+    }
+
+    .ataques-pie {
+        margin: 10px 0 0;
+    }
+}
+
+// Sus textos (descripción, datos y pie) llevan la misma tipografía que la descripción del dorso de las cartas
+.swal2-html-container {
+    .info-desc,
+    .info-datos,
+    .info-pie {
+        font-family: var(--f-descripcion), sans-serif;
+    }
+
+    .info-desc {
+        margin: 0 0 12px;
+        font-size: 1.05em;
+        line-height: 1.45;
+    }
+
+    .info-datos {
+        list-style: none;
+        margin: 0 0 12px;
+        padding: 10px 16px;
+        text-align: left;
+        border-radius: 10px;
+        background: rgba(36, 71, 106, 0.08);
+
+        li {
+            margin: 4px 0;
+        }
+
+        b {
+            color: $tinta;
+        }
+    }
+
+    .info-pie {
+        margin: 0;
+        font-size: 0.85em;
+        color: #5b6b7b;
+    }
+
+    // Enlaces de referencias cruzadas en los carteles de información (línea punteada al pasar el puntero)
+    .info-link {
+        appearance: none;
+        -webkit-appearance: none;
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+        padding: 1px 4px;
+        margin: 0 1px;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        font-weight: 700;
+        color: var(--link-c, #{$tinta});
+        cursor: pointer;
+        display: inline;
+        vertical-align: baseline;
+        text-decoration: underline dotted transparent;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1.5px;
+        transition:
+            text-decoration-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover,
+        &:focus-visible {
+            text-decoration-color: currentcolor;
+            background: rgba(36, 71, 106, 0.1);
+            outline: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--link-c, #{$tinta}) !important;
+            box-shadow: none !important;
+        }
+
+        &:active {
+            opacity: 0.75;
+        }
+    }
+}
+
+@include celular {
+    .popup-info:not(.popup-ataques) {
+        padding: 0.65em 0.55em 0.75em !important;
+
+        .swal2-icon {
+            width: 3.7em;
+            height: 3.7em;
+            margin: 1em auto 0.35em;
+            font-size: 14px;
+        }
+
+        .swal2-title {
+            padding: 12px 16px 0;
+            font-size: 1.4em;
+        }
+
+        .swal2-html-container {
+            padding: 8px 18px 3px;
+            font-size: 0.95em;
+        }
+
+        .info-desc {
+            margin-bottom: 8px;
+            font-size: 1em;
+            line-height: 1.35;
+        }
+
+        .info-datos {
+            margin-bottom: 8px;
+            padding: 7px 10px;
+
+            li {
+                margin: 2px 0;
+            }
+        }
+
+        .info-pie {
+            font-size: 0.84em;
+            line-height: 1.3;
+        }
+
+        .swal2-actions {
+            margin: 12px 0 0;
+        }
+
+        .swal2-confirm {
+            padding: 8px 14px;
+            font-size: 0.9em;
+        }
+    }
+}
+
+@media (max-width: 370px) {
+    .popup-info:not(.popup-ataques) {
+        .swal2-icon {
+            width: 3.2em;
+            height: 3.2em;
+            margin: 0.7em auto 0.25em;
+        }
+
+        .swal2-title {
+            padding: 8px 12px 0;
+            font-size: 1.25em;
+        }
+
+        .swal2-html-container {
+            padding: 6px 12px 2px;
+            font-size: 0.9em;
+        }
+
+        .info-desc {
+            line-height: 1.3;
+        }
+
+        .swal2-actions {
+            margin-top: 8px;
+        }
+
+        .swal2-confirm {
+            padding: 7px 12px;
+        }
+    }
+}

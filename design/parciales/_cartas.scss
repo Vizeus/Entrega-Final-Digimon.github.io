@@ -1,0 +1,1125 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+// -----------------------------------------------------------------------------------------------------------------
+// CARTAS
+//   El tipo define el color (--tipo) y el nivel lo aclara o lo oscurece: los bebés son pastel y cada nivel es un poco más
+//   profundo que el anterior (--base es el color del tipo ya ajustado al nivel). El elemento define el color de su etiqueta.
+//   Las etiquetas chicas (tipo, gema, botón Evolución) usan el color puro del tipo para que el texto blanco se lea bien.
+//   Los Perfect (nivel 5) tienen marco de cromo helado y los Ultimate (nivel 6) marco dorado; el anillo y el aura
+//   interiores conservan el color del tipo, así se distingue el tipo sin perder que es Perfect o Ultimate.
+//   Los niveles 7 (Super Ultimate) y 8 (Absolute) son inventados para el simulador y tienen un marco que gira:
+//   arcoíris holográfico con corona el 7, y estrellado en violeta y oro con un sol el 8.
+//
+//   Estructura de cada carta (la arma el main.js):
+//     li
+//      ├─ .c-frente  → .c-cab (nombre) · .c-arte (imagen + .c-gema con el nivel) · .c-sub · .c-chips
+//      ├─ .c-dorso   → .c-cab (nombre) · .c-cuerpo (especie, campos, estreno y descripción). Se crea al girar la carta.
+//      └─ .c-flip    → botón para dar vuelta la carta (aparece al pasar el mouse)
+//   El levantado (hover / seleccionada) usa la propiedad "translate" y la inclinación/giro usan "transform",
+//   así no se pisan entre sí.
+// -----------------------------------------------------------------------------------------------------------------
+#listado-digimons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: 14px 0 0; // un respiro debajo de la barra
+    // Con el zoom, la carta que sale (o la que entra) pasa por afuera de la pantalla un instante: sin esto la página se hacía
+    // más ancha y aparecía por un momento la barra de desplazamiento horizontal. "clip" no deja una barra y no toca el vertical.
+    overflow-x: clip;
+
+    li {
+        --tipo: #59616d; // Desconocido / sin tipo: gris oscuro
+        --claro: 12%; // cuánto se aclara hacia blanco (bebés); sin nivel conocido: como un Child
+        --oscuro: 0%; // cuánto se oscurece hacia negro (niveles altos)
+        --fuerza: 64%; // cuánto color lleva el fondo y la placa del nombre (crece con el nivel)
+        --base: color-mix(in srgb, color-mix(in srgb, var(--tipo), white var(--claro)), black var(--oscuro));
+        --tinte: color-mix(in srgb, var(--base) var(--fuerza), white);
+
+        // Marco: un degradé que se pinta detrás del borde transparente. Entre borde y relleno siempre suman 14px,
+        // por eso todas las cartas miden lo mismo aunque el marco sea más grueso.
+        --borde-base: 2px;
+        --borde: var(--borde-base);
+        --aro: linear-gradient(var(--base), var(--base));
+        --fondo: linear-gradient(160deg, var(--tinte) 0%, #ffffff 85%);
+
+        // Sombras (siempre 3 capas para que se puedan animar entre estados)
+        --anillo: inset 0 0 0 0 transparent;
+        --aura: 0 0 0 0 transparent;
+        --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+        // El contenido (placa del nombre, imagen, chips) empieza a 14px del borde de la carta y el marco blanco de la imagen
+        // sobresale --halo-arte. El anillo de adentro (borde + --anillo) tiene que terminar antes que eso, si no se mete debajo
+        --halo-arte: 2px;
+
+        position: relative;
+        width: 194px;
+        box-sizing: content-box;
+        margin: 10px;
+        padding: calc(14px - var(--borde));
+        border: var(--borde) solid transparent;
+        border-radius: 10px;
+        background:
+            var(--fondo) padding-box,
+            var(--aro) border-box;
+        box-shadow: var(--anillo), var(--aura), var(--caida);
+        text-align: center;
+        list-style-type: none;
+        // La inclinación (transform, --mx y --my) NO lleva transición CSS: main.js la suaviza cuadro a cuadro. Una transición
+        // sobre un transform con perspective() hace que el navegador dibuje la carta a menor resolución mientras se mueve.
+        transition:
+            translate 0.3s ease,
+            box-shadow 0.3s ease;
+
+        // Un color distinto para cada tipo (los colores están en _variables.scss)
+        @each $tipo, $color in $colores-tipo {
+            &[data-tipo="#{$tipo}"] {
+                --tipo: #{$color};
+            }
+        }
+
+        // Un tono por nivel: Baby I es pastel, Baby II y Child van subiendo hasta el color del tipo,
+        // y de Adult en adelante pasan a tonos cada vez más profundos (cada nivel un escalón más oscuro que el anterior,
+        // hasta el nivel 8, el más intenso)
+        &[data-nivel="1"] {
+            --claro: 58%;
+            --fuerza: 45%;
+        }
+        &[data-nivel="2"] {
+            --claro: 34%;
+            --fuerza: 55%;
+        }
+        &[data-nivel="3"] {
+            --claro: 12%;
+            --fuerza: 64%;
+        }
+        &[data-nivel="4"] {
+            --claro: 0%;
+            --oscuro: 6%;
+            --fuerza: 72%;
+        }
+
+        // PERFECT: marco de cromo helado + un rombo en la esquina
+        &[data-nivel="5"] {
+            --claro: 0%;
+            --oscuro: 20%;
+            --fuerza: 80%;
+            --borde-base: 7px;
+            --aro: linear-gradient(135deg, #f3fdff 0%, #7fd0f5 28%, #ffffff 48%, #5cb3e6 72%, #d6f3ff 100%);
+            --anillo: inset 0 0 0 4px var(--base);
+            --aura: 0 0 14px 2px rgba(90, 200, 255, 0.6), 0 0 26px 4px color-mix(in srgb, var(--base) 45%, transparent);
+
+            @include insignia-de-nivel("◆", 0, 6px, 14px, #ffffff, 0 0 5px #7fc8ff, 0 0 10px #4aa8ff);
+        }
+
+        // ULTIMATE: marco dorado + una estrella en la esquina + reflejo de arcoíris en la imagen
+        &[data-nivel="6"] {
+            --claro: 0%;
+            --oscuro: 34%;
+            --fuerza: 88%;
+            --borde-base: 7px;
+            --aro: linear-gradient(135deg, #fff4b8 0%, #e8b52a 28%, #fff1a3 48%, #c98f10 72%, #ffe27a 100%);
+            --anillo: inset 0 0 0 4px var(--base);
+            --aura: 0 0 14px 2px rgba(255, 190, 40, 0.65), 0 0 26px 4px color-mix(in srgb, var(--base) 45%, transparent);
+
+            @include insignia-de-nivel("✦", -1px, 5px, 17px, #ffffff, 0 0 5px #ffcf3a, 0 0 10px #ffb400);
+            @include reflejo-del-arte(0.16, linear-gradient(115deg, $arcoiris));
+        }
+
+        // SUPER ULTIMATE (nivel 7): marco holográfico de arcoíris que gira + corona + aura violeta + reflejo de prisma fuerte
+        &[data-nivel="7"] {
+            --claro: 0%;
+            --oscuro: 46%;
+            --fuerza: 95%;
+            --borde-base: 8px;
+            --colores-marco: #ff5fa2, #ffd85f, #5fffb0, #5fc8ff, #b55fff, #ff5fa2;
+            --vuelta-marco: 6s;
+            --aro: conic-gradient(from 0deg, var(--colores-marco));
+            --anillo: inset 0 0 0 3px var(--base), inset 0 0 0 4px rgba(255, 255, 255, 0.85); // borde 8 + anillo 4 = 12px
+            --halo-arte: 1px;
+            --aura: 0 0 16px 3px rgba(190, 110, 255, 0.75), 0 0 34px 8px color-mix(in srgb, var(--base) 55%, transparent);
+
+            @include insignia-de-nivel("♛", -1px, 5px, 19px, #ffffff, 0 0 5px #e39bff, 0 0 11px #a24dff);
+            @include reflejo-del-arte(0.28, linear-gradient(115deg, $arcoiris));
+
+            .c-gema {
+                background: radial-gradient(circle at 30% 25%, #ffe3f4 0%, #e0489b 52%, #5e1d86 100%);
+            }
+        }
+
+        // ABSOLUTE (nivel 8): marco estrellado en violeta y oro que gira + sol + aura dorada + velo cósmico en la imagen
+        &[data-nivel="8"] {
+            --claro: 0%;
+            --oscuro: 58%;
+            --fuerza: 100%;
+            --borde-base: 9px;
+            --colores-marco: #12082e, #6a3dff 16%, #fff7c9 28%, #ffd24a 38%, #12082e 52%, #6a3dff 68%, #fff7c9 80%, #ffd24a 90%, #12082e;
+            --vuelta-marco: 5s;
+            --aro: conic-gradient(from 0deg, var(--colores-marco));
+            --anillo: inset 0 0 0 2px var(--base), inset 0 0 0 3px rgba(255, 233, 150, 0.95); // borde 9 + anillo 3 = 12px
+            --halo-arte: 1px;
+            --aura: 0 0 18px 4px rgba(255, 218, 110, 0.9), 0 0 40px 10px rgba(120, 80, 255, 0.6);
+
+            @include insignia-de-nivel("✺", -2px, 4px, 21px, #fff7c9, 0 0 5px #ffd24a, 0 0 12px #ffb400, 0 0 18px #8a5cff);
+            @include reflejo-del-arte(
+                0.3,
+                radial-gradient(circle at 72% 18%, #ffe27a 0%, transparent 55%),
+                linear-gradient(115deg, #7b52ff, #ffd24a 55%, #7b52ff)
+            );
+
+            .c-gema {
+                background: radial-gradient(circle at 30% 25%, #fff7c9 0%, #f0b400 50%, #5a3a00 100%);
+            }
+        }
+
+        // MARCO QUE GIRA (niveles 7 y 8). Es un <span class="c-marco"> que arma main.js solo en esas cartas.
+        // Antes el giro cambiaba el fondo de la carta en cada cuadro, y el navegador tenía que volver a dibujar la carta entera
+        // (con su halo) 60 veces por segundo: con una sola carta de estas en pantalla, toda la página bajaba de fluidez.
+        // Ahora el degradé es una capa cuadrada, más grande que la carta, que solo se rota (eso lo hace la placa gráfica sin
+        // redibujar nada), y la carta la recorta con forma de marco (máscara): se ve igual, pero casi no cuesta.
+        // Solo gira mientras se ve en pantalla (la clase "en-pantalla" la pone main.js) y si la persona no pidió menos movimiento;
+        // si no, queda el marco quieto que dibuja la propia carta (--aro).
+        .c-marco {
+            display: none;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            &[data-nivel]:where(.en-pantalla) {
+                // ([data-nivel] para ganarle al --aro de cada nivel)
+                // El marco lo dibuja la capa que gira: el de la carta se saca para que no asome en los bordes
+                --aro: linear-gradient(transparent, transparent);
+
+                .c-marco {
+                    display: block;
+                    position: absolute;
+                    inset: calc(var(--borde) * -1); // tapa justo el borde de la carta
+                    box-sizing: border-box;
+                    padding: var(--borde);
+                    border-radius: 10px;
+                    overflow: hidden;
+                    pointer-events: none;
+                    // Solo se ve el borde: se resta el interior (content-box) a la caja entera
+                    -webkit-mask:
+                        linear-gradient(#000 0 0) content-box,
+                        linear-gradient(#000 0 0);
+                    -webkit-mask-composite: xor;
+                    mask:
+                        linear-gradient(#000 0 0) content-box exclude,
+                        linear-gradient(#000 0 0);
+
+                    &::before {
+                        content: "";
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        width: 440px; // más que la diagonal de la carta (390px), así el degradé la cubre en cualquier ángulo
+                        height: 440px;
+                        margin: -220px 0 0 -220px;
+                        background: conic-gradient(from 0deg, var(--colores-marco));
+                        will-change: transform;
+                        animation: girar-marco var(--vuelta-marco) linear infinite;
+                    }
+                }
+            }
+        }
+
+        // Color de la etiqueta de cada elemento (los colores están en _variables.scss). La de Luz, que es muy clara, lleva el texto oscuro
+        @each $elemento, $color in $colores-elemento {
+            &[data-elemento="#{$elemento}"] .c-elem {
+                --c: #{$color};
+                @if $elemento == "Luz" {
+                    color: #4a3a00;
+                    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+                }
+            }
+        }
+
+        // Frente y dorso comparten la misma disposición en columna
+        .c-frente,
+        .c-dorso {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .c-dorso {
+            display: none;
+        }
+
+        &.de-dorso {
+            .c-frente {
+                display: none;
+            }
+            .c-dorso {
+                display: flex;
+            }
+            .c-puente {
+                pointer-events: none !important;
+            }
+        }
+
+        // Cabecera con el nombre: una placa metálica con un toque del color del tipo
+        .c-cab {
+            box-sizing: border-box;
+            min-height: 40px;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(0, 0, 0, 0.28);
+            border-radius: 6px;
+            background: linear-gradient(
+                180deg,
+                #ffffff 0%,
+                color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.55), #e6e9ed) 52%,
+                color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.9), #bfc6ce) 100%
+            );
+            box-shadow:
+                inset 0 1px 0 #ffffff,
+                0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+
+        // Nombre: la variable --k (que calcula el main.js) agranda los nombres cortos.
+        // Lo que va entre paréntesis (.c-aparte) pasa a una segunda línea más chica (--sp).
+        .c-cab h4,
+        .c-nombre {
+            margin: 0;
+            font-family: var(--f-titulo), sans-serif;
+            font-size: calc(var(--t-nombre) * var(--k, 1));
+            font-weight: var(--p-titulo);
+            letter-spacing: var(--ls-titulo);
+            line-height: 1.15;
+            color: #1d2733;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .c-aparte {
+            display: block;
+            margin-top: 1px;
+            font-size: var(--sp, 9px);
+            line-height: 1.15;
+            opacity: 0.8;
+        }
+
+        // Imagen: va en un marco blanco (las imágenes de la API tienen fondo blanco)
+        .c-arte {
+            position: relative;
+            box-sizing: border-box;
+            width: 100%;
+            aspect-ratio: 1;
+            overflow: hidden;
+            background: #ffffff;
+            border: 2px solid var(--base);
+            border-radius: 6px;
+            box-shadow:
+                0 0 0 var(--halo-arte) rgba(255, 255, 255, 0.85),
+                0 2px 5px rgba(0, 0, 0, 0.25);
+
+            img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+            // Brillo suave en la parte de arriba, como una tapa de vidrio
+            &::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 42%);
+            }
+        }
+
+        // Gema con el nivel (número del 1 al 8, o "?" si es desconocido)
+        .c-gema {
+            position: absolute;
+            z-index: 2;
+            top: 6px;
+            right: 6px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font:
+                900 15px/1 var(--f-titulo),
+                sans-serif;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            background: radial-gradient(
+                circle at 30% 25%,
+                color-mix(in srgb, var(--tipo) 45%, white) 0%,
+                var(--tipo) 55%,
+                color-mix(in srgb, var(--tipo) 65%, black) 100%
+            );
+            box-shadow:
+                0 0 0 2px #e4e8ed,
+                0 0 0 3px #7e8791,
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            user-select: none;
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease,
+                box-shadow 0.15s ease;
+
+            &:hover {
+                filter: brightness(1.15);
+                transform: scale(1.08);
+                box-shadow:
+                    0 0 0 2px #ffffff,
+                    0 0 0 3px #9ba5b0,
+                    0 3px 6px rgba(0, 0, 0, 0.5),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+            }
+
+            &:active {
+                transform: scale(0.95);
+            }
+
+            small {
+                font-size: 7px;
+                letter-spacing: 0.6px;
+            }
+        }
+
+        // Gema de la X-Antibody (solo en las cartas que la tienen): del lado opuesto a la del nivel
+        .c-x {
+            position: absolute;
+            z-index: 2;
+            top: 6px;
+            left: 6px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font:
+                900 16px/1 var(--f-titulo),
+                sans-serif;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, #ffd1dc 0%, #e0245e 52%, #7a0b2f 100%);
+            box-shadow:
+                0 0 0 2px #e4e8ed,
+                0 0 0 3px #7e8791,
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            cursor: help;
+        }
+
+        // Marca de los digimons que la API trae como Armor (rojo, "A") o Hybrid (verde, "H"): igual que la gema de la X-Antibody
+        // y en el mismo lugar. Al pasar el mouse dice cuál es. Si una carta tuviera las dos, la marca va justo debajo de la X.
+        // El rojo de Armor es un bermellón (tira a naranja); el de la X-Antibody es un carmesí rosado: con la letra y el lugar no se confunden.
+        .c-marca {
+            position: absolute;
+            z-index: 2;
+            top: 6px;
+            left: 6px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font:
+                900 16px/1 var(--f-titulo),
+                sans-serif;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, #ffd6c9 0%, #f22f12 52%, #7d1204 100%); // Armor: bermellón
+            box-shadow:
+                0 0 0 2px #e4e8ed,
+                0 0 0 3px #7e8791,
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            cursor: help;
+        }
+
+        &[data-marca="Hybrid"] .c-marca {
+            background: radial-gradient(circle at 30% 25%, #c9ffe9 0%, #14b87a 52%, #045239 100%);
+        }
+
+        .c-x ~ .c-marca {
+            top: 36px;
+        }
+
+        // Nivel (izquierda) e ID (derecha)
+        .c-sub {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px;
+            font-family: var(--f-etiqueta), sans-serif;
+            font-size: var(--t-sub);
+            font-weight: 700;
+            letter-spacing: var(--ls-sub);
+            text-transform: uppercase;
+            color: #56606b;
+
+            .c-nivel {
+                cursor: pointer;
+                user-select: none;
+                border-radius: 4px;
+                padding: 0 4px;
+                margin: 0 -4px;
+                transition:
+                    color 0.15s ease,
+                    background 0.15s ease;
+
+                &:hover {
+                    color: #1a222a;
+                    background: rgba(0, 0, 0, 0.08);
+                    text-decoration: underline dotted 1px;
+                }
+
+                &:active {
+                    background: rgba(0, 0, 0, 0.15);
+                }
+            }
+        }
+
+        // Etiquetas de tipo y elemento: píldoras brillantes estilo Frutiger Aero
+        .c-chips {
+            display: flex;
+            gap: 5px;
+        }
+
+        .chip {
+            --c: var(--tipo);
+            flex: 1;
+            min-width: 0;
+            padding: 3px 4px;
+            white-space: nowrap; // "Desconocido ❓" tiene que entrar en una sola línea
+            font-family: var(--f-etiqueta), sans-serif;
+            font-size: var(--t-chip);
+            font-weight: var(--p-chip);
+            color: #ffffff;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+            border-radius: 999px;
+            background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, white) 0%, var(--c) 50%, color-mix(in srgb, var(--c) 82%, black) 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.7),
+                0 1px 2px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            user-select: none;
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease,
+                box-shadow 0.15s ease;
+
+            &:hover {
+                filter: brightness(1.14);
+                transform: translateY(-1px);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                    0 2px 4px rgba(0, 0, 0, 0.35);
+            }
+
+            &:active {
+                transform: translateY(0) scale(0.97);
+            }
+        }
+
+        // Dorso: datos y descripción (en inglés, tal cual la devuelve la API)
+        .c-cuerpo {
+            flex: 1;
+            min-height: 0;
+            box-sizing: border-box;
+            overflow: auto;
+            // La descripción se comporta como cualquier lista con scroll, con el dedo y con la rueda del mouse: el gesto que la lleva hasta el
+            // fondo (o el tope) se queda en ella y no mueve la página, pero el gesto siguiente en esa dirección, con la descripción ya en el
+            // borde, sí mueve la página (con la rueda, el gesto siguiente es volver a girarla después de una pausa de un instante).
+            // Con "contain" ese segundo gesto no hacía nada y la carta se volvía una trampa para el dedo y para el mouse.
+            overscroll-behavior: auto;
+            padding: 8px 9px;
+            text-align: left;
+            font-family: var(--f-descripcion), sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.4;
+            color: #26303a;
+            background: rgba(255, 255, 255, 0.88);
+            border: 2px solid var(--base);
+            border-radius: 6px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+
+            .dato {
+                margin: 0 0 4px;
+
+                b {
+                    font-weight: 700;
+                    color: color-mix(in srgb, var(--tipo) 70%, black);
+                }
+            }
+
+            .c-desc {
+                margin: 8px 0 4px;
+            }
+
+            .c-idioma {
+                margin: 6px 0 0;
+                font-size: 9.5px;
+                color: #7a848f;
+            }
+        }
+
+        // Con el zoom abierto la página no se mueve: la descripción siempre se queda con el scroll
+        &.zoom-activa .c-cuerpo {
+            overscroll-behavior: contain !important;
+        }
+
+        // Botón de dar vuelta la carta: aparece solo al pasar el mouse, asomando por la esquina superior izquierda.
+        // Se coloca respecto del borde de afuera de la carta y no del de adentro (la posición absoluta cuenta desde adentro del borde):
+        // así asoma lo mismo (8 px) en las cartas comunes (borde de 2 px) y en las de nivel 5 en adelante, que tienen marco (de 7 a 9 px)
+        .c-flip {
+            position: absolute;
+            z-index: 10;
+            top: calc(-1 * (var(--borde) + 8px));
+            left: calc(-1 * (var(--borde) + 8px));
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+            padding: 0;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            line-height: 1;
+            color: #1b4f82;
+            cursor: pointer;
+            border: 1px solid rgba(27, 79, 130, 0.45);
+            border-radius: 50%;
+            background: linear-gradient(180deg, #ffffff 0%, #cfe9ff 45%, #8cc4f2 100%);
+            background-clip: padding-box;
+            box-shadow:
+                inset 0 1px 1.5px rgba(255, 255, 255, 0.95),
+                0 2px 4px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            scale: 0.4;
+            rotate: -140deg;
+            pointer-events: none;
+            overflow: hidden;
+            transition:
+                opacity 0.15s ease,
+                scale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                rotate 0.3s ease-out;
+
+            &:active {
+                background: linear-gradient(180deg, #8cc4f2 0%, #cfe9ff 100%);
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        // (Con el teclado, el botón se ve cuando recibe el foco. Con el mouse NO: después de un clic el botón queda con el foco y la carta
+        // lo mostraría pegado hasta hacer clic en otro lado. Por eso es ":focus-visible" y no ":focus-within".)
+        &:hover .c-flip,
+        &.tilt-activo .c-flip,
+        .c-flip:focus-visible {
+            opacity: 1;
+            scale: 1;
+            rotate: 0deg;
+            pointer-events: auto;
+        }
+
+        // Puente invisible que acompaña el levante de la carta (-8px) en hover e inclinación.
+        // Al entrar despacio desde cualquier borde o en diagonal, el levante de la carta vacía unos píxeles;
+        // este puente mantiene el área de interacción sólida en los 4 bordes y las 4 esquinas,
+        // eliminando de raíz cualquier oscilación o vibración de :hover.
+        .c-puente {
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        &:hover .c-puente,
+        &.tilt-activo .c-puente {
+            inset: -6px -8px -20px;
+            border-radius: 16px;
+            pointer-events: auto;
+        }
+
+        // Reflejo que cruza la carta al pasar el mouse.
+        // (Si hay inclinación con el mouse, se reemplaza por el reflejo que sigue al puntero: ver más abajo.)
+        // Va por encima de las gemas (nivel y X-Antibody) y de los símbolos de las esquinas: el reflejo cruza toda la carta.
+        // (Queda debajo del botón de dar vuelta, que tiene z-index 10, y no frena los clics: pointer-events none.)
+        &::after {
+            content: "";
+            position: absolute;
+            z-index: 4;
+            inset: 0;
+            border-radius: calc(10px - var(--borde));
+            pointer-events: none;
+            opacity: 0;
+            background: linear-gradient(
+                    115deg,
+                    transparent 38%,
+                    rgba(0, 200, 255, 0.24) 44%,
+                    rgba(255, 255, 255, 0.55) 50%,
+                    rgba(255, 60, 200, 0.2) 56%,
+                    transparent 62%
+                )
+                no-repeat;
+            background-size: 300% 100%;
+            background-position: 100% 0;
+        }
+
+        &:hover,
+        &.tilt-activo {
+            --caida: 0 8px 16px rgba(0, 0, 0, 0.85);
+            translate: 0 -8px;
+
+            &::after {
+                opacity: 1;
+                background-position: 0 0;
+                transition:
+                    background-position 0.9s ease,
+                    opacity 0.2s;
+            }
+        }
+
+        // Carta seleccionada para el combate: flota y el halo de afuera cambia de matiz de forma pareja (una vuelta cada 6 s).
+        // El marco queda como es, así no se confunde con el marco multicolor de las cartas de nivel 7.
+        // Con el zoom (doble clic) la carta se ve como una común, sin el halo: eso es solo para cuando está chica.
+        &.seleccionado:not(.zoom-activa) {
+            translate: 0 -2px;
+            animation:
+                matiz 6s linear infinite,
+                flota-brilla 1.5s ease-in-out infinite;
+        }
+    }
+
+    // Con inclinación (solo mouse o dedo): el reflejo sigue al puntero: la franja diagonal de luz (celeste, blanca y magenta) corre
+    // con él. En ninguna carta hay un destello redondo y claro alrededor del puntero (se sacó de las de 1 a 6 y después también
+    // de las holográficas de 6, 7 y 8; en esas, la textura y el brillo irisado de más abajo quedan como estaban).
+    &.tilt-on li {
+        &::after {
+            background: linear-gradient(
+                115deg,
+                transparent 41%,
+                rgba(0, 200, 255, 0.13) 46%,
+                rgba(255, 255, 255, 0.26) 50%,
+                rgba(255, 60, 200, 0.1) 54%,
+                transparent 59%
+            );
+            background-repeat: no-repeat;
+            background-size: 300% 100%;
+            background-position: calc(75% - var(--mx) / 2) 0;
+            transition: opacity 0.25s ease;
+        }
+
+        &:hover::after,
+        &.tilt-activo::after {
+            opacity: 1;
+            background-position: calc(75% - var(--mx) / 2) 0;
+            transition: opacity 0.25s ease;
+        }
+    }
+
+    // Del lado del dorso no hay reflejo, para poder leer tranquilo
+    li.de-dorso::after {
+        opacity: 0 !important;
+    }
+
+    // TEXTURA HOLOGRÁFICA (como en las cartas de colección con foil). Se suma al reflejo de arriba: el brillo es la luz que
+    // rebota y esto es el relieve grabado en el foil. Con la inclinación del mouse aparecen, cerca de donde apunta:
+    //   · signos grabados (una especie de jeroglíficos) que se iluminan con los colores del arcoíris,
+    //   · un tramado de líneas finas que irisa.
+    // Los colores corren al mover el mouse y los signos se quedan fijos en la carta, como en la realidad.
+    // Solo las cartas de nivel 6, 7 y 8 llevan esta textura; el resto queda solo con el reflejo.
+    // Van en el frente (el dorso no lleva) y SIN transición de opacidad a propósito: una capa que aparece con fundido sobre una
+    // carta inclinada se dibuja un instante a baja resolución.
+    $holo-signos: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(0 0)'%3E%3Cpath d='M6 14Q14 5 22 14Q14 23 6 14Z'/%3E%3Ccircle cx='14' cy='14' r='2.4' fill='white'/%3E%3C/g%3E%3Cg transform='translate(28 0)'%3E%3Ccircle cx='14' cy='8.5' r='4'/%3E%3Cpath d='M14 12.5V24M9 17.5H19'/%3E%3C/g%3E%3Cg transform='translate(56 0)'%3E%3Cpath d='M4 17L9 9L14 19L19 9L24 17'/%3E%3C/g%3E%3Cg transform='translate(0 28)'%3E%3Cpath d='M14 4L24 22H4Z'/%3E%3Ccircle cx='14' cy='16.5' r='1.7' fill='white'/%3E%3C/g%3E%3Cg transform='translate(28 28)'%3E%3Cpath d='M6 19a8 8 0 0 1 16 0M10 19a4 4 0 0 1 8 0M14 19v4'/%3E%3C/g%3E%3Cg transform='translate(56 28)'%3E%3Cpath d='M3 14q3.5-7 7 0t7 0 7 0'/%3E%3Cpath d='M3 20q3.5-7 7 0t7 0 7 0' opacity='.6'/%3E%3C/g%3E%3Cg transform='translate(0 56)'%3E%3Cpath d='M14 3L25 14L14 25L3 14Z'/%3E%3Cpath d='M14 9V19M9 14H19'/%3E%3C/g%3E%3Cg transform='translate(28 56)'%3E%3Cpath d='M4 22L14 5L24 22M9 16H19'/%3E%3Ccircle cx='14' cy='5' r='1.4' fill='white'/%3E%3C/g%3E%3Cg transform='translate(56 56)'%3E%3Cpath d='M9 4V24M9 9L19 4M9 15L19 10'/%3E%3Ccircle cx='20' cy='20' r='1.6' fill='white'/%3E%3C/g%3E%3C/svg%3E");
+
+    $holo-niveles: '[data-nivel="6"], [data-nivel="7"], [data-nivel="8"]';
+
+    li:is(#{$holo-niveles}) .c-frente {
+        position: relative;
+    }
+
+    &.tilt-on li:is(#{$holo-niveles}) .c-frente {
+        &::before,
+        &::after {
+            content: "";
+            position: absolute;
+            z-index: 3;
+            // Mismo recuadro que el reflejo (li::after): así la franja del foil cae justo sobre la franja del brillo
+            inset: calc(var(--borde) - 14px);
+            border-radius: calc(10px - var(--borde));
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        // La zona iluminada es la franja diagonal del reflejo (misma inclinación y mismo desplazamiento), más angosta, y se apaga
+        // hacia arriba y abajo del puntero. El centro del óvalo corre sobre la diagonal: la franja se inclina ~0.67 puntos de ancho
+        // por cada punto de alto (115°, carta de 218 × 314).
+        // Tramado de líneas finas con un velo de arcoíris
+        // (las líneas blancas están al 15 %: antes al 30 % resaltaban demasiado sobre las ilustraciones oscuras)
+        &::before {
+            background:
+                repeating-linear-gradient(115deg, rgba(255, 255, 255, 0) 0 3px, rgba(255, 255, 255, 0.15) 3px 4px),
+                linear-gradient(
+                        115deg,
+                        rgba(255, 95, 162, 0.4),
+                        rgba(255, 216, 95, 0.4) 25%,
+                        rgba(95, 255, 176, 0.4) 50%,
+                        rgba(95, 200, 255, 0.4) 75%,
+                        rgba(181, 95, 255, 0.4)
+                    )
+                    var(--mx) var(--my) / 200% 200%;
+            $franja: linear-gradient(115deg, transparent 43%, #000 50%, transparent 57%);
+            $punta: radial-gradient(
+                ellipse 100% 30% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                #000 0,
+                rgba(0, 0, 0, 0.55) 45%,
+                transparent 100%
+            );
+            -webkit-mask-image: $franja, $punta;
+            mask-image: $franja, $punta;
+            -webkit-mask-size:
+                300% 100%,
+                100% 100%;
+            mask-size:
+                300% 100%,
+                100% 100%;
+            -webkit-mask-position:
+                calc(75% - var(--mx) / 2) 0,
+                0 0;
+            mask-position:
+                calc(75% - var(--mx) / 2) 0,
+                0 0;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-composite: source-in;
+            mask-composite: intersect;
+        }
+
+        // Signos grabados diminutos (baldosa de 30px, cada signo de ~9px), pintados con los colores del arcoíris
+        &::after {
+            background: linear-gradient(115deg, #ff5fa2, #ffd85f 20%, #5fffb0 40%, #5fc8ff 60%, #b55fff 80%, #ff5fa2) var(--mx) var(--my) / 170% 170%;
+            $franja-fina: linear-gradient(115deg, transparent 44.5%, #000 50%, transparent 55.5%);
+            $punta-fina: radial-gradient(
+                ellipse 100% 28% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                #000 0,
+                rgba(0, 0, 0, 0.6) 45%,
+                transparent 100%
+            );
+            -webkit-mask-image: $holo-signos, $franja-fina, $punta-fina;
+            mask-image: $holo-signos, $franja-fina, $punta-fina;
+            -webkit-mask-size:
+                30px 30px,
+                300% 100%,
+                100% 100%;
+            mask-size:
+                30px 30px,
+                300% 100%,
+                100% 100%;
+            -webkit-mask-position:
+                0 0,
+                calc(75% - var(--mx) / 2) 0,
+                0 0;
+            mask-position:
+                0 0,
+                calc(75% - var(--mx) / 2) 0,
+                0 0;
+            -webkit-mask-repeat: repeat, no-repeat, no-repeat;
+            mask-repeat: repeat, no-repeat, no-repeat;
+            -webkit-mask-composite: source-in;
+            mask-composite: intersect;
+            // Al entrar o salir del zoom los signos cambian de tamaño con un suave encogerse/agrandarse, no de golpe
+            // (solo transiciona el tamaño de la máscara; la opacidad sigue sin transición, ver arriba)
+            transition: mask-size 0.35s ease;
+        }
+    }
+
+    // CON EL DEDO (pantallas táctiles) la zona holográfica es bastante más grande: con el mouse el puntero es una flechita y la franja
+    // angosta alrededor se aprecia entera, pero el pulgar tapa unos 70 px de una carta de ~180 px, es decir casi toda esa franja. Acá la
+    // franja diagonal se ensancha (la mitad del ancho pasa de 7 % / 5,5 % a 14 % / 12 %: el doble) y la mancha alrededor del dedo se
+    // estira hacia arriba y abajo (30 % / 28 % → 48 % / 46 % del alto). Así, alrededor del pulgar queda mucho más textura a la vista.
+    // Solo vale para la carta chica de la lista: con el zoom (.zoom-activa) la carta ya se ve enorme y el dedo no la tapa, así que
+    // ahí queda la zona de siempre.
+    @media (hover: none) {
+        &.tilt-on li:is(#{$holo-niveles}):not(.zoom-activa) .c-frente {
+            &::before {
+                $franja-dedo: linear-gradient(115deg, transparent 36%, #000 50%, transparent 64%);
+                $punta-dedo: radial-gradient(
+                    ellipse 100% 48% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                    #000 0,
+                    rgba(0, 0, 0, 0.7) 55%,
+                    transparent 100%
+                );
+                -webkit-mask-image: $franja-dedo, $punta-dedo;
+                mask-image: $franja-dedo, $punta-dedo;
+            }
+
+            &::after {
+                $franja-fina-dedo: linear-gradient(115deg, transparent 38%, #000 50%, transparent 62%);
+                $punta-fina-dedo: radial-gradient(
+                    ellipse 100% 46% at calc(var(--mx) - (var(--my) - 50%) * 0.67) var(--my),
+                    #000 0,
+                    rgba(0, 0, 0, 0.75) 55%,
+                    transparent 100%
+                );
+                -webkit-mask-image: $holo-signos, $franja-fina-dedo, $punta-fina-dedo;
+                mask-image: $holo-signos, $franja-fina-dedo, $punta-fina-dedo;
+            }
+        }
+    }
+
+    // Con el zoom (doble clic) la carta se ve enorme y los signos de 30px se verían grandotes y toscos: la baldosa se achica
+    // para que entren muchos más (la mitad de ancho = el cuádruple de signos), finitos como en un foil de verdad.
+    // Chica, en la grilla, queda como estaba (30px). Probado a 20, 15 y 10px: a 15 se ven claramente más chicos y siguen
+    // leyéndose como signos; a 10 se vuelven casi un grano. Salva pidió "un poco más chicos todavía" que 15: quedó en 12.
+    $holo-signos-zoom: 12px;
+
+    &.tilt-on li:is(#{$holo-niveles}).zoom-activa .c-frente::after {
+        -webkit-mask-size:
+            $holo-signos-zoom $holo-signos-zoom,
+            300% 100%,
+            100% 100%;
+        mask-size:
+            $holo-signos-zoom $holo-signos-zoom,
+            300% 100%,
+            100% 100%;
+    }
+
+    &.tilt-on li:is(#{$holo-niveles}):hover .c-frente,
+    &.tilt-on li:is(#{$holo-niveles}).tilt-activo .c-frente {
+        &::before {
+            opacity: 0.75;
+        }
+
+        &::after {
+            opacity: 0.85;
+        }
+    }
+}
+
+// En pantallas táctiles no hay hover: el botón de dar vuelta queda siempre a la vista
+@media (hover: none) {
+    #listado-digimons li .c-flip {
+        opacity: 1;
+        scale: 1;
+        rotate: 0deg;
+        pointer-events: auto;
+    }
+}
+
+// En móvil: tras 4 flips con el dedo en una sesión, desaparecen las flechas hasta la próxima sesión.
+// Al completar ese aprendizaje en 5 sesiones distintas, quedan ocultas de forma permanente.
+@media (hover: none), (max-width: 768px) {
+    body.sin-flechas-flip-movil #listado-digimons li .c-flip {
+        opacity: 0 !important;
+        scale: 0 !important;
+        pointer-events: none !important;
+        transition:
+            opacity 0.35s ease,
+            scale 0.35s ease !important;
+    }
+}
+
+// En pantallas táctiles el "hover" queda pegado en la última carta tocada: ahí no se levanta ni brilla.
+// El brillo con el dedo aparece solo al mantener apretada la carta (inclinación con el dedo, clase .tilt-activo).
+// Además, al mantener apretada una carta no se abre el menú del sistema ni se selecciona texto.
+@media (hover: none) {
+    #listado-digimons > li {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+
+        img {
+            -webkit-user-drag: none;
+        }
+    }
+
+    #listado-digimons > li:is(:hover, .tilt-activo):not(.seleccionado):not(.evo-resaltada) {
+        --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+        translate: 0 0;
+    }
+
+    #listado-digimons > li .c-puente {
+        display: none;
+    }
+
+    #listado-digimons > li:hover:not(.tilt-activo)::after,
+    #listado-digimons.tilt-on > li:hover:not(.tilt-activo)::after,
+    #listado-digimons.tilt-on > li:hover:not(.tilt-activo) .c-frente::before,
+    #listado-digimons.tilt-on > li:hover:not(.tilt-activo) .c-frente::after {
+        opacity: 0;
+    }
+}
+
+// En computadora, mientras se mantiene apretada Shift (main.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)
+// las cartas no se inclinan con el mouse: tampoco muestran el reflejo ni la textura holográfica, que siguen al puntero y sin inclinación
+// quedarían fijos en un lugar. El levante del hover (la carta que se alza un poquito, con su sombra) NO se anula: ese siempre está.
+// Va con !important en la opacidad para ganarle a los reflejos de más arriba, que son más específicos.
+// (El botón de dar vuelta sigue apareciendo: es un control, no un efecto.)
+#listado-digimons.inclinacion-anulada > li:hover::after,
+#listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::before,
+#listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::after {
+    opacity: 0 !important;
+}
+
+// La carta ampliada de más (zoom extra, con la rueda del mouse o el pellizco; main.js le pone la clase "zoom-extra-activo") no se inclina
+// y tampoco muestra el reflejo ni la textura holográfica (los signos): eso va con la inclinación. Al volver al zoom normal vuelven.
+#listado-digimons > li.zoom-activa.zoom-extra-activo::after,
+#listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::before,
+#listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::after {
+    opacity: 0 !important;
+}
+
+// Al pasar de carta en el zoom (con el teclado o con las flechas), la carta nueva queda sin reflejo ni textura holográfica mientras el mouse no
+// se mueva (main.js le pone la clase "reflejo-quieto" y se la saca con el primer movimiento del mouse; tampoco se inclina). Si no, el "hover" de
+// la carta que aparece justo debajo del puntero la mostraba con el brillo quieto en el medio.
+#listado-digimons > li.reflejo-quieto::after,
+#listado-digimons.tilt-on > li.reflejo-quieto .c-frente::before,
+#listado-digimons.tilt-on > li.reflejo-quieto .c-frente::after {
+    opacity: 0 !important;
+}
+
+// Con la carta agrandada de más el mouse la "agarra" (main.js: activarArrastreDeZoomExtra): mano abierta sobre ella y cerrada mientras se
+// arrastra. No se selecciona su texto ni se arrastra la imagen. (Los botones de la carta conservan su cursor.)
+#listado-digimons > li.zoom-activa.zoom-extra-activo {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#listado-digimons > li.zoom-activa.zoom-extra-activo img {
+    -webkit-user-drag: none;
+}
+
+#listado-digimons > li.zoom-activa.zoom-arrastrando,
+#listado-digimons > li.zoom-activa.zoom-arrastrando * {
+    cursor: grabbing !important;
+}
+
+// Una carta bailando (baile.js: "transform" animado) no reacciona al hover: con el puntero quieto y la carta saltando por debajo, el
+// levante y el reflejo aparecerían y desaparecerían a cada rato. Queda como si no tuviera el mouse encima.
+#listado-digimons > li.bailando:hover:not(.seleccionado):not(.evo-resaltada):not(.zoom-activa) {
+    --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
+    translate: 0 0;
+}
+
+#listado-digimons > li.bailando:hover::after,
+#listado-digimons.tilt-on > li.bailando:hover .c-frente::before,
+#listado-digimons.tilt-on > li.bailando:hover .c-frente::after {
+    opacity: 0 !important;
+}
+
+// CELULAR: dos cartas por fila. Las cartas se achican enteras con "zoom" (texto, marcos, botones y dorso juntos),
+// con un tamaño según el ancho de la pantalla: (ancho - 8px) / 464px, redondeado para abajo.
+@media (max-width: 483px) {
+    #listado-digimons {
+        padding: 4px;
+    }
+
+    #listado-digimons > li {
+        margin: 5px;
+        zoom: 0.88;
+    }
+}
+
+// Lugar al final de la lista (celular) para que el botón de sonido, que flota abajo a la derecha, no tape la última fila de cartas.
+// Va después de los bloques de arriba: ellos fijan "padding: 4px" y esto solo cambia el de abajo.
+@include celular {
+    #listado-digimons {
+        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+// Y cuanto más angosta la pantalla, más chicas (ver $zoom-de-cartas-en-celular en _variables.scss)
+@each $ancho, $zoom in $zoom-de-cartas-en-celular {
+    @media (max-width: $ancho) {
+        #listado-digimons > li {
+            zoom: $zoom;
+        }
+    }
+}
+
+// ESCRITORIO Y CELULAR: una vez cargadas todas, el navegador solo dibuja el frente de las cartas que están en pantalla y las
+// que están cerca (un margen de unas 4 filas que decide el navegador). Las demás guardan su lugar y no se procesan: así no
+// se trabaja con más de mil cartas a la vez, y el tilt y el scroll andan más fluidos.
+//   · 290px es el alto real del frente. Con el "zoom" del celular se achica solo, así que el mismo número sirve en todos los anchos
+//     (con otro número, el alto total de la página cambia al ir mostrando cartas y la barra de scroll da saltos).
+//     "auto" hace que, una vez dibujada una carta, el navegador recuerde su alto real.
+//   · "content-visibility: auto" recorta lo que se sale del frente. Hay brillos y sombras que se salen unos pocos píxeles, y la
+//     textura holográfica de las cartas 6, 7 y 8 llega hasta el marco: "overflow-clip-margin" deja ese margen sin recortar.
+#listado-digimons.lista-completa > li > .c-frente {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 290px;
+    overflow-clip-margin: 16px;
+}
+
+// Si la persona pidió menos animaciones en su sistema, las desactivamos
+@media (prefers-reduced-motion: reduce) {
+    #navbar img {
+        animation: none;
+    }
+
+    #navbar .botones,
+    #navbar .menu-desplegable,
+    #navbar .menu-info ul,
+    #navbar .contador,
+    #navbar #cambiar-idioma span,
+    #navbar #cambiar-niveles .sn-opcion {
+        transition: none;
+    }
+
+    #listado-digimons li,
+    #listado-digimons li::after,
+    #listado-digimons li .c-flip {
+        transition: none;
+    }
+
+    // La carta seleccionada queda quieta, con un marco fijo
+    #listado-digimons li.seleccionado:not(.zoom-activa) {
+        animation: none;
+        --h: 200;
+        translate: 0 -6px;
+        box-shadow:
+            var(--anillo),
+            0 0 0 3px #ffffff,
+            0 0 18px 8px hsl(var(--h) 100% 60% / 0.8),
+            0 10px 16px rgba(0, 0, 0, 0.4);
+    }
+}
+
+// Animación del matiz del marco de la carta seleccionada
+@keyframes matiz {
+    to {
+        --h: 360;
+    }
+}
+
+// Animación de la carta seleccionada: flota y brilla
+@keyframes flota-brilla {
+    0%,
+    100% {
+        translate: 0 -2px;
+        box-shadow:
+            var(--anillo),
+            0 0 0 3px rgba(255, 255, 255, 0.95),
+            0 0 0 4px rgba(0, 0, 0, 0.35),
+            0 0 12px 5px hsl(var(--h) 100% 60% / 0.6),
+            0 6px 12px rgba(0, 0, 0, 0.35);
+    }
+    50% {
+        translate: 0 -12px;
+        box-shadow:
+            var(--anillo),
+            0 0 0 3px #ffffff,
+            0 0 0 4px rgba(0, 0, 0, 0.35),
+            0 0 28px 12px hsl(var(--h) 100% 60% / 0.95),
+            0 18px 22px rgba(0, 0, 0, 0.5);
+    }
+}

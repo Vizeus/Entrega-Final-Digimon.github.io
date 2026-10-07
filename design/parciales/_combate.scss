@@ -1,0 +1,542 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+// -----------------------------------------------------------------------------------------------------------------
+// CARTELES DEL COMBATE (main.js, iniciarCombate): preparando → peleando → ganador.
+//   Ventana de vidrio con barra de título brillante, "pantallita" tipo Digivice con el GIF, el VS con las dos cartas
+//   y el botón de gel de la barra de arriba. El ganador lleva corona y confeti.
+// -----------------------------------------------------------------------------------------------------------------
+@keyframes vs-ataque-entra {
+    from {
+        opacity: 0;
+        translate: 0 8px;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+// Entrada y salida de los carteles: la ventana crece desde chiquita mientras aparece (combate-entra) y al irse se desvanece
+// (combate-sale), en medio segundo. main.js las pide en CARTEL_COMBATE (showClass / hideClass). Antes salían de la librería
+// animate.css (zoomIn y fadeOut, "faster"), que se cargaba entera para usar solo estas dos: son las mismas animaciones.
+@keyframes combate-entra {
+    from {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes combate-sale {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.combate-entra,
+.combate-sale {
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.combate-entra {
+    animation-name: combate-entra;
+}
+
+.combate-sale {
+    animation-name: combate-sale;
+}
+
+// Con "reducir movimiento" (o al imprimir) aparecen y se van casi al instante
+@media (prefers-reduced-motion: reduce), print {
+    .combate-entra,
+    .combate-sale {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+    }
+
+    .combate-sale {
+        opacity: 0;
+    }
+}
+
+.combate-contenedor {
+    overscroll-behavior: contain; // si el cartel se desplaza (pantalla baja), al llegar al final no arrastra a la página de atrás
+}
+
+.combate-contenedor.swal2-backdrop-show {
+    backdrop-filter: blur($desenfoque-del-fondo);
+    -webkit-backdrop-filter: blur($desenfoque-del-fondo);
+}
+
+.combate-popup {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff 0%, #e8f5ff 55%, #cfe8ff 100%);
+    box-shadow:
+        0 24px 60px rgba(0, 20, 80, 0.55),
+        inset 0 1px 0 #fff;
+
+    // Barra de título brillante, como una ventana de Frutiger Aero
+    .combate-titulo {
+        margin: 0;
+        padding: 14px 52px 12px; // a los dos lados lo mismo: deja lugar a la cruz de la derecha y el texto sigue centrado
+        font-family: var(--f-boton), sans-serif;
+        font-size: 23px;
+        font-weight: 700;
+        line-height: 1.2;
+        text-wrap: balance;
+        color: #fff;
+        text-shadow:
+            0 2px 0 rgba(0, 40, 100, 0.55),
+            0 0 12px rgba(0, 60, 140, 0.45);
+        background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 48%, #1479d1 52%, #3eb0f5 100%);
+        border-bottom: 1px solid rgba(0, 60, 130, 0.6);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    // La cruz de arriba a la derecha: anula el combate (lo mismo que tocar afuera o apretar Esc). Botón de gel rojo,
+    // redondo, sobre la barra de título
+    .combate-cerrar {
+        position: absolute; // SweetAlert la deja en el flujo del cartel; así queda flotando sobre la barra
+        inset: 10px 12px auto auto;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin: 0;
+        padding: 0;
+        font-size: 1rem;
+        color: #fff;
+        border: 1px solid rgba(110, 10, 0, 0.75);
+        border-radius: 50%;
+        cursor: pointer;
+        background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
+        box-shadow:
+            0 2px 6px rgba(0, 30, 80, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition:
+            filter 0.15s ease,
+            translate 0.1s ease;
+
+        svg {
+            display: block;
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentcolor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            filter: drop-shadow(0 1px 0 rgba(90, 0, 0, 0.6));
+        }
+
+        // Estos estados repiten el fondo y la sombra porque los de SweetAlert (:hover y :focus) los pisarían
+        &:hover,
+        &:focus {
+            color: #fff;
+            background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
+            box-shadow:
+                0 2px 6px rgba(0, 30, 80, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            transform: none;
+        }
+
+        &:hover {
+            filter: brightness(1.1);
+        }
+
+        &:active {
+            filter: brightness(0.95);
+            translate: 0 1px;
+        }
+
+        &:focus-visible {
+            outline: 3px solid #fff;
+            outline-offset: 1px;
+            box-shadow:
+                0 0 0 5px rgba(20, 121, 209, 0.6),
+                0 2px 6px rgba(0, 30, 80, 0.4);
+        }
+    }
+
+    .combate-cuerpo {
+        margin: 0;
+        padding: 16px 18px 2px;
+        font-size: 1rem;
+        overflow: visible;
+    }
+
+    // La pantallita: marco oscuro, el GIF con líneas de pantalla y un reflejo
+    .combate-pantalla {
+        position: relative;
+        padding: 9px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #4a5a6b, #1f2a36);
+        box-shadow:
+            0 6px 14px rgba(0, 30, 80, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+
+        img {
+            display: block;
+            width: 100%;
+            aspect-ratio: var(--proporcion, 16 / 9); // la del GIF de cada fase (la pone main.js): así no se recorta nada
+            object-fit: cover;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 9px;
+            border-radius: 10px;
+            pointer-events: none;
+            background:
+                repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 3px),
+                linear-gradient(125deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 36%);
+        }
+    }
+
+    // El VS: las dos cartas que pelean, cada una con el color de su carta
+    .combate-vs {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 18px;
+    }
+
+    .vs-luchador {
+        position: relative;
+        flex: 0 1 138px;
+        min-width: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+
+        img {
+            box-sizing: border-box;
+            width: 90px;
+            height: 90px;
+            padding: 4px;
+            object-fit: contain;
+            border: 3px solid var(--c, #3a8dde);
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 6px 12px rgba(0, 30, 80, 0.3);
+        }
+
+        figcaption {
+            font-family: var(--f-boton), sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.2;
+            text-wrap: balance;
+            overflow-wrap: anywhere;
+            color: $tinta-oscura;
+        }
+    }
+
+    .vs-centro {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 90px;
+        font-family: var(--f-boton), sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+        color: #ff3b3b;
+        text-shadow:
+            0 2px 0 #fff,
+            0 3px 7px rgba(120, 0, 0, 0.45);
+    }
+
+    // Ganador: marco dorado, brillo y corona. Perdedor: se apaga y se achica un poco
+    .vs-luchador.ganador {
+        img {
+            border-color: #ffc928;
+            box-shadow:
+                0 0 0 3px rgba(255, 201, 40, 0.5),
+                0 0 22px 6px rgba(255, 201, 40, 0.75);
+            scale: 1.14;
+        }
+
+        figcaption {
+            font-weight: 700;
+            color: #a86500;
+        }
+
+        &::before {
+            content: "👑";
+            position: absolute;
+            top: -22px;
+            z-index: 1;
+            font-size: 28px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+        }
+    }
+
+    .vs-luchador.perdedor {
+        img {
+            filter: grayscale(0.9) brightness(0.92);
+            opacity: 0.6;
+            scale: 0.86;
+            rotate: -5deg;
+        }
+
+        figcaption {
+            opacity: 0.6;
+        }
+    }
+
+    // La pelea: qué ataque usa cada luchador (al azar) y qué hace; el borde lleva el color de su carta
+    .combate-ataques {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 16px;
+        text-align: left;
+    }
+
+    .vs-ataque {
+        box-sizing: border-box;
+        padding: 7px 11px 8px;
+        border: 1px solid rgba(0, 60, 130, 0.18);
+        border-left: 5px solid var(--c, #3a8dde);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: 0 2px 6px rgba(0, 30, 80, 0.15);
+        animation: vs-ataque-entra 0.45s ease both;
+
+        &.vs-1 {
+            animation-delay: 0.5s;
+        }
+        &.vs-2 {
+            animation-delay: 0.95s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+        }
+    }
+
+    .vs-ataque-linea {
+        margin: 0;
+        font-family: var(--f-boton), sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+        color: $tinta-oscura;
+
+        em {
+            font-style: normal;
+            font-weight: 700;
+            color: #c4410c;
+        }
+    }
+
+    .vs-ataque-desc {
+        margin: 3px 0 0;
+        font-family: var(--f-descripcion), sans-serif;
+        font-size: 13px;
+        line-height: 1.35;
+        color: #3a4a5a;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    // El botón respira abajo (sin esto queda pegado al borde de la ventana)
+    .swal2-actions {
+        margin: 0;
+        padding: 16px 0 22px;
+    }
+
+    // Botón de gel (el mismo aire que los de la barra)
+    .combate-boton {
+        margin: 0;
+        padding: 10px 30px;
+        font-family: var(--f-boton), sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 1px 0 rgba(0, 40, 100, 0.7);
+        border: 1px solid rgba(0, 70, 140, 0.8);
+        border-radius: 14px;
+        cursor: pointer;
+        background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 50%, #1479d1 54%, #3eb0f5 100%);
+        box-shadow:
+            0 4px 10px rgba(0, 50, 120, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition:
+            filter 0.15s ease,
+            translate 0.1s ease;
+
+        &:hover {
+            filter: brightness(1.08);
+        }
+
+        &:active {
+            filter: brightness(0.95);
+            translate: 0 1px;
+        }
+
+        &:focus-visible {
+            outline: 3px solid #fff;
+            outline-offset: 2px;
+            box-shadow:
+                0 0 0 5px rgba(20, 121, 209, 0.6),
+                0 4px 10px rgba(0, 50, 120, 0.4);
+        }
+    }
+
+    // Confeti (lo arma main.js al abrir la ventana del ganador)
+    .combate-confeti {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+
+        i {
+            position: absolute;
+            top: 0;
+            width: 8px;
+            height: 13px;
+            border-radius: 2px;
+            opacity: 0;
+        }
+    }
+}
+
+// Movimiento de los carteles (con "reducir movimiento" quedan quietos)
+@media (prefers-reduced-motion: no-preference) {
+    .combate-popup {
+        .fase-preparando .vs-1,
+        .fase-ganador .vs-1 {
+            animation: vs-entra-izq 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+        }
+
+        .fase-preparando .vs-2,
+        .fase-ganador .vs-2 {
+            animation: vs-entra-der 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+        }
+
+        .fase-preparando .vs-centro,
+        .fase-ganador .vs-centro {
+            animation: vs-pop 0.5s 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+        }
+
+        // Peleando: las dos cartas se chocan sin parar y entre ellas salta la chispa
+        .fase-peleando .vs-1 img {
+            animation: choque-izq 0.55s ease-in-out infinite;
+        }
+
+        .fase-peleando .vs-2 img {
+            animation: choque-der 0.55s ease-in-out infinite;
+        }
+
+        .fase-peleando .vs-centro {
+            animation: chispa 0.55s ease-in-out infinite;
+        }
+
+        .vs-luchador.ganador::before {
+            animation: corona-cae 0.7s 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+        }
+    }
+}
+
+@keyframes vs-entra-izq {
+    from {
+        translate: -80px 0;
+        opacity: 0;
+    }
+}
+
+@keyframes vs-entra-der {
+    from {
+        translate: 80px 0;
+        opacity: 0;
+    }
+}
+
+@keyframes vs-pop {
+    from {
+        scale: 0;
+        rotate: -40deg;
+    }
+
+    60% {
+        scale: 1.4;
+    }
+}
+
+@keyframes choque-izq {
+    0%,
+    100% {
+        translate: 0 0;
+        rotate: 0deg;
+    }
+
+    45%,
+    55% {
+        translate: 18px -2px;
+        rotate: 7deg;
+    }
+}
+
+@keyframes choque-der {
+    0%,
+    100% {
+        translate: 0 0;
+        rotate: 0deg;
+    }
+
+    45%,
+    55% {
+        translate: -18px -2px;
+        rotate: -7deg;
+    }
+}
+
+@keyframes chispa {
+    0%,
+    100% {
+        scale: 0.8;
+        rotate: -12deg;
+    }
+
+    50% {
+        scale: 1.35;
+        rotate: 12deg;
+    }
+}
+
+@keyframes corona-cae {
+    from {
+        translate: 0 -34px;
+        rotate: -25deg;
+        opacity: 0;
+    }
+}

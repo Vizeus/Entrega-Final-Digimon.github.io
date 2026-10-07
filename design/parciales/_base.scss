@@ -1,0 +1,79 @@
+// -----------------------------------------------------------------------------------------------------------------
+// TIPOGRAFÍAS (se cargan desde Google Fonts en el index.html)
+//   Orbitron       → nombres de los Digimons y número de nivel
+//   Pixelify Sans  → etiquetas (nivel, ID, tipo, elemento) y botones de la barra
+//   Exo 2          → textos generales (ventanas emergentes y resto de la página; la barra de arriba va toda en Pixelify Sans)
+//   DotGothic16    → descripción del dorso de las cartas
+// Los tamaños viven en variables porque el main.js también los lee para ajustar el largo de los nombres.
+// -----------------------------------------------------------------------------------------------------------------
+:root {
+    --f-titulo: "Orbitron";
+    --f-etiqueta: "Pixelify Sans";
+    --f-cuerpo: "Exo 2";
+    --f-boton: "Pixelify Sans";
+    --f-descripcion: "DotGothic16";
+
+    --t-nombre: 11.5px; // tamaño base del nombre (los cortos se agrandan, ver ajustarNombre() en main.js)
+    --p-titulo: 800;
+    --ls-titulo: 0.3px;
+    --t-chip: 11px;
+    --p-chip: 700;
+    --t-sub: 11px;
+    --ls-sub: 0.5px;
+    --t-boton: 16px;
+    --t-nav: 14px;
+}
+
+// Variables que se animan (posición del puntero para el brillo y el matiz de la carta seleccionada)
+@property --h {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+}
+
+// El color del marco (--aro) puede cambiar de matiz (--h). Si se hereda, cada cambio
+// obliga al navegador a recalcular todos los elementos de adentro de la carta; registrado así solo se recalcula el marco.
+@property --aro {
+    syntax: "*";
+    inherits: false;
+}
+
+@property --mx {
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 50%;
+}
+
+@property --my {
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 50%;
+}
+
+body {
+    margin: 0;
+    overflow: auto !important;
+    padding-right: 0 !important;
+    font-family: var(--f-cuerpo), sans-serif;
+    font-weight: 500;
+    font-style: normal;
+}
+
+button,
+[role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+// El degradé de fondo queda fijo en la pantalla, pero va en una capa propia y no con "background-attachment: fixed".
+// Con "fixed", el navegador tenía que volver a dibujar todo el fondo en cada paso del scroll (medido: con la lista completa,
+// al desplazarse se dibujaban la mitad de cuadros y se gastaba 6 veces más en pintar). Con la capa fija, el fondo se dibuja una
+// sola vez y el scroll solo la deja quieta. Se ve exactamente igual.
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, #25c4e0, #1e2bdd);
+}

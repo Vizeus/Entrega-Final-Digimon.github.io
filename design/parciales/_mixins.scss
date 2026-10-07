@@ -1,0 +1,259 @@
+// -----------------------------------------------------------------------------------------------------------------
+// MIXINS COMPARTIDOS: no generan CSS por sí mismos; las demás partes los usan con @use "mixins" as * y @include.
+// -----------------------------------------------------------------------------------------------------------------
+@use "variables" as *;
+
+// ---- Cortes de pantalla --------------------------------------------------------------------------------------------------
+// @include celular { ... } → solo en el diseño de celular (hasta 700px). @include computadora { ... } → desde 701px.
+@mixin celular {
+    @media (max-width: $corte-celular) {
+        @content;
+    }
+}
+
+@mixin computadora {
+    @media (min-width: $corte-celular + 1) {
+        @content;
+    }
+}
+
+// ---- Botones ---------------------------------------------------------------------------------------------------------------
+// Botón de gel: color base en --c, brillo arriba, biselado abajo y sombra que lo despega del fondo.
+// Lo usan los botones de la barra de arriba y el botón de sonido cuando flota en el celular (fuera de la barra).
+@mixin boton-de-gel {
+    --c: #8a96a3;
+    position: relative;
+    height: 42px;
+    margin: 0;
+    padding: 0 20px;
+    white-space: nowrap;
+    font-family: var(--f-boton), sans-serif;
+    font-size: var(--t-boton);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--c) 55%, black);
+    border-radius: 13px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--c) 78%, white) 0%, var(--c) 55%, color-mix(in srgb, var(--c) 82%, black) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+        0 1px 0 rgba(255, 255, 255, 0.7),
+        0 3px 7px rgba(0, 30, 80, 0.35);
+    transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.15s ease;
+
+    &:hover:not(:disabled) {
+        filter: brightness(1.08) saturate(1.1);
+        transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+        filter: brightness(0.96);
+        transform: translateY(1px);
+        box-shadow:
+            inset 0 3px 6px rgba(0, 0, 0, 0.35),
+            0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    &:focus-visible {
+        outline: 3px solid rgba(255, 255, 255, 0.95);
+        outline-offset: 2px;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            0 0 0 5px rgba(20, 160, 230, 0.75),
+            0 3px 7px rgba(0, 30, 80, 0.35);
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+    }
+}
+
+// "llamando": el botón salta y lanza ondas para que la persona vea dónde está (lo usan el botón de sonido, la primera vez que suena algo
+// en la sesión, y el de inclinación, cuando aparece el cartel que lo explica). main.js pone y saca la clase.
+@mixin boton-que-llama {
+    // Las ondas del aviso: un aro que nace en el botón y se agranda mientras se desvanece (invisible el resto del tiempo)
+    &::after {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        box-shadow:
+            0 0 0 1px rgba(10, 110, 200, 0.7),
+            0 0 12px 2px rgba(60, 170, 255, 0.75);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &.llamando {
+        animation: sonido-salto 2.4s ease-in-out;
+
+        &::after {
+            animation: sonido-onda 0.8s ease-out 3;
+        }
+    }
+
+    // Con "reducir movimiento" no salta ni se agranda: solo se enciende un aro fijo y se apaga
+    @media (prefers-reduced-motion: reduce) {
+        &.llamando {
+            animation: none;
+
+            &::after {
+                animation: sonido-onda-quieta 1.6s ease-out;
+            }
+        }
+    }
+}
+
+// La opción elegida de los selectores de dos posiciones (niveles Japón / EE.UU. e idioma ES / EN): gel azul con brillo
+@mixin opcion-activa {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%),
+        linear-gradient(180deg, #7cc4f5 0%, #3f97e8 55%, #2a75cf 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        0 1px 3px rgba(0, 40, 110, 0.4);
+}
+
+// Botón chiquito y redondo de vidrio claro: la base de los botones de sonido y de inclinación
+@mixin boton-redondo {
+    --c: #{$vidrio-claro};
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    color: $tinta;
+    text-shadow: none;
+    border-color: rgba(0, 40, 90, 0.4);
+    border-radius: 50%;
+}
+
+// Botón de sonido: chiquito y redondo, del mismo vidrio claro que el de idioma. Su ícono sigue el paso en que está (data-modo, lo
+// escribe main.js): parlante con ondas (sonido y vibración), celular que vibra (solo vibración, únicamente en celulares) o
+// parlante con cruz roja (nada). Mientras no suena queda "hundido", para que se note de un vistazo.
+// (La animación "llamando" de la primera vez que suena algo en la sesión sale del mixin boton-que-llama.)
+@mixin boton-de-sonido {
+    @include boton-redondo;
+
+    .audio-icono {
+        width: 20px;
+        height: 20px;
+        filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+    }
+
+    // Por defecto (modo "todo"): parlante con ondas
+    .audio-cruz,
+    .audio-movil {
+        display: none;
+    }
+
+    &.silenciado {
+        box-shadow: $sombra-hundida;
+    }
+
+    &[data-modo="vibracion"] {
+        .audio-parlante,
+        .audio-ondas {
+            display: none;
+        }
+
+        .audio-movil {
+            display: inline;
+        }
+    }
+
+    &[data-modo="nada"] {
+        .audio-ondas {
+            display: none;
+        }
+
+        .audio-cruz {
+            display: inline;
+            stroke: #c2362b;
+        }
+    }
+
+    @include boton-que-llama;
+}
+
+// Botón de inclinación con el mouse (solo computadora): botón chiquito y redondo, igual al de sonido. Queda "hundido" (aria-pressed) cuando la
+// inclinación está invertida (solo con Shift apretada) y en ese caso muestra, al lado de la carta en perspectiva, la flecha de Shift (⇧).
+// (Cuando aparece el cartel que lo explica salta y lanza ondas, igual que el de sonido en su primer sonido: ver boton-que-llama.)
+@mixin boton-de-inclinacion {
+    @include boton-redondo;
+
+    // (display: grid pisaría al atributo hidden)
+    &[hidden] {
+        display: none;
+    }
+
+    @include boton-que-llama;
+
+    .inclinacion-icono {
+        width: 20px;
+        height: 20px;
+        filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+    }
+
+    .inclinacion-carta {
+        transform: translateX(3.5px);
+        transition: transform 0.15s ease;
+    }
+
+    .inclinacion-shift {
+        display: none;
+    }
+
+    &[aria-pressed="true"] {
+        box-shadow: $sombra-hundida;
+
+        .inclinacion-carta {
+            transform: none;
+        }
+
+        .inclinacion-shift {
+            display: inline;
+        }
+    }
+}
+
+// ---- Cartas --------------------------------------------------------------------------------------------------------------
+// La insignia de la esquina de arriba a la izquierda de las cartas de nivel 5 a 8 (◆ ✦ ♛ ✺): el símbolo, dónde va, su tamaño,
+// su color y su brillo (uno o más text-shadow)
+@mixin insignia-de-nivel($simbolo, $arriba, $izquierda, $tamano, $color, $brillo...) {
+    &::before {
+        content: $simbolo;
+        position: absolute;
+        z-index: 3;
+        top: $arriba;
+        left: $izquierda;
+        font-size: $tamano;
+        line-height: 1;
+        color: $color;
+        text-shadow: $brillo;
+    }
+}
+
+// El reflejo de color sobre la imagen de las cartas de nivel 6 a 8 (se mezcla con "multiply", así tiñe sin tapar el dibujo)
+@mixin reflejo-del-arte($opacidad, $fondo...) {
+    .c-arte::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        mix-blend-mode: multiply;
+        opacity: $opacidad;
+        background: $fondo;
+    }
+}

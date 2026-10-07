@@ -1,0 +1,725 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+// -----------------------------------------------------------------------------------------------------------------
+// BARRA DE ARRIBA (computadora): las animaciones de los botones redondos y la barra de vidrio con todo lo que lleva
+// -----------------------------------------------------------------------------------------------------------------
+@keyframes sonido-salto {
+    0%,
+    50%,
+    100% {
+        scale: 1;
+        rotate: 0deg;
+    }
+    10% {
+        scale: 1.35;
+        rotate: -14deg;
+    }
+    20% {
+        scale: 1.35;
+        rotate: 12deg;
+    }
+    30% {
+        scale: 1.3;
+        rotate: -9deg;
+    }
+    40% {
+        scale: 1.2;
+        rotate: 6deg;
+    }
+    60% {
+        scale: 1.25;
+        rotate: -10deg;
+    }
+    70% {
+        scale: 1.25;
+        rotate: 8deg;
+    }
+    80% {
+        scale: 1.1;
+        rotate: -4deg;
+    }
+    90% {
+        scale: 1.03;
+        rotate: 2deg;
+    }
+}
+
+@keyframes sonido-onda {
+    0% {
+        opacity: 0.95;
+        scale: 0.9;
+    }
+    100% {
+        opacity: 0;
+        scale: 2.1;
+    }
+}
+
+@keyframes sonido-onda-quieta {
+    0% {
+        opacity: 0.95;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+// BARRA DE ARRIBA: vidrio "Frutiger Aero" con botones de gel, del mismo estilo que las cartas
+// -----------------------------------------------------------------------------------------------------------------
+#navbar {
+    position: sticky;
+    top: 0;
+    z-index: capa(barra);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    padding: 9px 26px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(230, 245, 255, 0.8) 50%, rgba(190, 224, 248, 0.78) 100%);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+    border-bottom: 1px solid rgba(0, 70, 130, 0.35);
+    box-shadow:
+        inset 0 1px 0 #fff,
+        0 8px 22px rgba(0, 25, 90, 0.38);
+    font-family: var(--f-boton), sans-serif; // toda la barra va con la fuente pixelada (Pixelify Sans)
+
+    // Brillo de vidrio en la mitad de arriba
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 50%;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.12));
+    }
+
+    > img {
+        height: 62px;
+        width: auto;
+        filter: drop-shadow(0 2px 3px rgba(0, 30, 80, 0.4));
+    }
+
+    // Panel de combate: la consigna, el contador y el botón principal van juntos, en una "pantallita" hundida en el vidrio
+    .combate {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        flex: 1 1 420px;
+        min-width: 0;
+        max-width: 680px;
+        padding: 7px;
+        border: 1px solid rgba(0, 80, 140, 0.25);
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(0, 80, 140, 0.13), rgba(255, 255, 255, 0.4));
+        box-shadow:
+            inset 0 2px 5px rgba(0, 60, 110, 0.28),
+            0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .consigna {
+        grid-column: 1;
+        min-width: 0;
+        margin: 0;
+        padding-left: 14px;
+        padding-right: 4px;
+        text-align: center;
+        text-wrap: balance;
+        line-height: 1.25;
+        font-family: var(--f-boton), sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        color: $tinta-oscura;
+        text-shadow: $brillo-de-texto;
+    }
+
+    // Cuántos digimons van elegidos: se pone verde al llegar a 2 (centrado geométricamente en la pestaña)
+    .contador {
+        grid-column: 2;
+        justify-self: center;
+        flex: none;
+        min-width: 54px;
+        padding: 4px 12px;
+        text-align: center;
+        font-family: var(--f-etiqueta), sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: #2c5a80;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow:
+            inset 0 1px 3px rgba(0, 50, 100, 0.3),
+            0 1px 0 rgba(255, 255, 255, 0.8);
+        transition:
+            color 0.2s ease,
+            background-color 0.2s ease,
+            box-shadow 0.15s ease,
+            translate 0.15s ease;
+        // También es un botón (quita la selección): se le sacan los estilos del navegador y, con 1 o 2 elegidos, se nota que se puede tocar
+        appearance: none;
+        box-sizing: content-box; // (los botones miden con el borde incluido; así conserva el tamaño que tenía)
+        border: 0;
+        margin-block: 0;
+        line-height: normal;
+        text-shadow: none;
+        cursor: default;
+
+        &.completo {
+            color: #0d6a2c;
+            background: #c9f5d6;
+        }
+
+        &:not(:disabled) {
+            cursor: pointer;
+            box-shadow:
+                inset 0 1px 3px rgba(0, 50, 100, 0.3),
+                0 0 0 1.5px rgba(44, 90, 128, 0.5),
+                0 1px 0 rgba(255, 255, 255, 0.8);
+
+            &.completo {
+                box-shadow:
+                    inset 0 1px 3px rgba(0, 70, 30, 0.3),
+                    0 0 0 1.5px rgba(13, 106, 44, 0.55),
+                    0 1px 0 rgba(255, 255, 255, 0.8);
+            }
+
+            &:hover {
+                background-color: #fff;
+            }
+
+            &.completo:hover {
+                background-color: #dcfae6;
+            }
+
+            &:active {
+                translate: 0 1px;
+                box-shadow:
+                    inset 0 2px 4px rgba(0, 50, 100, 0.45),
+                    0 0 0 1.5px rgba(44, 90, 128, 0.5);
+            }
+        }
+
+        &:focus-visible {
+            outline: 3px solid #1f7fd6;
+            outline-offset: 2px;
+        }
+    }
+
+    // Solo para celular (ver más abajo): en computadora el botón ☰ y la consigna del menú no se ven,
+    // y el contenedor del menú no existe para el diseño (sus hijos quedan en la barra como siempre)
+    #abrir-menu,
+    .menu-consigna {
+        display: none;
+    }
+
+    .menu-movil {
+        display: contents;
+    }
+
+    // Ajustes (banderita de niveles e idioma) y herramientas (menús de información)
+    .ajustes,
+    .herramientas {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    // Botones de gel: color base en --c, brillo arriba, biselado abajo y sombra que los despega de la barra (ver el mixin boton-de-gel)
+    .botones,
+    .menu-desplegable,
+    #cambiar-idioma,
+    #silenciar,
+    #inclinacion-invertida {
+        @include boton-de-gel;
+    }
+
+    // Botón principal: es el más grande y el único con color fuerte. Verde y con brillo cuando se puede pelear, gris apagado mientras no
+    #iniciar-combate {
+        --c: #34b35a;
+        grid-column: 3;
+        justify-self: end;
+        flex: none;
+        height: 48px;
+        min-width: 204px;
+        padding: 0 28px;
+        border-radius: 999px;
+        font-size: 18px;
+
+        &::before {
+            content: "\2694\FE0F";
+            margin-right: 10px;
+        }
+
+        &:enabled:not(:active) {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+                0 1px 0 rgba(255, 255, 255, 0.7),
+                0 0 0 3px rgba(52, 179, 90, 0.28),
+                0 0 22px 4px rgba(52, 179, 90, 0.55);
+        }
+
+        // Mientras se puede pelear (hay 2 digimons elegidos) el botón late cada 2 s: crece un poco y vuelve a su tamaño (1 s) y descansa
+        // otro segundo, y así sigue hasta que se inicia el combate o se quita la selección (al quedar deshabilitado se frena solo).
+        // Usa "scale" y no "transform" para no pisar el movimiento al pasar el mouse o apretarlo. Con "reducir movimiento" no late.
+        @media (prefers-reduced-motion: no-preference) {
+            &:enabled {
+                animation: combate-pulso 2s ease-in-out infinite;
+            }
+        }
+
+        &:disabled {
+            --c: #97a2ad;
+            color: rgba(255, 255, 255, 0.85);
+            filter: saturate(0.55);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.7),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.12),
+                0 1px 0 rgba(255, 255, 255, 0.6),
+                0 2px 4px rgba(0, 30, 80, 0.25);
+        }
+    }
+
+    // Cambio de sistema de niveles (herramienta secundaria): selector de dos posiciones, igual que el de idioma.
+    // Lleva el rótulo "Niveles" y las dos banderas a la vista (Japón / EE.UU.), con la vigente resaltada en azul,
+    // así se entiende qué es sin tener que esperar a que aparezca la ayuda. Los ejemplos de nombre ("Adult" / "Champion")
+    // quedan ocultos en escritorio y se muestran en el menú del celular.
+    #cambiar-niveles {
+        --c: #{$vidrio-claro};
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        height: 34px;
+        padding: 0 4px 0 10px;
+        border-color: rgba(0, 40, 90, 0.4);
+        border-radius: 11px;
+
+        .sn-rotulo {
+            margin-right: 5px;
+            font-size: 12px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: $tinta;
+            text-shadow: $brillo-de-texto;
+        }
+
+        .sn-opcion {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 24px;
+            padding: 0 6px;
+            border-radius: 8px;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+
+            img {
+                display: block;
+                width: auto;
+                height: 14px;
+                border-radius: 2px;
+                box-shadow: 0 0 0 1px rgba(0, 30, 80, 0.4);
+            }
+
+            small {
+                display: none;
+                font-size: 13px;
+                color: $tinta;
+                text-shadow: $brillo-de-texto;
+            }
+
+            &.activo {
+                opacity: 1;
+                @include opcion-activa;
+
+                small {
+                    color: #fff;
+                    text-shadow: 0 1px 1px rgba(0, 40, 110, 0.6);
+                }
+            }
+        }
+    }
+
+    // Selector de idioma: los dos idiomas a la vista y el activo resaltado en azul, como una llave de dos posiciones
+    #cambiar-idioma {
+        --c: #{$vidrio-claro};
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        height: 34px;
+        padding: 0 4px;
+        border-color: rgba(0, 40, 90, 0.4);
+        border-radius: 11px;
+
+        // Ícono universal de idioma (dos globos de diálogo con "A" y "文"), a la izquierda de ES / EN
+        .idioma-icono {
+            flex: none;
+            width: 19px;
+            height: 19px;
+            margin: 0 3px 0 5px;
+            color: $tinta;
+            filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+        }
+
+        span {
+            display: grid;
+            place-items: center;
+            min-width: 28px;
+            height: 24px;
+            padding: 0 4px;
+            font-size: 13px;
+            color: $tinta;
+            text-shadow: $brillo-de-texto;
+            border-radius: 8px;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+
+            &.activo {
+                opacity: 1;
+                color: #fff;
+                text-shadow: 0 1px 1px rgba(0, 40, 110, 0.6);
+                @include opcion-activa;
+            }
+        }
+    }
+
+    // Sonido (en computadora): botón chiquito y redondo, junto al de idioma (ver el mixin boton-de-sonido).
+    // En celular main.js lo saca de la barra y lo deja flotando en la esquina de abajo a la derecha (más abajo)
+    #silenciar {
+        @include boton-de-sonido;
+
+        // Queda centrado entre el idioma y los menús de información: a su izquierda hay 8 px (el espacio entre botones de este grupo)
+        // y a su derecha 16 (el espacio entre grupos de la barra, que es siempre ese: ver "margin-left: auto" de .ajustes más abajo).
+        // Con 4 px más de un lado y 4 menos del otro quedan 12 y 12.
+        @include computadora {
+            margin-inline: 4px -4px;
+        }
+    }
+
+    // Inclinación con el mouse (solo computadora): botón chiquito y redondo, igual al de sonido y pegado a él (8 px). Si está a la vista,
+    // el par de botones redondos queda centrado entre el idioma y los menús: el de sonido conserva solo los 4 px de su izquierda
+    // (8 + 4 = 12) y el de inclinación se queda con los -4 px de la derecha (16 - 4 = 12). Sin él (pantallas táctiles), el de sonido
+    // sigue centrado solo, como arriba.
+    // (Mientras el de inclinación está afuera de la barra, llamando la atención, en su lugar queda un hueco: cuenta igual)
+    .ajustes:has(#inclinacion-invertida:not([hidden]), [data-hueco="inclinacion-invertida"]) #silenciar {
+        @include computadora {
+            margin-inline: 4px 0;
+        }
+    }
+
+    // Ver el mixin boton-de-inclinacion (más arriba). main.js lo muestra (hidden) solo con mouse; en el celular no existe.
+    #inclinacion-invertida {
+        @include boton-de-inclinacion;
+
+        @include computadora {
+            margin-inline: 0 -4px;
+        }
+
+        @include celular {
+            display: none;
+        }
+    }
+
+    // Menús de información (herramientas secundarias): botón de vidrio claro que abre un panel con las opciones
+    .menu-info {
+        position: relative;
+    }
+
+    .menu-desplegable {
+        --c: #{$vidrio-claro};
+        height: 34px;
+        padding: 0 11px;
+        font-size: 13px;
+        border-radius: 11px;
+        color: $tinta;
+        text-shadow: $brillo-de-texto;
+        border-color: rgba(0, 40, 90, 0.4);
+
+        &::after {
+            content: "\25BE";
+            display: inline-block;
+            margin-left: 6px;
+            transition: rotate 0.18s ease;
+        }
+
+        &[aria-expanded="true"] {
+            filter: brightness(0.97);
+            box-shadow: $sombra-hundida;
+
+            &::after {
+                rotate: 180deg;
+            }
+        }
+    }
+
+    .menu-info ul {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        min-width: 100%;
+        margin: 0;
+        padding: 6px;
+        list-style: none;
+        border: 1px solid rgba(0, 80, 140, 0.35);
+        border-radius: 14px;
+        background: linear-gradient(180deg, #ffffff, #eaf4ff);
+        box-shadow:
+            0 10px 24px rgba(0, 30, 80, 0.4),
+            inset 0 1px 0 #fff;
+        z-index: capa(menus-de-informacion); // por encima de la fila de filtros: su línea divisora tiene que quedar debajo de la lista
+        visibility: hidden;
+        opacity: 0;
+        translate: 0 -6px;
+        transition:
+            opacity 0.18s ease,
+            translate 0.18s ease,
+            visibility 0s 0.18s;
+
+        button {
+            display: block;
+            width: 100%;
+            margin: 0;
+            padding: 7px 14px;
+            white-space: nowrap;
+            text-align: left;
+            font-family: var(--f-boton), sans-serif;
+            font-size: var(--t-nav);
+            font-weight: 600;
+            color: #24313f;
+            cursor: pointer;
+            border: 0;
+            border-radius: 9px;
+            background: none;
+
+            &:hover,
+            &:focus-visible {
+                outline: none;
+                background: linear-gradient(180deg, #dcefff, #b8dcfa);
+                box-shadow:
+                    inset 0 1px 0 #fff,
+                    0 0 0 1px rgba(0, 110, 190, 0.3);
+            }
+        }
+    }
+
+    .menu-info.abierto ul {
+        visibility: visible;
+        opacity: 1;
+        translate: 0 0;
+        transition-delay: 0s;
+    }
+
+    // Los elementos son 12: van en dos columnas
+    #lista-elementos {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 4px;
+        min-width: 250px;
+    }
+
+    // Progreso de la carga: rótulo chico arriba y una barra de vidrio con relleno aqua
+    // El rótulo y la barra son independientes: cada uno tiene su propio ancho y quedan centrados uno sobre el otro.
+    // El rótulo puede ser más ancho que la barra (la caja se ajusta al más ancho de los dos), así que nunca se corta.
+    .carga {
+        display: grid;
+        justify-items: center;
+        row-gap: 5px;
+        width: max-content;
+
+        // Lleva el salto de línea fijo en el HTML ("...carga de" / "Digimons:") y su tamaño crece con el ancho de la ventana.
+        // (Más chico que antes —era clamp(10px, 0.85vw, 16px) y la barra clamp(110px, 9vw, 150px)— para que el bloque ocupe
+        // menos lugar en la barra mientras carga.)
+        label {
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.15;
+            font-family: var(--f-etiqueta), sans-serif;
+            font-size: clamp(9px, 0.68vw, 13px);
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            color: #2c5a80;
+            text-shadow: 0 1px 0 #fff;
+        }
+
+        progress {
+            appearance: none;
+            width: clamp(95px, 7.5vw, 130px);
+            height: 10px;
+            border: 1px solid rgba(0, 70, 130, 0.35);
+            border-radius: 999px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #b7d2e6, #e6f2fb);
+            box-shadow:
+                inset 0 2px 4px rgba(0, 50, 100, 0.4),
+                0 1px 0 #fff;
+
+            &::-webkit-progress-bar {
+                background: transparent;
+            }
+
+            &::-webkit-progress-value {
+                border-radius: 999px;
+                background:
+                    linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0) 51%),
+                    linear-gradient(180deg, #7ff0ff, #22c0e8 50%, #0a9ad0);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                    0 0 8px rgba(40, 200, 255, 0.7);
+                transition: width 0.2s ease;
+            }
+
+            &::-moz-progress-bar {
+                border-radius: 999px;
+                background: linear-gradient(180deg, #7ff0ff, #22c0e8 50%, #0a9ad0);
+            }
+        }
+    }
+}
+
+// Latido del botón "Iniciar Combate" (ver #iniciar-combate): el mismo "pulse" de animate.css (de 1 a 1,05 y de vuelta en 1 s), pero dentro de un
+// ciclo de 2 s para que descanse un segundo entre latido y latido (en el CSS una animación no puede esperar entre repeticiones por sí sola)
+@keyframes combate-pulso {
+    0%,
+    50%,
+    100% {
+        scale: 1;
+    }
+
+    25% {
+        scale: 1.05;
+    }
+}
+
+// En pantallas angostas el panel de combate baja a su propia fila (sigue siendo lo más grande de la barra):
+// ahí ocupa todo el ancho, la consigna va en una sola línea y los ajustes se van a la derecha, junto a los menús
+@media (max-width: 1439px) {
+    #navbar .combate {
+        order: 10;
+        flex: 1 1 100%;
+        max-width: none;
+    }
+
+    #navbar .consigna {
+        max-width: none;
+    }
+
+    #navbar .ajustes {
+        margin-left: auto;
+    }
+}
+
+// En pantallas anchas (1440 o más) la barra va en una sola fila y "space-between" reparte el espacio que sobra entre TODOS los huecos,
+// también el que hay entre los ajustes y los menús de información. Ese hueco crecía cuando el bloque de carga se retiraba, y el botón
+// de sonido (que está al borde derecho de los ajustes) dejaba de quedar centrado entre el idioma y "Info. tipos". Con margen automático
+// a la izquierda del panel de combate y de los ajustes, lo que sobra se reparte solo ahí (el panel sigue en el medio) y los ajustes
+// quedan siempre a 16 px de los menús, igual que en las pantallas más angostas: el botón de sonido queda centrado con y sin la carga.
+@media (min-width: 1440px) {
+    #navbar .combate,
+    #navbar .ajustes {
+        margin-left: auto;
+    }
+}
+
+// En computadora la barra de carga (rótulo + barra) desaparece cuando termina: el JS le pone la clase "carga-completa" a la barra
+// de arriba (la misma que en el celular apaga la línea finita). Medio segundo después de llegar al 100 % —para que se alcance a
+// ver completa— se desvanece y, ya invisible, main.js (retirarBloqueDeCarga) lo saca de la barra (atributo hidden) y desliza el
+// resto de la barra al lugar que deja, en vez de que salte.
+@include computadora {
+    #navbar.carga-completa .carga {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease 0.6s;
+    }
+}
+
+// SONIDO EN CELULAR: main.js saca el botón de la barra y lo deja suelto en el <body>. Flota siempre en la esquina de abajo a la
+// derecha, por encima de todo (cartas, ventanas de combate y de información, zoom y sus flechas): se puede apagar el sonido en
+// cualquier momento, también mientras suena la música del combate. En computadora sigue en la barra, junto al idioma.
+@include celular {
+    body > #silenciar {
+        @include boton-de-gel;
+        @include boton-de-sonido;
+        position: fixed;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        z-index: capa(botones-flotantes);
+        width: 44px;
+        height: 44px;
+        // Un aro blanco y más sombra, para que se despegue de lo que haya detrás (cartas claras u oscuras)
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+            0 0 0 2px rgba(255, 255, 255, 0.85),
+            0 5px 14px rgba(0, 20, 70, 0.55);
+
+        .audio-icono {
+            width: 25px;
+            height: 25px;
+        }
+    }
+
+    // Con el zoom de una carta abierto pasa a la esquina de arriba a la izquierda: abajo a la derecha queda el pulgar, que es
+    // el que desliza las cartas (al empezar a cerrarse el zoom vuelve a su lugar de siempre)
+    body:has(#zoom-fondo.abierto) > #silenciar {
+        inset: calc(12px + env(safe-area-inset-top, 0px)) auto auto 12px;
+    }
+
+    // (El de inclinación no existe en celular; si se achica la ventana justo cuando está afuera de la barra, no se muestra)
+    body > #inclinacion-invertida {
+        display: none;
+    }
+}
+
+// En computadora los botones redondos de sonido e inclinación viven en la barra. Cuando uno llama la atención (salta, lanza ondas y suelta
+// su globito: ver "LLAMADA DE LOS BOTONES REDONDOS" en main.js) y hay algo por encima de la barra —el zoom de una carta, un cartel del combate
+// o uno de información, todos con una cortina oscura y desenfocada—, main.js lo saca un momento de la barra (con top y left puestos en el
+// mismo lugar de la pantalla) para que se vea por encima de la cortina y se pueda tocar. Al terminar vuelve a la barra.
+@include computadora {
+    body > #silenciar,
+    body > #inclinacion-invertida {
+        @include boton-de-gel;
+        position: fixed;
+        z-index: capa(botones-flotantes);
+        margin: 0;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+            0 0 0 2px rgba(255, 255, 255, 0.85),
+            0 5px 14px rgba(0, 20, 70, 0.55);
+    }
+
+    body > #silenciar {
+        @include boton-de-sonido;
+    }
+
+    body > #inclinacion-invertida {
+        @include boton-de-inclinacion;
+    }
+
+    // "Hundidos" (sonido apagado, inclinación invertida) siguen con su aro blanco y su sombra para despegarse de la cortina
+    body > #silenciar.silenciado,
+    body > #inclinacion-invertida[aria-pressed="true"] {
+        box-shadow:
+            inset 0 3px 6px rgba(0, 40, 90, 0.3),
+            0 0 0 2px rgba(255, 255, 255, 0.85),
+            0 5px 14px rgba(0, 20, 70, 0.55);
+    }
+}
+
+// (display: grid lo pisaría al atributo hidden)
+#navbar .carga[hidden] {
+    display: none;
+}
+
+// En pantallas angostas (pero todavía no de celular) la barra de carga ocupa su propia fila
+@media (min-width: 701px) and (max-width: 800px) {
+    #navbar .carga {
+        order: 11;
+        width: 100%;
+    }
+}

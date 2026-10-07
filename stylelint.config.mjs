@@ -16,6 +16,7 @@ export default {
         // Líneas en blanco y reglas de una sola línea: es formato, no errores
         'declaration-empty-line-before': null,
         'rule-empty-line-before': null,
+        'at-rule-empty-line-before': null,
         'custom-property-empty-line-before': null,
         'scss/dollar-variable-empty-line-before': null,
         'scss/double-slash-comment-empty-line-before': null,

@@ -1,0 +1,202 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+// -----------------------------------------------------------------------------------------------------------------
+// ZOOM DE LA CARTA (doble clic): el fondo se oscurece con un resplandor del color de la carta y la carta queda por encima.
+//   La carta no sale del <ul>: main.js la traslada y la agranda (translate y scale), por eso en su lugar queda un hueco.
+// -----------------------------------------------------------------------------------------------------------------
+// En celulares el zoom de la carta es el gesto de pellizco (dos dedos): sobre las cartas se puede desplazar hacia arriba y abajo,
+// pero el navegador no amplía la página con ese gesto, así que le llega a main.js. El fondo del zoom no se desplaza ni se amplía.
+#listado-digimons li {
+    touch-action: pan-y;
+}
+
+#zoom-fondo {
+    touch-action: none;
+}
+
+#listado-digimons li.zoom-activa {
+    z-index: capa(carta-ampliada); // por encima del fondo del zoom y de la barra de arriba
+}
+
+// Con el zoom la sombra no cambia con el hover y no corren las transiciones de sombra ni de levante: la carta grande no se
+// vuelve a dibujar entera cada vez que el mouse entra o sale.
+#listado-digimons li.zoom-activa,
+#listado-digimons li.zoom-activa:hover {
+    --caida: 0 6px 14px rgba(0, 0, 0, 0.5);
+    transition: none;
+}
+
+// El reflejo y el botón de dar vuelta de la carta grande aparecen y se van sin transición: una transición de opacidad los
+// convierte un instante en capas aparte, y con la carta inclinada esas capas se dibujaban a baja resolución (pixeladas).
+#listado-digimons li.zoom-activa::after,
+#listado-digimons li.zoom-activa .c-flip {
+    transition: none !important;
+}
+
+// Solo para medir dónde está la carta en la grilla, sin el levante del hover ni la inclinación (dura un instante)
+#listado-digimons li.zoom-midiendo {
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
+    transform: none !important;
+    transition: none !important;
+}
+
+#zoom-fondo {
+    position: fixed;
+    inset: 0;
+    z-index: capa(fondo-del-zoom);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    background:
+        radial-gradient(ellipse 44% 58% at 50% 50%, color-mix(in srgb, var(--zc, #3a8dde) 62%, transparent) 0%, transparent 74%),
+        radial-gradient(ellipse at 50% 50%, rgba(8, 14, 44, 0.8) 0%, rgba(1, 3, 14, 0.94) 100%);
+    backdrop-filter: blur($desenfoque-del-fondo); // el mismo desenfoque que los carteles del combate; el color oscuro queda igual
+    -webkit-backdrop-filter: blur($desenfoque-del-fondo);
+
+    &.abierto {
+        opacity: 1;
+    }
+
+    // ✕ de vidrio arriba a la derecha
+    .zoom-cerrar {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        font:
+            700 19px/1 var(--f-boton),
+            sans-serif;
+        color: #0b3a66;
+        cursor: pointer;
+        border: 1px solid #fff;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 #fff;
+        transition:
+            scale 0.15s ease,
+            filter 0.15s ease;
+
+        &:hover {
+            scale: 1.08;
+            filter: brightness(1.06);
+        }
+
+        &:active {
+            scale: 0.95;
+        }
+    }
+
+    .zoom-ayuda {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        translate: -50% 0;
+        margin: 0;
+        padding: 5px 14px;
+        font:
+            600 13px var(--f-boton),
+            sans-serif;
+        color: rgba(255, 255, 255, 0.85);
+        white-space: nowrap;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+    }
+}
+
+// Flechas para pasar a la carta anterior / siguiente sin salir del zoom.
+// Viven fuera del fondo (que tiene su propio apilamiento, por debajo de la carta) para quedar por encima.
+#zoom-flechas {
+    position: fixed;
+    inset: 0;
+    z-index: capa(flechas-del-zoom);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+
+    &.abierto {
+        opacity: 1;
+    }
+
+    // Con el zoom extra (la carta agrandada de más, ver main.js) la carta puede llegar hasta las flechas: se esconden
+    &.zoom-extra {
+        opacity: 0;
+
+        .zoom-flecha {
+            pointer-events: none;
+        }
+    }
+
+    .zoom-flecha {
+        position: absolute;
+        top: 50%;
+        translate: 0 -50%;
+        display: grid;
+        place-items: center;
+        width: var(--flecha, 48px);
+        height: var(--flecha, 48px);
+        padding: 0;
+        color: #0b3a66;
+        cursor: pointer;
+        pointer-events: auto;
+        border: 1px solid #fff;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 #fff;
+        transition:
+            scale 0.15s ease,
+            filter 0.15s ease,
+            opacity 0.15s ease;
+
+        svg {
+            width: 55%;
+            height: 55%;
+        }
+
+        &:hover:not(:disabled) {
+            scale: 1.08;
+            filter: brightness(1.06);
+        }
+
+        &:active:not(:disabled) {
+            scale: 0.95;
+        }
+
+        &:disabled {
+            opacity: 0.28;
+            cursor: default;
+        }
+
+        &.zoom-anterior {
+            left: var(--fl-izq, 8px);
+        }
+
+        &.zoom-siguiente {
+            right: var(--fl-der, 8px);
+        }
+    }
+}
+
+// En pantallas táctiles no hay tecla Esc
+@media (hover: none) {
+    #zoom-fondo .zoom-ayuda {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #zoom-fondo,
+    #zoom-flechas {
+        transition: none;
+    }
+}

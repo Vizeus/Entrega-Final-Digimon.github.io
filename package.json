@@ -4,6 +4,8 @@
     "description": "Colección de Digimons y sencillo simulador de combates",
     "main": "main.js",
     "scripts": {
+        "css": "sass --source-map design/styles.scss design/styles.css",
+        "css:mirar": "sass --watch --source-map design/styles.scss design/styles.css",
         "revisar": "npm run revisar:js && npm run revisar:css",
         "revisar:js": "eslint .",
         "revisar:css": "stylelint \"design/**/*.scss\"",
@@ -19,6 +21,7 @@
         "eslint": "^10.12.0",
         "globals": "^17.13.0",
         "prettier": "^3.9.9",
+        "sass": "^1.105.1",
         "stylelint": "^17.16.0",
         "stylelint-config-standard-scss": "^17.0.0"
     }

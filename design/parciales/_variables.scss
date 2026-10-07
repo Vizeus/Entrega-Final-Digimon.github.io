@@ -1,0 +1,90 @@
+// -----------------------------------------------------------------------------------------------------------------
+// VARIABLES COMPARTIDAS: no generan CSS por sí mismas; las demás partes las usan con @use "variables" as *.
+// -----------------------------------------------------------------------------------------------------------------
+@use "sass:map";
+
+// Cuánto se desenfoca la página de atrás cuando hay un cartel encima: lo usan los carteles del combate y el fondo del zoom de la carta
+$desenfoque-del-fondo: 10px;
+
+// ---- Cortes de pantalla (ver los mixins "celular" y "computadora") -----------------------------------------------------
+// Hasta 700px es el diseño de celular (barra finita con el menú ☰, dos cartas por fila...); desde 701px, el de computadora.
+// main.js y los demás scripts usan el mismo número: si se cambia acá, hay que cambiarlo también allá.
+$corte-celular: 700px;
+
+// ---- Colores que se repiten ---------------------------------------------------------------------------------------------
+$tinta: #24476a; // texto de los botones de vidrio claro (idioma, niveles, menús de información, ☰...)
+$tinta-oscura: #1d4468; // textos de los carteles y avisos sobre fondo claro
+$vidrio-claro: #cfdde9; // color base de los botones de vidrio claro (va en --c, que usa el mixin boton-de-gel)
+$brillo-de-texto: 0 1px 0 rgba(255, 255, 255, 0.85); // el reflejo blanco debajo de los textos sobre vidrio
+$sombra-hundida:
+    inset 0 3px 6px rgba(0, 40, 90, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.6); // botón apretado o activado
+$arcoiris:
+    #ff5fa2,
+    #ffd85f 25%,
+    #5fffb0 50%,
+    #5fc8ff 75%,
+    #b55fff; // el reflejo de prisma de las cartas de nivel alto
+
+// ---- Colores de tipo y elemento (los mismos que usan los filtros en filtros.js) ------------------------------------------
+// Cada tipo le da el color a la carta (--tipo); cada elemento, a su etiqueta (--c).
+$colores-tipo: (
+    "Vacuna": #3a8dde,
+    "Virus": #8a4fc7,
+    "Datos": #3fae5a,
+    "Libre": #1fa79f,
+    "Variable": #e2803a,
+    "Desconocido": #59616d,
+);
+
+$colores-elemento: (
+    "Fuego": #e8552b,
+    "Agua": #2f8fe0,
+    "Planta": #4aa84f,
+    "Hielo": #58c7ea,
+    "Rayo": #f0b400,
+    "Viento": #7cc9b0,
+    "Tierra": #a17a4a,
+    "Luz": #f5c542,
+    "Oscuridad": #6a4c93,
+    "Metal": #8a96a3,
+    "Veneno": #a24fc4,
+    "Neutro": #aab2bb,
+);
+
+// ---- Achicado de las cartas en celular (dos por fila) -------------------------------------------------------------------
+// Ancho máximo de la pantalla → "zoom" de las cartas. El de 483px (el primero) va aparte porque también cambia los márgenes.
+$zoom-de-cartas-en-celular: (
+    419px: 0.82,
+    389px: 0.79,
+    374px: 0.75,
+    359px: 0.71,
+    339px: 0.67,
+);
+
+// ---- Capas (z-index) ----------------------------------------------------------------------------------------------------
+// Todo lo que flota por encima de la página, de abajo hacia arriba. Se usa con capa(nombre): por ejemplo, z-index: capa(barra).
+// Así se ve de un vistazo qué queda encima de qué (los números chicos, de 1 a 30, son locales de cada carta y no van acá).
+$capas: (
+    avisos-de-ayuda: 800,
+    filtros: 900,
+    menus-de-informacion: 950,
+    barra: 1000,
+    aviso-del-contador: 1100,
+    fondo-del-zoom: 1500,
+    carta-ampliada: 1600,
+    flechas-del-zoom: 1700,
+    avisos-sobre-el-zoom: 1700,
+    botones-flotantes: 1800,
+    globo-de-boton: 1850,
+    ventanas: 2000,
+    botones-sobre-las-ventanas: 2100,
+    globo-sobre-las-ventanas: 2150,
+);
+
+@function capa($nombre) {
+    @if not map.has-key($capas, $nombre) {
+        @error "No existe la capa '#{$nombre}'. Las que hay: #{map.keys($capas)}";
+    }
+    @return map.get($capas, $nombre);
+}

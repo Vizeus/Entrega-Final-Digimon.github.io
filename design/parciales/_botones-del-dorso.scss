@@ -1,0 +1,59 @@
+// -----------------------------------------------------------------------------------------------------------------
+// BOTONES DEL DORSO DE LA CARTA ("⚔️ Ataques" y "🧬 Evolución")
+// -----------------------------------------------------------------------------------------------------------------
+
+/* Botones del pie del dorso de la carta: "⚔️ Ataques" (info.js) y "🧬 Evolución" (evolucion.js), del color del tipo.
+   Van uno al lado del otro si entran; en las cartas angostas (celular) pasan uno debajo del otro */
+#listado-digimons li .c-botones {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    position: relative;
+    z-index: 5;
+}
+
+#listado-digimons li .c-evo,
+#listado-digimons li .c-ataques {
+    position: relative;
+    z-index: 6;
+    pointer-events: auto;
+    flex: 1 1 82px;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: 6px;
+    font:
+        700 12px var(--f-boton),
+        sans-serif;
+    white-space: nowrap;
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--tipo) 55%, black);
+    border-radius: 8px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--tipo) 55%, white) 0%, var(--tipo) 50%, color-mix(in srgb, var(--tipo) 88%, black) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        0 1px 2px color-mix(in srgb, var(--tipo) 35%, rgba(0, 0, 0, 0.2));
+    transition:
+        transform 0.07s ease,
+        box-shadow 0.07s ease,
+        filter 0.07s ease; // el hundimiento (y el soltar) se ven como un movimiento
+}
+
+#listado-digimons li .c-evo:hover,
+#listado-digimons li .c-evo:focus-visible,
+#listado-digimons li .c-ataques:hover,
+#listado-digimons li .c-ataques:focus-visible {
+    filter: brightness(1.1);
+}
+
+// Hundido: con el mouse es :active; con el dedo la clase "hundido" (main.js, activarBotonDelDorso), que dura un mínimo para que se alcance a ver
+#listado-digimons li .c-evo:active,
+#listado-digimons li .c-ataques:active,
+#listado-digimons li .c-evo.hundido,
+#listado-digimons li .c-ataques.hundido {
+    transform: translateY(1px) scale(0.97);
+    filter: brightness(0.94);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
