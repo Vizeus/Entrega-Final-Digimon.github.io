@@ -52,6 +52,7 @@
 
 body {
     margin: 0;
+    // (!important: al abrir una ventana, SweetAlert le pone al body overflow hidden y un margen a la derecha; así la página no salta)
     overflow: auto !important;
     padding-right: 0 !important;
     font-family: var(--f-cuerpo), sans-serif;

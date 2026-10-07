@@ -573,7 +573,7 @@
 
         // Con el zoom abierto la página no se mueve: la descripción siempre se queda con el scroll
         &.zoom-activa .c-cuerpo {
-            overscroll-behavior: contain !important;
+            overscroll-behavior: contain;
         }
 
         // Botón de dar vuelta la carta: aparece solo al pasar el mouse, asomando por la esquina superior izquierda.
@@ -724,7 +724,7 @@
         }
     }
 
-    // Del lado del dorso no hay reflejo, para poder leer tranquilo
+    // Del lado del dorso no hay reflejo, para poder leer tranquilo (!important: le gana al reflejo del hover y de la inclinación)
     li.de-dorso::after {
         opacity: 0 !important;
     }
@@ -917,9 +917,9 @@
 // Al completar ese aprendizaje en 5 sesiones distintas, quedan ocultas de forma permanente.
 @media (hover: none), (max-width: 768px) {
     body.sin-flechas-flip-movil #listado-digimons li .c-flip {
-        opacity: 0 !important;
-        scale: 0 !important;
-        pointer-events: none !important;
+        opacity: 0;
+        scale: 0;
+        pointer-events: none;
         transition:
             opacity 0.35s ease,
             scale 0.35s ease !important;
@@ -961,12 +961,11 @@
 // En computadora, mientras se mantiene apretada Shift (inclinacion.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)
 // las cartas no se inclinan con el mouse: tampoco muestran el reflejo ni la textura holográfica, que siguen al puntero y sin inclinación
 // quedarían fijos en un lugar. El levante del hover (la carta que se alza un poquito, con su sombra) NO se anula: ese siempre está.
-// Va con !important en la opacidad para ganarle a los reflejos de más arriba, que son más específicos.
 // (El botón de dar vuelta sigue apareciendo: es un control, no un efecto.)
 #listado-digimons.inclinacion-anulada > li:hover::after,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::before,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::after {
-    opacity: 0 !important;
+    opacity: 0;
 }
 
 // La carta ampliada de más (zoom extra, con la rueda del mouse o el pellizco; zoom.js le pone la clase "zoom-extra-activo") no se inclina
@@ -974,7 +973,7 @@
 #listado-digimons > li.zoom-activa.zoom-extra-activo::after,
 #listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::before,
 #listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::after {
-    opacity: 0 !important;
+    opacity: 0;
 }
 
 // Al pasar de carta en el zoom (con el teclado o con las flechas), la carta nueva queda sin reflejo ni textura holográfica mientras el mouse no
@@ -1000,7 +999,7 @@
 
 #listado-digimons > li.zoom-activa.zoom-arrastrando,
 #listado-digimons > li.zoom-activa.zoom-arrastrando * {
-    cursor: grabbing !important;
+    cursor: grabbing;
 }
 
 // Una carta bailando (baile.js: "transform" animado) no reacciona al hover: con el puntero quieto y la carta saltando por debajo, el
@@ -1013,7 +1012,7 @@
 #listado-digimons > li.bailando:hover::after,
 #listado-digimons.tilt-on > li.bailando:hover .c-frente::before,
 #listado-digimons.tilt-on > li.bailando:hover .c-frente::after {
-    opacity: 0 !important;
+    opacity: 0;
 }
 
 // CELULAR: dos cartas por fila. Las cartas se achican enteras con "zoom" (texto, marcos, botones y dorso juntos),

@@ -35,6 +35,7 @@
 }
 
 // Solo para medir dónde está la carta en la grilla, sin el levante del hover ni la inclinación (dura un instante)
+// (!important: le gana a la inclinación, que inclinacion.js escribe en el style de la carta, y a las animaciones)
 #listado-digimons li.zoom-midiendo {
     translate: none !important;
     scale: none !important;

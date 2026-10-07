@@ -60,9 +60,9 @@
 @media (prefers-reduced-motion: reduce), print {
     .combate-entra,
     .combate-sale {
-        animation-duration: 1ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 1ms !important;
+        animation-duration: 1ms;
+        animation-iteration-count: 1;
+        transition-duration: 1ms;
     }
 
     .combate-sale {

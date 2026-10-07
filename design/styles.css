@@ -1269,7 +1269,7 @@ body::before {
   }
 }
 .swal2-container {
-  z-index: 2000 !important;
+  z-index: 2000;
 }
 .swal2-container.swal2-backdrop-show {
   backdrop-filter: blur(10px);
@@ -1280,8 +1280,8 @@ body:has(.swal2-container) #zoom-flechas,
 body:has(.swal2-container) #zoom-fondo .zoom-cerrar,
 body:has(.swal2-container) #zoom-fondo .zoom-ayuda,
 body:has(.swal2-container) #avisos-ayuda {
-  opacity: 0 !important;
-  pointer-events: none !important;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .swal2-popup {
@@ -1306,14 +1306,14 @@ body:has(.swal2-container) #avisos-ayuda {
 .swal2-popup button:focus, .swal2-popup button.swal2-confirm:focus,
 .swal2-styled:focus,
 .swal2-styled.swal2-confirm:focus {
-  outline: none !important;
-  box-shadow: none !important;
+  outline: none;
+  box-shadow: none;
 }
 .swal2-popup button:focus-visible, .swal2-popup button.swal2-confirm:focus-visible,
 .swal2-styled:focus-visible,
 .swal2-styled.swal2-confirm:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.8) !important;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.6) !important;
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.6);
 }
 
 .popup-info .swal2-title {
@@ -1510,7 +1510,7 @@ body:has(.swal2-container) #avisos-ayuda {
 
 @media (max-width: 700px) {
   .popup-info:not(.popup-ataques) {
-    padding: 0.65em 0.55em 0.75em !important;
+    padding: 0.65em 0.55em 0.75em;
   }
   .popup-info:not(.popup-ataques) .swal2-icon {
     width: 3.7em;
@@ -1618,9 +1618,9 @@ body:has(.swal2-container) #avisos-ayuda {
 @media (prefers-reduced-motion: reduce), print {
   .combate-entra,
   .combate-sale {
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+    transition-duration: 1ms;
   }
   .combate-sale {
     opacity: 0;
@@ -2363,7 +2363,7 @@ body:has(.swal2-container) #avisos-ayuda {
 }
 
 #listado-digimons > li.filtrada {
-  display: none !important;
+  display: none;
 }
 
 @keyframes f-abre {
@@ -2964,7 +2964,7 @@ body:has(.swal2-container) #avisos-ayuda {
   color: #7a848f;
 }
 #listado-digimons li.zoom-activa .c-cuerpo {
-  overscroll-behavior: contain !important;
+  overscroll-behavior: contain;
 }
 #listado-digimons li .c-flip {
   position: absolute;
@@ -3126,9 +3126,9 @@ body:has(.swal2-container) #avisos-ayuda {
 }
 @media (hover: none), (max-width: 768px) {
   body.sin-flechas-flip-movil #listado-digimons li .c-flip {
-    opacity: 0 !important;
-    scale: 0 !important;
-    pointer-events: none !important;
+    opacity: 0;
+    scale: 0;
+    pointer-events: none;
     transition: opacity 0.35s ease, scale 0.35s ease !important;
   }
 }
@@ -3159,13 +3159,13 @@ body:has(.swal2-container) #avisos-ayuda {
 #listado-digimons.inclinacion-anulada > li:hover::after,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::before,
 #listado-digimons.tilt-on.inclinacion-anulada > li:hover .c-frente::after {
-  opacity: 0 !important;
+  opacity: 0;
 }
 
 #listado-digimons > li.zoom-activa.zoom-extra-activo::after,
 #listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::before,
 #listado-digimons.tilt-on > li.zoom-activa.zoom-extra-activo .c-frente::after {
-  opacity: 0 !important;
+  opacity: 0;
 }
 
 #listado-digimons > li.reflejo-quieto::after,
@@ -3186,7 +3186,7 @@ body:has(.swal2-container) #avisos-ayuda {
 
 #listado-digimons > li.zoom-activa.zoom-arrastrando,
 #listado-digimons > li.zoom-activa.zoom-arrastrando * {
-  cursor: grabbing !important;
+  cursor: grabbing;
 }
 
 #listado-digimons > li.bailando:hover:not(.seleccionado):not(.evo-resaltada):not(.zoom-activa) {
@@ -3197,7 +3197,7 @@ body:has(.swal2-container) #avisos-ayuda {
 #listado-digimons > li.bailando:hover::after,
 #listado-digimons.tilt-on > li.bailando:hover .c-frente::before,
 #listado-digimons.tilt-on > li.bailando:hover .c-frente::after {
-  opacity: 0 !important;
+  opacity: 0;
 }
 
 @media (max-width: 483px) {
@@ -3755,7 +3755,7 @@ body:has(.swal2-container) #avisos-ayuda {
     scale: 1;
   }
 }
-/* Ventana de la línea evolutiva */
+/* Ventana de la línea evolutiva. (Los !important del ancho: SweetAlert escribe el ancho en el style de la ventana; sin ellos, el CSS no podría cambiarlo) */
 .popup-evo {
   padding: 1.1em 1em 1em;
   width: min(96vw, 920px) !important;

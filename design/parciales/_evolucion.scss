@@ -53,7 +53,7 @@
     }
 }
 
-/* Ventana de la línea evolutiva */
+/* Ventana de la línea evolutiva. (Los !important del ancho: SweetAlert escribe el ancho en el style de la ventana; sin ellos, el CSS no podría cambiarlo) */
 .popup-evo {
     padding: 1.1em 1em 1em;
     width: min(96vw, 920px) !important;

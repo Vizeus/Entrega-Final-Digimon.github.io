@@ -5,7 +5,7 @@
 // VENTANAS EMERGENTES (SweetAlert2): la cortina, el tamaño común y las ventanas de información y de ataques.
 // -----------------------------------------------------------------------------------------------------------------
 .swal2-container {
-    z-index: capa(ventanas) !important;
+    z-index: capa(ventanas);
 
     &.swal2-backdrop-show {
         backdrop-filter: blur($desenfoque-del-fondo);
@@ -17,8 +17,8 @@ body:has(.swal2-container) #zoom-flechas,
 body:has(.swal2-container) #zoom-fondo .zoom-cerrar,
 body:has(.swal2-container) #zoom-fondo .zoom-ayuda,
 body:has(.swal2-container) #avisos-ayuda {
-    opacity: 0 !important;
-    pointer-events: none !important;
+    opacity: 0;
+    pointer-events: none;
 }
 
 // Ventanas emergentes (SweetAlert2): todos los carteles en escritorio tienen el mismo tamaño unificado (punto medio entre los grandes y los chicos)
@@ -26,6 +26,7 @@ body:has(.swal2-container) #avisos-ayuda {
     font-family: var(--f-cuerpo), sans-serif;
 }
 
+// (!important: SweetAlert escribe el ancho en el style de la ventana; sin ellos, el CSS no podría cambiarlo)
 @media (min-width: 641px) {
     .popup-info,
     .popup-ataques {
@@ -44,14 +45,14 @@ body:has(.swal2-container) #avisos-ayuda {
 
     &:focus,
     &.swal2-confirm:focus {
-        outline: none !important;
-        box-shadow: none !important;
+        outline: none;
+        box-shadow: none;
     }
 
     &:focus-visible,
     &.swal2-confirm:focus-visible {
-        outline: 2px solid rgba(255, 255, 255, 0.8) !important;
-        box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.6) !important;
+        outline: 2px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.6);
     }
 }
 
@@ -299,7 +300,7 @@ body:has(.swal2-container) #avisos-ayuda {
 
 @include celular {
     .popup-info:not(.popup-ataques) {
-        padding: 0.65em 0.55em 0.75em !important;
+        padding: 0.65em 0.55em 0.75em;
 
         .swal2-icon {
             width: 3.7em;

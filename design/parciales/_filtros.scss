@@ -24,6 +24,7 @@
     font-family: var(--f-boton), sans-serif;
     color: $tinta;
 
+    // (!important: si no, los display de los propios botones y listas de los filtros los volverían a mostrar)
     [hidden] {
         display: none !important;
     }
@@ -511,7 +512,7 @@
 
 // Las cartas que no cumplen los filtros se esconden
 #listado-digimons > li.filtrada {
-    display: none !important;
+    display: none;
 }
 
 @keyframes f-abre {
