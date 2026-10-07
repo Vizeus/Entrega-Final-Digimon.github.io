@@ -266,7 +266,7 @@
     font:
         600 10px var(--f-boton),
         sans-serif;
-    color: color-mix(in srgb, var(--c) 65%, black);
+    color: color-mix(in srgb, var(--c) 50%, black); // más oscuro que el color del nivel: los pastel (niveles 1 y 2) y el plateado (5) tienen que leerse
 }
 
 /* Etiqueta de las ramas "especiales" (Armor, Hybrid, fusión, salto de nivel, mismo nivel): una pastillita bajo el nivel */

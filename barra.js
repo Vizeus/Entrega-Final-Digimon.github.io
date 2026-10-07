@@ -1,11 +1,16 @@
 // -----------------------------------------------------------------------------------------------------------------
 // BARRA DE ARRIBA EN EL CELULAR
-//   · El menú ☰, que despliega el panel con la consigna, los ajustes, los menús de información y los filtros.
-//   · La barra que se esconde al bajar por la lista y vuelve a aparecer al subir.
+//   · El menú ☰, que despliega el panel con la consigna, los ajustes y los menús de información.
+//   · La barra (con el buscador y los filtros, que van siempre a la vista debajo del logo) que se esconde al bajar por la lista y
+//     vuelve a aparecer al subir.
+//   · El logo de Digimon, que es un botón de "volver al inicio".
 // (Antes estaban en info.js, que es de las ventanas de información.)
 // -----------------------------------------------------------------------------------------------------------------
 
 import { PANTALLA_DE_CELULAR } from './util.js';
+import { reducirMovimiento } from './cartas.js';
+import { limpiarSeleccionDeCombate } from './combate.js';
+import { limpiarTodo } from './filtros.js';
 
 // Menú ☰ del celular: abre y cierra el panel con la consigna, los ajustes y los menús de información.
 // Se cierra con el mismo botón, al tocar afuera, con Esc o al elegir una opción de información.
@@ -17,11 +22,11 @@ export function activarMenuMovil() {
     const abrir = abierto => {
         barra.classList.toggle('menu-abierto', abierto);
         boton.setAttribute('aria-expanded', String(abierto));
-        // Al cerrar el panel también se recogen las listas de información y de filtros: al volver a abrirlo están cerradas
+        // Al cerrar el panel también se recogen las listas de información: al volver a abrirlo están cerradas
         if (!abierto) {
-            panel.querySelectorAll('.menu-info.abierto, .f-grupo.abierto').forEach(menu => {
+            panel.querySelectorAll('.menu-info.abierto').forEach(menu => {
                 menu.classList.remove('abierto');
-                menu.querySelector('.menu-desplegable, .f-btn').setAttribute('aria-expanded', 'false');
+                menu.querySelector('.menu-desplegable').setAttribute('aria-expanded', 'false');
             });
         }
     };
@@ -40,8 +45,8 @@ export function activarMenuMovil() {
     document.addEventListener(
         'keydown',
         evento => {
-            // Si hay una lista de información o de filtros abierta, Esc primero cierra esa lista (lo hacen activarMenusInfo y filtros.js)
-            if (evento.key !== 'Escape' || !estaAbierto() || panel.querySelector('.menu-info.abierto, .f-grupo.abierto')) return;
+            // Si hay una lista de información abierta, Esc primero cierra esa lista (lo hace activarMenusInfo)
+            if (evento.key !== 'Escape' || !estaAbierto() || panel.querySelector('.menu-info.abierto')) return;
             abrir(false);
             boton.focus();
         },
@@ -54,9 +59,11 @@ export function activarMenuMovil() {
     });
 }
 
-// Barra de arriba del celular (la que lleva el menú ☰ con los filtros): se esconde al bajar por la lista y vuelve a aparecer
-// apenas se sube un poquito, y solo con ese gesto (así no tapa las cartas mientras se recorre la lista). Arriba de todo de la
-// página y con el menú ☰ abierto siempre se ve. En computadora no hace nada: la barra queda fija como siempre.
+// Barra de arriba del celular (la del logo, el combate, el menú ☰, el buscador y los filtros): se esconde entera al bajar por la
+// lista y vuelve a aparecer apenas se sube un poquito, y solo con ese gesto (así no tapa las cartas mientras se recorre la lista).
+// Arriba de todo de la página siempre se ve, y también mientras se usa: con el menú ☰ abierto, con las opciones de un filtro
+// desplegadas o con el cursor en el buscador (si no, se iría de la pantalla en pleno uso). En computadora no hace nada: la barra
+// queda fija como siempre.
 // (El CSS hace el movimiento: la clase "barra-escondida" la desliza hacia arriba, fuera de la pantalla.)
 export function activarBarraQueSeEsconde() {
     const barra = document.getElementById('navbar');
@@ -67,6 +74,8 @@ export function activarBarraQueSeEsconde() {
     let recorrido = 0; // px que se lleva recorridos en la dirección actual (positivo: bajando, negativo: subiendo)
 
     const mostrar = () => barra.classList.remove('barra-escondida');
+    // ¿La persona está usando la barra ahora? Menú ☰ abierto, opciones de un filtro desplegadas o cursor en el buscador
+    const enUso = () => barra.classList.contains('menu-abierto') || barra.querySelector('.f-grupo.abierto, input:focus') !== null;
 
     window.addEventListener(
         'scroll',
@@ -82,7 +91,7 @@ export function activarBarraQueSeEsconde() {
             if (dy === 0) return;
             recorrido = dy > 0 === recorrido > 0 && recorrido !== 0 ? recorrido + dy : dy;
 
-            if (y <= SIEMPRE_VISIBLE_ARRIBA || barra.classList.contains('menu-abierto')) {
+            if (y <= SIEMPRE_VISIBLE_ARRIBA || enUso()) {
                 mostrar();
             } else if (recorrido >= BAJADA_PARA_ESCONDER) {
                 barra.classList.add('barra-escondida');
@@ -98,5 +107,34 @@ export function activarBarraQueSeEsconde() {
         recorrido = 0;
         ultimoY = window.scrollY;
         mostrar();
+    });
+}
+
+// El logo de Digimon (arriba a la izquierda) es un botón de "volver al inicio": salta, sube hasta arriba de todo de la página, borra
+// los filtros y el buscador y quita la selección de combate, todo junto (lo que ya está limpio o arriba, queda como está).
+// También se activa con el teclado (Enter o espacio). El salto lo hace el CSS (la clase "salta"); si se toca de nuevo mientras salta,
+// vuelve a empezar. Con "reducir movimiento" no salta y sube de golpe.
+export function activarLogo() {
+    const logo = document.querySelector('#navbar > img');
+    const DURACION_DEL_SALTO = 1000; // ms: lo que dura la animación del CSS
+    let fin = 0;
+
+    const volverAlInicio = () => {
+        logo.classList.remove('salta');
+        void logo.offsetWidth; // fuerza a que el navegador note que se sacó la clase: así la animación vuelve a empezar
+        logo.classList.add('salta');
+        clearTimeout(fin);
+        fin = setTimeout(() => logo.classList.remove('salta'), DURACION_DEL_SALTO);
+
+        limpiarTodo();
+        limpiarSeleccionDeCombate();
+        window.scrollTo({ top: 0, behavior: reducirMovimiento ? 'instant' : 'smooth' });
+    };
+
+    logo.addEventListener('click', volverAlInicio);
+    logo.addEventListener('keydown', evento => {
+        if (evento.key !== 'Enter' && evento.key !== ' ') return;
+        evento.preventDefault(); // el espacio no tiene que bajar la página
+        volverAlInicio();
     });
 }

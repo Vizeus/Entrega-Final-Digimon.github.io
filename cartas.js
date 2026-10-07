@@ -211,30 +211,35 @@ function construirDorso(carta) {
     return dorso;
 }
 
+// Escribe el nombre del nivel de una carta según el sistema de clasificación vigente (Japón o EE.UU.): el rótulo de abajo y la ayuda
+// (el cartelito que sale al dejar el puntero encima y el texto para lectores de pantalla) de la gema y del rótulo. Se vuelve a llamar
+// al cambiar de sistema (main.js), así la ayuda no se queda con el nombre del sistema anterior.
+export function escribirNivel(carta) {
+    const textoNivel = nombreNivel(carta.dataset.nivelApi);
+    const ayudaNivel = t('carta.infoNivel', { nivel: textoNivel });
+    const gema = carta.querySelector('.c-gema');
+    const nivel = carta.querySelector('.c-nivel');
+    if (gema) ponerAyuda(gema, ayudaNivel);
+    if (nivel) {
+        nivel.textContent = textoNivel;
+        ponerAyuda(nivel, ayudaNivel);
+    }
+}
+
 // Escribe en el idioma actual los textos de una carta: "NV", el nivel, el tipo, el elemento y el botón de dar vuelta.
 // Si el dorso ya se había armado, se rehace para que también quede traducido.
 function traducirCarta(carta) {
-    const { tipo, elemento, nivelApi } = carta.dataset;
+    const { tipo, elemento } = carta.dataset;
 
     const gema = carta.querySelector('.c-gema');
-    const nivel = carta.querySelector('.c-nivel');
     const chipTipo = carta.querySelector('.c-tipo');
     const chipElem = carta.querySelector('.c-elem');
 
-    const textoNivel = nombreNivel(nivelApi);
     const textoTipo = nombreTipo(tipo);
     const textoElem = nombreElemento(elemento);
 
-    if (gema) {
-        gema.querySelector('small').textContent = t('carta.nv');
-        const ayudaNivel = t('carta.infoNivel', { nivel: textoNivel });
-        ponerAyuda(gema, ayudaNivel);
-    }
-    if (nivel) {
-        nivel.textContent = textoNivel;
-        const ayudaNivel = t('carta.infoNivel', { nivel: textoNivel });
-        ponerAyuda(nivel, ayudaNivel);
-    }
+    if (gema) gema.querySelector('small').textContent = t('carta.nv');
+    escribirNivel(carta);
     if (chipTipo) {
         chipTipo.textContent = `${textoTipo} ${EMOJIS_TIPO[tipo]}`;
         const ayudaTipo = t('carta.infoTipo', { tipo: textoTipo });
@@ -414,7 +419,7 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOrigin
         <div class="c-frente">
             <div class="c-cab"><h4></h4></div>
             <div class="c-arte">
-                <img alt="" loading="lazy" decoding="async">
+                <img alt="" loading="lazy" decoding="async" draggable="false">
                 ${xAntibody ? '<span class="c-x" title="X-Antibody">X</span>' : ''}
                 ${datosMarca ? `<span class="c-marca" title="${datosMarca.nombre}" role="img" aria-label="${datosMarca.nombre}">${datosMarca.letra}</span>` : ''}
                 <span class="c-gema" role="button" tabindex="0"><small></small>${nivelNumerico ?? '?'}</span>

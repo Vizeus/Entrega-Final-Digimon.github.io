@@ -7,6 +7,11 @@
 // Los tamaños viven en variables porque cartas.js también los lee para ajustar el largo de los nombres.
 // -----------------------------------------------------------------------------------------------------------------
 :root {
+    // La página tiene un solo aspecto, el claro. Con "only light" se le avisa al navegador que no la oscurezca por su cuenta (el "modo noche" de
+    // algunos celulares, que invierte los colores de las páginas que no traen versión oscura); sin esto, las cartas y la barra se veían apagadas.
+    // (Lo mismo va en el index.html, en un <meta>: así se sabe desde el primer momento, antes de que cargue este archivo.)
+    color-scheme: only light;
+
     --f-titulo: "Orbitron";
     --f-etiqueta: "Pixelify Sans";
     --f-cuerpo: "Exo 2";

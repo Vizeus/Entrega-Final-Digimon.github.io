@@ -4,6 +4,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="only light" />
         <title>Digimon</title>
 
         <meta
@@ -32,29 +33,29 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261007-1825",
-                    "./datos.js": "./datos.js?v=20261007-1825",
-                    "./i18n.js": "./i18n.js?v=20261007-1825",
-                    "./nombres.js": "./nombres.js?v=20261007-1825",
-                    "./pagina.js": "./pagina.js?v=20261007-1825",
-                    "./api.js": "./api.js?v=20261007-1825",
-                    "./combate.js": "./combate.js?v=20261007-1825",
-                    "./avisos.js": "./avisos.js?v=20261007-1825",
-                    "./cartas.js": "./cartas.js?v=20261007-1825",
-                    "./zoom.js": "./zoom.js?v=20261007-1825",
-                    "./gestos.js": "./gestos.js?v=20261007-1825",
-                    "./inclinacion.js": "./inclinacion.js?v=20261007-1825",
-                    "./audio.js": "./audio.js?v=20261007-1825",
-                    "./sonidos.js": "./sonidos.js?v=20261007-1825",
-                    "./filtros.js": "./filtros.js?v=20261007-1825",
-                    "./info.js": "./info.js?v=20261007-1825",
-                    "./barra.js": "./barra.js?v=20261007-1825",
-                    "./evolucion.js": "./evolucion.js?v=20261007-1825",
-                    "./baile.js": "./baile.js?v=20261007-1825"
+                    "./util.js": "./util.js?v=20261007-1944",
+                    "./datos.js": "./datos.js?v=20261007-1944",
+                    "./i18n.js": "./i18n.js?v=20261007-1944",
+                    "./nombres.js": "./nombres.js?v=20261007-1944",
+                    "./pagina.js": "./pagina.js?v=20261007-1944",
+                    "./api.js": "./api.js?v=20261007-1944",
+                    "./combate.js": "./combate.js?v=20261007-1944",
+                    "./avisos.js": "./avisos.js?v=20261007-1944",
+                    "./cartas.js": "./cartas.js?v=20261007-1944",
+                    "./zoom.js": "./zoom.js?v=20261007-1944",
+                    "./gestos.js": "./gestos.js?v=20261007-1944",
+                    "./inclinacion.js": "./inclinacion.js?v=20261007-1944",
+                    "./audio.js": "./audio.js?v=20261007-1944",
+                    "./sonidos.js": "./sonidos.js?v=20261007-1944",
+                    "./filtros.js": "./filtros.js?v=20261007-1944",
+                    "./info.js": "./info.js?v=20261007-1944",
+                    "./barra.js": "./barra.js?v=20261007-1944",
+                    "./evolucion.js": "./evolucion.js?v=20261007-1944",
+                    "./baile.js": "./baile.js?v=20261007-1944"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261007-1825"></script>
+        <script type="module" src="./main.js?v=20261007-1944"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -65,7 +66,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261007-1825" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261007-1944" />
     </head>
 
     <body>
@@ -77,9 +78,12 @@
             <img
                 src="./img/DigimonLogo.png"
                 alt="Logo de Digimon"
-                title="Logo de Digimon"
-                class="animate__animated animate__bounce"
-                data-i18n-attr="alt:logo.alt;title:logo.alt"
+                title="Volver al inicio: sube, borra los filtros y quita la selección de combate"
+                role="button"
+                tabindex="0"
+                draggable="false"
+                aria-label="Volver al inicio: sube, borra los filtros y quita la selección de combate"
+                data-i18n-attr="alt:logo.alt;title:logo.ayuda;aria-label:logo.ayuda"
             />
 
             <!-- Panel de combate: la consigna, cuántos digimons van elegidos y el botón principal, todo junto -->
@@ -120,70 +124,6 @@
          En celular es el panel que se despliega con el botón ☰ -->
             <div id="menu-movil" class="menu-movil">
                 <p class="menu-consigna" data-i18n="combate.consigna">Elige 2 digimons con los que quieras simular un combate</p>
-
-                <!-- Filtros y buscador: van en la barra, así acompañan al bajar por la lista. En computadora son la segunda fila de la barra;
-             en celular, parte del panel que se despliega con ☰. Los botones con las opciones (los "chips") los arma filtros.js -->
-                <section id="filtros" aria-label="Filtros y buscador de digimons" data-i18n-attr="aria-label:filtros.region">
-                    <span class="f-titulo"><span aria-hidden="true">🔎</span> <span data-i18n="filtros.titulo">Filtros</span></span>
-
-                    <label class="f-buscar">
-                        <span class="f-lupa" aria-hidden="true">🔍</span>
-                        <input
-                            type="text"
-                            role="searchbox"
-                            autocomplete="off"
-                            spellcheck="false"
-                            placeholder="Buscar digimon por nombre o número"
-                            aria-label="Buscar digimon por nombre o número"
-                            data-i18n-attr="placeholder:filtros.buscar;aria-label:filtros.buscar"
-                        />
-                        <button
-                            type="button"
-                            class="f-x"
-                            hidden
-                            title="Borrar búsqueda"
-                            aria-label="Borrar búsqueda"
-                            data-i18n-attr="title:filtros.borrarBusqueda;aria-label:filtros.borrarBusqueda"
-                        >
-                            ✕
-                        </button>
-                    </label>
-
-                    <div class="f-grupo" data-g="tipo">
-                        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-                            <span data-i18n="filtros.tipo">Tipo</span><b class="f-n" hidden>0</b>
-                        </button>
-                        <div class="f-panel" role="group" aria-label="Filtrar por tipo" data-i18n-attr="aria-label:filtros.porTipo"></div>
-                    </div>
-
-                    <div class="f-grupo" data-g="nivel">
-                        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-                            <span data-i18n="filtros.nivel">Nivel</span><b class="f-n" hidden>0</b>
-                        </button>
-                        <div class="f-panel" role="group" aria-label="Filtrar por nivel" data-i18n-attr="aria-label:filtros.porNivel"></div>
-                    </div>
-
-                    <div class="f-grupo" data-g="elemento">
-                        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-                            <span data-i18n="filtros.elemento">Elemento</span><b class="f-n" hidden>0</b>
-                        </button>
-                        <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
-                    </div>
-
-                    <!-- X-Antibody: un solo botón con tres estados. Cada clic pasa al siguiente (indistinto → solo con X-Antibody → solo sin X-Antibody).
-             El texto y el estado los escribe filtros.js -->
-                    <button type="button" class="f-btn f-xa" data-estado="indistinto" aria-label="X-Antibody">
-                        <span class="f-xa-gema" aria-hidden="true">X</span><span class="f-xa-texto">X-Antibody</span>
-                    </button>
-
-                    <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
-                    <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
-
-                    <div class="f-resumen">
-                        <span class="f-cuenta" aria-live="polite"></span>
-                        <button type="button" class="f-limpiar" hidden data-i18n="filtros.limpiar">Limpiar ✕</button>
-                    </div>
-                </section>
 
                 <!-- Ajustes: sistema de clasificación de niveles (Japón / EE.UU.) e idioma. Van juntos, en el centro de la barra.
          El selector de niveles muestra las dos opciones a la vista, con el rótulo "Niveles" y la activa resaltada (como el de idioma).
@@ -269,8 +209,8 @@
                         id="inclinacion-invertida"
                         hidden
                         aria-pressed="false"
-                        title="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo"
-                        aria-label="Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo"
+                        title="Las cartas se inclinan al pasar el mouse (con Shift apretado, no). Hacé clic para invertirlo"
+                        aria-label="Las cartas se inclinan al pasar el mouse (con Shift apretado, no). Hacé clic para invertirlo"
                     >
                         <svg
                             class="inclinacion-icono"
@@ -343,6 +283,71 @@
                 </div>
             </div>
             <!-- /menu-movil -->
+
+            <!-- Filtros y buscador: van en la barra, así acompañan al bajar por la lista. En computadora son la segunda fila de la barra;
+         en celular también están siempre a la vista, en filas finitas debajo del logo (no van en el menú ☰). Los botones con las opciones
+         (los "chips") los arma filtros.js -->
+            <section id="filtros" aria-label="Filtros y buscador de digimons" data-i18n-attr="aria-label:filtros.region">
+                <span class="f-titulo"><span aria-hidden="true">🔎</span> <span data-i18n="filtros.titulo">Filtros</span></span>
+
+                <label class="f-buscar">
+                    <span class="f-lupa" aria-hidden="true">🔍</span>
+                    <input
+                        type="text"
+                        role="searchbox"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="Buscar digimon por nombre o número"
+                        aria-label="Buscar digimon por nombre o número"
+                        data-i18n-attr="placeholder:filtros.buscar;aria-label:filtros.buscar"
+                    />
+                    <button
+                        type="button"
+                        class="f-x"
+                        hidden
+                        title="Borrar búsqueda"
+                        aria-label="Borrar búsqueda"
+                        data-i18n-attr="title:filtros.borrarBusqueda;aria-label:filtros.borrarBusqueda"
+                    >
+                        ✕
+                    </button>
+                </label>
+
+                <div class="f-grupo" data-g="tipo">
+                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                        <span data-i18n="filtros.tipo">Tipo</span><b class="f-n" hidden>0</b>
+                    </button>
+                    <div class="f-panel" role="group" aria-label="Filtrar por tipo" data-i18n-attr="aria-label:filtros.porTipo"></div>
+                </div>
+
+                <div class="f-grupo" data-g="nivel">
+                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                        <span data-i18n="filtros.nivel">Nivel</span><b class="f-n" hidden>0</b>
+                    </button>
+                    <div class="f-panel" role="group" aria-label="Filtrar por nivel" data-i18n-attr="aria-label:filtros.porNivel"></div>
+                </div>
+
+                <div class="f-grupo" data-g="elemento">
+                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                        <span data-i18n="filtros.elemento">Elemento</span><b class="f-n" hidden>0</b>
+                    </button>
+                    <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
+                </div>
+
+                <!-- X-Antibody: un solo botón con tres estados. Cada clic pasa al siguiente (indistinto → solo con X-Antibody → solo sin X-Antibody).
+         El texto y el estado los escribe filtros.js -->
+                <button type="button" class="f-btn f-xa" data-estado="indistinto" aria-label="X-Antibody">
+                    <span class="f-xa-gema" aria-hidden="true">X</span><span class="f-xa-texto">X-Antibody</span>
+                </button>
+
+                <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
+                <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
+
+                <div class="f-resumen">
+                    <span class="f-cuenta" aria-live="polite"></span>
+                    <button type="button" class="f-limpiar" hidden data-i18n="filtros.limpiar">Limpiar ✕</button>
+                </div>
+            </section>
 
             <div class="carga">
                 <label for="carga" data-i18n-html="carga.rotulo">Progreso de la carga de <br />digimons:</label>

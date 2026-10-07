@@ -22,6 +22,7 @@ import { nombreCompleto, reducirMovimiento } from './cartas.js';
 import { cartaEnZoom, cerrarZoom } from './zoom.js';
 import { activarBotonDelDorso } from './gestos.js';
 import { limpiarTodo } from './filtros.js';
+import { FICHERO_DE_ATAQUES, sonidoFichero } from './sonidos.js';
 
 Object.assign(DICCIONARIO.es, {
     'evo.boton': '🧬 Evolución',
@@ -384,8 +385,12 @@ function crearLoreEvo() {
     const detalle = document.createElement('details');
     detalle.className = 'evo-lore';
     detalle.open = Boolean(estadoEvo?.loreAbierto); // al pasar a otro digimon del árbol queda como estaba
+    let estaba = detalle.open; // si estaba abierto la última vez: al volver a armarlo ya abierto no tiene que sonar
     detalle.addEventListener('toggle', () => {
         if (estadoEvo) estadoEvo.loreAbierto = detalle.open;
+        if (detalle.open === estaba) return;
+        estaba = detalle.open;
+        sonidoFichero(detalle.open, FICHERO_DE_ATAQUES); // el fichero que se abre o se cierra (sonidos.js): sin tecla, como los ataques
     });
 
     const titulo = document.createElement('summary');

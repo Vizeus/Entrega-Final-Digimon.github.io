@@ -44,7 +44,7 @@ export const PESO_ELEMENTO = 0.1;
 
 // Poder en combate: del 1 al 6 es el mismo número que se ve en la carta, pero los niveles 7 y 8 rompen la escala.
 // Del 6 al 7 y del 7 al 8 hay 3 niveles de distancia (6 → 9 → 12): un Mega apenas le puede hacer cosquillas a un Ultra
-// (lo mismo que un Ultra a un Apex), y entre un Mega y un Apex la diferencia es tan grande que no tiene forma de ganar.
+// (lo mismo que un Ultra a un Absolute), y entre un Mega y un Absolute la diferencia es tan grande que no tiene forma de ganar.
 export const PODER_EN_COMBATE = { 7: 9, 8: 12 };
 const poderEnCombate = nivel => PODER_EN_COMBATE[nivel] ?? nivel;
 
@@ -88,10 +88,13 @@ function quitarSeleccion() {
     verificarSeleccion();
 }
 
-contadorSeleccion.addEventListener('click', () => {
+// Vacía la selección de combate y apaga el cartelito del contador (lo usan el propio contador y el logo de la barra)
+export function limpiarSeleccionDeCombate() {
     quitarSeleccion();
     quitarAvisoDelContador();
-});
+}
+
+contadorSeleccion.addEventListener('click', limpiarSeleccionDeCombate);
 document.addEventListener('idioma-cambiado', mostrarAyudaDelContador);
 mostrarAyudaDelContador();
 

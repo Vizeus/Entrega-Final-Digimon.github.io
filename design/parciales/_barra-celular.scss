@@ -2,14 +2,15 @@
 @use "mixins" as *;
 
 // -----------------------------------------------------------------------------------------------------------------
-// CELULAR (hasta 700px): barra finita siempre a la vista con el logo, el contador, el botón de combate y el botón ☰.
-// La consigna, la banderita, el idioma y los menús de información van en un panel que se despliega con ☰.
+// CELULAR (hasta 700px): barra finita siempre a la vista. Arriba el logo, el contador, el botón de combate y el botón ☰; debajo, el
+// buscador y los filtros (ver _filtros.scss). La consigna, la banderita, el idioma y los menús de información van en un panel que
+// se despliega con ☰. Al bajar por la lista se esconde la barra entera (con los filtros) y reaparece al subir.
 // La carga es una línea finita de color en el borde de abajo de la barra, que se apaga al terminar.
 // -----------------------------------------------------------------------------------------------------------------
 @include celular {
     #navbar {
-        flex-wrap: nowrap;
-        gap: 8px;
+        flex-wrap: wrap; // la segunda fila (los filtros) ocupa todo el ancho; lo de arriba entra siempre en una sola
+        gap: 6px 8px;
         padding: 6px 10px 7px;
 
         // La barra solo se ve al subir: al bajar por la lista se sale por arriba (info.js le pone la clase "barra-escondida")
@@ -25,6 +26,7 @@
         }
 
         > img {
+            --salto: 10px;
             flex: none;
             height: 34px;
             margin-right: auto;

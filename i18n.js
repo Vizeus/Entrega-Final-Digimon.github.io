@@ -22,6 +22,7 @@ export const DICCIONARIO = {
     es: {
         // Barra de arriba
         'logo.alt': 'Logo de Digimon',
+        'logo.ayuda': 'Volver al inicio: sube, borra los filtros y quita la selección de combate',
         'combate.consigna': 'Elige 2 digimons con los que quieras simular un combate',
         'combate.contador': 'Digimons elegidos',
         'combate.contador.limpiar': 'Quitar la selección de los digimons elegidos',
@@ -76,9 +77,9 @@ export const DICCIONARIO = {
         'aviso.zoom.deslizar': 'Deslizá el dedo hacia un costado, empezando por fuera de la carta, para pasar a otra',
         'aviso.contador.mouse': 'Podés hacer clic acá para deseleccionar todas las cartas, o hacer clic en cada carta para deseleccionarla a mano',
         'aviso.contador.dedos': 'Podés tocar acá para deseleccionar todas las cartas, o tocar cada carta para deseleccionarla a mano',
-        'aviso.inclinacion.normal': 'Mantené apretada Shift para anular la inclinación de las cartas, y con este botón podés invertirla',
+        'aviso.inclinacion.normal': 'Mantené apretado Shift para anular la inclinación de las cartas, y con este botón podés invertirlo',
         'aviso.inclinacion.normal.boton': 'Con este botón podés invertir la inclinación de las cartas',
-        'aviso.inclinacion.invertida': 'Pasá el mouse por las cartas mientras mantenés apretada Shift para inclinarlas, y con este botón podés cambiarlo',
+        'aviso.inclinacion.invertida': 'Pasá el mouse por las cartas mientras mantenés apretado Shift para inclinarlas, y con este botón podés cambiarlo',
         'aviso.inclinacion.invertida.boton': 'Con este botón podés cambiar cómo se inclinan las cartas',
         'aviso.audio': 'Con este botón podés silenciar el sonido de la página',
         'aviso.audio.vibracion': 'Con este botón podés apagar el sonido y la vibración de la página',
@@ -104,8 +105,8 @@ export const DICCIONARIO = {
         'audio.todo': 'Sonido y vibración activados. Tocá para quitar solo el sonido',
         'audio.vibracion': 'Solo vibración, sin sonido. Tocá para quitar también la vibración',
         'audio.nada': 'Sin sonido ni vibración. Tocá para activar todo',
-        'inclinacion.normal': 'Las cartas se inclinan al pasar el mouse (con Shift apretada, no). Hacé clic para invertirlo',
-        'inclinacion.invertida': 'Las cartas se inclinan solo mientras mantenés apretada Shift. Hacé clic para que se inclinen al pasar el mouse',
+        'inclinacion.normal': 'Las cartas se inclinan al pasar el mouse (con Shift apretado, no). Hacé clic para invertirlo',
+        'inclinacion.invertida': 'Las cartas se inclinan solo mientras mantenés apretado Shift. Hacé clic para que se inclinen al pasar el mouse',
         'carta.sinDescripcion': 'Sin descripción disponible.',
         'carta.idiomaOriginal': 'Descripción original en inglés',
 
@@ -198,6 +199,7 @@ export const DICCIONARIO = {
         'filtros.activos': 'Filtros activos',
         'filtros.quitar': 'Quitar {grupo}: {valor}',
         'filtros.cuenta': 'Mostrando {v} de {n} digimons',
+        'filtros.cuenta.corta': '{v} de {n}',
         'filtros.limpiar': 'Limpiar ✕',
         'filtros.limpiarTodo': 'Limpiar filtros',
         'filtros.vacio': '😕 Ningún digimon cumple esa combinación.',
@@ -206,6 +208,7 @@ export const DICCIONARIO = {
     en: {
         // Top bar
         'logo.alt': 'Digimon logo',
+        'logo.ayuda': 'Back to the start: scrolls to the top, clears the filters and the battle selection',
         'combate.consigna': 'Pick 2 Digimon to simulate a battle',
         'combate.contador': 'Digimon picked',
         'combate.contador.limpiar': 'Clear the picked digimon',
@@ -382,6 +385,7 @@ export const DICCIONARIO = {
         'filtros.activos': 'Active filters',
         'filtros.quitar': 'Remove {grupo}: {valor}',
         'filtros.cuenta': 'Showing {v} of {n} Digimon',
+        'filtros.cuenta.corta': '{v} of {n}',
         'filtros.limpiar': 'Clear ✕',
         'filtros.limpiarTodo': 'Clear filters',
         'filtros.vacio': '😕 No Digimon match that combination.',

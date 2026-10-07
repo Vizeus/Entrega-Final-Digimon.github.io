@@ -19,9 +19,15 @@
     gap: 8px;
     width: min(320px, calc(100vw - 16px));
     pointer-events: none;
+    transition: opacity 0.3s ease;
 
     &.sobre-zoom {
         z-index: capa(avisos-sobre-el-zoom); // por encima de la carta ampliada
+    }
+
+    // Mientras una carta está agrandada de más (zoom extra), los avisos se esconden y su tiempo se frena (avisos.js, frenarCarteles)
+    &.en-pausa {
+        opacity: 0;
     }
 }
 

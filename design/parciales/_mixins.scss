@@ -93,11 +93,13 @@
         pointer-events: none;
     }
 
+    // (--llamada-adelanto: cuánto de la animación ya pasó. Lo pone avisos.js cuando la animación se frena y vuelve (mientras hay una carta con
+    // zoom extra), para que siga justo donde iba y no empiece de cero; normalmente no está y vale 0)
     &.llamando {
-        animation: sonido-salto 2.4s ease-in-out;
+        animation: sonido-salto 2.4s ease-in-out calc(var(--llamada-adelanto, 0ms) * -1);
 
         &::after {
-            animation: sonido-onda 0.8s ease-out 3;
+            animation: sonido-onda 0.8s ease-out calc(var(--llamada-adelanto, 0ms) * -1) 3;
         }
     }
 
@@ -107,7 +109,7 @@
             animation: none;
 
             &::after {
-                animation: sonido-onda-quieta 1.6s ease-out;
+                animation: sonido-onda-quieta 1.6s ease-out calc(var(--llamada-adelanto, 0ms) * -1);
             }
         }
     }

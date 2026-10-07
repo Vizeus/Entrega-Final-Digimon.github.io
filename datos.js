@@ -64,7 +64,7 @@ export const nivelesAlternativos = {
     'Perfect': 'Ultimate',
     'Ultimate': 'Mega',
     'Super Ultimate': 'Ultra', // nivel 7 (inventado para este simulador): por encima del Mega
-    'Absolute': 'Apex', // nivel 8 (inventado para este simulador): lo más alto
+    'Absolute': 'Absolute', // nivel 8 (inventado para este simulador): lo más alto, y el único que se llama igual en los dos sistemas
 };
 
 // Digimons que la API lista con dos niveles (el Perfect y el Ultimate): el simulador toma siempre el primero, que acá es el más
@@ -338,7 +338,9 @@ export const COLOR_ELEMENTO = {
     'Veneno': '#a24fc4',
     'Neutro': '#aab2bb',
 };
-export const COLOR_NIVEL = { 1: '#a9b8c9', 2: '#7fb3e6', 3: '#4f9be0', 4: '#2f7fd0', 5: '#6a5fd8', 6: '#d9a520', 7: '#d6409a', 8: '#3a2f9e' }; // según el poder del nivel
+// Un color por nivel, todos bien distintos entre sí. Los niveles 1 y 2 son pastel (rosa y menta); del 5 al 8 coinciden con el marco de la carta:
+// plateado azulado (cromo helado), dorado, el rosa fuerte del holográfico y el violeta del estrellado. Los usan los filtros, la línea evolutiva y las ventanas.
+export const COLOR_NIVEL = { 1: '#f8bfd8', 2: '#a5e6c8', 3: '#1ea59d', 4: '#e5604f', 5: '#a4cde8', 6: '#d9a520', 7: '#d6409a', 8: '#3a2f9e' };
 export const COLOR_NIVEL_DESCONOCIDO = '#59616d';
 export const COLOR_BUSQUEDA = '#2f7fd0';
 export const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas

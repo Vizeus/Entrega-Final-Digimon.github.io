@@ -958,6 +958,19 @@
     }
 }
 
+// Con el dedo, la imagen de la carta no se puede "agarrar": al no recibir el toque (lo recibe el marco que tiene detrás), el navegador no puede
+// arrancar con ella su propio arrastre de imagen ni su menú de imagen (guardar, buscar con Google...) al mantener apretada la carta, que es
+// justo el gesto con el que se inclina. Si lo hiciera, cancelaría el toque (touchcancel) y la carta soltaría la inclinación a mitad de camino.
+// (Se pregunta por "pointer: coarse" además de "hover: none" por las dudas: no todos los navegadores contestan igual a las dos preguntas.)
+@media (hover: none), (pointer: coarse) {
+    #listado-digimons > li img {
+        pointer-events: none;
+        -webkit-user-drag: none;
+        -webkit-touch-callout: none;
+        user-select: none;
+    }
+}
+
 // En computadora, mientras se mantiene apretada Shift (inclinacion.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)
 // las cartas no se inclinan con el mouse: tampoco muestran el reflejo ni la textura holográfica, que siguen al puntero y sin inclinación
 // quedarían fijos en un lugar. El levante del hover (la carta que se alza un poquito, con su sombra) NO se anula: ese siempre está.

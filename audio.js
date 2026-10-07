@@ -6,7 +6,7 @@
 // ganador, el mouse, la pajita del GIF "Trabajando") y la vibración.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { CON_DEDO, PANTALLA_DE_CELULAR, guardarJSON, hayMarcaDeSesion, leerJSON, ponerAyuda, ponerMarcaDeSesion } from './util.js';
+import { CON_DEDO, PANTALLA_DE_CELULAR, emitir, guardarJSON, hayMarcaDeSesion, leerJSON, ponerAyuda, ponerMarcaDeSesion } from './util.js';
 import { t } from './i18n.js';
 import { llamarLaAtencion, terminarLlamada } from './avisos.js';
 import { nodoVolumenTeclas, sonidoTecla } from './sonidos.js';
@@ -23,11 +23,54 @@ export function vibrar(duracion = 8, forzar = false) {
     }
 }
 
+// ---- Toques con el dedo en los botoncitos de las cartas -----------------------------------------------------------------
+// Al desplazar la página con el dedo, muchas veces el dedo cae justo sobre un botoncito de una carta (dar vuelta, nivel, tipo, elemento...).
+// Al apoyarlo todavía no se sabe si es un toque o el comienzo de un desplazamiento, y si en ese momento sonaba y vibraba, lo hacía aunque
+// no se tocara nada. Por eso, en esos botones, con el dedo se espera a que el toque termine: recién al levantar el dedo se avisa con
+// "toque-en-boton-de-carta" (es lo que escuchan el sonido, en sonidos.js, y la vibración, acá abajo). No se avisa si la página se desplazó
+// (el navegador cancela el toque), si el dedo se movió, si se lo dejó apretado (la carta se empieza a inclinar, o es una pulsación larga) o
+// si apareció un segundo dedo (el pellizco del zoom).
+const TOQUE_DISTANCIA_MAXIMA = 10; // px que se puede mover el dedo y que siga siendo un toque (los mismos que tolera la inclinación)
+const TOQUE_DURACION_MAXIMA = 500; // ms que se puede tener apoyado el dedo (más que eso es una pulsación larga)
+
+// ¿Este toque cayó con el dedo sobre un botón de una carta? (En el frente son <span role="button">: gema, nivel, tipo y elemento)
+export function esToqueEnBotonDeCarta(evento) {
+    return evento.pointerType === 'touch' && Boolean(evento.target.closest('button, [role="button"]')?.closest('#listado-digimons li'));
+}
+
+export function activarToqueEnBotonesDeCarta() {
+    let apoyado = null; // el toque que espera terminar: en qué botón, dónde y cuándo empezó
+    document.addEventListener('pointerdown', evento => {
+        // (un segundo dedo, que no es el principal, también deja sin efecto el toque que estaba esperando)
+        const boton = evento.isPrimary && esToqueEnBotonDeCarta(evento) ? evento.target.closest('button, [role="button"]') : null;
+        apoyado = boton && { boton, x: evento.clientX, y: evento.clientY, desde: evento.timeStamp };
+    });
+    document.addEventListener('pointerup', evento => {
+        const toque = apoyado;
+        apoyado = null;
+        if (!toque || evento.pointerType !== 'touch') return;
+        const sinMoverse = Math.hypot(evento.clientX - toque.x, evento.clientY - toque.y) <= TOQUE_DISTANCIA_MAXIMA;
+        if (sinMoverse && evento.timeStamp - toque.desde <= TOQUE_DURACION_MAXIMA) emitir('toque-en-boton-de-carta', { boton: toque.boton });
+    });
+    for (const nombre of ['pointercancel', 'inclinacion-con-dedo']) {
+        document.addEventListener(nombre, () => {
+            apoyado = null;
+        });
+    }
+}
+
+// Los "botones" que son <span role="button"> (gema, nivel, tipo y elemento del frente de la carta) vibran con una mini vibración, como su
+// tecla, que también es más suave
+const vibrarAlTocar = boton => vibrar(boton.matches('[role="button"]') ? 6 : 8);
+
 export function activarVibracion() {
     if (!navigator.vibrate) return;
+    // Los botones de las cartas vibran al terminar el toque, no al apoyar el dedo (ver más arriba)
+    document.addEventListener('toque-en-boton-de-carta', evento => {
+        if (!evento.detail.boton.disabled) vibrarAlTocar(evento.detail.boton);
+    });
     document.addEventListener('pointerdown', evento => {
-        if (evento.pointerType !== 'touch') return;
-        // También los "botones" del frente de la carta (gema, nivel, tipo, elemento), que son <span role="button">
+        if (evento.pointerType !== 'touch' || esToqueEnBotonDeCarta(evento)) return;
         const boton = evento.target.closest('button, [role="button"]');
         if (!boton || boton.disabled) return;
         if (boton.id === 'silenciar') {
@@ -37,8 +80,7 @@ export function activarVibracion() {
             if (modoSiguienteDelAudio() !== 'nada') vibrar(8, true);
             return;
         }
-        // Los del frente de la carta, una mini vibración (como su tecla, que también es más suave)
-        vibrar(boton.matches('[role="button"]') ? 6 : 8);
+        vibrarAlTocar(boton);
     });
 }
 
@@ -83,7 +125,7 @@ function guardarAudio() {
 const PERFIL_AUDIO = {
     movil: {
         volumenGeneral: 0.2,
-        volumenTeclas: 0.15,
+        volumenTeclas: 0.1, // (antes 0.15: en el celular las teclas de los botones sobresalían del resto, un tercio menos de volumen)
     },
     escritorio: {
         volumenGeneral: 0.85,

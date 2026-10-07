@@ -9,19 +9,19 @@
 
 import { emitir } from './util.js';
 import { nombreParaMostrar } from './nombres.js';
-import { botonCambiarNiveles, botonIniciarCombate, cambiarClasificacion, listaDigimons, mostrarSistemaDeNiveles, nombreNivel } from './pagina.js';
+import { botonCambiarNiveles, botonIniciarCombate, cambiarClasificacion, listaDigimons, mostrarSistemaDeNiveles } from './pagina.js';
 import { crearListaDeDigimons } from './api.js';
 import { iniciarCombate } from './combate.js';
 import { activarAvisoDeInclinacion, activarAvisoDeZoomExtra, activarAvisosDeAyuda } from './avisos.js';
-import { activarCartelesDeInfoEnCartas, ajustarNombre, cartasEnEspera, escribirNombre } from './cartas.js';
+import { activarCartelesDeInfoEnCartas, ajustarNombre, cartasEnEspera, escribirNivel, escribirNombre } from './cartas.js';
 import { activarArrastreDeZoomExtra, activarReflejoQuieto, activarZoom } from './zoom.js';
 import { activarVoltearConDedo, gestionarVisitasYFlechasMovil } from './gestos.js';
 import { activarInclinacion, activarRuedaConShift, evitarFocoYSeleccionConShift } from './inclinacion.js';
-import { activarBotonDeAudio, activarDesbloqueoAudio, activarVibracion, aplicarSilencio } from './audio.js';
+import { activarBotonDeAudio, activarDesbloqueoAudio, activarToqueEnBotonesDeCarta, activarVibracion, aplicarSilencio } from './audio.js';
 import { activarSonidoBotones, activarSonidoDeDesplegables } from './sonidos.js';
 import { prepararFiltros } from './filtros.js';
 import { activarInfo } from './info.js';
-import { activarBarraQueSeEsconde, activarMenuMovil } from './barra.js';
+import { activarBarraQueSeEsconde, activarLogo, activarMenuMovil } from './barra.js';
 import { activarEvolucion } from './evolucion.js';
 import { activarBaileDeCartas } from './baile.js';
 
@@ -44,6 +44,7 @@ activarAvisoDeZoomExtra(); // (este también)
 gestionarVisitasYFlechasMovil();
 activarDesbloqueoAudio();
 activarVoltearConDedo();
+activarToqueEnBotonesDeCarta(); // antes del sonido y la vibración: son los que escuchan su aviso
 activarSonidoBotones();
 activarSonidoDeDesplegables();
 activarBotonDeAudio();
@@ -68,10 +69,11 @@ botonCambiarNiveles.addEventListener('click', () => {
     emitir('niveles-cambiados');
 });
 
+// (Cada carta reescribe el rótulo y también su ayuda, la que sale al dejar el puntero encima. Las que todavía esperan para entrar a la
+// lista también: si no, entrarían con el nombre del sistema anterior.)
 document.addEventListener('niveles-cambiados', () => {
-    listaDigimons.querySelectorAll(':scope > li').forEach(carta => {
-        carta.querySelector('.c-nivel').textContent = nombreNivel(carta.dataset.nivelApi);
-    });
+    const cartas = [...listaDigimons.querySelectorAll(':scope > li'), ...cartasEnEspera.map(({ carta }) => carta)];
+    cartas.forEach(escribirNivel);
 });
 
 // Agregar evento al botón de iniciar combate
@@ -86,5 +88,6 @@ prepararFiltros();
 activarInfo();
 activarMenuMovil();
 activarBarraQueSeEsconde();
+activarLogo();
 activarEvolucion();
 activarBaileDeCartas();

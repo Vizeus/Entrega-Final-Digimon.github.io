@@ -14,6 +14,66 @@ import { inclinandoConDedo } from './inclinacion.js';
 import { AUDIO_AVISO_DURACION, ubicarBotonDeAudio } from './audio.js';
 
 // -----------------------------------------------------------------------------------------------------------------
+// EL ZOOM EXTRA FRENA LOS CARTELES
+//
+// Mientras una carta está agrandada de más (zoom extra), lo que está a la vista se esconde y su tiempo se frena: los avisos de ayuda, los
+// globitos de los botones redondos (sonido e inclinación) y la animación con que esos botones llaman la atención. Al alejar el zoom (o al
+// cerrarlo) vuelve todo y sigue justo donde iba. Lo que todavía esperaba para salir también espera, y lo que tenga que salir en ese momento
+// aparece recién cuando se aleja el zoom. La única excepción es el cartel del zoom extra: al hacerlo ya cumplió, así que se va y no vuelve
+// (ver activarAvisoDeZoomExtra).
+// Para eso los carteles no usan setTimeout sino "esperar", que es lo mismo pero se puede frenar y seguir.
+// -----------------------------------------------------------------------------------------------------------------
+let cartelesEnPausa = false;
+const relojes = new Set(); // los "esperar" que todavía no terminaron
+const alFrenar = new Set(); // { frenar, seguir } de lo que tiene algo a la vista que esconder (las llamadas de los botones redondos)
+
+// Un setTimeout que se puede frenar. Devuelve su reloj: reloj.cancelar() lo apaga. Si se lo pide con los carteles frenados, arranca al seguir.
+function esperar(accion, ms) {
+    const reloj = { restante: ms, id: 0, desde: 0 };
+    const arrancar = () => {
+        reloj.desde = performance.now();
+        reloj.id = setTimeout(() => {
+            reloj.id = 0;
+            relojes.delete(reloj);
+            accion();
+        }, reloj.restante);
+    };
+    reloj.frenar = () => {
+        if (!reloj.id) return;
+        clearTimeout(reloj.id);
+        reloj.id = 0;
+        reloj.restante = Math.max(0, reloj.restante - (performance.now() - reloj.desde)); // lo que le falta cuando siga
+    };
+    reloj.seguir = () => {
+        if (!reloj.id) arrancar();
+    };
+    reloj.cancelar = () => {
+        clearTimeout(reloj.id);
+        reloj.id = 0;
+        relojes.delete(reloj);
+    };
+    relojes.add(reloj);
+    if (!cartelesEnPausa) arrancar();
+    return reloj;
+}
+
+function frenarCarteles(frenar) {
+    if (frenar === cartelesEnPausa) return;
+    cartelesEnPausa = frenar;
+    cajaDeAvisos?.classList.toggle('en-pausa', frenar);
+    for (const reloj of relojes) {
+        if (frenar) reloj.frenar();
+        else reloj.seguir();
+    }
+    for (const llamada of alFrenar) {
+        if (frenar) llamada.frenar();
+        else llamada.seguir();
+    }
+}
+
+document.addEventListener('zoom-extra', () => frenarCarteles(zoomExtra));
+
+// -----------------------------------------------------------------------------------------------------------------
 // AVISO DEL CONTADOR: una sola vez por sesión del navegador, cuando termina el primer combate (o se lo cierra a medio camino), de
 // la bolita "2/2" de la barra sale un minicartel con una flechita que cuenta que ahí se puede tocar para quitar la selección de las
 // cartas, o tocar las cartas de a una para soltarlas. Se va solo a los pocos segundos y antes si la persona cambia la selección,
@@ -192,6 +252,7 @@ function ponerAviso(aviso) {
     if (!cajaDeAvisos) {
         cajaDeAvisos = document.createElement('div');
         cajaDeAvisos.id = 'avisos-ayuda';
+        cajaDeAvisos.classList.toggle('en-pausa', cartelesEnPausa);
         document.body.appendChild(cajaDeAvisos);
     }
     cajaDeAvisos.appendChild(aviso);
@@ -248,13 +309,13 @@ function activarAvisoGestosDelZoom() {
     if (!CON_DEDO.matches) return;
     let yaSeMostro = avisoHecho('gestos'); // también si salió en una visita anterior
     let enZoom = false; // hay una carta ampliada (y no se está cerrando)
-    let espera = 0;
-    let temporizador = 0;
+    let espera = null;
+    let temporizador = null;
     let avisos = []; // un cartelito por consejo (los que están a la vista)
 
     const cerrar = () => {
-        clearTimeout(espera);
-        clearTimeout(temporizador);
+        espera?.cancelar();
+        temporizador?.cancelar();
         avisos.forEach(quitarAviso);
         avisos = [];
     };
@@ -269,7 +330,7 @@ function activarAvisoGestosDelZoom() {
             return;
         }
         if (yaSeMostro) return;
-        espera = setTimeout(() => {
+        espera = esperar(() => {
             if (!enZoom || yaSeMostro) return;
             yaSeMostro = true;
             marcarAvisoHecho('gestos');
@@ -283,7 +344,7 @@ function activarAvisoGestosDelZoom() {
                 ponerAviso(aviso);
                 return aviso;
             });
-            temporizador = setTimeout(cerrar, AVISO_GESTOS_DURACION);
+            temporizador = esperar(cerrar, AVISO_GESTOS_DURACION);
         }, AVISO_GESTOS_ESPERA);
     });
     document.addEventListener('idioma-cambiado', () => avisos.forEach(escribirAviso));
@@ -414,12 +475,14 @@ export function activarAvisoDeInclinacion() {
         if (llamadasActivas.has(boton)) return;
 
         let devolver = null;
-        if (boton.parentElement !== document.body && hayCortinaSobreLaBarra()) {
+        // (con una carta en zoom extra el botón no llama la atención: ni se muestra ni sube por encima de la cortina)
+        const cortinaSobreLaBarra = () => !cartelesEnPausa && hayCortinaSobreLaBarra();
+        if (boton.parentElement !== document.body && cortinaSobreLaBarra()) {
             devolver = subirBotonSobreLaCortina(boton);
         }
         let vigiliaAnim = 0;
         const vigilarCortinaAnim = () => {
-            const tapada = hayCortinaSobreLaBarra();
+            const tapada = cortinaSobreLaBarra();
             if (!devolver && boton.parentElement !== document.body && tapada) {
                 devolver = subirBotonSobreLaCortina(boton);
             } else if (devolver && !tapada) {
@@ -430,16 +493,11 @@ export function activarAvisoDeInclinacion() {
         };
         vigiliaAnim = requestAnimationFrame(vigilarCortinaAnim);
 
-        boton.classList.remove('llamando');
-        void boton.offsetWidth;
-        boton.classList.add('llamando');
-
-        setTimeout(() => {
+        animarLlamada(boton, () => {
             cancelAnimationFrame(vigiliaAnim);
-            boton.classList.remove('llamando');
             devolver?.();
             devolver = null;
-        }, AUDIO_AVISO_DURACION);
+        });
     };
 
     // Tercera condición de aparición: clic en los botones inferiores del frente de la carta (tipo o elemento).
@@ -497,7 +555,8 @@ export function activarAvisoDeInclinacion() {
 // Cartel del zoom extra (solo computadora): al ampliar la primera carta de la sesión cuenta, en una línea, que con el mouse sobre la carta la
 // rueda hacia arriba la agranda todavía más y hacia abajo vuelve (ver "ZOOM EXTRA"). Una sola vez por sesión del navegador (si se cierra la
 // carta antes de que entre, todavía no lo vio y sale con la próxima), y solo en las primeras 5 sesiones de la persona (el mismo contador de
-// visitas de los avisos de ayuda): a partir de la sexta no sale más. Se va si la persona hace lo que cuenta, o al cerrar la carta.
+// visitas de los avisos de ayuda): a partir de la sexta no sale más. Se va si la persona hace lo que cuenta, o al cerrar la carta. Es el único
+// cartel que no se frena con el zoom extra para seguir después: al hacerlo ya cumplió, así que se va de una vez y no vuelve.
 const ZOOM_EXTRA_AVISO_SESION = 'digimon-aviso-zoom-extra'; // sessionStorage: en esta sesión ya salió
 const ZOOM_EXTRA_AVISO_ULTIMA_SESION = 5;
 const ZOOM_EXTRA_AVISO_ESPERA = 1500; // ms desde que se abre el zoom (la carta llega al centro a los 0,7 s)
@@ -549,7 +608,7 @@ export function activarAvisoDeZoomExtra() {
 // Primero: qué hay que hacer. Solo en celular (hasta 700px, donde la consigna queda escondida dentro del menú ☰)
 function activarAvisoCombate() {
     let aviso = null;
-    let temporizador = 0;
+    let temporizador = null;
     let cerrado = false;
     let secuenciaFinalizada = false;
 
@@ -562,7 +621,7 @@ function activarAvisoCombate() {
     const cerrar = () => {
         if (cerrado) return;
         cerrado = true;
-        clearTimeout(temporizador);
+        temporizador?.cancelar();
         if (aviso) {
             quitarAviso(aviso);
             aviso = null;
@@ -583,10 +642,10 @@ function activarAvisoCombate() {
         aviso = crearAviso('aviso-combate', [{ clave: 'combate', icono: '⚔️', texto: 'combate.consigna' }]);
         escribirAviso(aviso);
         ponerAviso(aviso);
-        temporizador = setTimeout(cerrar, AVISO_COMBATE_DURACION);
+        temporizador = esperar(cerrar, AVISO_COMBATE_DURACION);
     };
 
-    document.addEventListener('carta-agregada', () => setTimeout(mostrar, AVISO_COMBATE_ESPERA), { once: true });
+    document.addEventListener('carta-agregada', () => esperar(mostrar, AVISO_COMBATE_ESPERA), { once: true });
     document.addEventListener('seleccion-cambio', () => {
         if (seleccionados.length < 2) return;
         marcarAvisoHecho('combate'); // ya eligió las 2
@@ -615,7 +674,7 @@ function activarAvisoZoom() {
     const quitar = clave => {
         const aviso = avisos.get(clave);
         if (!aviso) return;
-        clearTimeout(temporizadores.get(clave));
+        temporizadores.get(clave).cancelar();
         temporizadores.delete(clave);
         avisos.delete(clave);
         quitarAviso(aviso);
@@ -644,7 +703,7 @@ function activarAvisoZoom() {
             const duracion = conDedo ? AVISO_ZOOM_DURACION_DEDO + (consejo.clave === 'voltear' ? AVISO_VOLTEAR_DURACION_EXTRA : 0) : AVISO_ZOOM_DURACION;
             temporizadores.set(
                 consejo.clave,
-                setTimeout(() => quitar(consejo.clave), duracion),
+                esperar(() => quitar(consejo.clave), duracion),
             );
         });
     };
@@ -655,12 +714,12 @@ function activarAvisoZoom() {
         document.addEventListener(
             'aviso-combate-finalizado',
             () => {
-                setTimeout(mostrar, AVISO_ZOOM_ESPERA_DEDO);
+                esperar(mostrar, AVISO_ZOOM_ESPERA_DEDO);
             },
             { once: true },
         );
     } else {
-        document.addEventListener('carta-agregada', () => setTimeout(mostrar, AVISO_ZOOM_ESPERA), { once: true });
+        document.addEventListener('carta-agregada', () => esperar(mostrar, AVISO_ZOOM_ESPERA), { once: true });
     }
     document.addEventListener('zoom-cambio', () => {
         if (cartaEnZoom) yaLoHizo('zoom'); // hay una carta ampliada (o cerrándose): ya sabe cómo hacerlo
@@ -680,7 +739,7 @@ function activarAvisoZoom() {
 // y el de inclinación no existe, así que ahí solo está el globito.
 // -----------------------------------------------------------------------------------------------------------------
 const GLOBO_DEL_BOTON_DURACION = 7000; // ms a la vista (el de inclinación elige el suyo: explica más)
-const GLOBO_DEL_BOTON_DURACION_DOBLE = 16000; // ms: si coinciden dos carteles (ej. sonido e inclinación al voltear), más tiempo para leer ambos
+const GLOBO_DEL_BOTON_DURACION_DOBLE = 15000; // ms: si coinciden dos carteles (ej. sonido e inclinación al voltear), más tiempo para leer ambos
 
 // ¿Hay algo por encima de la barra? El zoom de una carta (#zoom-fondo) o un cartel de SweetAlert (los del combate y los de información)
 const hayCortinaSobreLaBarra = () => !!(cartaEnZoom || combateEnCurso || document.querySelector('#zoom-fondo, .swal2-container'));
@@ -755,7 +814,8 @@ function ubicarGloboDelBoton(boton, globo, lado = 'centro') {
 }
 
 export function revisarLlamadas() {
-    const tapada = hayCortinaSobreLaBarra();
+    // (con una carta en zoom extra los botones no llaman la atención: no suben por encima de la cortina, vuelven a la barra)
+    const tapada = !cartelesEnPausa && hayCortinaSobreLaBarra();
     for (const [boton, llamada] of llamadasActivas) {
         if (!boton.isConnected) {
             terminarLlamada(boton);
@@ -777,6 +837,18 @@ export function revisarLlamadas() {
     llamadas.forEach(([boton, llamada], i) => {
         ubicarGloboDelBoton(boton, llamada.globo, llamadas.length < 2 ? 'centro' : i === 0 ? 'izquierda' : 'derecha');
     });
+    esquivarAvisosConElBotonDeSonido();
+}
+
+// En celular, con el zoom de una carta abierto, el botón de sonido está arriba a la izquierda y su globito se extiende hacia la derecha, justo
+// donde salen los cartelitos de ayuda (arriba a la derecha): si el botón está llamando la atención al mismo tiempo que hay cartelitos a la vista,
+// el CSS lo pasa a la esquina de abajo a la izquierda (clase "esquiva-avisos"). Vuelve arriba cuando se va el primero de los dos: el globito del
+// botón o los cartelitos (también si se frenan por el zoom extra). Sin zoom el botón flota abajo a la derecha, donde no molesta a nadie.
+function esquivarAvisosConElBotonDeSonido() {
+    const boton = document.getElementById('silenciar');
+    if (!boton) return;
+    const avisosAVista = !cartelesEnPausa && !!cajaDeAvisos?.querySelector('.aviso-ayuda.visible');
+    boton.classList.toggle('esquiva-avisos', PANTALLA_DE_CELULAR.matches && llamadasActivas.has(boton) && avisosAVista);
 }
 
 function vigilarLlamadas() {
@@ -787,6 +859,37 @@ function vigilarLlamadas() {
 
 function escribirGloboDelBoton(llamada) {
     llamada.globo.querySelector('.aviso-texto').textContent = llamada.texto();
+}
+
+// La animación del botón: salta y lanza ondas durante AUDIO_AVISO_DURACION. Se puede frenar (el botón vuelve a verse normal) y seguir justo donde
+// iba (el CSS recibe en --llamada-adelanto cuánto ya pasó); "quitar" la termina. "alTerminar" se llama cuando se cumple el tiempo.
+function animarLlamada(boton, alTerminar) {
+    const reloj = esperar(() => {
+        quitar();
+        alTerminar?.();
+    }, AUDIO_AVISO_DURACION);
+    const animacion = { frenar, seguir: poner, quitar };
+    alFrenar.add(animacion);
+    if (!cartelesEnPausa) poner();
+    return animacion;
+
+    function poner() {
+        boton.style.setProperty('--llamada-adelanto', `${Math.round(AUDIO_AVISO_DURACION - reloj.restante)}ms`);
+        boton.classList.remove('llamando');
+        void boton.offsetWidth; // para que la animación arranque de nuevo
+        boton.classList.add('llamando');
+    }
+
+    function frenar() {
+        boton.classList.remove('llamando');
+    }
+
+    function quitar() {
+        reloj.cancelar();
+        alFrenar.delete(animacion);
+        boton.classList.remove('llamando');
+        boton.style.removeProperty('--llamada-adelanto');
+    }
 }
 
 // El botón salta y lanza ondas (animación "llamando", 2,6 s) y sale el globito: "icono" va antes del texto y "texto" es una función que
@@ -801,28 +904,37 @@ export function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOT
     globo.querySelector('.aviso-icono').textContent = icono;
     document.body.appendChild(globo);
 
-    const llamada = { globo, texto, devolver: null, temporizador: 0, finDeLaAnimacion: 0 };
+    const llamada = { globo, texto, devolver: null, temporizador: null, animacion: null, alFrenar: null };
     llamadasActivas.set(boton, llamada);
     escribirGloboDelBoton(llamada);
     revisarLlamadas(); // (si ya hay una cortina, el botón sube ahora mismo, antes de que se dibuje el siguiente cuadro)
 
-    boton.classList.remove('llamando');
-    void boton.offsetWidth; // para que la animación arranque de cero
-    boton.classList.add('llamando');
-    llamada.finDeLaAnimacion = setTimeout(() => boton.classList.remove('llamando'), AUDIO_AVISO_DURACION);
-    llamada.temporizador = setTimeout(() => terminarLlamada(boton), Math.max(duracion, AUDIO_AVISO_DURACION));
+    llamada.animacion = animarLlamada(boton);
+    llamada.temporizador = esperar(() => terminarLlamada(boton), Math.max(duracion, AUDIO_AVISO_DURACION));
+    // Con una carta en zoom extra el globito se esconde y el botón vuelve a la barra (revisarLlamadas); al alejar el zoom, vuelven los dos
+    llamada.alFrenar = {
+        frenar: () => {
+            globo.classList.remove('visible');
+            revisarLlamadas();
+        },
+        seguir: () => {
+            globo.classList.add('visible');
+            revisarLlamadas();
+        },
+    };
+    alFrenar.add(llamada.alFrenar);
 
     // Si coinciden dos o más carteles a la vez (por ejemplo, el primer sonido de la sesión es voltear una carta,
     // disparando a la vez el aviso de silenciar y el de tilt/shift), dejamos ambos carteles más tiempo para darle al usuario tiempo de leer ambos
     if (llamadasActivas.size > 1) {
         for (const [b, l] of llamadasActivas) {
-            clearTimeout(l.temporizador);
-            l.temporizador = setTimeout(() => terminarLlamada(b), GLOBO_DEL_BOTON_DURACION_DOBLE);
+            l.temporizador.cancelar();
+            l.temporizador = esperar(() => terminarLlamada(b), GLOBO_DEL_BOTON_DURACION_DOBLE);
         }
     }
 
     void globo.offsetWidth; // para que la entrada se anime
-    globo.classList.add('visible');
+    if (!cartelesEnPausa) globo.classList.add('visible'); // (si hay una carta en zoom extra, sale al alejarla)
     if (!vigiliaDeLlamadas) vigiliaDeLlamadas = requestAnimationFrame(vigilarLlamadas);
 }
 
@@ -832,9 +944,10 @@ export function terminarLlamada(boton) {
     const llamada = llamadasActivas.get(boton);
     if (!llamada) return;
     llamadasActivas.delete(boton);
-    clearTimeout(llamada.temporizador);
-    clearTimeout(llamada.finDeLaAnimacion);
-    boton.classList.remove('llamando');
+    boton.classList.remove('esquiva-avisos'); // (ya no llama la atención: vuelve a su lugar)
+    llamada.temporizador?.cancelar();
+    llamada.animacion?.quitar();
+    alFrenar.delete(llamada.alFrenar);
     llamada.devolver?.();
     llamada.globo.classList.remove('visible');
     setTimeout(() => llamada.globo.remove(), 500);

@@ -11,7 +11,6 @@
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { PANTALLA_DE_CELULAR } from './util.js';
 import {
     COLOR_BUSQUEDA,
     COLOR_ELEMENTO,
@@ -284,18 +283,15 @@ function refrescar() {
     });
 
     escribirEtiquetas();
-    const cuenta = t('filtros.cuenta', { v: `<b>${visibles}</b>`, n: total });
+    // Dos versiones del mismo dato: la larga ("Mostrando 12 de 860 digimons") y una cortita ("12 de 860") para la barra finita del celular
+    // (el CSS muestra una u otra; la que no se ve no se lee ni en pantalla ni con lector)
+    const datos = { v: `<b>${visibles}</b>`, n: total };
+    const cuenta = `<span class="f-cuenta-larga">${t('filtros.cuenta', datos)}</span><span class="f-cuenta-corta">${t('filtros.cuenta.corta', datos)}</span>`;
     if (textoCuenta.innerHTML !== cuenta) textoCuenta.innerHTML = cuenta;
 
     const hayFiltros = busqueda !== '' || GRUPOS.some(grupo => elegidos[grupo].size > 0);
     botonLimpiar.hidden = !hayFiltros;
     avisoVacio.hidden = !(total > 0 && visibles === 0);
-
-    // En celular los filtros están dentro del menú ☰: con el menú cerrado, un globito en el botón avisa cuántos hay activos
-    const activos = (busqueda !== '' ? 1 : 0) + GRUPOS.reduce((suma, grupo) => suma + elegidos[grupo].size, 0);
-    const botonMenu = document.getElementById('abrir-menu');
-    if (activos > 0) botonMenu.dataset.filtros = activos;
-    else delete botonMenu.dataset.filtros;
 }
 
 // Las cartas llegan de a poco: si llegan varias juntas, se hacen las cuentas una sola vez por cuadro
@@ -348,14 +344,6 @@ function activarFiltros() {
     const abrir = (grupo, abierto) => {
         grupo.classList.toggle('abierto', abierto);
         grupo.querySelector('.f-btn').setAttribute('aria-expanded', String(abierto));
-        // En celular los filtros están al final del panel del menú: si las opciones quedan más abajo de lo que se ve, se las acerca
-        // (se mueve solo el panel del menú, no la página: por eso no se usa scrollIntoView)
-        const menu = grupo.closest('.menu-movil');
-        if (abierto && menu && PANTALLA_DE_CELULAR.matches) {
-            const limite = Math.min(menu.getBoundingClientRect().bottom, window.innerHeight) - 14;
-            const falta = grupo.querySelector('.f-panel').getBoundingClientRect().bottom - limite;
-            if (falta > 0) menu.scrollBy({ top: falta, behavior: 'smooth' });
-        }
     };
     grupos.forEach(grupo => {
         grupo.querySelector('.f-btn').addEventListener('click', () => abrir(grupo, !grupo.classList.contains('abierto')));

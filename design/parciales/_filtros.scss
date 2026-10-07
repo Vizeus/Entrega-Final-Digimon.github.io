@@ -3,7 +3,7 @@
 
 // -----------------------------------------------------------------------------------------------------------------
 // FILTROS Y BUSCADOR: van dentro de la barra (#navbar), así acompañan al bajar por la lista.
-//   En computadora son la segunda fila de la barra; en celular, parte del panel que se despliega con ☰.
+//   En computadora son la segunda fila de la barra; en celular también están siempre a la vista, en filas finitas (no van en el menú ☰).
 //   Estructura (el HTML tiene el esqueleto y filtros.js arma las opciones):
 //     #filtros → .f-titulo · .f-buscar · .f-grupo (.f-btn + .f-panel con los .f-chip) ×3 · .f-activos (.f-tag) · .f-resumen
 //     #f-vacio → aviso cuando ningún digimon cumple los filtros
@@ -526,18 +526,22 @@
     }
 }
 
-// En celular los filtros van dentro del panel del menú ☰, al final (debajo de los ajustes y de los menús de información): el buscador ocupa toda la fila, los tres botones comparten la
-// siguiente y las opciones del filtro que se abre se despliegan debajo, dentro del panel (como las listas de información).
-// Los grupos dejan de ser cajas ("display: contents") para que sus botones y sus paneles se ordenen en el mismo renglón.
+// En celular los filtros están siempre a la vista, en la barra de arriba (no van en el menú ☰), en filas finitas debajo del logo:
+//   1. el buscador, a todo el ancho;
+//   2. los botones Tipo, Nivel, Elemento y X-Antibody, repartidos en una sola fila;
+//   3. solo si hay algo elegido: las etiquetas de los filtros activos (una tira que se desliza de costado) y, a la derecha, cuántos
+//      digimons quedan y el botón de limpiar.
+// Las opciones del filtro que se abre caen debajo de la barra como un panel flotante (igual que el menú ☰), con su propio scroll si
+// no entran. Los grupos dejan de ser cajas ("display: contents") para que sus botones se repartan en la misma fila.
 @include celular {
     #navbar #filtros {
-        order: 1; // los demás hijos del panel (consigna, ajustes y menús de información) quedan en 0: los filtros van abajo de todo
-        flex: none;
-        width: 100%;
-        gap: 8px;
-        padding: 0;
-        border-top: 0;
-        box-shadow: none;
+        order: 20; // siempre es la última fila de la barra
+        position: static; // sin esto el panel de opciones se ubicaría respecto de los filtros y no de la barra entera
+        z-index: auto;
+        flex: 1 1 100%;
+        min-width: 0; // sin esto la fila de botones ensancharía la barra (más allá de la pantalla) en vez de achicarse
+        gap: 6px;
+        padding: 6px 0 0;
 
         .f-titulo {
             display: none;
@@ -546,7 +550,9 @@
         .f-buscar {
             order: 0;
             flex: 1 1 100%;
-            height: 40px;
+            min-width: 0;
+            height: 30px; // (+ 2px de borde)
+            border-radius: 11px;
 
             input {
                 font-size: 16px; // con menos, iPhone agranda la pantalla al tocar la caja
@@ -557,63 +563,137 @@
             display: contents;
         }
 
+        // Cada botón mide lo que pide su texto y el lugar que sobra se reparte parejo (así no se aprietan los que llevan el globito)
         .f-btn {
             order: 1;
-            flex: 1 1 0;
+            flex: 1 1 auto;
             justify-content: center;
-            gap: 6px;
-            height: 40px;
-            padding: 0 8px;
+            gap: 5px;
+            min-width: 0;
+            height: 30px;
+            padding: 0 6px;
+            font-size: 13px;
+            border-radius: 10px;
         }
 
-        // Con cuatro botones en la fila no entra el texto: el de X-Antibody va en un renglón propio
+        // Con opciones elegidas el globito con la cantidad ya dice que hay filtro: se saca la flechita para ganar lugar en la fila
+        .f-btn.tiene::after {
+            display: none;
+        }
+
+        // X-Antibody comparte la fila con los otros tres: se queda con el ancho de su texto
         .f-xa {
-            flex: 1 1 100%;
+            flex: 0 0 auto;
+            padding: 0 9px;
+        }
+
+        // En pantallas angostas no entra el texto con los otros tres botones: queda solo la gema (su color dice el estado)
+        @media (max-width: 399px) {
+            .f-xa {
+                padding: 0 8px;
+            }
+
+            .f-xa-texto {
+                display: none;
+            }
+        }
+
+        // En los más angostos (320px), con los tres filtros usados y sus globitos, hay que achicar un poco los botones para que entren en una fila
+        @media (max-width: 340px) {
+            .f-btn {
+                gap: 4px;
+                padding: 0 4px;
+                font-size: 12px;
+            }
+
+            .f-xa {
+                padding: 0 7px;
+            }
         }
 
         .f-panel {
             order: 2;
-            position: static;
-            flex: 1 1 100%;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 8px;
+            right: 8px;
             width: auto;
             max-width: none;
+            max-height: calc(100dvh - 175px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
             padding: 10px;
-            animation: none;
-            box-shadow: inset 0 1px 3px rgba(0, 40, 90, 0.18);
+        }
+
+        // Salto de fila forzado: la fila de etiquetas va siempre debajo de los botones (aunque sobre lugar al lado de ellos)
+        &::after {
+            content: "";
+            order: 2;
+            flex: 1 1 100%;
+            height: 0;
+            margin-top: -6px; // se come el espacio entre filas que sumaría esta fila vacía
         }
 
         .f-activos {
             order: 3;
-            flex: 1 1 100%;
+            flex: 1 1 0;
+            flex-wrap: nowrap;
+            gap: 5px;
+            min-width: 0;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: none;
+            mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent); // el borde de la derecha se desvanece: hay más para deslizar
+
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+        .f-tag {
+            flex: none;
+            max-width: 150px;
+            height: 24px;
+            padding: 0 8px 0 6px;
+            font-size: 12px;
         }
 
         .f-resumen {
             order: 4;
-            margin-left: 0;
-            width: 100%;
-            justify-content: space-between;
+            flex: none;
+            gap: 8px;
+        }
+
+        // Acá se muestra la versión cortita del conteo ("12 de 860")
+        .f-cuenta {
+            font-size: 12px;
+        }
+
+        .f-cuenta-larga {
+            display: none;
+        }
+
+        .f-limpiar {
+            height: 24px;
+            padding: 0 9px;
+            font-size: 12px;
+        }
+
+        // Sin nada elegido no hay etiquetas, ni conteo, ni botón de limpiar: la barra se queda en las dos filas de arriba
+        &:not(:has(.f-tag)) {
+            &::after,
+            .f-activos,
+            .f-resumen {
+                display: none;
+            }
         }
     }
+}
 
-    // Con el menú cerrado, un globito en el botón ☰ dice cuántos filtros hay activos
-    #navbar #abrir-menu[data-filtros]::after {
-        content: attr(data-filtros);
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        display: grid;
-        place-items: center;
-        min-width: 19px;
-        height: 19px;
-        padding: 0 5px;
-        border-radius: 10px;
-        font:
-            700 12px var(--f-boton),
-            sans-serif;
-        color: #fff;
-        background: linear-gradient(#7cc4f5, #2a75cf);
-        border: 1px solid #fff;
-        box-shadow: 0 1px 3px rgba(0, 30, 90, 0.5);
+// Fuera del celular (computadora) se muestra la versión larga del conteo ("Mostrando 12 de 860 digimons")
+@include computadora {
+    #filtros .f-cuenta-corta {
+        display: none;
     }
 }
 
