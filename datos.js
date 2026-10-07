@@ -61,7 +61,7 @@ export const nivelesAlternativos = {
     'Baby II': 'In-Training',
     'Child': 'Rookie',
     'Adult': 'Champion',
-    'Perfect': 'Ultimate ',
+    'Perfect': 'Ultimate',
     'Ultimate': 'Mega',
     'Super Ultimate': 'Ultra', // nivel 7 (inventado para este simulador): por encima del Mega
     'Absolute': 'Apex', // nivel 8 (inventado para este simulador): lo más alto

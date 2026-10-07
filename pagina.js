@@ -44,7 +44,7 @@ export function nombreNivel(nivelApi) {
     if (nivelApi === 'Desconocido') {
         return t('nivel.Desconocido');
     }
-    return (clasificacionAlternativa ? nivelesAlternativos[nivelApi] || nivelApi : nivelApi).trim();
+    return clasificacionAlternativa ? nivelesAlternativos[nivelApi] || nivelApi : nivelApi;
 }
 
 // Selector de niveles: resalta el sistema vigente (Japón o EE.UU.) y escribe su ayuda (título y aria-label) en el idioma actual.

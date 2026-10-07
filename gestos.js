@@ -5,7 +5,7 @@
 // mostrar cuando ya se aprendió) y el toque con "hundimiento" de los botones del dorso.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { emitir } from './util.js';
+import { emitir, guardarTexto, hayMarcaDeSesion, HAY_PANTALLA_TACTIL, leerTexto, ponerMarcaDeSesion } from './util.js';
 import { listaDigimons } from './pagina.js';
 import { seleccionados } from './combate.js';
 import { voltearCarta } from './cartas.js';
@@ -32,7 +32,7 @@ const TOQUE_DURACION = 250; // ms máximos que el dedo puede estar apoyado para 
 const TOQUE_MOVIMIENTO = 12; // px máximos que se puede mover el dedo durante un toque
 
 export function activarZoomConDobleToque() {
-    if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
+    if (!HAY_PANTALLA_TACTIL) return;
     let apoyado = null; // { carta, t, x, y, estado }: el dedo que está apoyado ahora
     let anterior = null; // { carta, tFin, x, y, estado }: el último toque corto
 
@@ -224,62 +224,46 @@ const MIN_FLIPS_SESION_PARA_OCULTAR = 4;
 const MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE = 5;
 let sesionFlipContada = false;
 
+// Un número guardado en el navegador: 0 si no hay nada, si está roto o si el navegador no deja guardar
+const leerNumero = (clave, donde) => Math.max(0, Number.parseInt(leerTexto(clave, donde) ?? '0', 10) || 0);
+
 function aplicarOcultarFlechasFlip() {
     document.body.classList.add('sin-flechas-flip-movil');
 }
 
 function registrarSesionDeFlipsCompletada() {
     if (sesionFlipContada) return;
-    try {
-        if (sessionStorage.getItem(ALMACEN_SESION_FLIPS_COMPLETADA) === '1') {
-            sesionFlipContada = true;
-            return;
-        }
-        sesionFlipContada = true;
-        const guardadas = Number.parseInt(localStorage.getItem(ALMACEN_SESIONES_FLIPS_COMPLETADAS) || '0', 10);
-        const sesiones = Number.isFinite(guardadas) ? Math.max(0, guardadas) : 0;
-        const completadas = Math.min(sesiones + 1, MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE);
-        localStorage.setItem(ALMACEN_SESIONES_FLIPS_COMPLETADAS, String(completadas));
-        sessionStorage.setItem(ALMACEN_SESION_FLIPS_COMPLETADA, '1');
-        if (completadas >= MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE) {
-            aplicarOcultarFlechasFlip();
-        }
-    } catch (error) {}
+    sesionFlipContada = true;
+    if (hayMarcaDeSesion(ALMACEN_SESION_FLIPS_COMPLETADA)) return;
+    const completadas = Math.min(leerNumero(ALMACEN_SESIONES_FLIPS_COMPLETADAS) + 1, MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE);
+    guardarTexto(ALMACEN_SESIONES_FLIPS_COMPLETADAS, String(completadas));
+    ponerMarcaDeSesion(ALMACEN_SESION_FLIPS_COMPLETADA);
+    if (completadas >= MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE) aplicarOcultarFlechasFlip();
 }
 
 export function gestionarVisitasYFlechasMovil() {
     // Solo se vuelve permanente después de completar los 4 flips en 5 sesiones distintas
-    try {
-        const sesionesCompletadas = Number.parseInt(localStorage.getItem(ALMACEN_SESIONES_FLIPS_COMPLETADAS) || '0', 10);
-        if (sesionesCompletadas >= MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE) {
-            aplicarOcultarFlechasFlip();
-            return;
-        }
-    } catch (error) {}
+    if (leerNumero(ALMACEN_SESIONES_FLIPS_COMPLETADAS) >= MIN_SESIONES_FLIPS_PARA_OCULTAR_SIEMPRE) {
+        aplicarOcultarFlechasFlip();
+        return;
+    }
 
     // Si ya completó los 4 flips en esta sesión, oculta las flechas y registra el logro si todavía no estaba contado
-    try {
-        const flipsSesion = Number.parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
-        if (sessionStorage.getItem(ALMACEN_SESION_FLIPS_COMPLETADA) === '1') sesionFlipContada = true;
-        if (flipsSesion >= MIN_FLIPS_SESION_PARA_OCULTAR) {
-            aplicarOcultarFlechasFlip();
-            registrarSesionDeFlipsCompletada();
-        }
-    } catch (error) {}
+    if (hayMarcaDeSesion(ALMACEN_SESION_FLIPS_COMPLETADA)) sesionFlipContada = true;
+    if (leerNumero(ALMACEN_FLIPS_SESION, 'sesion') >= MIN_FLIPS_SESION_PARA_OCULTAR) {
+        aplicarOcultarFlechasFlip();
+        registrarSesionDeFlipsCompletada();
+    }
 }
 
 function registrarFlipConDedo() {
     emitir('flip-con-dedo');
-    try {
-        let flips = Number.parseInt(sessionStorage.getItem(ALMACEN_FLIPS_SESION) || '0', 10);
-        if (!Number.isFinite(flips)) flips = 0;
-        flips += 1;
-        sessionStorage.setItem(ALMACEN_FLIPS_SESION, String(flips));
-        if (flips >= MIN_FLIPS_SESION_PARA_OCULTAR) {
-            aplicarOcultarFlechasFlip();
-            registrarSesionDeFlipsCompletada();
-        }
-    } catch (error) {}
+    const flips = leerNumero(ALMACEN_FLIPS_SESION, 'sesion') + 1;
+    guardarTexto(ALMACEN_FLIPS_SESION, String(flips), 'sesion');
+    if (flips >= MIN_FLIPS_SESION_PARA_OCULTAR) {
+        aplicarOcultarFlechasFlip();
+        registrarSesionDeFlipsCompletada();
+    }
 }
 
 // ---- Botones del dorso con el dedo ("⚔️ Ataques" y "🧬 Evolución") ----------------------------------------------------------------
@@ -364,7 +348,7 @@ export function activarBotonDelDorso(boton, accion) {
 }
 
 export function activarVoltearConDedo() {
-    if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
+    if (!HAY_PANTALLA_TACTIL) return;
     let gesto = null; // { carta, x0, y0, muestras, resuelto }: el dedo que está apoyado en una carta
     let evitarClic = false; // al soltar después del barrido no se elige la carta
 

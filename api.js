@@ -21,14 +21,14 @@ import { barraProgreso, listaDigimons } from './pagina.js';
 import { agregarCarta, colocarCartas, esperarTipografias, reducirMovimiento, separarXAntibody } from './cartas.js';
 
 // URL base de la API
-const urlBase = 'https://digi-api.com/api/v1/digimon';
+const URL_DE_LA_API = 'https://digi-api.com/api/v1/digimon';
 
 // Número total de digimons
-const totalDigimons = 1488; // todos los que tiene la API (digi-api.com)
+const TOTAL_DE_DIGIMONS = 1488; // todos los que tiene la API (digi-api.com)
 
 // Número de páginas a recuperar (con pageSize=100 son solo 15 páginas en vez de 298)
 const DIGIMONS_POR_PAGINA = 100;
-const totalPaginas = Math.ceil(totalDigimons / DIGIMONS_POR_PAGINA);
+const TOTAL_DE_PAGINAS = Math.ceil(TOTAL_DE_DIGIMONS / DIGIMONS_POR_PAGINA);
 
 // Pasa el nivel que trae la API al nivel con el que se juega. Devuelve { nivel, marca }: la marca ('Armor' o 'Hybrid') solo
 // existe si el digimon venía con ese nivel.
@@ -80,7 +80,7 @@ const CACHE_STORE_DETALLES = 'detalles';
 
 function abrirCacheDB() {
     return new Promise(resolve => {
-        if (typeof window === 'undefined' || !('indexedDB' in window)) return resolve(null);
+        if (!('indexedDB' in window)) return resolve(null);
         try {
             const peticion = indexedDB.open(CACHE_DB_NOMBRE, 1);
             peticion.onupgradeneeded = () => {
@@ -97,15 +97,15 @@ function abrirCacheDB() {
     });
 }
 
-let dbPromise = null;
-function getCacheDB() {
-    if (!dbPromise) dbPromise = abrirCacheDB();
-    return dbPromise;
+let promesaDeLaCache = null;
+function obtenerCacheDB() {
+    if (!promesaDeLaCache) promesaDeLaCache = abrirCacheDB();
+    return promesaDeLaCache;
 }
 
 async function obtenerDetalleCache(url) {
     try {
-        const db = await getCacheDB();
+        const db = await obtenerCacheDB();
         if (!db) return null;
         return new Promise(resolve => {
             const tx = db.transaction(CACHE_STORE_DETALLES, 'readonly');
@@ -122,7 +122,7 @@ async function obtenerDetalleCache(url) {
 async function guardarDetalleCache(url, datos) {
     if (!datos) return;
     try {
-        const db = await getCacheDB();
+        const db = await obtenerCacheDB();
         if (!db) return;
         const tx = db.transaction(CACHE_STORE_DETALLES, 'readwrite');
         const store = tx.objectStore(CACHE_STORE_DETALLES);
@@ -136,7 +136,7 @@ async function guardarDetalleCache(url, datos) {
 async function obtenerPagina(numeroPagina, reintentos = 3) {
     for (let intento = 1; intento <= reintentos; intento++) {
         try {
-            const respuesta = await fetch(`${urlBase}?pageSize=${DIGIMONS_POR_PAGINA}&page=${numeroPagina}`);
+            const respuesta = await fetch(`${URL_DE_LA_API}?pageSize=${DIGIMONS_POR_PAGINA}&page=${numeroPagina}`);
             if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
             const datos = await respuesta.json();
             return datos.content || [];
@@ -188,7 +188,7 @@ async function crearArrayDeDatos() {
     try {
         // Generar array de promesas para todas las páginas (15 páginas en vez de 298)
         const promesasPaginas = [];
-        for (let i = 0; i < totalPaginas; i++) {
+        for (let i = 0; i < TOTAL_DE_PAGINAS; i++) {
             promesasPaginas.push(obtenerPagina(i));
         }
 
@@ -208,8 +208,8 @@ async function crearArrayDeDatos() {
 // Función para actualizar la barra de progreso
 export function actualizarBarraProgreso(contador) {
     barraProgreso.value = contador;
-    barraProgreso.max = totalDigimons;
-    const completa = totalDigimons > 0 && contador >= totalDigimons;
+    barraProgreso.max = TOTAL_DE_DIGIMONS;
+    const completa = TOTAL_DE_DIGIMONS > 0 && contador >= TOTAL_DE_DIGIMONS;
     // En celular la carga es una línea finita en la barra: cuando se completa, se apaga.
     // En computadora el bloque (rótulo + barra) se desvanece y se retira (ver retirarBloqueDeCarga)
     document.getElementById('navbar').classList.toggle('carga-completa', completa);

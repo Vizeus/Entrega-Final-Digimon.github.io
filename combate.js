@@ -15,7 +15,7 @@ import { TECLAS_DE_DESPLAZAMIENTO, zonaConScroll } from './zoom.js';
 import {
     arrancarGifConSorbo,
     audioMouse,
-    battleMusic,
+    musicaDelCombate,
     cancelarMusicaGanador,
     detenerSonido,
     detenerSonidoPajita,
@@ -24,8 +24,8 @@ import {
     reproducirConDelay,
     reproducirPajita,
     reproducirSonido,
-    winMusic,
-    winSound,
+    musicaDelGanador,
+    fanfarriaDeVictoria,
 } from './audio.js';
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -329,10 +329,10 @@ async function correrCombate() {
     console.log(luchador2);
     console.log('----------------------------------------------------------------------');
 
-    const ganador = determinarGanador(luchador1, luchador2);
+    const indiceGanador = determinarGanador(luchador1, luchador2);
+    const ganador = [luchador1, luchador2][indiceGanador].nombre;
     const cartas = [seleccionados[0], seleccionados[1]]; // las dos cartas que pelean (para mostrarlas en los carteles)
     const ataques = cartas.map(elegirAtaque); // el ataque que usa cada una en la pelea (es solo ambientación: el resultado ya está decidido)
-    const indiceGanador = ganador === luchador1.nombre ? 0 : 1;
 
     // Cuadros de animación
     let anulado = false; // true si en un cartel tocaron la cruz, afuera o Esc: el combate se corta ahí
@@ -365,15 +365,15 @@ async function correrCombate() {
             title: `${FASES_COMBATE.peleando.icono} ${t('combate.peleando')}`,
             html: crearCuerpoCartel('peleando', cartas, -1, true, ataques),
             didOpen: ventana => {
-                cancelarSonido = cuandoAparece(ventana, () => reproducirSonido(battleMusic));
+                cancelarSonido = cuandoAparece(ventana, () => reproducirSonido(musicaDelCombate));
             },
         });
         anulado = !aceptado;
         cancelarSonido();
-        detenerSonido(battleMusic);
+        detenerSonido(musicaDelCombate);
     } catch (error) {
         cancelarSonido();
-        detenerSonido(battleMusic);
+        detenerSonido(musicaDelCombate);
     }
     if (anulado) return;
 
@@ -383,8 +383,8 @@ async function correrCombate() {
             html: crearCuerpoCartel('ganador', cartas, indiceGanador),
             didOpen: ventana => {
                 cancelarSonido = cuandoAparece(ventana, () => {
-                    reproducirSonido(winSound);
-                    reproducirConDelay(); // Llama a la función con delay para reproducir winMusic
+                    reproducirSonido(fanfarriaDeVictoria);
+                    reproducirConDelay(); // Llama a la función con delay para reproducir musicaDelGanador
                     lanzarConfeti(ventana);
                 });
             },
@@ -393,7 +393,7 @@ async function correrCombate() {
         // Se cerró el cartel del ganador (o hubo un error): se corta todo lo que iba a sonar o estaba sonando
         cancelarSonido();
         cancelarMusicaGanador();
-        detenerSonido(winMusic);
+        detenerSonido(musicaDelGanador);
     }
 }
 
@@ -453,7 +453,7 @@ function calcularProbabilidad(luchador1, luchador2) {
     return Math.min(1, Math.max(0, Number(suma.toFixed(2))));
 }
 
-// Función para determinar el ganador considerando tipo, nivel y elemento
+// Función para determinar el ganador considerando tipo, nivel y elemento. Devuelve su lugar: 0 (el primero) o 1 (el segundo)
 function determinarGanador(luchador1, luchador2) {
     const probabilidadAjustada = calcularProbabilidad(luchador1, luchador2);
     console.log('El N° aleatorio debe ser inferior a este 👇 para ganar');
@@ -465,9 +465,5 @@ function determinarGanador(luchador1, luchador2) {
     console.log(random);
     console.log('----------------------------------------------------------------------');
 
-    if (random < probabilidadAjustada) {
-        return luchador1.nombre;
-    } else {
-        return luchador2.nombre;
-    }
+    return random < probabilidadAjustada ? 0 : 1; // 0: gana el primero; 1: gana el segundo
 }

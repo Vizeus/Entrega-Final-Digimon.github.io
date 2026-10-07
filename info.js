@@ -180,7 +180,7 @@ export function infoNivel(nivelApi) {
 
     // Cómo se llama en el otro sistema (solo si el nombre es distinto)
     if (poder !== undefined) {
-        const otroNombre = (clasificacionAlternativa ? nivelApi : nivelesAlternativos[nivelApi] || nivelApi).trim();
+        const otroNombre = clasificacionAlternativa ? nivelApi : nivelesAlternativos[nivelApi] || nivelApi;
         if (otroNombre !== nombre) {
             datos.push([t('info.otraClasificacion'), otroNombre]);
         }

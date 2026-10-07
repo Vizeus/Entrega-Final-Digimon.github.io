@@ -319,79 +319,44 @@ export async function voltearCarta(carta, direccion = 1) {
     emitir('giro-terminado', carta); // la inclinación retoma si el mouse sigue encima
 }
 
+// Las ventanas que se abren desde los botones de una carta (info.js y evolucion.js). Los del frente (tipo, elemento y nivel)
+// necesitan un dato de la carta y avisan con "click-chip-carta"; los del dorso (ataques y evolución) reciben la carta entera.
+const VENTANAS_DE_LA_CARTA = [
+    { boton: '.c-tipo', dato: 'tipo', aviso: 'tipo', abrir: infoTipo },
+    { boton: '.c-elem', dato: 'elemento', aviso: 'elemento', abrir: infoElemento },
+    { boton: '.c-gema, .c-nivel', dato: 'nivelApi', aviso: 'nivel', abrir: infoNivel },
+    { boton: '.c-ataques', abrir: abrirAtaques },
+    { boton: '.c-evo', abrir: abrirEvolucion },
+];
+const dentroDeUnaCarta = botones => `#listado-digimons li :is(${botones})`;
+
 // Al hacer clic en el nivel (la gema o el nombre), tipo o elemento de una carta, se abre su ventana de información (info.js)
-// sin seleccionar la carta para el combate ni cerrarla si está en modo zoom.
+// sin seleccionar la carta para el combate ni cerrarla si está en modo zoom. Lo mismo con los botones del dorso.
 export function activarCartelesDeInfoEnCartas() {
     document.addEventListener(
         'click',
         evento => {
-            // 1. Tipo
-            const chipTipo = evento.target.closest?.('#listado-digimons li .c-tipo');
-            if (chipTipo) {
-                const carta = chipTipo.closest('#listado-digimons li');
-                if (carta?.dataset.tipo) {
-                    evento.stopPropagation();
-                    emitir('click-chip-carta', { tipo: carta.dataset.tipo });
-                    infoTipo(carta.dataset.tipo);
-                    return;
+            for (const { boton, dato, aviso, abrir } of VENTANAS_DE_LA_CARTA) {
+                const carta = evento.target.closest?.(dentroDeUnaCarta(boton))?.closest('#listado-digimons li');
+                if (!carta || (dato && !carta.dataset[dato])) continue;
+                evento.stopPropagation();
+                if (dato) {
+                    emitir('click-chip-carta', { [aviso]: carta.dataset[dato] });
+                    abrir(carta.dataset[dato]);
+                } else {
+                    abrir(carta);
                 }
-            }
-
-            // 2. Elemento
-            const chipElem = evento.target.closest?.('#listado-digimons li .c-elem');
-            if (chipElem) {
-                const carta = chipElem.closest('#listado-digimons li');
-                if (carta?.dataset.elemento) {
-                    evento.stopPropagation();
-                    emitir('click-chip-carta', { elemento: carta.dataset.elemento });
-                    infoElemento(carta.dataset.elemento);
-                    return;
-                }
-            }
-
-            // 3. Nivel (gema o texto del nivel)
-            const nivelTarget = evento.target.closest?.('#listado-digimons li .c-gema, #listado-digimons li .c-nivel');
-            if (nivelTarget) {
-                const carta = nivelTarget.closest('#listado-digimons li');
-                if (carta?.dataset.nivelApi) {
-                    evento.stopPropagation();
-                    emitir('click-chip-carta', { nivel: carta.dataset.nivelApi });
-                    infoNivel(carta.dataset.nivelApi);
-                    return;
-                }
-            }
-
-            // 4. Ataques del dorso
-            const btnAtaques = evento.target.closest?.('#listado-digimons li .c-ataques');
-            if (btnAtaques) {
-                const carta = btnAtaques.closest('#listado-digimons li');
-                if (carta) {
-                    evento.stopPropagation();
-                    abrirAtaques(carta);
-                    return;
-                }
-            }
-
-            // 5. Evolución del dorso
-            const btnEvo = evento.target.closest?.('#listado-digimons li .c-evo');
-            if (btnEvo) {
-                const carta = btnEvo.closest('#listado-digimons li');
-                if (carta) {
-                    evento.stopPropagation();
-                    abrirEvolucion(carta);
-                    return;
-                }
+                return;
             }
         },
         true,
     );
 
     // Accesibilidad por teclado: Enter o Espacio sobre la gema, el nivel, los chips o los botones del dorso activa el clic
+    const TODOS_LOS_BOTONES = dentroDeUnaCarta(VENTANAS_DE_LA_CARTA.map(({ boton }) => boton).join(', '));
     document.addEventListener('keydown', evento => {
         if (evento.key !== 'Enter' && evento.key !== ' ') return;
-        const boton = evento.target.closest?.(
-            '#listado-digimons li .c-gema, #listado-digimons li .c-nivel, #listado-digimons li .c-tipo, #listado-digimons li .c-elem, #listado-digimons li .c-ataques, #listado-digimons li .c-evo',
-        );
+        const boton = evento.target.closest?.(TODOS_LOS_BOTONES);
         if (!boton) return;
         evento.preventDefault();
         boton.click();
@@ -449,7 +414,7 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOrigin
         <div class="c-frente">
             <div class="c-cab"><h4></h4></div>
             <div class="c-arte">
-                <img src="${imagen}" alt="" loading="lazy" decoding="async">
+                <img alt="" loading="lazy" decoding="async">
                 ${xAntibody ? '<span class="c-x" title="X-Antibody">X</span>' : ''}
                 ${datosMarca ? `<span class="c-marca" title="${datosMarca.nombre}" role="img" aria-label="${datosMarca.nombre}">${datosMarca.letra}</span>` : ''}
                 <span class="c-gema" role="button" tabindex="0"><small></small>${nivelNumerico ?? '?'}</span>
@@ -461,6 +426,7 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOrigin
             </div>
         </div>
         <button class="c-flip" type="button">↻</button>`;
+    elementoLista.querySelector('.c-arte img').src = imagen; // la dirección de la imagen (viene de la API) va aparte, no dentro del HTML
     escribirNombre(elementoLista);
     traducirCarta(elementoLista);
 

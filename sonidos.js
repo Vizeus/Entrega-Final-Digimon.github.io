@@ -11,10 +11,10 @@ import { destinoDeAudio, obtenerContextoAudio, perfilAudioActual, sonarCuandoElA
 // y un "thock" grave que resuena en la carcasa. Al soltar hay otro clic, más suave y más agudo.
 const ruidosPorContexto = new WeakMap();
 
-// Un poco de ruido blanco (se reutiliza en cada pulsación)
+// Un poco de ruido blanco, que reutilizan todos los sonidos. Dura 0,6 s: alcanza para el más largo (el giro de la carta, 0,55 s)
 function obtenerRuido(contexto) {
     if (!ruidosPorContexto.has(contexto)) {
-        const largo = Math.floor(contexto.sampleRate * 0.15);
+        const largo = Math.floor(contexto.sampleRate * 0.6);
         const buffer = contexto.createBuffer(1, largo, contexto.sampleRate);
         const datos = buffer.getChannelData(0);
         for (let i = 0; i < largo; i++) {
@@ -23,6 +23,28 @@ function obtenerRuido(contexto) {
         ruidosPorContexto.set(contexto, buffer);
     }
     return ruidosPorContexto.get(contexto);
+}
+
+// Una ráfaga corta de ruido filtrado: la base de los clics de las teclas, de los roces de papel y del crujido de las hojas.
+// El volumen sube hasta "pico" en "subida" segundos y se apaga a los "duracion" segundos (contados desde "inicio").
+// "corrida": cada ráfaga arranca en un lugar al azar del ruido (hasta esos segundos), así no suenan todas igual.
+// "cola": cuánto más sigue sonando la fuente después de apagarse el volumen.
+function rafagaDeRuido(contexto, destino, { inicio, frecuencia, q, pico, duracion, subida = 0.002, corrida = 0.05, cola = 0.01 }) {
+    const fuente = contexto.createBufferSource();
+    fuente.buffer = obtenerRuido(contexto);
+    const filtro = contexto.createBiquadFilter();
+    filtro.type = 'bandpass';
+    filtro.frequency.value = frecuencia;
+    filtro.Q.value = q;
+    const volumen = contexto.createGain();
+    volumen.gain.setValueAtTime(0.0001, inicio);
+    volumen.gain.exponentialRampToValueAtTime(pico, inicio + subida);
+    volumen.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
+    fuente.connect(filtro);
+    filtro.connect(volumen);
+    volumen.connect(destino);
+    fuente.start(inicio, Math.random() * corrida);
+    fuente.stop(inicio + duracion + cola);
 }
 
 // Volumen de las teclas: se adapta según el perfil de audio (celular vs escritorio).
@@ -75,24 +97,8 @@ function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
     const afinacion = (0.94 + Math.random() * 0.12) * tecla.tono;
 
     // Ráfaga corta de ruido filtrado: es el "clic"
-    const chasquido = (retraso, frecuencia, q, pico, duracion) => {
-        const inicio = t + retraso;
-        const fuente = contexto.createBufferSource();
-        fuente.buffer = obtenerRuido(contexto);
-        const filtro = contexto.createBiquadFilter();
-        filtro.type = 'bandpass';
-        filtro.frequency.value = frecuencia * afinacion;
-        filtro.Q.value = q;
-        const volumen = contexto.createGain();
-        volumen.gain.setValueAtTime(0.0001, inicio);
-        volumen.gain.exponentialRampToValueAtTime(pico * fuerza, inicio + 0.001);
-        volumen.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
-        fuente.connect(filtro);
-        filtro.connect(volumen);
-        volumen.connect(destino);
-        fuente.start(inicio, Math.random() * 0.05);
-        fuente.stop(inicio + duracion + 0.01);
-    };
+    const chasquido = (retraso, frecuencia, q, pico, duracion) =>
+        rafagaDeRuido(contexto, destino, { inicio: t + retraso, frecuencia: frecuencia * afinacion, q, pico: pico * fuerza, duracion, subida: 0.001 });
 
     // Tono que cae rápido: es el golpe y el "thock" grave
     const golpe = (retraso, tipo, desde, hasta, pico, duracion) => {
@@ -136,21 +142,7 @@ export function sonidoTecla(bajada = true, tecla = TECLA_NORMAL) {
 // El toquecito de una carta que se apoya (al terminar de girar y al volver a su lugar desde el zoom): un roce seco de papel,
 // muy bajito y casi sin cuerpo grave. Una carta casi no pesa: no es un golpe sobre la mesa.
 function toqueDeCarta(contexto, llegada) {
-    const toque = contexto.createBufferSource();
-    toque.buffer = obtenerRuido(contexto);
-    const filtroToque = contexto.createBiquadFilter();
-    filtroToque.type = 'bandpass';
-    filtroToque.frequency.value = 2200;
-    filtroToque.Q.value = 1;
-    const volumenToque = contexto.createGain();
-    volumenToque.gain.setValueAtTime(0.0001, llegada);
-    volumenToque.gain.exponentialRampToValueAtTime(0.09, llegada + 0.002);
-    volumenToque.gain.exponentialRampToValueAtTime(0.0001, llegada + 0.04);
-    toque.connect(filtroToque);
-    filtroToque.connect(volumenToque);
-    volumenToque.connect(destinoDeAudio(contexto));
-    toque.start(llegada, Math.random() * 0.05);
-    toque.stop(llegada + 0.06);
+    rafagaDeRuido(contexto, destinoDeAudio(contexto), { inicio: llegada, frecuencia: 2200, q: 1, pico: 0.09, duracion: 0.04, cola: 0.02 });
 
     const cuerpo = contexto.createOscillator();
     const volumenCuerpo = contexto.createGain();
@@ -180,21 +172,7 @@ export function sonidoSeleccion(elegida) {
             ? [2000, 0.07, 210, 130, 0.028, 0.035]
             : [3200, 0.04, 330, 240, 0.015, 0.025];
 
-        const roce = contexto.createBufferSource();
-        roce.buffer = obtenerRuido(contexto);
-        const filtro = contexto.createBiquadFilter();
-        filtro.type = 'bandpass';
-        filtro.frequency.value = frecuencia;
-        filtro.Q.value = 1;
-        const volumenDelRoce = contexto.createGain();
-        volumenDelRoce.gain.setValueAtTime(0.0001, inicio);
-        volumenDelRoce.gain.exponentialRampToValueAtTime(volumenRoce, inicio + 0.002);
-        volumenDelRoce.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
-        roce.connect(filtro);
-        filtro.connect(volumenDelRoce);
-        volumenDelRoce.connect(destino);
-        roce.start(inicio, Math.random() * 0.05);
-        roce.stop(inicio + duracion + 0.02);
+        rafagaDeRuido(contexto, destino, { inicio, frecuencia, q: 1, pico: volumenRoce, duracion, cola: 0.02 });
 
         const cuerpo = contexto.createOscillator();
         cuerpo.type = 'sine';
@@ -224,14 +202,8 @@ function sonidoVueltaAhora() {
         const t = contexto.currentTime;
 
         // Ruido blanco filtrado: el filtro sube de tono durante la primera mitad del giro y baja en la segunda
-        const largo = Math.floor(contexto.sampleRate * 0.6);
-        const buffer = contexto.createBuffer(1, largo, contexto.sampleRate);
-        const datos = buffer.getChannelData(0);
-        for (let i = 0; i < largo; i++) {
-            datos[i] = Math.random() * 2 - 1;
-        }
         const ruido = contexto.createBufferSource();
-        ruido.buffer = buffer;
+        ruido.buffer = obtenerRuido(contexto);
 
         const banda = contexto.createBiquadFilter();
         banda.type = 'bandpass';
@@ -338,24 +310,15 @@ function armarFichero(contexto, destino, t, abrir, fuerza = 1) {
     const duracion = abrir ? 0.2 : 0.17;
 
     // Una ráfaga corta de ruido filtrado: un crujido de hoja (o el golpecito de la tapa)
-    const rafaga = (retraso, frecuencia, q, pico, largo) => {
-        const inicio = t + retraso;
-        const fuente = contexto.createBufferSource();
-        fuente.buffer = obtenerRuido(contexto);
-        const filtro = contexto.createBiquadFilter();
-        filtro.type = 'bandpass';
-        filtro.frequency.value = frecuencia * afinacion;
-        filtro.Q.value = q;
-        const volumen = contexto.createGain();
-        volumen.gain.setValueAtTime(0.0001, inicio);
-        volumen.gain.exponentialRampToValueAtTime(Math.max(pico * fuerza, 0.0002), inicio + 0.002);
-        volumen.gain.exponentialRampToValueAtTime(0.0001, inicio + largo);
-        fuente.connect(filtro);
-        filtro.connect(volumen);
-        volumen.connect(destino);
-        fuente.start(inicio, Math.random() * 0.04);
-        fuente.stop(inicio + largo + 0.01);
-    };
+    const rafaga = (retraso, frecuencia, q, pico, largo) =>
+        rafagaDeRuido(contexto, destino, {
+            inicio: t + retraso,
+            frecuencia: frecuencia * afinacion,
+            q,
+            pico: Math.max(pico * fuerza, 0.0002),
+            duracion: largo,
+            corrida: 0.04,
+        });
 
     // El aire que mueven las hojas: ruido filtrado que barre hacia arriba (al abrir) o hacia abajo (al cerrar)
     const aire = contexto.createBufferSource();

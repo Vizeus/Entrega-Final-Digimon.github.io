@@ -5,7 +5,7 @@
 // (o al revés, con el botón de inclinación invertida), y con Shift la rueda del mouse sigue subiendo y bajando la página.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { CON_MOUSE, emitir, guardarJSON, leerJSON, ponerAyuda } from './util.js';
+import { CON_MOUSE, emitir, guardarJSON, HAY_PANTALLA_TACTIL, leerJSON, ponerAyuda } from './util.js';
 import { t } from './i18n.js';
 import { listaDigimons } from './pagina.js';
 import { PERSPECTIVA, reducirMovimiento } from './cartas.js';
@@ -37,7 +37,7 @@ function guardarInclinacionInvertida(invertida) {
 // página no se desplaza). Un toque corto sigue siendo un toque normal (elegir la carta para el combate).
 export function activarInclinacion() {
     const conMouse = CON_MOUSE.matches;
-    const conDedo = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    const conDedo = HAY_PANTALLA_TACTIL;
     if (reducirMovimiento || (!conMouse && !conDedo)) return;
 
     listaDigimons.classList.add('tilt-on');

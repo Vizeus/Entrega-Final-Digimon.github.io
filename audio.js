@@ -91,17 +91,18 @@ const PERFIL_AUDIO = {
     },
 };
 
-function esDispositivoMovil() {
-    if (typeof window === 'undefined') return false;
+// ¿Celular o tableta? Solo para el volumen: además de la pantalla de celular, cuenta una pantalla táctil de hasta 1024 px de
+// ancho o un navegador que dice ser de un celular o una tableta (las tabletas suenan fuerte aunque la pantalla sea grande)
+function esCelularOTableta() {
     return (
         PANTALLA_DE_CELULAR.matches ||
-        (typeof navigator !== 'undefined' &&
-            ((navigator.maxTouchPoints > 1 && window.innerWidth <= 1024) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)))
+        (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024) ||
+        /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
     );
 }
 
 export function perfilAudioActual() {
-    return esDispositivoMovil() ? PERFIL_AUDIO.movil : PERFIL_AUDIO.escritorio;
+    return esCelularOTableta() ? PERFIL_AUDIO.movil : PERFIL_AUDIO.escritorio;
 }
 
 function obtenerVolumenGeneral() {
@@ -132,7 +133,7 @@ export function aplicarSilencio() {
         salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : vol, salidaGeneral.context.currentTime, 0.01);
     }
     actualizarVolumenAudios();
-    [audioMouse, winMusic, battleMusic, winSound, audioPajita].forEach(audio => {
+    [audioMouse, musicaDelGanador, musicaDelCombate, fanfarriaDeVictoria, audioPajita].forEach(audio => {
         if (audio) audio.muted = silenciado;
     });
     if (vibracionApagada) {
@@ -407,12 +408,12 @@ function actualizarVolumenAudios() {
 export const audioMouse = audioConVolumen('audio/Mouse.mp3');
 audioMouse.loop = true;
 
-export const winMusic = audioConVolumen('audio/Digimon World 3 - Victory.mp3', 0.7);
+export const musicaDelGanador = audioConVolumen('audio/Digimon World 3 - Victory.mp3', 0.7);
 
-export const battleMusic = audioConVolumen('audio/Digimon World - Earlygame Battle.mp3', 0.5);
-battleMusic.loop = true;
+export const musicaDelCombate = audioConVolumen('audio/Digimon World - Earlygame Battle.mp3', 0.5);
+musicaDelCombate.loop = true;
 
-export const winSound = audioConVolumen('audio/Digimon World - PSX Battle Win.mp3', 0.7);
+export const fanfarriaDeVictoria = audioConVolumen('audio/Digimon World - PSX Battle Win.mp3', 0.7);
 
 const audioPajita = audioConVolumen('audio/Pajita.mp3');
 let intervaloSonido;
@@ -565,7 +566,7 @@ let temporizadorMusicaGanador = 0;
 
 export function reproducirConDelay() {
     cancelarMusicaGanador();
-    temporizadorMusicaGanador = setTimeout(() => reproducirSonido(winMusic), 2450);
+    temporizadorMusicaGanador = setTimeout(() => reproducirSonido(musicaDelGanador), 2450);
 }
 
 export function cancelarMusicaGanador() {

@@ -67,6 +67,7 @@ export function emitir(nombre, detalle) {
 export const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
 export const CON_DEDO = window.matchMedia('(hover: none)'); // pantalla táctil, sin "hover"
 export const CON_MOUSE = window.matchMedia('(hover: hover) and (pointer: fine)');
+export const HAY_PANTALLA_TACTIL = navigator.maxTouchPoints > 0 || 'ontouchstart' in window; // aunque también tenga mouse
 
 // ---- Ayudas --------------------------------------------------------------------------------------------------------
 // El texto que se ve al dejar el puntero encima (title) y el que leen los lectores de pantalla (aria-label): casi siempre el mismo
