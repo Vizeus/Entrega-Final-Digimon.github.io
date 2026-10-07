@@ -3239,7 +3239,7 @@ body:has(.swal2-container) #avisos-ayuda {
     zoom: 0.67;
   }
 }
-#listado-digimons.lista-completa > li > .c-frente {
+#listado-digimons.lista-completa > li:not(.con-dorso) > .c-frente {
   content-visibility: auto;
   contain-intrinsic-block-size: auto 290px;
   overflow-clip-margin: 16px;

@@ -269,6 +269,7 @@ async function voltearCarta(carta, direccion = 1) {
         if (!dorso) {
             dorso = construirDorso(carta);
             carta.appendChild(dorso);
+            carta.classList.add('con-dorso'); // desde ahora el frente de esta carta se dibuja siempre (ver "content-visibility" en _cartas.scss)
         }
         dorso.style.height = `${frente.offsetHeight}px`; // el dorso mide lo mismo que el frente
     }

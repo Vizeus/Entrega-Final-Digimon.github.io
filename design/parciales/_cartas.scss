@@ -1054,7 +1054,10 @@
 //     "auto" hace que, una vez dibujada una carta, el navegador recuerde su alto real.
 //   · "content-visibility: auto" recorta lo que se sale del frente. Hay brillos y sombras que se salen unos pocos píxeles, y la
 //     textura holográfica de las cartas 6, 7 y 8 llega hasta el marco: "overflow-clip-margin" deja ese margen sin recortar.
-#listado-digimons.lista-completa > li > .c-frente {
+//   · Las cartas que ya se dieron vuelta alguna vez (.con-dorso) quedan afuera: al volver al frente en medio del giro, el navegador
+//     tardaba unos cuadros en volver a dibujar el contenido y se veía la carta vacía por un instante (parpadeo). Son pocas, así que
+//     dibujarlas siempre no pesa.
+#listado-digimons.lista-completa > li:not(.con-dorso) > .c-frente {
     content-visibility: auto;
     contain-intrinsic-block-size: auto 290px;
     overflow-clip-margin: 16px;
