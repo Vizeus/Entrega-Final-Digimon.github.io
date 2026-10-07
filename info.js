@@ -7,6 +7,28 @@
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 
+import {
+    COLOR_ELEMENTO_ENLACE,
+    COLOR_NIVEL,
+    COLOR_NIVEL_DESCONOCIDO,
+    COLOR_TIPO_ENLACE,
+    ELEMENTO_FUERTE_CONTRA,
+    EMOJIS_ELEMENTO,
+    EMOJIS_TIPO,
+    ORDEN_ELEMENTOS,
+    ORDEN_NIVELES,
+    TIPO_FUERTE_CONTRA,
+    nivelesAlternativos,
+    numeracionNiveles,
+} from './datos.js';
+import { nombreElemento, nombreTipo, t } from './i18n.js';
+import { clasificacionAlternativa, nombreNivel } from './pagina.js';
+import { PESO_ELEMENTO, PESO_NIVEL, PESO_TIPO, PODER_EN_COMBATE } from './combate.js';
+import { nombreCompleto } from './cartas.js';
+import { activarBotonDelDorso } from './gestos.js';
+import { FICHERO_DE_ATAQUES, sonidoFichero } from './sonidos.js';
+import { irALaCarta } from './evolucion.js';
+
 const ORDEN_TIPOS_MENU = ['Datos', 'Virus', 'Vacuna', 'Libre', 'Variable', 'Desconocido'];
 
 const conEmojiTipo = tipo => `${nombreTipo(tipo)} ${EMOJIS_TIPO[tipo]}`;
@@ -88,7 +110,7 @@ function mostrarInfo(titulo, descripcion, datos, pie) {
     });
 }
 
-function infoTipo(tipo) {
+export function infoTipo(tipo) {
     ultimaInfoAbierta = { fn: infoTipo, args: [tipo] };
     const fuerte = TIPO_FUERTE_CONTRA[tipo] || [];
     const debil = quienesLeGanan(TIPO_FUERTE_CONTRA, tipo);
@@ -105,7 +127,7 @@ function infoTipo(tipo) {
     );
 }
 
-function infoElemento(elemento) {
+export function infoElemento(elemento) {
     ultimaInfoAbierta = { fn: infoElemento, args: [elemento] };
     const fuerte = ELEMENTO_FUERTE_CONTRA[elemento] || [];
     const debil = quienesLeGanan(ELEMENTO_FUERTE_CONTRA, elemento);
@@ -128,7 +150,7 @@ function infoElemento(elemento) {
 }
 
 // El nivel se pide con el nombre original de la API ('Adult'); el nombre que se muestra depende del sistema de clasificación
-function infoNivel(nivelApi) {
+export function infoNivel(nivelApi) {
     ultimaInfoAbierta = { fn: infoNivel, args: [nivelApi] };
     const poder = numeracionNiveles[nivelApi]; // undefined si el nivel es desconocido
     const nombre = nombreNivel(nivelApi);
@@ -177,13 +199,13 @@ function infoNivel(nivelApi) {
 }
 
 // Clics en referencias cruzadas (links)
-document.addEventListener('click', evento => {
+const alTocarUnaReferencia = evento => {
     const linkT = evento.target.closest('.info-link-tipo');
     if (linkT) {
         evento.preventDefault();
         evento.stopPropagation();
         const tipo = linkT.dataset.infoTipo;
-        if (tipo && typeof infoTipo === 'function') {
+        if (tipo) {
             infoTipo(tipo);
         }
         return;
@@ -194,7 +216,7 @@ document.addEventListener('click', evento => {
         evento.preventDefault();
         evento.stopPropagation();
         const elemento = linkE.dataset.infoElemento;
-        if (elemento && typeof infoElemento === 'function') {
+        if (elemento) {
             infoElemento(elemento);
         }
         return;
@@ -205,12 +227,12 @@ document.addEventListener('click', evento => {
         evento.preventDefault();
         evento.stopPropagation();
         const nivel = linkN.dataset.infoNivel;
-        if (nivel && typeof infoNivel === 'function') {
+        if (nivel) {
             infoNivel(nivel);
         }
         return;
     }
-});
+};
 
 // Redibujar la ventana si se cambia el idioma o el sistema de niveles
 const redibujarInfoAbierta = () => {
@@ -221,15 +243,12 @@ const redibujarInfoAbierta = () => {
     }
 };
 
-document.addEventListener('idioma-cambiado', redibujarInfoAbierta);
-document.addEventListener('niveles-cambiados', redibujarInfoAbierta);
-
 // ---- Ventana de ataques de una carta ---------------------------------------------------------------------------------
 // El botón "⚔️ Ataques" del dorso (lo arma cartas.js al construir el dorso). Abre una lista con todos los ataques de la carta; al tocar
 // uno se despliega qué hace (la descripción viene de la API, en inglés). Se abre de a uno, para que la lista no se alargue.
 let cartaDeAtaques = null; // la carta cuya ventana de ataques está abierta (para reescribirla si se cambia el idioma)
 
-function crearBotonAtaques(carta) {
+export function crearBotonAtaques(carta) {
     const boton = document.createElement('button');
     boton.type = 'button';
     boton.className = 'c-ataques';
@@ -298,9 +317,7 @@ function crearMiniNodoDigimon(carta) {
 
     nodo.addEventListener('click', e => {
         e.stopPropagation();
-        if (typeof window.irALaCarta === 'function') {
-            window.irALaCarta(id);
-        }
+        irALaCarta(id);
     });
 
     return nodo;
@@ -390,7 +407,7 @@ function crearListaDeAtaques(habilidades, cartaActual) {
             cerrarTodos(boton);
             boton.setAttribute('aria-expanded', String(abrir));
             detalle.hidden = !abrir;
-            if (typeof sonidoFichero === 'function') sonidoFichero(abrir, FICHERO_DE_ATAQUES); // el fichero que se abre o se cierra (sonidos.js): sin tecla
+            sonidoFichero(abrir, FICHERO_DE_ATAQUES); // el fichero que se abre o se cierra (sonidos.js): sin tecla
             if (abrir) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         });
 
@@ -400,7 +417,7 @@ function crearListaDeAtaques(habilidades, cartaActual) {
     return lista;
 }
 
-function abrirAtaques(carta) {
+export function abrirAtaques(carta) {
     const habilidades = carta.datosDorso?.habilidades || [];
     if (!habilidades.length) return;
     cartaDeAtaques = carta;
@@ -432,13 +449,8 @@ function abrirAtaques(carta) {
     });
 }
 
-window.abrirAtaques = abrirAtaques;
-window.infoTipo = infoTipo;
-window.infoElemento = infoElemento;
-window.infoNivel = infoNivel;
-
 // Si se cambia el idioma con la ventana abierta, el título, la ayuda y el aviso se vuelven a escribir en el idioma nuevo
-document.addEventListener('idioma-cambiado', () => {
+const traducirVentanaDeAtaques = () => {
     if (!cartaDeAtaques) return;
     const titulo = Swal.getTitle();
     if (titulo) titulo.textContent = t('ataques.titulo', { nombre: nombreCompleto(cartaDeAtaques) });
@@ -451,7 +463,7 @@ document.addEventListener('idioma-cambiado', () => {
     }
     const confirmar = Swal.getConfirmButton();
     if (confirmar) confirmar.textContent = t('aceptar');
-});
+};
 
 // Qué ventana abre cada menú (por el id de su lista)
 const VENTANA_DE_CADA_MENU = {
@@ -534,7 +546,14 @@ function activarMenusInfo() {
     });
 }
 
-escribirMenus();
-activarMenusInfo();
-document.addEventListener('idioma-cambiado', escribirMenus);
-document.addEventListener('niveles-cambiados', escribirMenus); // la lista de niveles usa los nombres del sistema vigente
+// Pone en marcha las ventanas de información y los menús (lo llama main.js)
+export function activarInfo() {
+    document.addEventListener('click', alTocarUnaReferencia);
+    document.addEventListener('idioma-cambiado', redibujarInfoAbierta);
+    document.addEventListener('niveles-cambiados', redibujarInfoAbierta);
+    document.addEventListener('idioma-cambiado', traducirVentanaDeAtaques);
+    escribirMenus();
+    activarMenusInfo();
+    document.addEventListener('idioma-cambiado', escribirMenus);
+    document.addEventListener('niveles-cambiados', escribirMenus); // la lista de niveles usa los nombres del sistema vigente
+}

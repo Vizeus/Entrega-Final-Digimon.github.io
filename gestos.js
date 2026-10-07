@@ -5,6 +5,24 @@
 // mostrar cuando ya se aprendió) y el toque con "hundimiento" de los botones del dorso.
 // -----------------------------------------------------------------------------------------------------------------
 
+import { emitir } from './util.js';
+import { listaDigimons } from './pagina.js';
+import { seleccionados } from './combate.js';
+import { voltearCarta } from './cartas.js';
+import {
+    ZOOM_EXTRA_MAXIMO,
+    abrirZoom,
+    cartaEnZoom,
+    cerrarZoom,
+    ponerZoomExtra,
+    restaurarSeleccion,
+    zoomExtra,
+    zoomExtraDisponible,
+    zoomOcupado,
+} from './zoom.js';
+import { inclinandoConDedo } from './inclinacion.js';
+import { vibrar } from './audio.js';
+
 // En celulares la carta también se amplía con doble toque (dos toques cortos seguidos sobre la misma carta). Igual que con el
 // doble clic, el primer toque ya eligió la carta y el segundo la desmarcó: al ampliar se deja la selección como estaba antes.
 // (Se detecta acá y no con "dblclick" porque no todos los navegadores del celular lo mandan con un doble toque.)
@@ -13,7 +31,7 @@ const DOBLE_TOQUE_DISTANCIA = 30; // px máximos entre los dos toques
 const TOQUE_DURACION = 250; // ms máximos que el dedo puede estar apoyado para que cuente como toque (más es una presión larga)
 const TOQUE_MOVIMIENTO = 12; // px máximos que se puede mover el dedo durante un toque
 
-function activarZoomConDobleToque() {
+export function activarZoomConDobleToque() {
     if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
     let apoyado = null; // { carta, t, x, y, estado }: el dedo que está apoyado ahora
     let anterior = null; // { carta, tFin, x, y, estado }: el último toque corto
@@ -100,7 +118,7 @@ function activarZoomConDobleToque() {
 const PELLIZCO_ABRIR = 1.3; // los dedos se separaron un 30%
 const PELLIZCO_CERRAR = 0.75; // los dedos se juntaron un 25%
 
-function activarZoomConPellizco() {
+export function activarZoomConPellizco() {
     let pellizco = null; // { carta, distancia, resuelto }: el gesto de dos dedos que está en curso
 
     const distanciaEntreDedos = toques => Math.hypot(toques[0].clientX - toques[1].clientX, toques[0].clientY - toques[1].clientY);
@@ -196,7 +214,6 @@ const BARRIDO_VENTANA = 90; // ms que se miran para calcular la distancia y la v
 // (si se da vuelta sin querer: subir estos números; si cuesta darla vuelta a propósito: bajarlos)
 const BARRIDO_DISTANCIA_INCLINANDO = 70; // px
 const BARRIDO_VELOCIDAD_INCLINANDO = 1.8; // px por milisegundo (más de 2 veces la normal)
-let inclinandoConDedo = false; // true mientras hay una carta inclinándose con el dedo (lo maneja activarInclinacionConDedo)
 
 // Ocultamiento inteligente de las flechas de flip en móvil:
 // 4 flips con el dedo las ocultan por el resto de esa sesión. Al completar esto en 5 sesiones distintas, se ocultan para siempre.
@@ -230,7 +247,7 @@ function registrarSesionDeFlipsCompletada() {
     } catch (error) {}
 }
 
-function gestionarVisitasYFlechasMovil() {
+export function gestionarVisitasYFlechasMovil() {
     // Solo se vuelve permanente después de completar los 4 flips en 5 sesiones distintas
     try {
         const sesionesCompletadas = Number.parseInt(localStorage.getItem(ALMACEN_SESIONES_FLIPS_COMPLETADAS) || '0', 10);
@@ -276,7 +293,7 @@ function registrarFlipConDedo() {
 const TOQUE_HUNDIDO_MINIMO = 120; // ms que el botón se ve hundido, aunque el toque haya sido más corto
 const TOQUE_TOLERANCIA = 12; // px que puede moverse el dedo y que siga contando como toque (más es un desplazamiento)
 
-function activarBotonDelDorso(boton, accion) {
+export function activarBotonDelDorso(boton, accion) {
     let toque = null; // { x, y, desde } mientras el dedo está apoyado en el botón
     let sinClicHasta = 0; // hasta cuándo se ignora el "click" que manda el navegador después de un toque (ya se atendió al levantar el dedo)
     let levantando = 0;
@@ -346,7 +363,7 @@ function activarBotonDelDorso(boton, accion) {
     });
 }
 
-function activarVoltearConDedo() {
+export function activarVoltearConDedo() {
     if (!(navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) return;
     let gesto = null; // { carta, x0, y0, muestras, resuelto }: el dedo que está apoyado en una carta
     let evitarClic = false; // al soltar después del barrido no se elige la carta

@@ -14,9 +14,11 @@
 // y los filtros los usan como identificadores. Lo que cambia con el idioma es solo el nombre que se muestra.
 // -----------------------------------------------------------------------------------------------------------------
 
+import { emitir, guardarTexto, leerTexto } from './util.js';
+
 const IDIOMAS = ['es', 'en'];
 
-const DICCIONARIO = {
+export const DICCIONARIO = {
     es: {
         // Barra de arriba
         'logo.alt': 'Logo de Digimon',
@@ -404,11 +406,11 @@ function detectarIdioma() {
     return 'en'; // ni español ni inglés: inglés, que es lo que más gente entiende
 }
 
-let idioma = detectarIdioma();
+export let idioma = detectarIdioma();
 
 // ---- Textos --------------------------------------------------------------------------------------------------------
 // t('clave') devuelve el texto en el idioma actual. Las variables van entre llaves: t('combate.ganador', { nombre: 'Agumon' })
-function t(clave, variables = {}) {
+export function t(clave, variables = {}) {
     let texto = DICCIONARIO[idioma]?.[clave] ?? DICCIONARIO.es[clave] ?? clave;
     for (const [nombre, valor] of Object.entries(variables)) {
         texto = texto.split(`{${nombre}}`).join(valor);
@@ -448,8 +450,8 @@ function cambiarIdioma(nuevo) {
 }
 
 // Nombres para mostrar (el valor interno sigue siendo el de español)
-const nombreTipo = tipo => t(`tipo.${tipo}`);
-const nombreElemento = elemento => t(`elemento.${elemento}`);
+export const nombreTipo = tipo => t(`tipo.${tipo}`);
+export const nombreElemento = elemento => t(`elemento.${elemento}`);
 
 aplicarTextos();
 

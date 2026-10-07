@@ -5,6 +5,14 @@
 // después del primer combate y la "llamada" de los botones redondos (sonido e inclinación). Recuerdan qué ya vio cada persona.
 // -----------------------------------------------------------------------------------------------------------------
 
+import { CON_DEDO, CON_MOUSE, PANTALLA_DE_CELULAR, emitir, guardarJSON, hayMarcaDeSesion, leerJSON, ponerMarcaDeSesion } from './util.js';
+import { t } from './i18n.js';
+import { botonIniciarCombate, contadorSeleccion, listaDigimons } from './pagina.js';
+import { combateEnCurso, seleccionados } from './combate.js';
+import { cartaEnZoom, zoomCerrando, zoomExtra } from './zoom.js';
+import { inclinandoConDedo } from './inclinacion.js';
+import { AUDIO_AVISO_DURACION, ubicarBotonDeAudio } from './audio.js';
+
 // -----------------------------------------------------------------------------------------------------------------
 // AVISO DEL CONTADOR: una sola vez por sesión del navegador, cuando termina el primer combate (o se lo cierra a medio camino), de
 // la bolita "2/2" de la barra sale un minicartel con una flechita que cuenta que ahí se puede tocar para quitar la selección de las
@@ -14,7 +22,7 @@
 // cuarta vez que entra a la página ya no sale.
 // -----------------------------------------------------------------------------------------------------------------
 const AVISO_CONTADOR_SESION = 'digimon-aviso-contador'; // sessionStorage: recargar la página no lo vuelve a mostrar, abrirla de nuevo sí
-const AVISO_CONTADOR_ESPERA = 300; // ms después de que se cierra el último cartel del combate (además de lo que tarde en irse)
+export const AVISO_CONTADOR_ESPERA = 300; // ms después de que se cierra el último cartel del combate (además de lo que tarde en irse)
 const AVISO_CONTADOR_DURACION = 9000; // ms que queda a la vista
 const AVISO_CONTADOR_VISITAS_MAXIMAS = 3; // desde la cuarta visita ya no sale
 let avisoContadorVisto = false;
@@ -43,7 +51,7 @@ function ubicarAvisoDelContador() {
     avisoDelContador.style.setProperty('--punta', `${Math.round(centro - izquierda)}px`);
 }
 
-function quitarAvisoDelContador() {
+export function quitarAvisoDelContador() {
     if (!avisoDelContador) return;
     const aviso = avisoDelContador;
     avisoDelContador = null;
@@ -54,7 +62,7 @@ function quitarAvisoDelContador() {
     setTimeout(() => aviso.remove(), 500);
 }
 
-function mostrarAvisoDelContador(reintentos = 15) {
+export function mostrarAvisoDelContador(reintentos = 15) {
     if (memoriaAvisos.visitas > AVISO_CONTADOR_VISITAS_MAXIMAS) return; // ya entró 4 veces o más: no hace falta
     if (avisoContadorVisto || avisoDelContador || seleccionados.length === 0) return;
     if (document.querySelector('.combate-contenedor')) {
@@ -220,7 +228,7 @@ function escribirAviso(aviso) {
     });
 }
 
-function activarAvisosDeAyuda() {
+export function activarAvisosDeAyuda() {
     const hayAvisos = registrarVisitaDeAvisos(); // (también cuenta la visita, así que se llama siempre)
     // Cómo se acomodan los carteles vale para todos, también para los que salen en visitas más allá de la sexta (el de la inclinación)
     document.addEventListener('zoom-cambio', avisosSobreElZoom);
@@ -320,7 +328,7 @@ function marcarInclinacionAnimacionSolaHecha() {
     ponerMarcaDeSesion(INCLINACION_ANIMACION_SOLA_SESION);
 }
 
-function activarAvisoDeInclinacion() {
+export function activarAvisoDeInclinacion() {
     const boton = document.getElementById('inclinacion-invertida');
     if (!boton || boton.hidden) return; // sin inclinación con el mouse (celular, o "reducir movimiento") no hay nada que contar
     const sesion = memoriaAvisos.visitas;
@@ -495,7 +503,7 @@ const ZOOM_EXTRA_AVISO_ULTIMA_SESION = 5;
 const ZOOM_EXTRA_AVISO_ESPERA = 1500; // ms desde que se abre el zoom (la carta llega al centro a los 0,7 s)
 const ZOOM_EXTRA_AVISO_DURACION = 8000; // ms a la vista
 
-function activarAvisoDeZoomExtra() {
+export function activarAvisoDeZoomExtra() {
     if (!CON_MOUSE.matches) return; // en celular no
     if (memoriaAvisos.visitas > ZOOM_EXTRA_AVISO_ULTIMA_SESION) return;
     let salio = hayMarcaDeSesion(ZOOM_EXTRA_AVISO_SESION);
@@ -671,8 +679,6 @@ function activarAvisoZoom() {
 // cuándo aparezca la cortina: se mira cuadro a cuadro mientras dura la llamada. En celular el botón de sonido ya flota por encima de todo
 // y el de inclinación no existe, así que ahí solo está el globito.
 // -----------------------------------------------------------------------------------------------------------------
-let combateEnCurso = false; // desde que se aprieta "Iniciar Combate" hasta que se cierra el último cartel (lo maneja iniciarCombate)
-
 const GLOBO_DEL_BOTON_DURACION = 7000; // ms a la vista (el de inclinación elige el suyo: explica más)
 const GLOBO_DEL_BOTON_DURACION_DOBLE = 16000; // ms: si coinciden dos carteles (ej. sonido e inclinación al voltear), más tiempo para leer ambos
 
@@ -748,7 +754,7 @@ function ubicarGloboDelBoton(boton, globo, lado = 'centro') {
     globo.classList.toggle('sobre-el-boton', !debajo);
 }
 
-function revisarLlamadas() {
+export function revisarLlamadas() {
     const tapada = hayCortinaSobreLaBarra();
     for (const [boton, llamada] of llamadasActivas) {
         if (!boton.isConnected) {
@@ -785,7 +791,7 @@ function escribirGloboDelBoton(llamada) {
 
 // El botón salta y lanza ondas (animación "llamando", 2,6 s) y sale el globito: "icono" va antes del texto y "texto" es una función que
 // devuelve la explicación en el idioma de ahora. El globito (y el botón arriba de la cortina, si hace falta) dura "duracion" ms.
-function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOTON_DURACION }) {
+export function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOTON_DURACION }) {
     terminarLlamada(boton);
 
     const globo = document.createElement('div');
@@ -822,7 +828,7 @@ function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOTON_DURA
 
 // Termina la llamada del botón (se cumplió el tiempo, o la persona ya lo encontró): se apaga la animación, el globito se achica hacia el
 // botón y, si estaba por encima de una cortina, vuelve a la barra
-function terminarLlamada(boton) {
+export function terminarLlamada(boton) {
     const llamada = llamadasActivas.get(boton);
     if (!llamada) return;
     llamadasActivas.delete(boton);

@@ -5,9 +5,11 @@
 // (Antes estaban en info.js, que es de las ventanas de información.)
 // -----------------------------------------------------------------------------------------------------------------
 
+import { PANTALLA_DE_CELULAR } from './util.js';
+
 // Menú ☰ del celular: abre y cierra el panel con la consigna, los ajustes y los menús de información.
 // Se cierra con el mismo botón, al tocar afuera, con Esc o al elegir una opción de información.
-function activarMenuMovil() {
+export function activarMenuMovil() {
     const barra = document.getElementById('navbar');
     const boton = document.getElementById('abrir-menu');
     const panel = document.getElementById('menu-movil');
@@ -56,7 +58,7 @@ function activarMenuMovil() {
 // apenas se sube un poquito, y solo con ese gesto (así no tapa las cartas mientras se recorre la lista). Arriba de todo de la
 // página y con el menú ☰ abierto siempre se ve. En computadora no hace nada: la barra queda fija como siempre.
 // (El CSS hace el movimiento: la clase "barra-escondida" la desliza hacia arriba, fuera de la pantalla.)
-function activarBarraQueSeEsconde() {
+export function activarBarraQueSeEsconde() {
     const barra = document.getElementById('navbar');
     const SIEMPRE_VISIBLE_ARRIBA = 60; // px desde el borde de arriba de la página: ahí la barra siempre se ve
     const BAJADA_PARA_ESCONDER = 14; // px seguidos hacia abajo para que se esconda (un temblor del dedo no alcanza)
@@ -98,6 +100,3 @@ function activarBarraQueSeEsconde() {
         mostrar();
     });
 }
-
-activarMenuMovil();
-activarBarraQueSeEsconde();

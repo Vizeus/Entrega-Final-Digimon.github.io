@@ -5,32 +5,42 @@
 // y qué nombres de nivel se muestran (los de Japón o los de EE.UU.).
 // -----------------------------------------------------------------------------------------------------------------
 
+import { guardarTexto, leerTexto, ponerAyuda } from './util.js';
+import { nivelesAlternativos } from './datos.js';
+import { t } from './i18n.js';
+
 // Seleccionar el elemento <ul> (unordered list) donde agregaremos los digimons
-const listaDigimons = document.getElementById('listado-digimons');
+export const listaDigimons = document.getElementById('listado-digimons');
 
 // Las cartas que ya están en la página, por su id (el de la API): buscar una es instantáneo, sin recorrer la lista.
 // Cada carta se anota cuando entra a la página (colocarCartas); las que todavía esperan su turno no están.
-const cartasPorId = new Map();
-const cartaPorId = id => cartasPorId.get(String(id));
+export const cartasPorId = new Map();
+export const cartaPorId = id => cartasPorId.get(String(id));
 
 // Seleccionar la barra de progreso
-const barraProgreso = document.getElementById('carga');
+export const barraProgreso = document.getElementById('carga');
 
 // Seleccionar el botón de cambiar niveles
-const botonCambiarNiveles = document.getElementById('cambiar-niveles');
+export const botonCambiarNiveles = document.getElementById('cambiar-niveles');
 
 // Seleccionar el botón de iniciar combate
-const botonIniciarCombate = document.getElementById('iniciar-combate');
+export const botonIniciarCombate = document.getElementById('iniciar-combate');
 
 // Seleccionar el contador de digimons elegidos (junto a la consigna, arriba)
-const contadorSeleccion = document.getElementById('contador-seleccion');
+export const contadorSeleccion = document.getElementById('contador-seleccion');
 
 // Qué sistema de clasificación de niveles se está mostrando (lo guarda el botón de la banderita)
-let clasificacionAlternativa = leerTexto('clasificacionAlternativa', 'sesion') === 'true';
+export let clasificacionAlternativa = leerTexto('clasificacionAlternativa', 'sesion') === 'true';
+
+// Pasa al otro sistema de clasificación (si no se puede guardar, igual cambia mientras la página esté abierta)
+export function cambiarClasificacion() {
+    clasificacionAlternativa = !clasificacionAlternativa;
+    guardarTexto('clasificacionAlternativa', String(clasificacionAlternativa), 'sesion');
+}
 
 // Nombre de un nivel para mostrar, según el sistema de clasificación vigente.
 // Recibe el nombre original de la API ('Adult'); si no tiene nivel, es 'Desconocido' y se traduce según el idioma.
-function nombreNivel(nivelApi) {
+export function nombreNivel(nivelApi) {
     if (nivelApi === 'Desconocido') {
         return t('nivel.Desconocido');
     }
@@ -39,7 +49,7 @@ function nombreNivel(nivelApi) {
 
 // Selector de niveles: resalta el sistema vigente (Japón o EE.UU.) y escribe su ayuda (título y aria-label) en el idioma actual.
 // El sistema vigente se recuperó de sessionStorage más arriba.
-function mostrarSistemaDeNiveles() {
+export function mostrarSistemaDeNiveles() {
     const sistema = clasificacionAlternativa ? 'eeuu' : 'japon';
     botonCambiarNiveles.querySelectorAll('.sn-opcion').forEach(opcion => {
         opcion.classList.toggle('activo', opcion.dataset.sistema === sistema);

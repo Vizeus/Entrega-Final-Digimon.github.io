@@ -2,7 +2,7 @@
 // DATOS DEL SIMULADOR
 //
 // Las tablas con la información que usa la página: tipos, niveles, elementos, cartas propias y colores. Son solo datos (no hay
-// funciones): para cambiar algo de lo que sabe el simulador, se cambia acá. Se carga antes que los demás scripts.
+// funciones): para cambiar algo de lo que sabe el simulador, se cambia acá. No depende de ningún otro archivo.
 // Las reglas de cómo se usan están en cada parte (por ejemplo, el combate en combate.js y la deducción del elemento en api.js).
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -10,7 +10,7 @@
 
 // Tipo (atributo) de cada digimon: la API lo trae en inglés y por dentro lo guardamos con estos nombres en español.
 // Lo que se ve en pantalla ("Datos" o "Data") lo decide i18n.js según el idioma, ver nombreTipo().
-const tipoDeLaApi = {
+export const tipoDeLaApi = {
     'Data': 'Datos',
     'Vaccine': 'Vacuna',
     'Virus': 'Virus',
@@ -20,7 +20,7 @@ const tipoDeLaApi = {
 };
 
 // Emoji de cada tipo para mostrar en la carta, en los filtros y en los menús
-const EMOJIS_TIPO = {
+export const EMOJIS_TIPO = {
     'Datos': '🔢',
     'Vacuna': '💉',
     'Virus': '👾',
@@ -30,7 +30,7 @@ const EMOJIS_TIPO = {
 };
 
 // Triángulo de tipos: cada tipo es fuerte contra el que tiene en su lista
-const TIPO_FUERTE_CONTRA = {
+export const TIPO_FUERTE_CONTRA = {
     'Vacuna': ['Virus'],
     'Virus': ['Datos'],
     'Datos': ['Vacuna'],
@@ -41,7 +41,7 @@ const TIPO_FUERTE_CONTRA = {
 // Fuerza de cada nivel, usando el nombre original de la API (así no importa qué sistema de clasificación se muestre).
 // Son 8 niveles, del 1 al 8, sin saltos. (Los "Armor" y los "Hybrid" que trae la API no son niveles de acá: cada uno de esos
 // digimons queda en uno de estos 8 y la carta lleva una marca; ver MARCAS_DE_NIVEL más abajo.)
-const numeracionNiveles = {
+export const numeracionNiveles = {
     'Baby I': 1,
     'Baby II': 2,
     'Child': 3,
@@ -53,10 +53,10 @@ const numeracionNiveles = {
 };
 
 // Orden en que se muestran los niveles en los menús y en los filtros (el último, 'Desconocido', es el que no tiene nivel)
-const ORDEN_NIVELES = ['Baby I', 'Baby II', 'Child', 'Adult', 'Perfect', 'Ultimate', 'Super Ultimate', 'Absolute', 'Desconocido'];
+export const ORDEN_NIVELES = ['Baby I', 'Baby II', 'Child', 'Adult', 'Perfect', 'Ultimate', 'Super Ultimate', 'Absolute', 'Desconocido'];
 
 // Mapeo de niveles para el cambio de sistema de clasificación de niveles
-const nivelesAlternativos = {
+export const nivelesAlternativos = {
     'Baby I': 'Fresh/Slime',
     'Baby II': 'In-Training',
     'Child': 'Rookie',
@@ -69,7 +69,7 @@ const nivelesAlternativos = {
 
 // Digimons que la API lista con dos niveles (el Perfect y el Ultimate): el simulador toma siempre el primero, que acá es el más
 // bajo, y por su lore les corresponde el más alto. Se corrigen a mano. La clave es el ID de la API.
-const NIVELES_CORREGIDOS = {
+export const NIVELES_CORREGIDOS = {
     1064: 'Ultimate', // Omega Shoutmon: recibió el poder de Omegamon y está al nivel de las formas Mega de Shoutmon (X7, DX, EX6)
     1278: 'Ultimate', // Omega Shoutmon (X-Antibody)
 };
@@ -78,7 +78,7 @@ const NIVELES_CORREGIDOS = {
 // están por encima: acá se los sube de nivel. La clave es el ID de la API; el nombre va en el comentario.
 // El 7 son Reyes Reales, Soberanos, Lores Demonio y otros seres excepcionales; el 8 es lo más alto de todo.
 // (Los X-Antibody y algunos más solo aparecen cuando se carga la API completa.)
-const ASCENSOS = {
+export const ASCENSOS = {
     // Nivel 7 (Super Ultimate) · Reyes Reales
     183: 'Super Ultimate', // Omegamon
     636: 'Super Ultimate', // Alphamon
@@ -167,7 +167,7 @@ const ASCENSOS = {
 //   · Hybrid (Digimon Frontier): según la forma van de Adult a Ultimate. Las formas humanas son Adult, las bestia son Perfect y
 //     las fusiones (y las formas supremas) son Ultimate. Se asignaron a mano, uno por uno, mirando Wikimon y la Digimon Wiki.
 //     La clave es el nombre de la API sin tildes, mayúsculas ni símbolos (claveDeNombre, de nombres.js: 'Löwemon' → 'lowemon', 'Jet Silphymon' → 'jetsilphymon').
-const NIVEL_DE_LOS_HYBRID = {
+export const NIVEL_DE_LOS_HYBRID = {
     // Formas humanas (los Human Spirits) → Adult
     agunimon: 'Adult', // fuego
     kazemon: 'Adult', // viento
@@ -203,10 +203,10 @@ const NIVEL_DE_LOS_HYBRID = {
     emperorgreymon: 'Ultimate', // forma suprema de fuego
 };
 
-const NIVEL_HYBRID_SIN_DATO = 'Perfect'; // para un Hybrid que no esté en la lista (si la API algún día suma uno): el punto medio
+export const NIVEL_HYBRID_SIN_DATO = 'Perfect'; // para un Hybrid que no esté en la lista (si la API algún día suma uno): el punto medio
 
 // Las marcas de la carta: qué letra lleva el círculo y cómo se llama (es lo que dice al pasar el mouse)
-const MARCAS_DE_NIVEL = {
+export const MARCAS_DE_NIVEL = {
     'Armor': { letra: 'A', nombre: 'Armor' },
     'Hybrid': { letra: 'H', nombre: 'Hybrid' },
 };
@@ -214,7 +214,7 @@ const MARCAS_DE_NIVEL = {
 // ---- Elementos ------------------------------------------------------------------------------------------------
 
 // Emoji de cada elemento para mostrar en la carta
-const EMOJIS_ELEMENTO = {
+export const EMOJIS_ELEMENTO = {
     'Fuego': '🔥',
     'Agua': '💧',
     'Planta': '🌿',
@@ -230,12 +230,12 @@ const EMOJIS_ELEMENTO = {
 };
 
 // Orden en que se muestran los elementos en los menús y en los filtros
-const ORDEN_ELEMENTOS = Object.keys(EMOJIS_ELEMENTO);
+export const ORDEN_ELEMENTOS = Object.keys(EMOJIS_ELEMENTO);
 
 // Elementos: cada elemento es fuerte contra los que tiene en su lista.
 // Si dos elementos se tienen ventaja mutuamente (Luz y Oscuridad), se cancelan.
 // Tipo Libre, Variable, Desconocido y elemento Neutro no dan ni quitan nada.
-const ELEMENTO_FUERTE_CONTRA = {
+export const ELEMENTO_FUERTE_CONTRA = {
     'Agua': ['Fuego', 'Tierra'],
     'Fuego': ['Planta', 'Hielo', 'Oscuridad'],
     'Hielo': ['Planta', 'Viento', 'Agua'],
@@ -251,7 +251,7 @@ const ELEMENTO_FUERTE_CONTRA = {
 
 // La API no trae el elemento, así que lo deducimos buscando palabras clave en las habilidades del digimon.
 // El elemento con más coincidencias gana; si hay empate o ninguna coincidencia, es Neutro.
-const REGLAS_ELEMENTO = {
+export const REGLAS_ELEMENTO = {
     'Fuego': /\b(fire|flame|flames|flaming|blaze|blazing|burn|burning|inferno|heat|lava|magma|scorch|ember)\b/g,
     'Agua': /\b(water|aqua|bubble|bubbles|wave|ocean|torrent|tide|splash|hydro|rain|sea)\b/g,
     'Planta': /\b(plant|leaf|leaves|vine|vines|thorn|thorns|flower|petal|petals|seed|seeds|tree|forest|pollen|rose|spore|spores)\b/g,
@@ -266,7 +266,7 @@ const REGLAS_ELEMENTO = {
 };
 
 // Correcciones a mano (id del digimon → elemento) para los casos en que la deducción automática no acierta
-const ELEMENTOS_MANUALES = {
+export const ELEMENTOS_MANUALES = {
     4: 'Rayo', // Betamon: sus habilidades empatan entre Rayo y Agua, pero es eléctrico
     457: 'Oscuridad', // Zeed Millenniumon: la deducción le daba Hielo por la palabra "freeze" de una habilidad, pero por lore es oscuridad y destrucción
 };
@@ -274,7 +274,7 @@ const ELEMENTOS_MANUALES = {
 // ---- Cartas propias -------------------------------------------------------------------------------------------
 
 // Cartas que no están en la API: las agrega el simulador (después de las de la API). Su ID es alto para no chocar con los de ella.
-const CARTAS_PROPIAS = [
+export const CARTAS_PROPIAS = [
     {
         id: 9001,
         etiquetaId: '★',
@@ -316,7 +316,7 @@ const CARTAS_PROPIAS = [
 // ---- Colores --------------------------------------------------------------------------------------------------
 
 // Color de cada opción (el mismo que usan las cartas)
-const COLOR_TIPO = {
+export const COLOR_TIPO = {
     'Vacuna': '#3a8dde',
     'Virus': '#8a4fc7',
     'Datos': '#3fae5a',
@@ -324,7 +324,7 @@ const COLOR_TIPO = {
     'Variable': '#e2803a',
     'Desconocido': '#59616d',
 };
-const COLOR_ELEMENTO = {
+export const COLOR_ELEMENTO = {
     'Fuego': '#e8552b',
     'Agua': '#2f8fe0',
     'Planta': '#4aa84f',
@@ -338,14 +338,14 @@ const COLOR_ELEMENTO = {
     'Veneno': '#a24fc4',
     'Neutro': '#aab2bb',
 };
-const COLOR_NIVEL = { 1: '#a9b8c9', 2: '#7fb3e6', 3: '#4f9be0', 4: '#2f7fd0', 5: '#6a5fd8', 6: '#d9a520', 7: '#d6409a', 8: '#3a2f9e' }; // según el poder del nivel
-const COLOR_NIVEL_DESCONOCIDO = '#59616d';
-const COLOR_BUSQUEDA = '#2f7fd0';
-const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas
+export const COLOR_NIVEL = { 1: '#a9b8c9', 2: '#7fb3e6', 3: '#4f9be0', 4: '#2f7fd0', 5: '#6a5fd8', 6: '#d9a520', 7: '#d6409a', 8: '#3a2f9e' }; // según el poder del nivel
+export const COLOR_NIVEL_DESCONOCIDO = '#59616d';
+export const COLOR_BUSQUEDA = '#2f7fd0';
+export const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas
 
 // Colores del texto de los enlaces que hay dentro de las ventanas de información. Son más oscuros que los de arriba (los de las
 // cartas y los filtros), que son colores de fondo, para que el texto se lea sobre el fondo claro de la ventana.
-const COLOR_TIPO_ENLACE = {
+export const COLOR_TIPO_ENLACE = {
     'Vacuna': '#2563eb',
     'Virus': '#7c3aed',
     'Datos': '#16a34a',
@@ -354,7 +354,7 @@ const COLOR_TIPO_ENLACE = {
     'Desconocido': '#4b5563',
 };
 
-const COLOR_ELEMENTO_ENLACE = {
+export const COLOR_ELEMENTO_ENLACE = {
     'Fuego': '#dc2626',
     'Agua': '#2563eb',
     'Planta': '#16a34a',

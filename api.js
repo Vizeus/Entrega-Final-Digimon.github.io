@@ -5,6 +5,21 @@
 // lo que trae la API (el nivel y el elemento) y arma las cartas. También maneja la barra de progreso de la carga.
 // -----------------------------------------------------------------------------------------------------------------
 
+import { PANTALLA_DE_CELULAR } from './util.js';
+import {
+    ASCENSOS,
+    CARTAS_PROPIAS,
+    ELEMENTOS_MANUALES,
+    NIVELES_CORREGIDOS,
+    NIVEL_DE_LOS_HYBRID,
+    NIVEL_HYBRID_SIN_DATO,
+    REGLAS_ELEMENTO,
+    tipoDeLaApi,
+} from './datos.js';
+import { claveDeNombre } from './nombres.js';
+import { barraProgreso, listaDigimons } from './pagina.js';
+import { agregarCarta, colocarCartas, esperarTipografias, reducirMovimiento, separarXAntibody } from './cartas.js';
+
 // URL base de la API
 const urlBase = 'https://digi-api.com/api/v1/digimon';
 
@@ -191,7 +206,7 @@ async function crearArrayDeDatos() {
 }
 
 // Función para actualizar la barra de progreso
-function actualizarBarraProgreso(contador) {
+export function actualizarBarraProgreso(contador) {
     barraProgreso.value = contador;
     barraProgreso.max = totalDigimons;
     const completa = totalDigimons > 0 && contador >= totalDigimons;
@@ -230,11 +245,11 @@ function retirarBloqueDeCarga() {
     }, 1000);
 }
 
-let contadorDigimons = 0; // Contador de digimons cargados
+export let contadorDigimons = 0; // Contador de digimons cargados
 const PEDIDOS_A_LA_VEZ = 6; // detalles que se piden a la API al mismo tiempo mientras carga la página
 
 // Función para crear la lista de digimons
-async function crearListaDeDigimons() {
+export async function crearListaDeDigimons() {
     try {
         // Obtenemos el array de digimons
         const digimons = await crearArrayDeDatos();

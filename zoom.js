@@ -5,23 +5,31 @@
 // arrastrar. Las flechas (o deslizar el dedo) pasan a la carta vecina.
 // -----------------------------------------------------------------------------------------------------------------
 
+import { CON_MOUSE, emitir, ponerAyuda } from './util.js';
+import { t } from './i18n.js';
+import { listaDigimons } from './pagina.js';
+import { seleccionados, verificarSeleccion } from './combate.js';
+import { reducirMovimiento, seleccionAntesDelClic } from './cartas.js';
+import { activarZoomConDobleToque, activarZoomConPellizco } from './gestos.js';
+import { vibrar } from './audio.js';
+import { sonidoZoom } from './sonidos.js';
+
 // -----------------------------------------------------------------------------------------------------------------
 // ZOOM: con doble clic la carta "vuela" al centro de la pantalla, bien grande, y el resto se oscurece.
 //   La carta NO se mueve del <ul>: se traslada y se agranda con las propiedades "translate" y "scale" (así en su lugar
 //   queda un hueco del tamaño de la carta, con el fondo a la vista) y sigue funcionando la inclinación ("transform") y
 //   el dar vuelta. Se cierra con Esc, con un clic afuera o con la ✕.
 // -----------------------------------------------------------------------------------------------------------------
-let cartaEnZoom = null; // la carta que está en el centro (o volviendo a su lugar)
-let zoomOcupado = false; // mientras vuela, no se inclina, no se da vuelta y no se cierra
+export let cartaEnZoom = null; // la carta que está en el centro (o volviendo a su lugar)
+export let zoomOcupado = false; // mientras vuela, no se inclina, no se da vuelta y no se cierra
 let cierrePendiente = false; // pidieron cerrar mientras todavía estaba llegando
-let zoomCerrando = false; // la carta ya está volviendo a su lugar: pedir cerrar otra vez no hace falta (ver cerrarZoom)
-let seleccionAntesDelClic = { carta: null, estado: [] }; // cómo estaba la selección antes del primer clic de un doble clic
+export let zoomCerrando = false; // la carta ya está volviendo a su lugar: pedir cerrar otra vez no hace falta (ver cerrarZoom)
 
 // Al pasar de una carta a otra dentro del zoom (con el teclado o con las flechas), la carta nueva suele quedar justo debajo del puntero, que
 // no se movió. Sin esto el navegador le daba el "hover" (a veces tarde o de más) y aparecía el reflejo quieto en el medio. Ahora la carta nueva
 // (clase "reflejo-quieto", ver el CSS) no se inclina ni brilla hasta que el mouse se mueve de verdad, aunque sea un píxel: un movimiento
 // "falso" que el navegador manda sin mover el mouse (misma posición) no cuenta, ni el que ocurre mientras la carta todavía está llegando.
-let zoomEsperaMovimiento = false; // true mientras se espera ese movimiento (la inclinación lo mira: ver activarInclinacion)
+export let zoomEsperaMovimiento = false; // true mientras se espera ese movimiento (la inclinación lo mira: ver activarInclinacion)
 let ultimoPuntero = null; // dónde estuvo el mouse la última vez que mandó un evento
 
 function pedirMovimientoDelPuntero(carta) {
@@ -35,7 +43,7 @@ function soltarReflejoQuieto() {
     listaDigimons.querySelectorAll(':scope > li.reflejo-quieto').forEach(carta => carta.classList.remove('reflejo-quieto'));
 }
 
-function activarReflejoQuieto() {
+export function activarReflejoQuieto() {
     // (en la fase de captura, para ir antes que la inclinación, que mira el mismo movimiento)
     document.addEventListener(
         'pointermove',
@@ -61,7 +69,7 @@ const ZOOM_ALTO = 0.86; // ...y el 86 % del alto
 const ZOOM_ANCHO_CELULAR = 0.8;
 const ZOOM_MAXIMO = 4.5;
 const ZOOM_MINIMO = 1.25;
-const TECLAS_DE_DESPLAZAMIENTO = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
+export const TECLAS_DE_DESPLAZAMIENTO = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
 
 // Dónde está la carta en la grilla (sin el levante del hover ni la inclinación) y cuánto hay que moverla y agrandarla
 function calcularZoom(carta) {
@@ -141,7 +149,7 @@ function soltarZoom(carta) {
 
 // El scroll de la página queda quieto mientras hay zoom (sin tocar el overflow del body, que haría saltar la grilla).
 // Solo se puede desplazar la descripción del dorso, que tiene su propio scroll.
-function zonaConScroll(destino, delta = 0, selector = '.c-cuerpo') {
+export function zonaConScroll(destino, delta = 0, selector = '.c-cuerpo') {
     const zona = destino.closest?.(selector);
     if (!zona || zona.scrollHeight <= zona.clientHeight) return false;
     if (delta === 0) return true;
@@ -203,17 +211,17 @@ function bloquearDesplazamiento(bloquear) {
 // dos dedos a la vez la desplaza. Mientras está agrandada de más la carta no se inclina: la inclinación se cancela (y vuelve sola cuando
 // se la devuelve al tamaño normal). Las flechas de los costados se esconden, y si se da vuelta la carta, se pasa a otra o se cierra el
 // zoom, vuelve a lo normal.
-const ZOOM_EXTRA_MAXIMO = 3; // veces el tamaño del zoom normal
+export const ZOOM_EXTRA_MAXIMO = 3; // veces el tamaño del zoom normal
 const ZOOM_EXTRA_RUEDA = 0.0016; // cuánto crece por cada unidad de la rueda (una muesca del mouse trae ~100: ×1,17)
 const ZOOM_EXTRA_SUAVIZADO = 60; // ms que tarda en alcanzar lo pedido con la rueda
-let zoomExtra = false; // true mientras la carta ampliada está más grande que el zoom normal
+export let zoomExtra = false; // true mientras la carta ampliada está más grande que el zoom normal
 let zoomExtraCuadro = 0; // pedido de animationFrame pendiente
 let zoomExtraUltimoCuadro = 0;
 let zoomExtraAncla = { x: 0, y: 0 }; // el punto de la pantalla que se queda quieto al agrandar (el puntero)
 const zoomExtraTerminados = []; // quienes esperan a que termine de volver a lo normal (ver volverAlZoomNormal)
 
 // ¿Se puede agrandar de más la carta ampliada? Solo si ya llegó al centro, no se está dando vuelta y está de frente
-const zoomExtraDisponible = () =>
+export const zoomExtraDisponible = () =>
     !!cartaEnZoom?.datosZoom && !zoomOcupado && !zoomCerrando && !cartaEnZoom.girando && !cartaEnZoom.classList.contains('de-dorso');
 
 // Pone el zoom extra de la carta en "factor". "anclaVieja" es el punto de la pantalla que estaba sobre cierto lugar de la carta, y "anclaNueva"
@@ -222,7 +230,7 @@ const zoomExtraDisponible = () =>
 // que la pantalla, queda centrada). Pero se sigue calculando adónde estaría sin ese tope ("ix", "iy"), así acercar mirando cerca de un borde
 // (la rueda) deja ese borde a la vista aunque la carta todavía fuera más chica que la pantalla al empezar a acercar. Con el pellizco, en
 // cambio, la carta sigue a los dedos tal cual: ahí lo de sin el tope se descarta ("directo").
-function ponerZoomExtra(carta, factor, anclaVieja, anclaNueva = anclaVieja, directo = false) {
+export function ponerZoomExtra(carta, factor, anclaVieja, anclaNueva = anclaVieja, directo = false) {
     const datos = carta.datosZoom;
     const extra = datos.extra;
     const nuevo = Math.max(1, Math.min(ZOOM_EXTRA_MAXIMO, factor));
@@ -333,7 +341,7 @@ function moverZoomExtra(carta, dx, dy) {
 // arrastrar no cierra el zoom aunque el mouse termine sobre el fondo. Con el dedo se corre con dos dedos (ver el pellizco).
 const ARRASTRE_MINIMO = 3; // px que hay que mover el mouse antes de que cuente como arrastre (un clic quieto no corre nada)
 
-function activarArrastreDeZoomExtra() {
+export function activarArrastreDeZoomExtra() {
     let arrastre = null; // { carta, id, x, y, movio }: el mouse que tiene agarrada la carta
 
     const terminar = () => {
@@ -391,7 +399,7 @@ function activarArrastreDeZoomExtra() {
 }
 
 // Devuelve la carta al tamaño normal y avisa cuando llegó (se usa antes de darla vuelta)
-function volverAlZoomNormal(carta) {
+export function volverAlZoomNormal(carta) {
     return new Promise(resolver => {
         if (!carta.datosZoom || carta.datosZoom.extra.factor === 1) {
             resolver();
@@ -614,7 +622,7 @@ async function cambiarZoom(direccion, repetida = false) {
     if (cierrePendiente) cerrarZoom();
 }
 
-async function abrirZoom(carta) {
+export async function abrirZoom(carta) {
     if (cartaEnZoom || zoomOcupado) return;
     cartaEnZoom = carta;
     zoomOcupado = true;
@@ -662,7 +670,7 @@ async function abrirZoom(carta) {
     if (cierrePendiente) cerrarZoom();
 }
 
-async function cerrarZoom({ rapido = false } = {}) {
+export async function cerrarZoom({ rapido = false } = {}) {
     const carta = cartaEnZoom;
     if (!carta) return;
     // Si ya se está cerrando (un segundo clic afuera, o Esc de nuevo, mientras la carta vuelve) no hay nada más que hacer. Antes ese
@@ -716,18 +724,15 @@ async function cerrarZoom({ rapido = false } = {}) {
     emitir('zoom-cambio');
 }
 
-window.cerrarZoom = cerrarZoom;
-window.obtenerCartaEnZoom = () => cartaEnZoom;
-
 // Vuelve la selección para el combate a como estaba antes del primer clic del doble clic
-function restaurarSeleccion(estado) {
+export function restaurarSeleccion(estado) {
     seleccionados.forEach(carta => carta.classList.remove('seleccionado'));
     seleccionados.splice(0, seleccionados.length, ...estado);
     estado.forEach(carta => carta.classList.add('seleccionado'));
     verificarSeleccion();
 }
 
-function activarZoom() {
+export function activarZoom() {
     listaDigimons.addEventListener('dblclick', evento => {
         if (evento.target.closest('button')) return;
         const carta = evento.target.closest('#listado-digimons > li');

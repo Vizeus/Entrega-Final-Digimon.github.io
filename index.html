@@ -22,32 +22,39 @@
             crossorigin="anonymous"
         ></script>
 
-        <!-- Los scripts de la página. "defer": se bajan mientras se dibuja la página y corren en este orden cuando terminó de armarse.
-             El orden importa: primero las funciones de uso general (util.js), los datos (datos.js) y los idiomas (i18n.js); después
-             las partes de la página (de pagina.js a sonidos.js), una por archivo; main.js las pone en marcha; y por último
-             los filtros, las ventanas de información, la barra del celular, la evolución y el baile, que usan todo lo anterior.
+        <!-- Los scripts de la página son módulos: cada archivo dice arriba de todo qué usa de los otros (import) y marca con "export"
+             lo que los otros pueden usar. Acá se carga solo main.js, la puerta de entrada: el navegador sigue los import y baja el resto.
+             Un módulo corre después de que la página terminó de armarse (como "defer") y una sola vez, aunque lo importen varios archivos.
+             (Los módulos no andan abriendo el index.html con doble clic, desde file://: hace falta un servidor, como GitHub Pages o Vercel.)
              El "?v=" es la versión: al cambiarla, los navegadores bajan los archivos nuevos en vez de usar los que tenían guardados
-             (el caché). Se cambia sola con "npm run nueva-version" antes de subir cambios a GitHub. -->
-        <script defer src="./util.js?v=20261006-2220"></script>
-        <script defer src="./datos.js?v=20261006-2220"></script>
-        <script defer src="./i18n.js?v=20261006-2220"></script>
-        <script defer src="./nombres.js?v=20261006-2220"></script>
-        <script defer src="./pagina.js?v=20261006-2220"></script>
-        <script defer src="./api.js?v=20261006-2220"></script>
-        <script defer src="./combate.js?v=20261006-2220"></script>
-        <script defer src="./avisos.js?v=20261006-2220"></script>
-        <script defer src="./cartas.js?v=20261006-2220"></script>
-        <script defer src="./zoom.js?v=20261006-2220"></script>
-        <script defer src="./gestos.js?v=20261006-2220"></script>
-        <script defer src="./inclinacion.js?v=20261006-2220"></script>
-        <script defer src="./audio.js?v=20261006-2220"></script>
-        <script defer src="./sonidos.js?v=20261006-2220"></script>
-        <script defer src="./main.js?v=20261006-2220"></script>
-        <script defer src="./filtros.js?v=20261006-2220"></script>
-        <script defer src="./info.js?v=20261006-2220"></script>
-        <script defer src="./barra.js?v=20261006-2220"></script>
-        <script defer src="./evolucion.js?v=20261006-2220"></script>
-        <script defer src="./baile.js?v=20261006-2220"></script>
+             (el caché). Los import no la llevan: este "importmap" le dice al navegador que, cuando un archivo pida por ejemplo
+             "./util.js", baje "./util.js?v=...". Se cambia sola con "npm run nueva-version" antes de subir cambios a GitHub. -->
+        <script type="importmap">
+            {
+                "imports": {
+                    "./util.js": "./util.js?v=20261006-2245",
+                    "./datos.js": "./datos.js?v=20261006-2245",
+                    "./i18n.js": "./i18n.js?v=20261006-2245",
+                    "./nombres.js": "./nombres.js?v=20261006-2245",
+                    "./pagina.js": "./pagina.js?v=20261006-2245",
+                    "./api.js": "./api.js?v=20261006-2245",
+                    "./combate.js": "./combate.js?v=20261006-2245",
+                    "./avisos.js": "./avisos.js?v=20261006-2245",
+                    "./cartas.js": "./cartas.js?v=20261006-2245",
+                    "./zoom.js": "./zoom.js?v=20261006-2245",
+                    "./gestos.js": "./gestos.js?v=20261006-2245",
+                    "./inclinacion.js": "./inclinacion.js?v=20261006-2245",
+                    "./audio.js": "./audio.js?v=20261006-2245",
+                    "./sonidos.js": "./sonidos.js?v=20261006-2245",
+                    "./filtros.js": "./filtros.js?v=20261006-2245",
+                    "./info.js": "./info.js?v=20261006-2245",
+                    "./barra.js": "./barra.js?v=20261006-2245",
+                    "./evolucion.js": "./evolucion.js?v=20261006-2245",
+                    "./baile.js": "./baile.js?v=20261006-2245"
+                }
+            }
+        </script>
+        <script type="module" src="./main.js?v=20261006-2245"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -58,7 +65,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261006-2220" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261006-2245" />
     </head>
 
     <body>

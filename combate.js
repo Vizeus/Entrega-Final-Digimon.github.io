@@ -5,6 +5,29 @@
 // combate (preparando → peleando → ganador).
 // -----------------------------------------------------------------------------------------------------------------
 
+import { emitir, ponerAyuda } from './util.js';
+import { ELEMENTO_FUERTE_CONTRA, TIPO_FUERTE_CONTRA } from './datos.js';
+import { t } from './i18n.js';
+import { botonIniciarCombate, contadorSeleccion } from './pagina.js';
+import { AVISO_CONTADOR_ESPERA, mostrarAvisoDelContador, quitarAvisoDelContador, revisarLlamadas } from './avisos.js';
+import { nombreCompleto, reducirMovimiento } from './cartas.js';
+import { TECLAS_DE_DESPLAZAMIENTO, zonaConScroll } from './zoom.js';
+import {
+    arrancarGifConSorbo,
+    audioMouse,
+    battleMusic,
+    cancelarMusicaGanador,
+    detenerSonido,
+    detenerSonidoPajita,
+    precargarPajita,
+    prepararPajita,
+    reproducirConDelay,
+    reproducirPajita,
+    reproducirSonido,
+    winMusic,
+    winSound,
+} from './audio.js';
+
 // -----------------------------------------------------------------------------------------------------------------
 // SISTEMA DE COMBATE: la probabilidad de ganar combina TIPO + NIVEL + ELEMENTO
 //
@@ -15,14 +38,14 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 // Cuánto pesa cada factor
-const PESO_TIPO = 0.2;
-const PESO_NIVEL = 0.15;
-const PESO_ELEMENTO = 0.1;
+export const PESO_TIPO = 0.2;
+export const PESO_NIVEL = 0.15;
+export const PESO_ELEMENTO = 0.1;
 
 // Poder en combate: del 1 al 6 es el mismo número que se ve en la carta, pero los niveles 7 y 8 rompen la escala.
 // Del 6 al 7 y del 7 al 8 hay 3 niveles de distancia (6 → 9 → 12): un Mega apenas le puede hacer cosquillas a un Ultra
 // (lo mismo que un Ultra a un Apex), y entre un Mega y un Apex la diferencia es tan grande que no tiene forma de ganar.
-const PODER_EN_COMBATE = { 7: 9, 8: 12 };
+export const PODER_EN_COMBATE = { 7: 9, 8: 12 };
 const poderEnCombate = nivel => PODER_EN_COMBATE[nivel] ?? nivel;
 
 // Si uno de los dos es nivel 7 u 8 y el otro está muy por debajo, el tipo y el elemento valen cada vez menos:
@@ -37,10 +60,10 @@ function calcularVentaja(tabla, a, b) {
 }
 
 // Array para almacenar los elementos seleccionados
-const seleccionados = [];
+export const seleccionados = [];
 
 // Función para manejar el boton de combate
-function verificarSeleccion() {
+export function verificarSeleccion() {
     if (seleccionados.length > 0) precargarPajita(); // el GIF y el sonido del primer cartel de combate se bajan mientras eligen
     contadorSeleccion.textContent = `${seleccionados.length}/2`;
     contadorSeleccion.classList.toggle('completo', seleccionados.length === 2);
@@ -282,7 +305,9 @@ async function abrirCartelDeCombate({ didOpen, ...opciones }) {
     return respuesta.isConfirmed;
 }
 
-async function iniciarCombate() {
+export let combateEnCurso = false; // desde que se aprieta "Iniciar Combate" hasta que se cierra el último cartel (avisos.js lo mira)
+
+export async function iniciarCombate() {
     combateEnCurso = true; // (las llamadas de los botones lo miran: si el primer sonido es el de "Iniciar Combate", el botón tiene que verse por encima del cartel)
     revisarLlamadas(); // si la llamada del botón ya arrancó con el clic de la tecla, el botón sube ahora mismo
     try {

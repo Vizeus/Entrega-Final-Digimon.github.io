@@ -23,6 +23,11 @@
 // Eventos que manda para la inclinación: "baile-empezo" (que suelte la carta que seguía al puntero) y "baile-terminado" (que retome).
 // -----------------------------------------------------------------------------------------------------------------
 
+import { CON_MOUSE, emitir } from './util.js';
+import { listaDigimons } from './pagina.js';
+import { reducirMovimiento } from './cartas.js';
+import { cartaEnZoom, zoomCerrando, zoomOcupado } from './zoom.js';
+
 const BAILE_PUNTERO = { espera: 60 * 1000, duracion: 20 * 1000 };
 const BAILE_TODAS = { espera: 4 * 60 * 1000, duracion: 60 * 1000 };
 const BAILE_ZOOM = { espera: 3 * 60 * 1000, duracion: 30 * 1000 };
@@ -285,7 +290,7 @@ function cartasQueSeVen() {
 // -----------------------------------------------------------------------------------------------------------------
 // El reloj: cuánto lleva todo quieto, y qué baile toca
 // -----------------------------------------------------------------------------------------------------------------
-function activarBaileDeCartas() {
+export function activarBaileDeCartas() {
     if (reducirMovimiento || !CON_MOUSE.matches) return; // solo computadora
 
     // Cada baile: "desde" es desde cuándo cuenta su espera, "fin" cuándo termina el que está en marcha (0: no hay uno) y "cartas" las que bailan
@@ -391,5 +396,3 @@ function activarBaileDeCartas() {
     actividad();
     setInterval(revisar, BAILE_REVISION);
 }
-
-activarBaileDeCartas();

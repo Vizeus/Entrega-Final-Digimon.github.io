@@ -5,16 +5,29 @@
 // tandas) y las ventanas que se abren desde sus chips y botones (tipo, elemento, nivel, ataques y evolución).
 // -----------------------------------------------------------------------------------------------------------------
 
+import { emitir, ponerAyuda } from './util.js';
+import { EMOJIS_ELEMENTO, EMOJIS_TIPO, MARCAS_DE_NIVEL, numeracionNiveles } from './datos.js';
+import { nombreElemento, nombreTipo, t } from './i18n.js';
+import { claveDeNombre, nombreOccidental, nombreParaMostrar } from './nombres.js';
+import { cartasPorId, listaDigimons, nombreNivel } from './pagina.js';
+import { actualizarBarraProgreso, contadorDigimons } from './api.js';
+import { seleccionados, verificarSeleccion } from './combate.js';
+import { cartaEnZoom, volverAlZoomNormal, zoomExtra, zoomOcupado } from './zoom.js';
+import { vibrar } from './audio.js';
+import { sonidoSeleccion, sonidoVuelta } from './sonidos.js';
+import { abrirAtaques, crearBotonAtaques, infoElemento, infoNivel, infoTipo } from './info.js';
+import { abrirEvolucion, crearBotonEvolucion } from './evolucion.js';
+
 // -----------------------------------------------------------------------------------------------------------------
 // DISEÑO DE LAS CARTAS: nombre ajustado al largo, dorso con la descripción y giro 3D
 // -----------------------------------------------------------------------------------------------------------------
 
 // Si la persona pidió menos animaciones en su sistema, no giramos ni inclinamos las cartas
-const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+export const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // El "(X-Antibody)" no va en el nombre de la carta: se muestra aparte, como una gema con una X (.c-x).
 // separarXAntibody('Omegamon (X-Antibody)') → { nombre: 'Omegamon', xAntibody: true }
-function separarXAntibody(nombre) {
+export function separarXAntibody(nombre) {
     const limpio = nombre.replace(/\s*\(\s*x-antibody\s*\)/i, '').trim();
     return { nombre: limpio, xAntibody: limpio !== nombre.trim() };
 }
@@ -23,14 +36,14 @@ function separarXAntibody(nombre) {
 // para que no se confunda con la versión normal del mismo digimon. Es el que se ve, o sea, el del idioma actual (ver nombres.js).
 const conXAntibody = (carta, nombre) => (carta.dataset.xAntibody ? `${nombre} (X-Antibody)` : nombre);
 
-function nombreCompleto(carta) {
+export function nombreCompleto(carta) {
     return conXAntibody(carta, carta.querySelector('h4').textContent.trim());
 }
 
 // Los dos nombres de un digimon, también con su "(X-Antibody)": el original (el que trae la API) y el occidental.
 // El buscador usa los dos, así se lo encuentra por cualquiera.
-const nombreApiCompleto = carta => conXAntibody(carta, carta.dataset.nombreApi);
-const nombreOccidentalCompleto = carta => conXAntibody(carta, nombreOccidental(carta.dataset.nombreApi));
+export const nombreApiCompleto = carta => conXAntibody(carta, carta.dataset.nombreApi);
+export const nombreOccidentalCompleto = carta => conXAntibody(carta, nombreOccidental(carta.dataset.nombreApi));
 
 // El otro nombre del digimon, el que NO se ve en la carta, si tiene uno distinto. Se cuenta en el dorso. En español y en inglés la carta muestra
 // el occidental, así que el otro es el original japonés (el de la API); con el japonés sería al revés. Si los dos nombres son iguales (casi
@@ -60,7 +73,7 @@ function ponerNombre(elemento, nombre) {
 }
 
 // Escribe el nombre de la carta (en el idioma actual) en el frente, en el dorso si ya se armó y en el texto de su imagen
-function escribirNombre(carta) {
+export function escribirNombre(carta) {
     const titulo = carta.querySelector('h4');
     titulo.textContent = '';
     ponerNombre(titulo, nombreParaMostrar(carta.dataset.nombreApi));
@@ -99,7 +112,7 @@ function medirPlaca(carta) {
 }
 
 // La carta tiene que estar ya agregada a la página para poder medir su placa
-function ajustarNombre(carta) {
+export function ajustarNombre(carta) {
     if (!medidasNombre) {
         medidasNombre = medirPlaca(carta);
     }
@@ -133,7 +146,7 @@ function ajustarNombre(carta) {
 }
 
 // Espera a que carguen las tipografías de las cartas (si tardan más de 3 segundos, sigue igual)
-function esperarTipografias() {
+export function esperarTipografias() {
     const cargas = ['800 12px "Orbitron"', '700 12px "Pixelify Sans"', '500 12px "Exo 2"', '12px "DotGothic16"'].map(fuente =>
         document.fonts.load(fuente).catch(() => null),
     );
@@ -252,10 +265,10 @@ document.addEventListener('idioma-cambiado', () => {
 });
 
 // Da vuelta la carta entera en 3D: gira hasta 90° (de canto), cambia de cara y termina de girar
-const PERSPECTIVA = 'perspective(800px) ';
+export const PERSPECTIVA = 'perspective(800px) ';
 
 // direccion: 1 gira hacia un lado y -1 hacia el otro (con el barrido del dedo, la carta gira hacia donde va el dedo)
-async function voltearCarta(carta, direccion = 1) {
+export async function voltearCarta(carta, direccion = 1) {
     if (carta.girando || (zoomOcupado && carta === cartaEnZoom)) return;
     emitir('click-chip-carta', { accion: 'voltear' });
     carta.girando = true;
@@ -308,7 +321,7 @@ async function voltearCarta(carta, direccion = 1) {
 
 // Al hacer clic en el nivel (la gema o el nombre), tipo o elemento de una carta, se abre su ventana de información (info.js)
 // sin seleccionar la carta para el combate ni cerrarla si está en modo zoom.
-function activarCartelesDeInfoEnCartas() {
+export function activarCartelesDeInfoEnCartas() {
     document.addEventListener(
         'click',
         evento => {
@@ -319,7 +332,7 @@ function activarCartelesDeInfoEnCartas() {
                 if (carta?.dataset.tipo) {
                     evento.stopPropagation();
                     emitir('click-chip-carta', { tipo: carta.dataset.tipo });
-                    if (typeof window.infoTipo === 'function') window.infoTipo(carta.dataset.tipo);
+                    infoTipo(carta.dataset.tipo);
                     return;
                 }
             }
@@ -331,7 +344,7 @@ function activarCartelesDeInfoEnCartas() {
                 if (carta?.dataset.elemento) {
                     evento.stopPropagation();
                     emitir('click-chip-carta', { elemento: carta.dataset.elemento });
-                    if (typeof window.infoElemento === 'function') window.infoElemento(carta.dataset.elemento);
+                    infoElemento(carta.dataset.elemento);
                     return;
                 }
             }
@@ -343,7 +356,7 @@ function activarCartelesDeInfoEnCartas() {
                 if (carta?.dataset.nivelApi) {
                     evento.stopPropagation();
                     emitir('click-chip-carta', { nivel: carta.dataset.nivelApi });
-                    if (typeof window.infoNivel === 'function') window.infoNivel(carta.dataset.nivelApi);
+                    infoNivel(carta.dataset.nivelApi);
                     return;
                 }
             }
@@ -352,9 +365,9 @@ function activarCartelesDeInfoEnCartas() {
             const btnAtaques = evento.target.closest?.('#listado-digimons li .c-ataques');
             if (btnAtaques) {
                 const carta = btnAtaques.closest('#listado-digimons li');
-                if (carta && typeof window.abrirAtaques === 'function') {
+                if (carta) {
                     evento.stopPropagation();
-                    window.abrirAtaques(carta);
+                    abrirAtaques(carta);
                     return;
                 }
             }
@@ -363,9 +376,9 @@ function activarCartelesDeInfoEnCartas() {
             const btnEvo = evento.target.closest?.('#listado-digimons li .c-evo');
             if (btnEvo) {
                 const carta = btnEvo.closest('#listado-digimons li');
-                if (carta && typeof window.abrirEvolucion === 'function') {
+                if (carta) {
                     evento.stopPropagation();
-                    window.abrirEvolucion(carta);
+                    abrirEvolucion(carta);
                     return;
                 }
             }
@@ -397,8 +410,10 @@ const observadorDeMarcos =
           )
         : null;
 
+export let seleccionAntesDelClic = { carta: null, estado: [] }; // cómo estaba la selección antes del primer clic de un doble clic (zoom.js la usa)
+
 // Crea una carta, la agrega a la lista y avisa a los filtros. La usan los digimons de la API y las cartas propias.
-function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, marca, elemento, datosDorso }) {
+export function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, marca, elemento, datosDorso }) {
     // Datos que usa el combate y el diseño de la carta
     const nivelNumerico = numeracionNiveles[nivelOriginal]; // undefined si el nivel es desconocido
     const { nombre: nombreEnCarta, xAntibody } = separarXAntibody(nombre); // el X-Antibody va en su propia gema
@@ -509,10 +524,10 @@ function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, mar
 // los filtros y la barra de progreso, y en el celular eso tenía el procesador siempre ocupado (los botones tardaban en
 // responder o se perdían toques). Ahora se juntan y entran todas juntas unas pocas veces por segundo.
 const COLOCAR_CADA = 300; // ms entre tandas
-const cartasEnEspera = [];
+export const cartasEnEspera = [];
 let colocacionPendiente = 0;
 
-function colocarCartas() {
+export function colocarCartas() {
     clearTimeout(colocacionPendiente);
     colocacionPendiente = 0;
     if (!cartasEnEspera.length) return;

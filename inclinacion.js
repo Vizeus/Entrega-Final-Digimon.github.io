@@ -5,6 +5,13 @@
 // (o al revés, con el botón de inclinación invertida), y con Shift la rueda del mouse sigue subiendo y bajando la página.
 // -----------------------------------------------------------------------------------------------------------------
 
+import { CON_MOUSE, emitir, guardarJSON, leerJSON, ponerAyuda } from './util.js';
+import { t } from './i18n.js';
+import { listaDigimons } from './pagina.js';
+import { PERSPECTIVA, reducirMovimiento } from './cartas.js';
+import { zoomEsperaMovimiento, zoomExtra, zoomOcupado } from './zoom.js';
+import { vibrar } from './audio.js';
+
 // Preferencia de la inclinación con el mouse (solo computadora): por defecto las cartas se inclinan al pasar el mouse y Shift apretada lo
 // anula; con "invertida" es al revés (no se inclinan al pasar el mouse y solo lo hacen mientras se mantiene apretada Shift). Se cambia con
 // el botón de la barra (#inclinacion-invertida, junto al de sonido) y, como el sonido, se guarda en el navegador de cada persona
@@ -28,7 +35,7 @@ function guardarInclinacionInvertida(invertida) {
 // cartas no se inclinan ni brillan y con Shift apretada sí.
 // Con el dedo: se mantiene apretada la carta un instante y, sin soltar, al mover el dedo se inclina (mientras tanto la
 // página no se desplaza). Un toque corto sigue siendo un toque normal (elegir la carta para el combate).
-function activarInclinacion() {
+export function activarInclinacion() {
     const conMouse = CON_MOUSE.matches;
     const conDedo = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
     if (reducirMovimiento || (!conMouse && !conDedo)) return;
@@ -288,6 +295,7 @@ function activarInclinacion() {
 
 const ESPERA_DEDO = 220; // ms que hay que mantener apretada la carta para que empiece a inclinarse
 const TOLERANCIA_DEDO = 10; // px que se puede mover el dedo antes de eso (si se mueve más, es que quiere desplazar la página)
+export let inclinandoConDedo = false; // true mientras hay una carta inclinándose con el dedo (gestos.js y avisos.js lo miran)
 
 function activarInclinacionConDedo({ tomar, seguir, soltar }) {
     let espera = 0; // temporizador de "mantener apretado"
@@ -383,7 +391,7 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
 // Se hace después de que el resto de los manejadores de la rueda tuvo su turno (setTimeout), para respetar a los que frenan el fondo (el zoom
 // de una carta, los carteles del combate): si alguno la frenó, no se toca. Si debajo del puntero hay una zona que sí se desplaza hacia los
 // costados (por ejemplo, un árbol de evolución ancho), se deja al navegador; si hay una zona con scroll vertical propio, se desplaza ella.
-function activarRuedaConShift() {
+export function activarRuedaConShift() {
     const desplazaEn = (elemento, eje) => {
         const estilo = getComputedStyle(elemento);
         const valor = eje === 'x' ? estilo.overflowX : estilo.overflowY;
@@ -422,7 +430,7 @@ function activarRuedaConShift() {
 // Al hacer clic en un botón con el mouse (en especial con la tecla Shift mantenida, por ejemplo al usar la rueda con Shift),
 // los botones no deben retener el aro de foco (:focus-visible) ni iniciar una selección de texto accidental.
 // Con la navegación por teclado (Tab, Enter, Espacio) la accesibilidad y el foco visible siguen funcionando con total normalidad.
-function evitarFocoYSeleccionConShift() {
+export function evitarFocoYSeleccionConShift() {
     document.addEventListener('mousedown', evento => {
         const boton = evento.target.closest('button, [role="button"]');
         if (!boton) return;

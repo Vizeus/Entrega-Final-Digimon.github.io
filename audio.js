@@ -6,9 +6,14 @@
 // ganador, el mouse, la pajita del GIF "Trabajando") y la vibración.
 // -----------------------------------------------------------------------------------------------------------------
 
+import { CON_DEDO, PANTALLA_DE_CELULAR, guardarJSON, hayMarcaDeSesion, leerJSON, ponerAyuda, ponerMarcaDeSesion } from './util.js';
+import { t } from './i18n.js';
+import { llamarLaAtencion, terminarLlamada } from './avisos.js';
+import { nodoVolumenTeclas, sonidoTecla } from './sonidos.js';
+
 // Vibración corta al tocar botones con el dedo, como una tecla física. Solo en los celulares que la permiten
 // (Android; en iPhone el navegador no deja vibrar). El navegador solo la permite después del primer toque en la página.
-function vibrar(duracion = 8, forzar = false) {
+export function vibrar(duracion = 8, forzar = false) {
     if (!navigator.vibrate || (vibracionApagada && !forzar)) return; // vibracionApagada: la persona la quitó con el botón de sonido (#silenciar)
     if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
     try {
@@ -18,7 +23,7 @@ function vibrar(duracion = 8, forzar = false) {
     }
 }
 
-function activarVibracion() {
+export function activarVibracion() {
     if (!navigator.vibrate) return;
     document.addEventListener('pointerdown', evento => {
         if (evento.pointerType !== 'touch') return;
@@ -95,7 +100,7 @@ function esDispositivoMovil() {
     );
 }
 
-function perfilAudioActual() {
+export function perfilAudioActual() {
     return esDispositivoMovil() ? PERFIL_AUDIO.movil : PERFIL_AUDIO.escritorio;
 }
 
@@ -109,7 +114,7 @@ let vibracionApagada = audioGuardado.sinVibracion;
 let salidaGeneral = null; // el "volumen maestro" de Web Audio: todos los sonidos sintetizados pasan por acá antes de salir
 
 // A dónde se conecta cada sonido sintetizado (en vez de directo a los parlantes): así un solo control los silencia a todos
-function destinoDeAudio(contexto) {
+export function destinoDeAudio(contexto) {
     if (!salidaGeneral || salidaGeneral.context !== contexto) {
         salidaGeneral = contexto.createGain();
         salidaGeneral.gain.value = silenciado ? 0 : obtenerVolumenGeneral();
@@ -120,7 +125,7 @@ function destinoDeAudio(contexto) {
 
 // Deja todo como corresponde: Web Audio por el volumen maestro y los archivos de audio con "muted", que sigue
 // reproduciéndolos (en silencio) y así los tiempos del combate no cambian. Si se quitó la vibración, corta la que esté en marcha
-function aplicarSilencio() {
+export function aplicarSilencio() {
     const vol = obtenerVolumenGeneral();
     if (salidaGeneral) {
         // Bajada rapidísima en vez de un corte seco, para que no suene un "clic" al silenciar
@@ -194,7 +199,7 @@ function mostrarEstadoDelAudio() {
 // En celular el botón no vive en la barra ni en el menú ☰: flota en la esquina de abajo a la derecha (lo dibuja el CSS cuando el botón
 // es hijo directo del <body>). Acá se lo cambia de lugar según el ancho de la pantalla: en celular al <body>, en computadora
 // de vuelta junto al selector de idioma. Es el mismo botón siempre, así que conserva su estado y sus eventos.
-function ubicarBotonDeAudio() {
+export function ubicarBotonDeAudio() {
     const boton = document.getElementById('silenciar');
     const ajustes = document.querySelector('#navbar .ajustes');
     if (!boton || !ajustes) return;
@@ -227,7 +232,7 @@ function ubicarBotonDeAudio() {
 // persona lo apagó con el botón antes del primer sonido, o ya lo traía apagado), no se hace en ningún momento mientras siga apagado; si lo
 // vuelve a activar, el primer sonido que suene sí lo hace (y desde ahí, ya no se repite), sin contar la tecla del propio toque que lo activó.
 const AUDIO_AVISO_SESION = 'digimon-audio-aviso';
-const AUDIO_AVISO_DURACION = 2600; // ms: un poco más que la animación del CSS (2,4 s)
+export const AUDIO_AVISO_DURACION = 2600; // ms: un poco más que la animación del CSS (2,4 s)
 
 let botonDeAudioYaMostrado = hayMarcaDeSesion(AUDIO_AVISO_SESION);
 
@@ -244,6 +249,16 @@ const terminarElAvisoDelBotonDeAudio = () => {
 
 let teclaDelBotonDeAudio = false; // true mientras suena una tecla que no cuenta como primer sonido: la del propio botón de sonido al volver a activarlo y la del botón de inclinación (ver sonarTeclaDeBoton)
 
+// Hace sonar algo que no cuenta como primer sonido: mientras suena, el botón de sonido no llama la atención
+export function sonarSinAvisarAlBotonDeAudio(sonar) {
+    teclaDelBotonDeAudio = true;
+    try {
+        sonar();
+    } finally {
+        teclaDelBotonDeAudio = false;
+    }
+}
+
 function llamarLaAtencionDelBotonDeAudio() {
     if (botonDeAudioYaMostrado || silenciado || teclaDelBotonDeAudio) return;
     const boton = botonDeAudio();
@@ -252,7 +267,7 @@ function llamarLaAtencionDelBotonDeAudio() {
     llamarLaAtencion(boton, { icono: '🔊', texto: () => t(VIBRACION_DISPONIBLE ? 'aviso.audio.vibracion' : 'aviso.audio') });
 }
 
-function activarBotonDeAudio() {
+export function activarBotonDeAudio() {
     const boton = document.getElementById('silenciar');
     if (!boton) return;
     ubicarBotonDeAudio();
@@ -272,11 +287,7 @@ function activarBotonDeAudio() {
         // Esa tecla no cuenta como el primer sonido del aviso del botón (no tiene sentido avisarle a quien lo está tocando): el aviso queda
         // para el primer sonido que suene después
         if (modoDelAudio() === 'todo') {
-            const tecla = bajada => {
-                teclaDelBotonDeAudio = true;
-                sonidoTecla(bajada);
-                teclaDelBotonDeAudio = false;
-            };
+            const tecla = bajada => sonarSinAvisarAlBotonDeAudio(() => sonidoTecla(bajada));
             setTimeout(() => tecla(true), 30);
             setTimeout(() => tecla(false), 110);
         }
@@ -308,7 +319,7 @@ function solicitarReanudacionAudio(contexto) {
 // Los navegadores solo dejan arrancar el audio dentro de un gesto "de verdad": con el dedo eso es al LEVANTARLO (touchend / pointerup /
 // click), no al apoyarlo ni al deslizarlo (touchstart / pointerdown / touchmove no cuentan, ni en Chrome ni en Safari). Por eso se prepara
 // en todos esos momentos: apoyar el dedo crea el audio y levantarlo es lo que lo destraba de verdad.
-function activarDesbloqueoAudio() {
+export function activarDesbloqueoAudio() {
     const preparar = () => prepararAudioAlTocar();
     for (const tipo of ['pointerdown', 'touchstart', 'touchend', 'pointerup', 'click', 'keydown']) {
         document.addEventListener(tipo, preparar, { capture: true, passive: true });
@@ -341,7 +352,7 @@ function prepararAudioAlTocar() {
 const ESPERA_DEL_PRIMER_SONIDO = 1000;
 const sonidosEnEspera = [];
 
-function sonarCuandoElAudioEsteListo(sonar) {
+export function sonarCuandoElAudioEsteListo(sonar) {
     try {
         contextoAudio = contextoAudio || new (window.AudioContext || window.webkitAudioContext)();
     } catch (error) {
@@ -363,7 +374,7 @@ function sonarCuandoElAudioEsteListo(sonar) {
     solicitarReanudacionAudio(contexto); // por si ya está permitido (en la computadora, o después del primer toque)
 }
 
-function obtenerContextoAudio() {
+export function obtenerContextoAudio() {
     contextoAudio = contextoAudio || new (window.AudioContext || window.webkitAudioContext)();
     destinoDeAudio(contextoAudio);
     solicitarReanudacionAudio(contextoAudio);
@@ -393,25 +404,25 @@ function actualizarVolumenAudios() {
     }
 }
 
-const audioMouse = audioConVolumen('audio/Mouse.mp3');
+export const audioMouse = audioConVolumen('audio/Mouse.mp3');
 audioMouse.loop = true;
 
-const winMusic = audioConVolumen('audio/Digimon World 3 - Victory.mp3', 0.7);
+export const winMusic = audioConVolumen('audio/Digimon World 3 - Victory.mp3', 0.7);
 
-const battleMusic = audioConVolumen('audio/Digimon World - Earlygame Battle.mp3', 0.5);
+export const battleMusic = audioConVolumen('audio/Digimon World - Earlygame Battle.mp3', 0.5);
 battleMusic.loop = true;
 
-const winSound = audioConVolumen('audio/Digimon World - PSX Battle Win.mp3', 0.7);
+export const winSound = audioConVolumen('audio/Digimon World - PSX Battle Win.mp3', 0.7);
 
 const audioPajita = audioConVolumen('audio/Pajita.mp3');
 let intervaloSonido;
 
 // play() devuelve una promesa: si el navegador no deja sonar (por ejemplo, sin un toque previo), se ignora en vez de dejar un error en la consola
-function reproducirSonido(audio) {
+export function reproducirSonido(audio) {
     audio.play()?.catch(() => {});
 }
 
-function detenerSonido(audio) {
+export function detenerSonido(audio) {
     audio.pause();
     audio.currentTime = 0;
 }
@@ -438,7 +449,7 @@ let direccionGifPajita = null;
 const sorbosSonando = new Set();
 
 // Baja el GIF y el sonido una sola vez (se pide al elegir la primera carta, así ya están cuando empieza el combate)
-function precargarPajita() {
+export function precargarPajita() {
     descargasPajita ||= Promise.all([
         fetch(PAJITA.gif).then(r => (r.ok ? r.blob() : Promise.reject(new Error(r.status)))),
         fetch(PAJITA.audio).then(r => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.status)))),
@@ -449,7 +460,7 @@ function precargarPajita() {
 }
 
 // Deja listo el sorbo. Se llama desde el clic de "Iniciar Combate" (sin un clic el navegador no deja sonar el audio)
-async function prepararPajita() {
+export async function prepararPajita() {
     try {
         const ctx = obtenerContextoAudio(); // el mismo contexto de Web Audio que usan los sonidos de las cartas
         await ctx.resume();
@@ -466,7 +477,7 @@ async function prepararPajita() {
 
 // Pone el GIF en la pantallita con una dirección nueva (arranca desde el cuadro 0) y, apenas se dibuja el primer cuadro,
 // empieza a programar los sorbos
-async function arrancarGifConSorbo(ventana, descargas) {
+export async function arrancarGifConSorbo(ventana, descargas) {
     const gif = ventana.querySelector('.combate-pantalla img');
     if (!gif) return;
     try {
@@ -520,7 +531,7 @@ function sonarSorbo(cuando) {
 }
 
 // Plan B (sin sincronizar): el mismo ritmo del GIF, pero el sonido arranca cuando se abre el cartel
-function reproducirPajita() {
+export function reproducirPajita() {
     const sorbo = () => {
         audioPajita.currentTime = 0;
         reproducirSonido(audioPajita);
@@ -530,7 +541,7 @@ function reproducirPajita() {
     intervaloSonido = setInterval(sorbo, PAJITA.vuelta);
 }
 
-function detenerSonidoPajita() {
+export function detenerSonidoPajita() {
     clearInterval(intervaloSonido);
     clearTimeout(temporizadorPajita);
     sorbosSonando.forEach(fuente => {
@@ -552,12 +563,12 @@ function detenerSonidoPajita() {
 // La música del ganador entra 2,45 s después del sonido de victoria. Si el cartel se cierra antes, se cancela (cancelarMusicaGanador)
 let temporizadorMusicaGanador = 0;
 
-function reproducirConDelay() {
+export function reproducirConDelay() {
     cancelarMusicaGanador();
     temporizadorMusicaGanador = setTimeout(() => reproducirSonido(winMusic), 2450);
 }
 
-function cancelarMusicaGanador() {
+export function cancelarMusicaGanador() {
     clearTimeout(temporizadorMusicaGanador);
     temporizadorMusicaGanador = 0;
 }

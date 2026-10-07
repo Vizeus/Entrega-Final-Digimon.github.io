@@ -1,6 +1,8 @@
 // -----------------------------------------------------------------------------------------------------------------
 // NOMBRES DE LOS DIGIMON SEGÚN EL IDIOMA
 // -----------------------------------------------------------------------------------------------------------------
+
+import { idioma } from './i18n.js';
 // La API trae los nombres ORIGINALES (los japoneses, escritos en letras latinas): Omegamon, Herakle Kabuterimon, Vamdemon...
 // En español y en inglés la página muestra los nombres occidentales, que desde hace años son los mismos en todo el mundo
 // (los del doblaje al inglés, los juegos y el juego de cartas): Omnimon, HerculesKabuterimon, Myotismon...
@@ -204,7 +206,7 @@ const NOMBRES_OCCIDENTALES = {
 };
 
 // "War Greymon", "war-greymon" y "WAR GREYMON" son lo mismo: se comparan sin mayúsculas, acentos, espacios ni signos
-const claveDeNombre = nombre =>
+export const claveDeNombre = nombre =>
     nombre
         .normalize('NFD')
         .replace(/[̀-ͯ]/g, '')
@@ -215,7 +217,7 @@ const TABLA_DE_NOMBRES = new Map(Object.entries(NOMBRES_OCCIDENTALES).map(([orig
 
 // Nombre occidental de un nombre de la API (sin el "(X-Antibody)"). Si no tiene uno distinto, devuelve el mismo.
 // nombreOccidental('Omegamon') → 'Omnimon'   nombreOccidental('Dukemon (Crimson Mode)') → 'Gallantmon (Crimson Mode)'
-function nombreOccidental(nombreApi) {
+export function nombreOccidental(nombreApi) {
     const completo = TABLA_DE_NOMBRES.get(claveDeNombre(nombreApi));
     if (completo) return completo;
 
@@ -234,7 +236,7 @@ const SE_MUESTRAN_CON_EL_ORIGINAL = new Set(['Piyomon'].map(claveDeNombre));
 
 // El nombre que se muestra en el idioma actual (es y en: el occidental, salvo los de SE_MUESTRAN_CON_EL_ORIGINAL; el resto de idiomas: el
 // original de la API)
-function nombreParaMostrar(nombreApi) {
+export function nombreParaMostrar(nombreApi) {
     if (!IDIOMAS_CON_NOMBRES_OCCIDENTALES.includes(idioma)) return nombreApi;
     const base = nombreApi.split('(')[0].trimEnd();
     return SE_MUESTRAN_CON_EL_ORIGINAL.has(claveDeNombre(base)) ? nombreApi : nombreOccidental(nombreApi);

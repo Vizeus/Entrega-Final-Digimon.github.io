@@ -11,6 +11,24 @@
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 
+import { PANTALLA_DE_CELULAR } from './util.js';
+import {
+    COLOR_BUSQUEDA,
+    COLOR_ELEMENTO,
+    COLOR_NIVEL,
+    COLOR_NIVEL_DESCONOCIDO,
+    COLOR_TIPO,
+    COLOR_X,
+    EMOJIS_ELEMENTO,
+    EMOJIS_TIPO,
+    ORDEN_ELEMENTOS,
+    ORDEN_NIVELES,
+    numeracionNiveles,
+} from './datos.js';
+import { nombreElemento, nombreTipo, t } from './i18n.js';
+import { listaDigimons, nombreNivel } from './pagina.js';
+import { nombreApiCompleto, nombreCompleto, nombreOccidentalCompleto } from './cartas.js';
+
 // Cada filtro: qué opciones tiene (con el nombre interno), cómo se llama cada una y qué lleva de ícono
 const GRUPOS_FILTRO = {
     tipo: {
@@ -291,7 +309,7 @@ function programarRefresco() {
     }
 }
 
-function limpiarTodo() {
+export function limpiarTodo() {
     GRUPOS.forEach(grupo => elegidos[grupo].clear());
     cajaBusqueda.value = '';
     leerBusqueda();
@@ -409,7 +427,10 @@ function activarFiltros() {
     }
 }
 
-crearChips();
-etiquetarChips();
-activarFiltros();
-refrescar();
+// Pone en marcha los filtros (lo llama main.js)
+export function prepararFiltros() {
+    crearChips();
+    etiquetarChips();
+    activarFiltros();
+    refrescar();
+}

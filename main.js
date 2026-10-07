@@ -1,10 +1,29 @@
 // -----------------------------------------------------------------------------------------------------------------
 // ARRANQUE DE LA PÁGINA
 //
+// La puerta de entrada: el index.html carga solo este archivo, y los import de cada archivo traen el resto.
 // Cada parte está en su archivo (pagina.js, api.js, combate.js, avisos.js, cartas.js, zoom.js, gestos.js, inclinacion.js,
-// audio.js y sonidos.js). Acá se ponen en marcha, en este orden, y se conectan los botones que usan varias partes a la vez.
-// Cuando la página termina de armarse, empieza la carga de los digimons.
+// audio.js, sonidos.js, filtros.js, info.js, barra.js, evolucion.js y baile.js). Acá se ponen en marcha, en este orden, y se
+// conectan los botones que usan varias partes a la vez. Cuando la página termina de armarse, empieza la carga de los digimons.
 // -----------------------------------------------------------------------------------------------------------------
+
+import { emitir } from './util.js';
+import { nombreParaMostrar } from './nombres.js';
+import { botonCambiarNiveles, botonIniciarCombate, cambiarClasificacion, listaDigimons, mostrarSistemaDeNiveles, nombreNivel } from './pagina.js';
+import { crearListaDeDigimons } from './api.js';
+import { iniciarCombate } from './combate.js';
+import { activarAvisoDeInclinacion, activarAvisoDeZoomExtra, activarAvisosDeAyuda } from './avisos.js';
+import { activarCartelesDeInfoEnCartas, ajustarNombre, cartasEnEspera, escribirNombre } from './cartas.js';
+import { activarArrastreDeZoomExtra, activarReflejoQuieto, activarZoom } from './zoom.js';
+import { activarVoltearConDedo, gestionarVisitasYFlechasMovil } from './gestos.js';
+import { activarInclinacion, activarRuedaConShift, evitarFocoYSeleccionConShift } from './inclinacion.js';
+import { activarBotonDeAudio, activarDesbloqueoAudio, activarVibracion, aplicarSilencio } from './audio.js';
+import { activarSonidoBotones, activarSonidoDeDesplegables } from './sonidos.js';
+import { prepararFiltros } from './filtros.js';
+import { activarInfo } from './info.js';
+import { activarBarraQueSeEsconde, activarMenuMovil } from './barra.js';
+import { activarEvolucion } from './evolucion.js';
+import { activarBaileDeCartas } from './baile.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     mostrarSistemaDeNiveles();
@@ -44,8 +63,7 @@ document.addEventListener('idioma-cambiado', () => {
 // Cambiar de sistema de niveles NO recarga la página: se escribe de nuevo el nombre de cada nivel donde aparece.
 // Las cartas lo hacen acá; los filtros (filtros.js), los menús (info.js) y la línea evolutiva (evolucion.js) escuchan el mismo aviso.
 botonCambiarNiveles.addEventListener('click', () => {
-    clasificacionAlternativa = !clasificacionAlternativa;
-    guardarTexto('clasificacionAlternativa', String(clasificacionAlternativa), 'sesion'); // si no se puede guardar, igual cambia mientras la página esté abierta
+    cambiarClasificacion();
     mostrarSistemaDeNiveles();
     emitir('niveles-cambiados');
 });
@@ -60,3 +78,13 @@ document.addEventListener('niveles-cambiados', () => {
 botonIniciarCombate.addEventListener('click', iniciarCombate);
 
 aplicarSilencio(); // si la persona había dejado el sonido apagado, los archivos de audio arrancan en silencio
+
+// Por último, las partes que usan todo lo anterior: los filtros, las ventanas de información, la barra del celular, la línea
+// evolutiva y el baile de las cartas. El orden importa: por ejemplo, cuando cambia el idioma, las cartas se traducen antes que las
+// ventanas que muestran sus nombres.
+prepararFiltros();
+activarInfo();
+activarMenuMovil();
+activarBarraQueSeEsconde();
+activarEvolucion();
+activarBaileDeCartas();

@@ -14,6 +14,15 @@
 // y un botón despliega el resto. Al tocar un digimon del árbol, el árbol se centra en él (y hay un botón para volver).
 // -----------------------------------------------------------------------------------------------------------------
 
+import { CON_MOUSE } from './util.js';
+import { COLOR_NIVEL, COLOR_NIVEL_DESCONOCIDO, EMOJIS_ELEMENTO, EMOJIS_TIPO } from './datos.js';
+import { DICCIONARIO, nombreElemento, nombreTipo, t } from './i18n.js';
+import { cartaPorId, listaDigimons, nombreNivel } from './pagina.js';
+import { nombreCompleto, reducirMovimiento } from './cartas.js';
+import { cartaEnZoom, cerrarZoom } from './zoom.js';
+import { activarBotonDelDorso } from './gestos.js';
+import { limpiarTodo } from './filtros.js';
+
 Object.assign(DICCIONARIO.es, {
     'evo.boton': '🧬 Evolución',
     'evo.boton.ayuda': 'Ver la línea evolutiva',
@@ -503,13 +512,11 @@ function resaltarCarta(carta) {
     carta.temporizadorDestello = setTimeout(() => carta.classList.remove('evo-resaltada'), DURACION_DESTELLO_MS);
 }
 
-async function irALaCarta(id) {
+export async function irALaCarta(id) {
     const carta = cartaPorId(id);
     Swal.close();
-    const zoomActivo = (typeof window.obtenerCartaEnZoom === 'function' && window.obtenerCartaEnZoom()) || document.querySelector('.zoom-activa');
-    if (zoomActivo && typeof window.cerrarZoom === 'function') {
-        await window.cerrarZoom({ rapido: true });
-    }
+    const zoomActivo = cartaEnZoom || document.querySelector('.zoom-activa');
+    if (zoomActivo) await cerrarZoom({ rapido: true });
     if (!carta) return;
     await esperarQueCierreLaVentana();
     if (carta.classList.contains('filtrada')) limpiarTodo(); // si los filtros la estaban escondiendo, se sacan
@@ -541,7 +548,7 @@ function alTocarEnEvolucion(evento) {
     }
 }
 
-function abrirEvolucion(carta) {
+export function abrirEvolucion(carta) {
     estadoEvo = { historial: [Number(carta.dataset.id)], loreAbierto: false };
     Swal.fire({
         title: t('evo.titulo'),
@@ -561,21 +568,22 @@ function abrirEvolucion(carta) {
     });
 }
 
-// Si se cambia de idioma con la ventana abierta, se vuelve a escribir en el idioma nuevo
-document.addEventListener('idioma-cambiado', () => {
-    if (!estadoEvo) return;
-    const titulo = Swal.getTitle();
-    if (titulo) titulo.textContent = t('evo.titulo');
-    pintarEvolucion();
-});
-
-// Lo mismo si se cambia el sistema de niveles: los niveles del árbol se escriben con los nombres del sistema nuevo
-document.addEventListener('niveles-cambiados', () => {
-    if (estadoEvo) pintarEvolucion();
-});
+// Si se cambia de idioma con la ventana abierta, se vuelve a escribir en el idioma nuevo. Y lo mismo si se cambia el sistema de
+// niveles: los niveles del árbol se escriben con los nombres del sistema nuevo. (Lo pone en marcha main.js.)
+export function activarEvolucion() {
+    document.addEventListener('idioma-cambiado', () => {
+        if (!estadoEvo) return;
+        const titulo = Swal.getTitle();
+        if (titulo) titulo.textContent = t('evo.titulo');
+        pintarEvolucion();
+    });
+    document.addEventListener('niveles-cambiados', () => {
+        if (estadoEvo) pintarEvolucion();
+    });
+}
 
 // ---- El botón del dorso --------------------------------------------------------------------------------------------
-function crearBotonEvolucion(carta) {
+export function crearBotonEvolucion(carta) {
     const boton = document.createElement('button');
     boton.type = 'button';
     boton.className = 'c-evo';
@@ -584,6 +592,3 @@ function crearBotonEvolucion(carta) {
     activarBotonDelDorso(boton, () => abrirEvolucion(carta)); // toque rápido con el dedo y hundimiento (gestos.js)
     return boton;
 }
-
-window.abrirEvolucion = abrirEvolucion;
-window.irALaCarta = irALaCarta;
