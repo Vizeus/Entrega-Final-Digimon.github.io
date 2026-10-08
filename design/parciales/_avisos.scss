@@ -7,8 +7,10 @@
 // Avisos de ayuda del inicio (avisos.js, activarAvisosDeAyuda): cartelitos discretos arriba a la derecha, debajo de la barra. Van
 // dentro de un contenedor (#avisos-ayuda) que los apila, así que si coinciden se ven uno debajo del otro.
 // No frenan los clics ni el mouse (pointer-events: none) y quedan por debajo de la barra (1000) y del zoom (1500), salvo mientras
-// hay una carta ampliada (clase "sobre-zoom"): ahí pasan por encima para que se lean. Al irse, el aviso se achica ("saliendo") y
-// los de abajo suben sin saltar (cada consejo es un cartelito aparte y se va cuando la persona ya hizo lo que cuenta).
+// hay una carta ampliada (clase "sobre-zoom"): ahí pasan por encima para que se lean, y suben al margen de arriba porque la barra no
+// se ve (avisos.js, ubicarAvisos). Con una ventana abierta (información, ataques, evolución, combate) quedan donde estaban, detrás de
+// su cortina, con el tiempo frenado (avisos.js, frenarPorVentanas). Al irse, el aviso se achica ("saliendo") y los de abajo suben sin
+// saltar (cada consejo es un cartelito aparte y se va cuando la persona ya hizo lo que cuenta).
 #avisos-ayuda {
     position: fixed;
     right: 16px;
@@ -20,6 +22,14 @@
     width: min(320px, calc(100vw - 16px));
     pointer-events: none;
     transition: opacity 0.3s ease;
+
+    // Cuando la barra se esconde (celular), o la tapa el zoom de una carta o una ventana (celular y computadora), los avisos suben al
+    // margen de arriba (avisos.js, ubicarAvisos) y al volver la barra bajan de nuevo, con el mismo movimiento con que se va la barra
+    @media (prefers-reduced-motion: no-preference) {
+        transition:
+            opacity 0.3s ease,
+            top 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
 
     &.sobre-zoom {
         z-index: capa(avisos-sobre-el-zoom); // por encima de la carta ampliada
@@ -104,14 +114,6 @@
 @include celular {
     #avisos-ayuda {
         right: 8px;
-
-        // Cuando la barra se esconde al bajar por la lista, los avisos suben al margen de arriba (avisos.js, ubicarAvisos), con el
-        // mismo movimiento con que se va la barra
-        @media (prefers-reduced-motion: no-preference) {
-            transition:
-                opacity 0.3s ease,
-                top 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
-        }
     }
 }
 
@@ -213,6 +215,28 @@
     body:has(.swal2-container) > .aviso-globo {
         z-index: capa(globo-sobre-las-ventanas);
     }
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+// Cerrar a mano (descartar.js): un clic o toque en cualquier parte del cartel lo quita, y con el dedo también se arrastran hacia un costado.
+// Mientras están a la vista dejan de ser "invisibles" para el mouse y los toques (pointer-events: auto): solo ellos, no el contenedor.
+// -----------------------------------------------------------------------------------------------------------------
+.aviso-ayuda,
+.aviso-contador,
+.aviso-globo {
+    touch-action: pan-y; // el dedo los puede llevar a un costado; hacia arriba y abajo sigue desplazando la página
+}
+
+.aviso-ayuda.visible,
+.aviso-contador.visible,
+.aviso-globo.visible {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+// Escondidos por el zoom extra no se pueden tocar
+#avisos-ayuda.en-pausa .aviso-ayuda {
+    pointer-events: none;
 }
 
 // En computadora todos los avisos comparten un tamaño algo más generoso, sin volver al formato grande anterior.

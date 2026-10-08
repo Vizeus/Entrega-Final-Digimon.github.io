@@ -15,8 +15,7 @@
 
 body:has(.swal2-container) #zoom-flechas,
 body:has(.swal2-container) #zoom-fondo .zoom-cerrar,
-body:has(.swal2-container) #zoom-fondo .zoom-ayuda,
-body:has(.swal2-container) #avisos-ayuda {
+body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
     opacity: 0;
     pointer-events: none;
 }

@@ -2,7 +2,7 @@
 // ARRANQUE DE LA PÁGINA
 //
 // La puerta de entrada: el index.html carga solo este archivo, y los import de cada archivo traen el resto.
-// Cada parte está en su archivo (pagina.js, api.js, combate.js, avisos.js, cartas.js, zoom.js, gestos.js, inclinacion.js,
+// Cada parte está en su archivo (pagina.js, api.js, combate.js, avisos.js, descartar.js, ventanas.js, cartas.js, zoom.js, gestos.js, inclinacion.js,
 // audio.js, sonidos.js, filtros.js, info.js, barra.js, evolucion.js y baile.js). Acá se ponen en marcha, en este orden, y se
 // conectan los botones que usan varias partes a la vez. Cuando la página termina de armarse, empieza la carga de los digimons.
 // -----------------------------------------------------------------------------------------------------------------
@@ -24,6 +24,7 @@ import { activarInfo } from './info.js';
 import { activarBarraQueSeEsconde, activarLogo, activarMenuMovil } from './barra.js';
 import { activarEvolucion } from './evolucion.js';
 import { activarBaileDeCartas } from './baile.js';
+import { activarPaginaQuietaConVentanas } from './ventanas.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     mostrarSistemaDeNiveles();
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     crearListaDeDigimons();
 });
 
+activarPaginaQuietaConVentanas(); // el dedo no desplaza la página con una ventana abierta
 activarInclinacion();
 activarRuedaConShift();
 evitarFocoYSeleccionConShift();

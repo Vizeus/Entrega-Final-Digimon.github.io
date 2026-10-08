@@ -8,7 +8,7 @@
 import { emitir, ponerAyuda } from './util.js';
 import { EMOJIS_ELEMENTO, EMOJIS_TIPO, MARCAS_DE_NIVEL, numeracionNiveles } from './datos.js';
 import { nombreElemento, nombreTipo, t } from './i18n.js';
-import { claveDeNombre, nombreOccidental, nombreParaMostrar } from './nombres.js';
+import { claveDeNombre, inicioDeLoAparte, nombreOccidental, nombreParaMostrar } from './nombres.js';
 import { cartasPorId, listaDigimons, nombreNivel } from './pagina.js';
 import { actualizarBarraProgreso, contadorDigimons } from './api.js';
 import { seleccionados, verificarSeleccion } from './combate.js';
@@ -58,10 +58,10 @@ function nombreAlternativo(carta) {
     return visible === original ? { etiqueta: 'carta.nombreOccidental', nombre: occidental } : { etiqueta: 'carta.nombreOriginal', nombre: original };
 }
 
-// Nombre en la carta: lo que va entre paréntesis pasa a una segunda línea, más chica.
+// Nombre en la carta: lo que va entre paréntesis o entre guiones ("Gabumon -Yujo no Kizuna-") pasa a una segunda línea, más chica.
 // El texto completo del <h4> no cambia (el combate lo lee con textContent).
 function ponerNombre(elemento, nombre) {
-    const posicion = nombre.indexOf('(');
+    const posicion = inicioDeLoAparte(nombre);
     if (posicion <= 0) {
         elemento.textContent = nombre;
         return;
@@ -292,7 +292,7 @@ export async function voltearCarta(carta, direccion = 1) {
         dorso.style.height = `${frente.offsetHeight}px`; // el dorso mide lo mismo que el frente
     }
 
-    void sonidoVuelta(); // el desbloqueo del audio móvil no debe retrasar el giro visual
+    void sonidoVuelta(carta === cartaEnZoom); // el desbloqueo del audio móvil no debe retrasar el giro visual (con la carta ampliada suena más fuerte)
 
     if (reducirMovimiento) {
         carta.classList.toggle('de-dorso');

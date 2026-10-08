@@ -201,13 +201,15 @@ export function sonidoSeleccion(elegida) {
 
 // Carta que se da vuelta: un "fshh" de papel cortando el aire mientras gira y, al terminar, el toquecito de apoyarse.
 // Suena más bajito que el resto de los efectos de las cartas (en celular y en computadora): 1 sería el volumen original, que sobresalía.
+// Con la carta ampliada (zoom) suena un 20 % más fuerte: se la ve más de cerca y el mismo sonido se sentía lejano.
 const VOLUMEN_DEL_GIRO = 0.55;
+const VOLUMEN_DEL_GIRO_EN_ZOOM = VOLUMEN_DEL_GIRO * 1.2;
 
-export function sonidoVuelta() {
-    sonarCuandoElAudioEsteListo(sonidoVueltaAhora);
+export function sonidoVuelta(enZoom = false) {
+    sonarCuandoElAudioEsteListo(() => sonidoVueltaAhora(enZoom ? VOLUMEN_DEL_GIRO_EN_ZOOM : VOLUMEN_DEL_GIRO));
 }
 
-function sonidoVueltaAhora() {
+function sonidoVueltaAhora(volumenDelGiro) {
     try {
         const contexto = obtenerContextoAudio();
         const t = contexto.currentTime;
@@ -229,9 +231,9 @@ function sonidoVueltaAhora() {
 
         const volumenRuido = contexto.createGain();
         volumenRuido.gain.setValueAtTime(0.0001, t);
-        volumenRuido.gain.exponentialRampToValueAtTime(0.22 * VOLUMEN_DEL_GIRO, t + 0.11);
-        volumenRuido.gain.exponentialRampToValueAtTime(0.05 * VOLUMEN_DEL_GIRO, t + 0.24);
-        volumenRuido.gain.exponentialRampToValueAtTime(0.13 * VOLUMEN_DEL_GIRO, t + 0.34);
+        volumenRuido.gain.exponentialRampToValueAtTime(0.22 * volumenDelGiro, t + 0.11);
+        volumenRuido.gain.exponentialRampToValueAtTime(0.05 * volumenDelGiro, t + 0.24);
+        volumenRuido.gain.exponentialRampToValueAtTime(0.13 * volumenDelGiro, t + 0.34);
         volumenRuido.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
 
         ruido.connect(banda);
@@ -241,7 +243,7 @@ function sonidoVueltaAhora() {
         ruido.start(t);
         ruido.stop(t + 0.55);
 
-        toqueDeCarta(contexto, t + 0.46, VOLUMEN_DEL_GIRO); // el roce final cuando termina de girar
+        toqueDeCarta(contexto, t + 0.46, volumenDelGiro); // el roce final cuando termina de girar
     } catch (error) {
         // Si el navegador no permite audio, simplemente no suena
     }

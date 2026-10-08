@@ -592,13 +592,17 @@
     width: var(--g);
 }
 
+/* En el celular el árbol va en una sola columna (los anteriores, el digimon del medio y los siguientes, uno debajo del otro) y todo se
+   compacta para que, con las ramas que se ven de entrada, la ventana entre en la pantalla sin desplazarla hacia abajo: el digimon del medio
+   es una cajita horizontal (la imagen al costado), las flechas y los espacios son más chicos y los botones "ver las restantes" van a la
+   altura del rótulo. Al desplegar las ramas que faltan sí hace falta desplazarse (ver "abierta" más abajo). */
 @media (max-width: 640px) {
     .popup-evo {
-        padding: 0.9em 0.6em 0.8em;
+        padding: 0.7em 0.6em 0.6em;
     }
 
     .popup-evo .swal2-title {
-        font-size: 1.2em;
+        font-size: 1.15em;
     }
 
     /* El contenedor de SweetAlert trae unos 25 px de margen a cada lado: en un celular de 320 px dejaba solo 216 px para el árbol (105 px por
@@ -611,23 +615,28 @@
 
     .evo-nodo {
         gap: 6px;
+        padding: 3px 6px 3px 3px;
     }
 
     .evo-nodo img {
-        width: 34px;
-        height: 34px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .evo-etiqueta {
+        margin-top: 2px;
     }
 
     .evo-arbol {
         flex-direction: column;
         align-items: stretch;
-        gap: 6px;
-        padding: 6px 0 4px;
+        gap: 4px;
+        padding: 2px 0;
     }
 
     .evo-col > h5 {
         position: static;
-        margin: 0 0 8px;
+        margin: 0 0 5px;
         text-align: center;
         transform: none;
     }
@@ -637,7 +646,7 @@
         display: flex;
         flex-flow: row wrap;
         justify-content: center;
-        gap: 6px;
+        gap: 5px;
         border: 0;
     }
 
@@ -646,7 +655,7 @@
     }
 
     .evo-lista li {
-        flex: 0 1 calc(50% - 3px);
+        flex: 0 1 calc(50% - 2.5px);
         min-width: 0;
     }
 
@@ -662,7 +671,8 @@
     .evo-ir {
         position: static;
         display: block;
-        margin: 10px auto 0;
+        margin: 6px auto 0;
+        padding: 3px 12px;
         transform: none;
     }
 
@@ -670,12 +680,57 @@
         align-self: center;
     }
 
+    /* El digimon del medio: la imagen a un lado y, al otro, el nombre, el nivel y el tipo (en vez de uno debajo del otro) */
+    .evo-actual {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            "foto nombre"
+            "foto nivel"
+            "foto datos";
+        place-items: center start;
+        gap: 1px 10px;
+        width: min(100%, 250px);
+        padding: 6px 12px 6px 6px;
+        text-align: left;
+        border-width: 2px;
+    }
+
+    .evo-actual img {
+        grid-area: foto;
+        width: 54px;
+        height: 54px;
+    }
+
+    .evo-actual .evo-nombre {
+        grid-area: nombre;
+        min-width: 0;
+    }
+
+    .evo-actual .evo-nv {
+        grid-area: nivel;
+        margin-top: 0;
+    }
+
+    .evo-actual .evo-datos {
+        grid-area: datos;
+    }
+
     .evo-flecha-v {
         display: block;
-        font-size: 20px;
+        margin: -3px 0;
+        font-size: 14px;
         line-height: 1;
         text-align: center;
         color: var(--linea);
+    }
+
+    .evo-lore {
+        margin-top: 8px;
+    }
+
+    .evo-lore + .info-pie {
+        margin-top: 8px;
     }
 
     .evo-centro::before,

@@ -19,6 +19,7 @@ import { COLOR_NIVEL, COLOR_NIVEL_DESCONOCIDO, EMOJIS_ELEMENTO, EMOJIS_TIPO } fr
 import { DICCIONARIO, nombreElemento, nombreTipo, t } from './i18n.js';
 import { cartaPorId, listaDigimons, nombreNivel } from './pagina.js';
 import { nombreCompleto, reducirMovimiento } from './cartas.js';
+import { inicioDeLoAparte } from './nombres.js';
 import { cartaEnZoom, cerrarZoom } from './zoom.js';
 import { activarBotonDelDorso } from './gestos.js';
 import { limpiarTodo } from './filtros.js';
@@ -113,11 +114,11 @@ const evolucionesDe = carta => carta.datosDorso.evo;
 // ---- Qué ramas se muestran -----------------------------------------------------------------------------------------
 const nivelDe = carta => (carta.dataset.nivel === undefined ? undefined : Number(carta.dataset.nivel));
 const nombreDe = nombreCompleto;
-const sinParentesis = texto =>
-    texto
-        .replace(/\s*\(.*$/, '')
-        .trim()
-        .toLowerCase();
+// El nombre sin lo que va aparte (lo que está entre paréntesis o entre guiones): sirve para saber si dos son variantes del mismo digimon
+const sinParentesis = texto => {
+    const posicion = inicioDeLoAparte(texto);
+    return (posicion > 0 ? texto.slice(0, posicion) : texto).trim().toLowerCase();
+};
 
 // Qué tipo de evolución "especial" es una rama (o null si sigue la escalera normal). Armor y Hybrid se saben por la marca de la carta
 // (la del digimon que evoluciona: el de destino en "evoluciona a", el actual en "viene de"); la fusión, por el texto de la condición.
@@ -179,11 +180,11 @@ function colorDelNivel(nivel) {
     return COLOR_NIVEL[nivel] || COLOR_NIVEL_DESCONOCIDO;
 }
 
-// Nombre con lo que va entre paréntesis en una línea aparte, más chica (igual que en las cartas)
+// Nombre con lo que va entre paréntesis o entre guiones en una línea aparte, más chica (igual que en las cartas)
 function crearNombreEvo(nombre) {
     const elemento = document.createElement('span');
     elemento.className = 'evo-nombre';
-    const posicion = nombre.indexOf('(');
+    const posicion = inicioDeLoAparte(nombre);
     if (posicion > 0) {
         const aparte = document.createElement('small');
         aparte.textContent = nombre.slice(posicion);

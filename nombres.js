@@ -15,7 +15,7 @@ const IDIOMAS_CON_NOMBRES_OCCIDENTALES = ['es', 'en'];
 
 // Nombre de la API (original) → nombre occidental. Solo están los digimon cuyo nombre cambia (los más conocidos); los demás
 // se muestran con el nombre de la API. Para sumar uno, basta con agregar una línea. Si el nombre de la API lleva algo entre
-// paréntesis, se busca primero el nombre completo y después solo lo de antes del paréntesis, que se vuelve a agregar:
+// paréntesis (o entre guiones, 'Gabumon -Yujo no Kizuna-'), se busca primero el nombre completo y después solo lo de antes, que se vuelve a agregar:
 // 'Dukemon (Crimson Mode)' → 'Gallantmon (Crimson Mode)'. El "(X-Antibody)" no hace falta anotarlo: va siempre aparte.
 const NOMBRES_OCCIDENTALES = {
     // Baby, Child y Adult
@@ -215,13 +215,26 @@ export const claveDeNombre = nombre =>
 
 const TABLA_DE_NOMBRES = new Map(Object.entries(NOMBRES_OCCIDENTALES).map(([original, occidental]) => [claveDeNombre(original), occidental]));
 
+// Lo que va "aparte", en una segunda línea más chica, al final del nombre de un digimon: lo que está entre paréntesis ('Dukemon (Crimson Mode)')
+// o entre guiones ('Gabumon -Yujo no Kizuna-', con o sin un "(X-Antibody)" después). Devuelve dónde empieza ese resto (el "(" o el primer
+// guion), o -1 si el nombre no lleva nada aparte. Lo usan las cartas, la ventana de evolución y la búsqueda del nombre occidental.
+const ENTRE_GUIONES = /\s-[^\s-][^()]*-(?=\s*(?:\(|$))/;
+
+export function inicioDeLoAparte(nombre) {
+    const parentesis = nombre.indexOf('(');
+    const espacioDeGuiones = nombre.search(ENTRE_GUIONES);
+    const guiones = espacioDeGuiones === -1 ? -1 : espacioDeGuiones + 1; // (el guion está después del espacio)
+    if (parentesis === -1) return guiones;
+    return guiones === -1 ? parentesis : Math.min(parentesis, guiones);
+}
+
 // Nombre occidental de un nombre de la API (sin el "(X-Antibody)"). Si no tiene uno distinto, devuelve el mismo.
 // nombreOccidental('Omegamon') → 'Omnimon'   nombreOccidental('Dukemon (Crimson Mode)') → 'Gallantmon (Crimson Mode)'
 export function nombreOccidental(nombreApi) {
     const completo = TABLA_DE_NOMBRES.get(claveDeNombre(nombreApi));
     if (completo) return completo;
 
-    const posicion = nombreApi.indexOf('(');
+    const posicion = inicioDeLoAparte(nombreApi);
     if (posicion > 0) {
         const antes = nombreApi.slice(0, posicion).trimEnd();
         const base = TABLA_DE_NOMBRES.get(claveDeNombre(antes));
@@ -238,6 +251,7 @@ const SE_MUESTRAN_CON_EL_ORIGINAL = new Set(['Piyomon'].map(claveDeNombre));
 // original de la API)
 export function nombreParaMostrar(nombreApi) {
     if (!IDIOMAS_CON_NOMBRES_OCCIDENTALES.includes(idioma)) return nombreApi;
-    const base = nombreApi.split('(')[0].trimEnd();
+    const posicion = inicioDeLoAparte(nombreApi);
+    const base = (posicion > 0 ? nombreApi.slice(0, posicion) : nombreApi).trimEnd();
     return SE_MUESTRAN_CON_EL_ORIGINAL.has(claveDeNombre(base)) ? nombreApi : nombreOccidental(nombreApi);
 }

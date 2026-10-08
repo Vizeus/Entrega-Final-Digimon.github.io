@@ -155,10 +155,13 @@ export function infoNivel(nivelApi) {
     const poder = numeracionNiveles[nivelApi]; // undefined si el nivel es desconocido
     const nombre = nombreNivel(nivelApi);
 
-    const datos = [
-        [t('info.poder'), poder ?? t('info.sinDato')],
-        [t('info.clasificacion'), t(clasificacionAlternativa ? 'info.eeuu' : 'info.japon')],
-    ];
+    // Cómo se llama en el otro sistema. Si se llama igual (el nivel desconocido y el 8, Absolute), no hay nada que aclarar: no se muestran ni
+    // "Clasificación actual" ni "En la otra clasificación", que dirían lo mismo para los dos sistemas
+    const otroNombre = poder === undefined ? nombre : clasificacionAlternativa ? nivelApi : nivelesAlternativos[nivelApi] || nivelApi;
+    const seLlamaIgual = otroNombre === nombre;
+
+    const datos = [[t('info.poder'), poder ?? t('info.sinDato')]];
+    if (!seLlamaIgual) datos.push([t('info.clasificacion'), t(clasificacionAlternativa ? 'info.eeuu' : 'info.japon')]);
 
     // Referencias cruzadas: nivel anterior y nivel siguiente
     if (poder !== undefined) {
@@ -179,12 +182,7 @@ export function infoNivel(nivelApi) {
     }
 
     // Cómo se llama en el otro sistema (solo si el nombre es distinto)
-    if (poder !== undefined) {
-        const otroNombre = clasificacionAlternativa ? nivelApi : nivelesAlternativos[nivelApi] || nivelApi;
-        if (otroNombre !== nombre) {
-            datos.push([t('info.otraClasificacion'), otroNombre]);
-        }
-    }
+    if (!seLlamaIgual) datos.push([t('info.otraClasificacion'), otroNombre]);
 
     mostrarInfo(
         poder === undefined ? nombre : t('info.nivelTitulo', { nombre, n: poder }),
