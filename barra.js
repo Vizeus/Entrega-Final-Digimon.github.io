@@ -2,14 +2,14 @@
 // BARRA DE ARRIBA EN EL CELULAR
 //   · El menú ☰, que despliega el panel con la consigna, los ajustes y los menús de información.
 //   · La barra (con el buscador y los filtros, que van siempre a la vista debajo del logo) que se esconde al bajar por la lista y
-//     vuelve a aparecer al subir.
+//     vuelve a aparecer al subir, o sola cuando se completan los 2 digimons del combate.
 //   · El logo de Digimon, que es un botón de "volver al inicio".
 // (Antes estaban en info.js, que es de las ventanas de información.)
 // -----------------------------------------------------------------------------------------------------------------
 
 import { PANTALLA_DE_CELULAR } from './util.js';
 import { reducirMovimiento } from './cartas.js';
-import { limpiarSeleccionDeCombate } from './combate.js';
+import { limpiarSeleccionDeCombate, seleccionados } from './combate.js';
 import { limpiarTodo } from './filtros.js';
 
 // Menú ☰ del celular: abre y cierra el panel con la consigna, los ajustes y los menús de información.
@@ -60,10 +60,10 @@ export function activarMenuMovil() {
 }
 
 // Barra de arriba del celular (la del logo, el combate, el menú ☰, el buscador y los filtros): se esconde entera al bajar por la
-// lista y vuelve a aparecer apenas se sube un poquito, y solo con ese gesto (así no tapa las cartas mientras se recorre la lista).
-// Arriba de todo de la página siempre se ve, y también mientras se usa: con el menú ☰ abierto, con las opciones de un filtro
-// desplegadas o con el cursor en el buscador (si no, se iría de la pantalla en pleno uso). En computadora no hace nada: la barra
-// queda fija como siempre.
+// lista y vuelve a aparecer apenas se sube un poquito (así no tapa las cartas mientras se recorre la lista), o sola cuando se
+// completan los 2 digimons del combate, para que se vean el contador y el botón de pelear. Arriba de todo de la página siempre se
+// ve, y también mientras se usa: con el menú ☰ abierto, con las opciones de un filtro desplegadas o con el cursor en el buscador
+// (si no, se iría de la pantalla en pleno uso). En computadora no hace nada: la barra queda fija como siempre.
 // (El CSS hace el movimiento: la clase "barra-escondida" la desliza hacia arriba, fuera de la pantalla.)
 export function activarBarraQueSeEsconde() {
     const barra = document.getElementById('navbar');
@@ -101,6 +101,12 @@ export function activarBarraQueSeEsconde() {
         },
         { passive: true },
     );
+
+    // Al completar los 2 digimons del combate la barra baja sola, aunque esté escondida: ahí están el contador y el botón de pelear,
+    // que se iluminan justo en ese momento. Si después se vuelve a bajar por la lista, se esconde de nuevo como siempre.
+    document.addEventListener('seleccion-cambio', () => {
+        if (PANTALLA_DE_CELULAR.matches && seleccionados.length === 2) mostrar();
+    });
 
     // Si la ventana pasa al diseño de computadora (o vuelve al celular), la barra arranca a la vista
     PANTALLA_DE_CELULAR.addEventListener('change', () => {

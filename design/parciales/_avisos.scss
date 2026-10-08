@@ -104,6 +104,14 @@
 @include celular {
     #avisos-ayuda {
         right: 8px;
+
+        // Cuando la barra se esconde al bajar por la lista, los avisos suben al margen de arriba (avisos.js, ubicarAvisos), con el
+        // mismo movimiento con que se va la barra
+        @media (prefers-reduced-motion: no-preference) {
+            transition:
+                opacity 0.3s ease,
+                top 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+        }
     }
 }
 

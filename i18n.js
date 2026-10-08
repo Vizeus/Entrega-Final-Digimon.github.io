@@ -22,7 +22,7 @@ export const DICCIONARIO = {
     es: {
         // Barra de arriba
         'logo.alt': 'Logo de Digimon',
-        'logo.ayuda': 'Volver al inicio: sube, borra los filtros y quita la selección de combate',
+        'logo.ayuda': 'Volver al inicio',
         'combate.consigna': 'Elige 2 digimons con los que quieras simular un combate',
         'combate.contador': 'Digimons elegidos',
         'combate.contador.limpiar': 'Quitar la selección de los digimons elegidos',
@@ -208,7 +208,7 @@ export const DICCIONARIO = {
     en: {
         // Top bar
         'logo.alt': 'Digimon logo',
-        'logo.ayuda': 'Back to the start: scrolls to the top, clears the filters and the battle selection',
+        'logo.ayuda': 'Back to the start',
         'combate.consigna': 'Pick 2 Digimon to simulate a battle',
         'combate.contador': 'Digimon picked',
         'combate.contador.limpiar': 'Clear the picked digimon',

@@ -3471,6 +3471,11 @@ body:has(.swal2-container) #avisos-ayuda {
     right: 8px;
   }
 }
+@media (max-width: 700px) and (prefers-reduced-motion: no-preference) {
+  #avisos-ayuda {
+    transition: opacity 0.3s ease, top 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+  }
+}
 .aviso-contador {
   position: fixed;
   z-index: 1100;

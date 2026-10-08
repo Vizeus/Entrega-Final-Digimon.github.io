@@ -238,9 +238,13 @@ let cajaDeAvisos = null; // el contenedor donde se apilan los avisos (se crea co
 
 function ubicarAvisos() {
     if (!cajaDeAvisos) return;
-    // Debajo de la barra, que cambia de alto según el ancho de la pantalla. Se cuenta con el alto de la barra y no con dónde está
-    // en este momento: en celular la barra se esconde al bajar y, si el aviso entra en ese momento, quedaría fuera de la pantalla
-    cajaDeAvisos.style.top = `${Math.round(document.getElementById('navbar').getBoundingClientRect().height) + 12}px`;
+    // Debajo de la barra, que cambia de alto según el ancho de la pantalla. En celular la barra se esconde al bajar por la lista: ahí
+    // los avisos suben al margen de arriba de la página (en vez de guardarle el lugar a una barra que ya no está) y bajan de nuevo
+    // cuando la barra reaparece. Mientras está escondida se cuenta con su alto igual, así un aviso que entra en ese momento no queda
+    // fuera de la pantalla: nace en el margen de arriba.
+    const barra = document.getElementById('navbar');
+    const escondida = PANTALLA_DE_CELULAR.matches && barra.classList.contains('barra-escondida');
+    cajaDeAvisos.style.top = `${(escondida ? 0 : Math.round(barra.getBoundingClientRect().height)) + 12}px`;
 }
 
 // Con una carta ampliada el fondo del zoom tapa todo: los avisos pasan por encima mientras dura
@@ -296,6 +300,8 @@ export function activarAvisosDeAyuda() {
     window.addEventListener('resize', ubicarAvisos);
     // La barra también cambia de alto sin que cambie la ventana (por ejemplo, cuando el bloque de carga desaparece)
     if ('ResizeObserver' in window) new ResizeObserver(ubicarAvisos).observe(document.getElementById('navbar'));
+    // Cuando la barra se esconde o reaparece (cambia su clase), los avisos suben o bajan con ella
+    new MutationObserver(ubicarAvisos).observe(document.getElementById('navbar'), { attributes: true, attributeFilter: ['class'] });
     if (!hayAvisos) return; // ya entró más de 6 veces: no hace falta ninguno de los avisos de cómo se usa la página
     activarAvisoCombate();
     activarAvisoZoom();

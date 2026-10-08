@@ -26,6 +26,8 @@ import {
     reproducirSonido,
     musicaDelGanador,
     fanfarriaDeVictoria,
+    cancelarGritoDeVictoria,
+    reproducirGritoConDelay,
 } from './audio.js';
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -388,6 +390,7 @@ async function correrCombate() {
                 cancelarSonido = cuandoAparece(ventana, () => {
                     reproducirSonido(fanfarriaDeVictoria);
                     reproducirConDelay(); // Llama a la función con delay para reproducir musicaDelGanador
+                    reproducirGritoConDelay(); // y el grito final de la victoria, que solo suena si el cartel sigue abierto
                     lanzarConfeti(ventana);
                 });
             },
@@ -396,6 +399,7 @@ async function correrCombate() {
         // Se cerró el cartel del ganador (o hubo un error): se corta todo lo que iba a sonar o estaba sonando
         cancelarSonido();
         cancelarMusicaGanador();
+        cancelarGritoDeVictoria();
         detenerSonido(musicaDelGanador);
     }
 }

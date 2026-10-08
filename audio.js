@@ -175,7 +175,7 @@ export function aplicarSilencio() {
         salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : vol, salidaGeneral.context.currentTime, 0.01);
     }
     actualizarVolumenAudios();
-    [audioMouse, musicaDelGanador, musicaDelCombate, fanfarriaDeVictoria, audioPajita].forEach(audio => {
+    [audioMouse, musicaDelGanador, musicaDelCombate, fanfarriaDeVictoria, gritoDeVictoria, audioPajita].forEach(audio => {
         if (audio) audio.muted = silenciado;
     });
     if (vibracionApagada) {
@@ -455,7 +455,10 @@ export const musicaDelGanador = audioConVolumen('audio/Digimon World 3 - Victory
 export const musicaDelCombate = audioConVolumen('audio/Digimon World - Earlygame Battle.mp3', 0.5);
 musicaDelCombate.loop = true;
 
+// El sonido de victoria original son dos cosas con un silencio en el medio: la fanfarria (el primer segundo y pico) y, más tarde, el grito
+// final "¡yatta!". Están en dos archivos para que el grito suene solo si el cartel del ganador sigue abierto (ver reproducirGritoConDelay).
 export const fanfarriaDeVictoria = audioConVolumen('audio/Digimon World - PSX Battle Win.mp3', 0.7);
+export const gritoDeVictoria = audioConVolumen('audio/Digimon World - PSX Battle Win - Grito.mp3', 0.7);
 
 const audioPajita = audioConVolumen('audio/Pajita.mp3');
 let intervaloSonido;
@@ -614,4 +617,20 @@ export function reproducirConDelay() {
 export function cancelarMusicaGanador() {
     clearTimeout(temporizadorMusicaGanador);
     temporizadorMusicaGanador = 0;
+}
+
+// El grito final de la victoria entra 1,95 s después de la fanfarria (justo donde estaba en el sonido original, antes de partirlo en
+// dos). Solo suena si el cartel del ganador sigue abierto: si se cierra antes, no entra; si se cierra mientras suena, se corta
+// (cancelarGritoDeVictoria).
+let temporizadorGritoDeVictoria = 0;
+
+export function reproducirGritoConDelay() {
+    cancelarGritoDeVictoria();
+    temporizadorGritoDeVictoria = setTimeout(() => reproducirSonido(gritoDeVictoria), 1950);
+}
+
+export function cancelarGritoDeVictoria() {
+    clearTimeout(temporizadorGritoDeVictoria);
+    temporizadorGritoDeVictoria = 0;
+    detenerSonido(gritoDeVictoria);
 }
