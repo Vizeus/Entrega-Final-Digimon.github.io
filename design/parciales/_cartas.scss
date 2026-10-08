@@ -846,7 +846,7 @@
     // estira hacia arriba y abajo (30 % / 28 % → 48 % / 46 % del alto). Así, alrededor del pulgar queda mucho más textura a la vista.
     // Solo vale para la carta chica de la lista: con el zoom (.zoom-activa) la carta ya se ve enorme y el dedo no la tapa, así que
     // ahí queda la zona de siempre.
-    @media (hover: none) {
+    @include con-dedo {
         &.tilt-on li:is(#{$holo-niveles}):not(.zoom-activa) .c-frente {
             &::before {
                 $franja-dedo: linear-gradient(115deg, transparent 36%, #000 50%, transparent 64%);
@@ -904,7 +904,7 @@
 }
 
 // En pantallas táctiles no hay hover: el botón de dar vuelta queda siempre a la vista
-@media (hover: none) {
+@include con-dedo {
     #listado-digimons li .c-flip {
         opacity: 1;
         scale: 1;
@@ -915,7 +915,7 @@
 
 // En móvil: tras 4 flips con el dedo en una sesión, desaparecen las flechas hasta la próxima sesión.
 // Al completar ese aprendizaje en 5 sesiones distintas, quedan ocultas de forma permanente.
-@media (hover: none), (max-width: 768px) {
+@mixin sin-flechas-de-giro {
     body.sin-flechas-flip-movil #listado-digimons li .c-flip {
         opacity: 0;
         scale: 0;
@@ -926,10 +926,18 @@
     }
 }
 
+@media (max-width: 768px) {
+    @include sin-flechas-de-giro;
+}
+
+@include con-dedo {
+    @include sin-flechas-de-giro;
+}
+
 // En pantallas táctiles el "hover" queda pegado en la última carta tocada: ahí no se levanta ni brilla.
 // El brillo con el dedo aparece solo al mantener apretada la carta (inclinación con el dedo, clase .tilt-activo).
 // Además, al mantener apretada una carta no se abre el menú del sistema ni se selecciona texto.
-@media (hover: none) {
+@include con-dedo {
     #listado-digimons > li {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
@@ -962,13 +970,21 @@
 // arrancar con ella su propio arrastre de imagen ni su menú de imagen (guardar, buscar con Google...) al mantener apretada la carta, que es
 // justo el gesto con el que se inclina. Si lo hiciera, cancelaría el toque (touchcancel) y la carta soltaría la inclinación a mitad de camino.
 // (Se pregunta por "pointer: coarse" además de "hover: none" por las dudas: no todos los navegadores contestan igual a las dos preguntas.)
-@media (hover: none), (pointer: coarse) {
+@mixin imagen-de-carta-sin-agarre {
     #listado-digimons > li img {
         pointer-events: none;
         -webkit-user-drag: none;
         -webkit-touch-callout: none;
         user-select: none;
     }
+}
+
+@media (pointer: coarse) {
+    @include imagen-de-carta-sin-agarre;
+}
+
+@include con-dedo {
+    @include imagen-de-carta-sin-agarre;
 }
 
 // En computadora, mientras se mantiene apretada Shift (inclinacion.js, activarInclinacion, que le pone la clase "inclinacion-anulada" a la lista)

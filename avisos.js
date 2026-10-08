@@ -2,7 +2,7 @@
 // AVISOS DE AYUDA
 //
 // Los cartelitos que explican cómo se usa la página (combate, zoom, gestos, inclinación, zoom extra), el aviso del contador
-// después del primer combate y la "llamada" de los botones redondos (sonido e inclinación). Recuerdan qué ya vio cada persona.
+// después del primer combate y la "llamada" de los botones redondos (sonido, inclinación y tema). Recuerdan qué ya vio cada persona.
 // -----------------------------------------------------------------------------------------------------------------
 
 import { CON_DEDO, CON_MOUSE, PANTALLA_DE_CELULAR, emitir, guardarJSON, hayMarcaDeSesion, leerJSON, ponerMarcaDeSesion } from './util.js';
@@ -27,7 +27,7 @@ import { hacerDescartable } from './descartar.js';
 // LAS VENTANAS TAMBIÉN LOS FRENAN (pero no los esconden)
 // Con una ventana abierta (información, ataques, línea evolutiva, combate) los avisos de ayuda quedan donde estaban, detrás de la cortina
 // oscura, y su tiempo se frena: lo que dicen (inclinar, dar vuelta una carta...) no se puede hacer mientras la ventana está abierta, así
-// que al cerrarla siguen justo donde iban. Los botones de sonido e inclinación y sus globitos son la excepción: siguen su camino y se ven
+// que al cerrarla siguen justo donde iban. Los botones de sonido, inclinación y tema y sus globitos son la excepción: siguen su camino y se ven
 // por encima de la cortina (ver la "llamada" de los botones, más abajo).
 // -----------------------------------------------------------------------------------------------------------------
 let cartelesEnPausa = false;
@@ -208,16 +208,17 @@ if ('ResizeObserver' in window) new ResizeObserver(ubicarAvisoDelContador).obser
 // los avisos pasan por encima del zoom, para que se lean.
 // MEMORIA DE LOS AVISOS: se guarda en el navegador de cada persona (localStorage), como un JSON, así los avisos no se repiten
 // cada vez que vuelve a entrar:
-//   { "visitas": 3, "hecho": { "combate": true, "zoom": true, "inclinar": false, "gestos": true } }
+//   { "visitas": 3, "hecho": { "combate": true, "zoom": true, "inclinar": false, "gestos": true }, "veces": { "tema": 2 } }
 //   - "hecho": lo que la persona ya hizo (eligió las 2 cartas, amplió una, inclinó una con el dedo) o ya vio ("gestos", que se
 //     muestra una sola vez). Un aviso que ya no hace falta no vuelve a salir.
+//   - "veces": cuántas veces salió un cartel que tiene tope de apariciones (hoy, el del botón de tema), para no mostrarlo más allá del tope.
 //   - "visitas": cuántas veces entró. Entrar una séptima vez todavía los muestra; desde la octava no sale ninguno (ya los conoce).
 //     Cuenta una por sesión del navegador: recargar la página con la pestaña abierta no suma.
 // Si el navegador no deja guardar (modo privado, datos bloqueados), todo sigue andando como si fuera la primera vez.
 // Para empezar de cero (por ejemplo, para probarlos): localStorage.removeItem('digimon-avisos')
 const AVISOS_ALMACEN = 'digimon-avisos';
 const AVISOS_VISITAS_MAXIMAS = 7;
-let memoriaAvisos = { visitas: 0, hecho: {} };
+let memoriaAvisos = { visitas: 0, hecho: {}, veces: {} };
 
 function guardarMemoriaAvisos() {
     guardarJSON(AVISOS_ALMACEN, memoriaAvisos);
@@ -229,6 +230,7 @@ function registrarVisitaDeAvisos() {
     if (guardado && typeof guardado === 'object') {
         memoriaAvisos.visitas = Number.isFinite(guardado.visitas) ? guardado.visitas : 0;
         if (guardado.hecho && typeof guardado.hecho === 'object') memoriaAvisos.hecho = guardado.hecho;
+        if (guardado.veces && typeof guardado.veces === 'object') memoriaAvisos.veces = guardado.veces;
     }
     const visitaNueva = !hayMarcaDeSesion(AVISOS_ALMACEN); // una por sesión: recargar no cuenta (sin memoria de sesión cuenta cada carga)
     ponerMarcaDeSesion(AVISOS_ALMACEN);
@@ -244,6 +246,13 @@ const avisoHecho = clave => memoriaAvisos.hecho[clave] === true;
 function marcarAvisoHecho(clave) {
     if (avisoHecho(clave)) return;
     memoriaAvisos.hecho[clave] = true;
+    guardarMemoriaAvisos();
+}
+
+const vecesQueSalio = clave => (Number.isFinite(memoriaAvisos.veces[clave]) ? memoriaAvisos.veces[clave] : 0);
+
+function sumarVezQueSalio(clave) {
+    memoriaAvisos.veces[clave] = vecesQueSalio(clave) + 1;
     guardarMemoriaAvisos();
 }
 
@@ -506,7 +515,8 @@ export function activarAvisoDeInclinacion() {
         // combate) también: no empieza nunca con una ventana abierta (la persona no puede hacer lo que cuenta) y sale cuando se cierra.
         // El zoom de una carta no hace esperar (el botón sube por encima), ni tampoco el globito del botón de sonido (si coinciden, se reparten
         // a los costados). Si la ventana se abre cuando ya empezó, el botón y el cartel la acompañan por encima de la cortina.
-        if (document.hidden || hayVentanaAbierta()) {
+        // Tampoco si ya están llamando dos botones (sonido y tema): con un tercer globito no cabrían los tres uno al lado del otro
+        if (document.hidden || hayVentanaAbierta() || llamadasActivas.size >= 2) {
             reintento = setTimeout(mostrar, 500);
             return;
         }
@@ -607,6 +617,80 @@ export function activarAvisoDeInclinacion() {
         terminarLlamada(boton);
         marcarInclinacionAnimacionSolaHecha();
     });
+}
+
+// Cartel del botón de tema (claro / oscuro / automático): el botón salta, lanza ondas y suelta un globito que cuenta, en una línea, que con él se
+// elige el tema (ver "LLAMADA DE LOS BOTONES REDONDOS"). Cuándo sale depende de dónde está el botón:
+//   - Computadora: a los 50 segundos de estar en la página. Es un botón de la barra, que siempre se ve; no espera a que se cierre nada: si a los
+//     50 s hay una carta ampliada o una ventana abierta, empieza igual y pasa por encima de la cortina (el botón sube de la barra un momento).
+//   - Celular: el botón vive dentro del menú ☰, así que solo sale con el menú abierto y pasados 15 segundos de estar en la página (abrirlo antes
+//     no hace nada; si ya estaba abierto cuando se cumplen, sale en ese momento). Sale del botón, en su lugar del menú, y si se cierra el menú
+//     se corta de golpe, globito y animación.
+// En los dos casos: una vez por sesión del navegador, y como mucho en 3 sesiones (cuentan las veces que salió de verdad, no las visitas); si la
+// persona toca el botón, ya lo encontró y no sale nunca más, haya salido una vez o ninguna (queda guardado, como los demás consejos).
+const TEMA_AVISO_SESION = 'digimon-aviso-tema'; // sessionStorage: en esta sesión ya salió
+const TEMA_AVISO_ESPERA = 50000; // ms desde que se abre la página (computadora)
+const TEMA_AVISO_ESPERA_CELULAR = 15000; // ms desde que se abre la página (celular: además hace falta el menú ☰ abierto)
+const TEMA_AVISO_MAXIMO_DE_SESIONES = 3; // sesiones distintas en las que puede salir
+const TEMA_AVISO_DURACION = 9000; // ms a la vista
+
+const hayCartelitosAVista = () => !cartelesEnPausa && !!cajaDeAvisos?.querySelector('.aviso-ayuda.visible');
+
+export function activarAvisoDeTema() {
+    const boton = document.getElementById('tema');
+    const barra = document.getElementById('navbar');
+    if (!boton || !barra) return;
+    if (avisoHecho('tema') || vecesQueSalio('tema') >= TEMA_AVISO_MAXIMO_DE_SESIONES || hayMarcaDeSesion(TEMA_AVISO_SESION)) return;
+    const menuAbierto = () => barra.classList.contains('menu-abierto');
+    let terminado = false; // ya salió (o ya no tiene que salir) en esta sesión
+    let pasoLaEsperaDeComputadora = false;
+    let pasoLaEsperaDeCelular = false;
+    let reintento = 0;
+    const esperaEscritorio = setTimeout(() => {
+        pasoLaEsperaDeComputadora = true;
+        intentar();
+    }, TEMA_AVISO_ESPERA);
+    const esperaCelular = setTimeout(() => {
+        pasoLaEsperaDeCelular = true;
+        intentar();
+    }, TEMA_AVISO_ESPERA_CELULAR);
+
+    function intentar() {
+        clearTimeout(reintento);
+        if (terminado) return;
+        const enCelular = PANTALLA_DE_CELULAR.matches;
+        if (enCelular ? !(pasoLaEsperaDeCelular && menuAbierto()) : !pasoLaEsperaDeComputadora) return;
+        // Solo espera si la pestaña está en segundo plano, si ya están llamando dos botones o, en computadora, si llama otro botón mientras hay
+        // cartelitos de ayuda a la vista (los dos globitos se reparten a los costados y el del tema se metía debajo de los cartelitos de arriba
+        // a la derecha)
+        const globosAmontonados = llamadasActivas.size >= 2 || (llamadasActivas.size === 1 && !enCelular && hayCartelitosAVista());
+        if (document.hidden || globosAmontonados) {
+            reintento = setTimeout(intentar, 500);
+            return;
+        }
+        terminado = true;
+        ponerMarcaDeSesion(TEMA_AVISO_SESION);
+        sumarVezQueSalio('tema');
+        llamarLaAtencion(boton, { icono: '🌓', texto: () => t('aviso.tema'), duracion: TEMA_AVISO_DURACION });
+    }
+
+    // En celular: al abrir el menú ☰ puede salir; al cerrarlo, se corta de golpe (el botón se va con el menú)
+    document.addEventListener('menu-movil-cambio', evento => {
+        if (evento.detail.abierto) intentar();
+        else terminarLlamada(boton, { deGolpe: true });
+    });
+
+    // Tocó el botón: ya lo encontró
+    boton.addEventListener('click', () => {
+        terminado = true;
+        clearTimeout(esperaEscritorio);
+        clearTimeout(esperaCelular);
+        clearTimeout(reintento);
+        terminarLlamada(boton);
+        marcarAvisoHecho('tema');
+    });
+    // Si se gira el celular (o se cambia el tamaño de la ventana) mientras llama, la llamada se corta: el botón cambia de lugar
+    PANTALLA_DE_CELULAR.addEventListener('change', () => terminarLlamada(boton, { deGolpe: true }));
 }
 
 // Cartel del zoom extra (solo computadora): al ampliar la primera carta de la sesión cuenta, en una línea, que con el mouse sobre la carta la
@@ -787,7 +871,7 @@ function activarAvisoZoom() {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-// LLAMADA DE LOS BOTONES REDONDOS (sonido e inclinación): cuando el botón salta y lanza ondas ("llamando"), de él sale un globito con una
+// LLAMADA DE LOS BOTONES REDONDOS (sonido, inclinación y tema): cuando el botón salta y lanza ondas ("llamando"), de él sale un globito con una
 // flechita (como el del contador de cartas elegidas) que cuenta para qué sirve. Mientras dura, en computadora el botón tiene que verse y
 // poder tocarse aunque haya algo encima de la barra: el zoom de una carta, un cartel del combate o uno de información (todos son una cortina
 // oscura y desenfocada por encima de ella). Si lo hay, el botón sale un momento de la barra y queda por encima de la cortina, en el mismo
@@ -904,8 +988,7 @@ export function revisarLlamadas() {
 function esquivarAvisosConElBotonDeSonido() {
     const boton = document.getElementById('silenciar');
     if (!boton) return;
-    const avisosAVista = !cartelesEnPausa && !!cajaDeAvisos?.querySelector('.aviso-ayuda.visible');
-    boton.classList.toggle('esquiva-avisos', PANTALLA_DE_CELULAR.matches && llamadasActivas.has(boton) && avisosAVista);
+    boton.classList.toggle('esquiva-avisos', PANTALLA_DE_CELULAR.matches && llamadasActivas.has(boton) && hayCartelitosAVista());
 }
 
 function vigilarLlamadas() {
@@ -960,6 +1043,7 @@ export function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOT
 
     const globo = document.createElement('div');
     globo.className = 'aviso-globo';
+    globo.dataset.boton = boton.id; // (de qué botón es el globito)
     globo.setAttribute('role', 'status');
     globo.innerHTML = '<span class="aviso-icono" aria-hidden="true"></span><span class="aviso-texto"></span>';
     globo.querySelector('.aviso-icono').textContent = icono;
@@ -1001,8 +1085,9 @@ export function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOT
 }
 
 // Termina la llamada del botón (se cumplió el tiempo, o la persona ya lo encontró): se apaga la animación, el globito se achica hacia el
-// botón y, si estaba por encima de una cortina, vuelve a la barra
-export function terminarLlamada(boton) {
+// botón y, si estaba por encima de una cortina, vuelve a la barra. Con "deGolpe" el globito desaparece en el acto, sin achicarse (cuando el botón
+// mismo se va de la pantalla, como al cerrar el menú ☰ del celular)
+export function terminarLlamada(boton, { deGolpe = false } = {}) {
     const llamada = llamadasActivas.get(boton);
     if (!llamada) return;
     llamadasActivas.delete(boton);
@@ -1012,7 +1097,8 @@ export function terminarLlamada(boton) {
     alFrenar.delete(llamada.alFrenar);
     llamada.devolver?.();
     llamada.globo.classList.remove('visible');
-    setTimeout(() => llamada.globo.remove(), 500);
+    if (deGolpe) llamada.globo.remove();
+    else setTimeout(() => llamada.globo.remove(), 500);
 }
 
 document.addEventListener('idioma-cambiado', () => llamadasActivas.forEach(escribirGloboDelBoton));

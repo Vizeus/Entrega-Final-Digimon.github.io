@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------------------------------------------------------
 // ZOOM DE LAS CARTAS
 //
-// Con doble clic la carta vuela al centro de la pantalla, grande. Con la rueda se agranda todavía más (zoom extra) y se puede
-// arrastrar. Las flechas (o deslizar el dedo) pasan a la carta vecina.
+// Con doble clic la carta vuela al centro de la pantalla, grande, y con otro doble clic vuelve a su lugar. Con la rueda se agranda todavía más
+// (zoom extra) y se puede arrastrar. Las flechas (o deslizar el dedo) pasan a la carta vecina.
 // -----------------------------------------------------------------------------------------------------------------
 
 import { CON_MOUSE, emitir, ponerAyuda } from './util.js';
@@ -10,7 +10,7 @@ import { t } from './i18n.js';
 import { listaDigimons } from './pagina.js';
 import { seleccionados, verificarSeleccion } from './combate.js';
 import { reducirMovimiento, seleccionAntesDelClic } from './cartas.js';
-import { activarZoomConDobleToque, activarZoomConPellizco } from './gestos.js';
+import { activarSalirDelZoomConBarrido, activarZoomConDobleToque, activarZoomConPellizco } from './gestos.js';
 import { vibrar } from './audio.js';
 import { sonidoZoom } from './sonidos.js';
 
@@ -18,12 +18,18 @@ import { sonidoZoom } from './sonidos.js';
 // ZOOM: con doble clic la carta "vuela" al centro de la pantalla, bien grande, y el resto se oscurece.
 //   La carta NO se mueve del <ul>: se traslada y se agranda con las propiedades "translate" y "scale" (así en su lugar
 //   queda un hueco del tamaño de la carta, con el fondo a la vista) y sigue funcionando la inclinación ("transform") y
-//   el dar vuelta. Se cierra con Esc, con un clic afuera o con la ✕.
+//   el dar vuelta. Se cierra con Esc, con un clic afuera, con la ✕ o con un doble clic sobre la carta. Con el dedo, también con un doble
+//   toque sobre ella o con un barrido hacia arriba o hacia abajo que empiece en ella.
 // -----------------------------------------------------------------------------------------------------------------
 export let cartaEnZoom = null; // la carta que está en el centro (o volviendo a su lugar)
 export let zoomOcupado = false; // mientras vuela, no se inclina, no se da vuelta y no se cierra
 let cierrePendiente = false; // pidieron cerrar mientras todavía estaba llegando
 export let zoomCerrando = false; // la carta ya está volviendo a su lugar: pedir cerrar otra vez no hace falta (ver cerrarZoom)
+let cierreIniciado = -Infinity; // cuándo empezó a cerrarse el zoom la última vez (ver activarZoom: el doble clic que cierra no tiene que volver a abrir)
+
+// Lo que dentro de la carta tiene su propia función (los botones, los botoncitos del frente y los del dorso): un doble toque o un doble clic
+// sobre eso no es para devolver la carta a su lugar
+export const CON_FUNCION_PROPIA = 'button, [role="button"], a, .c-evo, .c-ataques';
 
 // Al pasar de una carta a otra dentro del zoom (con el teclado o con las flechas), la carta nueva suele quedar justo debajo del puntero, que
 // no se movió. Sin esto el navegador le daba el "hover" (a veces tarde o de más) y aparecía el reflejo quieto en el medio. Ahora la carta nueva
@@ -207,8 +213,8 @@ function bloquearDesplazamiento(bloquear) {
 
 // ZOOM EXTRA: con una carta ampliada y DE FRENTE (el dorso no: ahí la rueda y el pellizco son para la descripción), la rueda del mouse
 // hacia arriba, con el puntero sobre la carta, la agranda todavía más, y hacia abajo la devuelve al tamaño normal. Lo que está bajo el
-// puntero se queda bajo el puntero (se acerca a donde se mira). En celular se hace separando los dedos (y juntándolos vuelve), y mover los
-// dos dedos a la vez la desplaza. Mientras está agrandada de más la carta no se inclina: la inclinación se cancela (y vuelve sola cuando
+// puntero se queda bajo el puntero (se acerca a donde se mira). En celular se hace separando los dedos, y solo dura mientras se mantiene el
+// pellizco: al soltarlo la carta vuelve sola al tamaño normal del zoom (ver activarZoomConPellizco). Mover los dos dedos a la vez la desplaza. Mientras está agrandada de más la carta no se inclina: la inclinación se cancela (y vuelve sola cuando
 // se la devuelve al tamaño normal). Las flechas de los costados se esconden, y si se da vuelta la carta, se pasa a otra o se cierra el
 // zoom, vuelve a lo normal.
 export const ZOOM_EXTRA_MAXIMO = 3; // veces el tamaño del zoom normal
@@ -682,6 +688,7 @@ export async function cerrarZoom({ rapido = false } = {}) {
         return;
     }
     cierrePendiente = false;
+    cierreIniciado = performance.now();
     zoomOcupado = true;
     zoomCerrando = true;
     emitir('zoom-cambio');
@@ -732,19 +739,32 @@ export function restaurarSeleccion(estado) {
     verificarSeleccion();
 }
 
+// ¿Un doble toque (o doble clic) acá devuelve la carta ampliada a su lugar? Sí, sobre la carta, salvo que haya una ventana abierta o sea sobre algo
+// que tiene su propia función (ver CON_FUNCION_PROPIA)
+export function puedeCerrarseConDobleToque(destino) {
+    return !zoomOcupado && !document.querySelector('.swal2-container') && !destino.closest?.(CON_FUNCION_PROPIA);
+}
+
 export function activarZoom() {
     listaDigimons.addEventListener('dblclick', evento => {
         if (evento.target.closest('button')) return;
         const carta = evento.target.closest('#listado-digimons > li');
-        if (!carta || cartaEnZoom) return;
+        if (cartaEnZoom) {
+            // Un doble clic sobre la carta ampliada la devuelve a su lugar (no cuenta soltar después de arrastrarla con el zoom extra)
+            if (carta === cartaEnZoom && puedeCerrarseConDobleToque(evento.target) && performance.now() - ultimoDeslizamiento > 500) cerrarZoom();
+            return;
+        }
+        if (!carta) return;
+        // (el doble toque del celular ya cerró el zoom: el "dblclick" que algunos navegadores mandan después no lo vuelve a abrir)
+        if (evento.timeStamp - cierreIniciado < 500) return;
         // Los dos clics del doble clic eligieron y desearon la carta (y, con 2 elegidas, pudieron sacar a otra): se deshace
         if (seleccionAntesDelClic.carta === carta) restaurarSeleccion(seleccionAntesDelClic.estado);
         abrirZoom(carta);
     });
 
-    // Un doble clic no selecciona el texto de la carta
+    // Un doble clic no selecciona el texto de la carta (tampoco con la carta ampliada: ahí el doble clic la cierra)
     listaDigimons.addEventListener('mousedown', evento => {
-        if (evento.detail > 1 && !cartaEnZoom && !evento.target.closest('button') && evento.target.closest('#listado-digimons > li')) {
+        if (evento.detail > 1 && !evento.target.closest('button') && evento.target.closest('#listado-digimons > li')) {
             evento.preventDefault();
         }
     });
@@ -766,4 +786,5 @@ export function activarZoom() {
 
     activarZoomConPellizco();
     activarZoomConDobleToque();
+    activarSalirDelZoomConBarrido();
 }

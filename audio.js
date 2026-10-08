@@ -10,6 +10,7 @@ import { CON_DEDO, PANTALLA_DE_CELULAR, emitir, guardarJSON, hayMarcaDeSesion, l
 import { t } from './i18n.js';
 import { llamarLaAtencion, terminarLlamada } from './avisos.js';
 import { nodoVolumenTeclas, sonidoTecla } from './sonidos.js';
+import { toqueQueSoloCierraMenus } from './menus.js';
 
 // Vibración corta al tocar botones con el dedo, como una tecla física. Solo en los celulares que la permiten
 // (Android; en iPhone el navegador no deja vibrar). El navegador solo la permite después del primer toque en la página.
@@ -23,26 +24,30 @@ export function vibrar(duracion = 8, forzar = false) {
     }
 }
 
-// ---- Toques con el dedo en los botoncitos de las cartas -----------------------------------------------------------------
+// ---- Toques con el dedo en los botones de las cartas y de las ventanas ---------------------------------------------------
 // Al desplazar la página con el dedo, muchas veces el dedo cae justo sobre un botoncito de una carta (dar vuelta, nivel, tipo, elemento...).
+// Lo mismo pasa dentro de las ventanas (ataques, evolución, información): están llenas de botones y para recorrerlas se desplaza el dedo.
 // Al apoyarlo todavía no se sabe si es un toque o el comienzo de un desplazamiento, y si en ese momento sonaba y vibraba, lo hacía aunque
 // no se tocara nada. Por eso, en esos botones, con el dedo se espera a que el toque termine: recién al levantar el dedo se avisa con
-// "toque-en-boton-de-carta" (es lo que escuchan el sonido, en sonidos.js, y la vibración, acá abajo). No se avisa si la página se desplazó
+// "toque-en-boton" (es lo que escuchan el sonido, en sonidos.js, y la vibración, acá abajo). No se avisa si la página o la ventana se desplazó
 // (el navegador cancela el toque), si el dedo se movió, si se lo dejó apretado (la carta se empieza a inclinar, o es una pulsación larga) o
 // si apareció un segundo dedo (el pellizco del zoom).
 const TOQUE_DISTANCIA_MAXIMA = 10; // px que se puede mover el dedo y que siga siendo un toque (los mismos que tolera la inclinación)
 const TOQUE_DURACION_MAXIMA = 500; // ms que se puede tener apoyado el dedo (más que eso es una pulsación larga)
 
-// ¿Este toque cayó con el dedo sobre un botón de una carta? (En el frente son <span role="button">: gema, nivel, tipo y elemento)
-export function esToqueEnBotonDeCarta(evento) {
-    return evento.pointerType === 'touch' && Boolean(evento.target.closest('button, [role="button"]')?.closest('#listado-digimons li'));
+// ¿Este toque cayó con el dedo sobre un botón de una carta o de una ventana? (En el frente de la carta son <span role="button">: gema, nivel, tipo
+// y elemento. Las ventanas son las de SweetAlert: ataques, evolución, información...)
+export function esToqueEnBotonConEspera(evento) {
+    return evento.pointerType === 'touch' && Boolean(evento.target.closest?.('button, [role="button"]')?.closest('#listado-digimons li, .swal2-popup'));
 }
 
-export function activarToqueEnBotonesDeCarta() {
+export function activarToqueEnBotonesConEspera() {
     let apoyado = null; // el toque que espera terminar: en qué botón, dónde y cuándo empezó
     document.addEventListener('pointerdown', evento => {
         // (un segundo dedo, que no es el principal, también deja sin efecto el toque que estaba esperando)
-        const boton = evento.isPrimary && esToqueEnBotonDeCarta(evento) ? evento.target.closest('button, [role="button"]') : null;
+        // (y si el toque solo cierra un menú abierto, ni se espera: ver menus.js)
+        const boton =
+            evento.isPrimary && esToqueEnBotonConEspera(evento) && !toqueQueSoloCierraMenus() ? evento.target.closest('button, [role="button"]') : null;
         apoyado = boton && { boton, x: evento.clientX, y: evento.clientY, desde: evento.timeStamp };
     });
     document.addEventListener('pointerup', evento => {
@@ -50,7 +55,7 @@ export function activarToqueEnBotonesDeCarta() {
         apoyado = null;
         if (!toque || evento.pointerType !== 'touch') return;
         const sinMoverse = Math.hypot(evento.clientX - toque.x, evento.clientY - toque.y) <= TOQUE_DISTANCIA_MAXIMA;
-        if (sinMoverse && evento.timeStamp - toque.desde <= TOQUE_DURACION_MAXIMA) emitir('toque-en-boton-de-carta', { boton: toque.boton });
+        if (sinMoverse && evento.timeStamp - toque.desde <= TOQUE_DURACION_MAXIMA) emitir('toque-en-boton', { boton: toque.boton });
     });
     for (const nombre of ['pointercancel', 'inclinacion-con-dedo']) {
         document.addEventListener(nombre, () => {
@@ -66,11 +71,11 @@ const vibrarAlTocar = boton => vibrar(boton.matches('[role="button"]') ? 6 : 8);
 export function activarVibracion() {
     if (!navigator.vibrate) return;
     // Los botones de las cartas vibran al terminar el toque, no al apoyar el dedo (ver más arriba)
-    document.addEventListener('toque-en-boton-de-carta', evento => {
+    document.addEventListener('toque-en-boton', evento => {
         if (!evento.detail.boton.disabled) vibrarAlTocar(evento.detail.boton);
     });
     document.addEventListener('pointerdown', evento => {
-        if (evento.pointerType !== 'touch' || esToqueEnBotonDeCarta(evento)) return;
+        if (evento.pointerType !== 'touch' || esToqueEnBotonConEspera(evento)) return;
         const boton = evento.target.closest('button, [role="button"]');
         if (!boton || boton.disabled) return;
         if (boton.id === 'silenciar') {
@@ -438,13 +443,23 @@ const audioConVolumen = (archivo, relativo = 1) => {
     return audio;
 };
 
+// Cuánto del volumen le queda a un archivo mientras se desvanece (de 0 a 1; sin desvanecerse, 1). Va aparte del volumen de cada archivo para que,
+// si en pleno desvanecimiento se recalcula el volumen (por ejemplo, al cambiar el tamaño de la ventana), no se lo devuelva de golpe al máximo
+const factoresDeDesvanecimiento = new Map();
+
 function actualizarVolumenAudios() {
     const base = obtenerVolumenGeneral();
     for (const { audio, relativo } of LISTA_AUDIOS) {
         if (audio) {
-            audio.volume = Math.min(1, base * relativo);
+            audio.volume = Math.min(1, base * relativo * (factoresDeDesvanecimiento.get(audio) ?? 1));
         }
     }
+}
+
+function ponerDesvanecimiento(audio, factor) {
+    if (factor >= 1) factoresDeDesvanecimiento.delete(audio);
+    else factoresDeDesvanecimiento.set(audio, Math.max(0, factor));
+    actualizarVolumenAudios();
 }
 
 export const audioMouse = audioConVolumen('audio/Mouse.mp3');
@@ -606,17 +621,44 @@ export function detenerSonidoPajita() {
     }
 }
 
-// La música del ganador entra 2,45 s después del sonido de victoria. Si el cartel se cierra antes, se cancela (cancelarMusicaGanador)
+// La música del ganador entra 2,45 s después del sonido de victoria. Si el cartel se cierra antes, se cancela (cancelarMusicaGanador).
+// El archivo dura 3 minutos, pero no suena hasta el final: a los 10 s de empezar baja de a poco hasta el silencio (4 s de desvanecimiento
+// lento) y se termina. El desvanecimiento sigue el avance de la propia música (currentTime) y no un reloj aparte, así que no se desfasa si
+// el archivo tarda en arrancar.
+// (En iPhone el navegador no deja cambiar el volumen de los archivos de audio: ahí no hay desvanecimiento y la música se corta al final de él.)
+const MUSICA_GANADOR_SEGUNDOS_A_VOLUMEN_PLENO = 10; // s de música antes de que empiece a bajar
+const MUSICA_GANADOR_SEGUNDOS_DE_DESVANECIMIENTO = 4; // s que tarda en llegar al silencio
 let temporizadorMusicaGanador = 0;
+let vigilanteDeLaMusicaGanador = 0;
 
 export function reproducirConDelay() {
     cancelarMusicaGanador();
-    temporizadorMusicaGanador = setTimeout(() => reproducirSonido(musicaDelGanador), 2450);
+    temporizadorMusicaGanador = setTimeout(() => {
+        reproducirSonido(musicaDelGanador);
+        vigilanteDeLaMusicaGanador = setInterval(desvanecerMusicaGanador, 50);
+    }, 2450);
 }
 
+// Cada 50 ms: según cuánto lleva sonando la música, le baja el volumen; al llegar al silencio la corta
+function desvanecerMusicaGanador() {
+    const segundos = musicaDelGanador.currentTime - MUSICA_GANADOR_SEGUNDOS_A_VOLUMEN_PLENO;
+    if (segundos <= 0) return;
+    const queda = 1 - segundos / MUSICA_GANADOR_SEGUNDOS_DE_DESVANECIMIENTO;
+    if (queda > 0) {
+        ponerDesvanecimiento(musicaDelGanador, queda);
+        return;
+    }
+    detenerSonido(musicaDelGanador); // (primero se corta y recién después se le devuelve el volumen: así no se oye un chasquido)
+    cancelarMusicaGanador();
+}
+
+// Cancela la música del ganador que estaba por entrar o desvaneciéndose, y deja su volumen listo para la próxima vez
 export function cancelarMusicaGanador() {
     clearTimeout(temporizadorMusicaGanador);
     temporizadorMusicaGanador = 0;
+    clearInterval(vigilanteDeLaMusicaGanador);
+    vigilanteDeLaMusicaGanador = 0;
+    ponerDesvanecimiento(musicaDelGanador, 1);
 }
 
 // El grito final de la victoria entra 1,95 s después de la fanfarria (justo donde estaba en el sonido original, antes de partirlo en

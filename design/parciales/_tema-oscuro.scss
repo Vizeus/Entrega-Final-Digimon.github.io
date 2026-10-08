@@ -1,0 +1,677 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+// -----------------------------------------------------------------------------------------------------------------
+// TEMA OSCURO
+//   tema.js le pone a <html> data-tema="oscuro" (por elección de la persona o porque su dispositivo está en modo oscuro). Todo lo de este archivo
+//   cuelga de ahí: el tema claro (el de siempre) no se toca. Va al final de styles.scss para que, a igual prioridad, estas reglas ganen.
+//   La idea: de noche, el vidrio claro sobre el degradé celeste pasa a ser vidrio azul noche con brillos cian sobre un fondo casi negro azulado.
+//   Las cartas siguen siendo cartas (cuerpo oscuro teñido con el color del tipo, marco y etiquetas iguales, imagen en su ventanita clara
+//   porque los dibujos de la API traen fondo blanco), y lo que ya era de color vivo (botones azules, verdes y rojos, etiquetas) queda como está.
+//   Los textos oscuros del tema claro ($tinta, $tinta-oscura...) son variables de CSS: acá se dan vuelta (clarean) y todo lo que las usa se acomoda.
+// -----------------------------------------------------------------------------------------------------------------
+
+// ---- Paleta ----------------------------------------------------------------------------------------------------------------
+$fondo-superior: #0a1c46;
+$fondo-medio: #081235;
+$fondo-inferior: #050a22;
+$panel: linear-gradient(180deg, #1e3365 0%, #14224a 100%); // menús, ventanas, carteles
+$panel-suave: linear-gradient(180deg, rgba(34, 58, 108, 0.97), rgba(20, 34, 72, 0.97)); // carteles (un poco translúcidos)
+$borde: rgba(115, 185, 255, 0.32); // borde fino de los paneles
+$luz: rgba(165, 213, 255, 0.3); // el reflejo de arriba de cada panel (el "inset 0 1px 0" blanco del claro)
+$texto: #dce9fa; // texto común sobre paneles oscuros
+$texto-suave: #93abca; // textos secundarios
+$hundido: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(70, 120, 200, 0.14)); // cajas hundidas (pantallita de combate, buscador...)
+$sombra-panel:
+    0 12px 28px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 $luz;
+
+// Brillo de vidrio de los botones: el del tema claro es blanco y fuerte; acá un reflejo celeste mucho más tenue
+$brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(165, 213, 255, 0.07) 49%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.12) 100%);
+
+:root[data-tema="oscuro"] {
+    color-scheme: dark;
+    background-color: $fondo-inferior; // (lo que se ve al estirar la página de más, en el celular)
+
+    --tinta: #b9d8f8;
+    --tinta-oscura: #d6e9ff;
+    --vidrio-claro: #2c4876;
+    --brillo-de-texto: 0 1px 1px rgba(0, 0, 0, 0.6);
+    --sombra-hundida: inset 0 3px 6px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(140, 200, 255, 0.14);
+
+    // ---- Fondo -------------------------------------------------------------------------------------------------------------
+    body::before {
+        background:
+            radial-gradient(ellipse 90% 42% at 50% -4%, rgba(40, 140, 230, 0.34), transparent 72%),
+            linear-gradient(to bottom, $fondo-superior 0%, $fondo-medio 45%, $fondo-inferior 100%);
+    }
+
+    // ---- Íconos de los botones redondos: sin el reflejo blanco de abajo (en oscuro es una sombra) --------------------------------
+    // (Cada selector repite los de _mixins.scss y _barra.scss, con la barra o con "body >" cuando el botón anda suelto, para ganarles en prioridad)
+    #navbar #silenciar .audio-icono,
+    #navbar #inclinacion-invertida .inclinacion-icono,
+    #navbar #tema .tema-icono,
+    #navbar #cambiar-idioma .idioma-icono,
+    body > #silenciar .audio-icono,
+    body > #inclinacion-invertida .inclinacion-icono,
+    body > #tema .tema-icono {
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+    }
+
+    #navbar #silenciar[data-modo="nada"] .audio-cruz,
+    body > #silenciar[data-modo="nada"] .audio-cruz {
+        stroke: #ff6a5a;
+    }
+
+    // El sol y la luna del botón de tema, más claros para que se luzcan sobre el vidrio oscuro
+    #navbar #tema .tema-sol,
+    body > #tema .tema-sol {
+        stroke: #ffd25f;
+    }
+
+    #navbar #tema .tema-luna,
+    body > #tema .tema-luna {
+        stroke: #b4c9ff;
+    }
+
+    // ---- Barra de arriba -----------------------------------------------------------------------------------------------------
+    #navbar {
+        background: linear-gradient(180deg, rgba(32, 56, 106, 0.94) 0%, rgba(19, 35, 76, 0.93) 55%, rgba(12, 24, 56, 0.93) 100%);
+        border-bottom-color: $borde;
+        box-shadow:
+            inset 0 1px 0 $luz,
+            0 8px 22px rgba(0, 0, 0, 0.6);
+
+        &::before {
+            background: linear-gradient(180deg, rgba(150, 205, 255, 0.16), rgba(150, 205, 255, 0.02));
+        }
+
+        > img {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(90, 170, 255, 0.3));
+        }
+
+        > img:focus-visible,
+        .contador:focus-visible {
+            outline-color: #5fb4ff;
+        }
+
+        .combate {
+            border-color: rgba(115, 185, 255, 0.24);
+            background: $hundido;
+            box-shadow:
+                inset 0 2px 5px rgba(0, 0, 0, 0.6),
+                0 1px 0 rgba(140, 200, 255, 0.14);
+        }
+
+        // La bolita "0/2"
+        .contador {
+            color: #a9cdf2;
+            background: rgba(0, 0, 0, 0.38);
+            box-shadow:
+                inset 0 1px 3px rgba(0, 0, 0, 0.6),
+                0 1px 0 rgba(140, 200, 255, 0.14);
+
+            &.completo {
+                color: #7df0a6;
+                background: rgba(40, 170, 95, 0.3);
+            }
+
+            &:not(:disabled) {
+                box-shadow:
+                    inset 0 1px 3px rgba(0, 0, 0, 0.6),
+                    0 0 0 1.5px rgba(130, 190, 255, 0.5),
+                    0 1px 0 rgba(140, 200, 255, 0.14);
+
+                &.completo {
+                    box-shadow:
+                        inset 0 1px 3px rgba(0, 0, 0, 0.6),
+                        0 0 0 1.5px rgba(80, 220, 140, 0.6),
+                        0 1px 0 rgba(140, 200, 255, 0.14);
+                }
+
+                &:hover {
+                    background-color: rgba(60, 100, 170, 0.5);
+                }
+
+                &.completo:hover {
+                    background-color: rgba(50, 190, 110, 0.4);
+                }
+
+                &:active {
+                    box-shadow:
+                        inset 0 2px 4px rgba(0, 0, 0, 0.7),
+                        0 0 0 1.5px rgba(130, 190, 255, 0.5);
+                }
+            }
+        }
+
+        // Botón de combate sin 2 digimons elegidos: gris azulado apagado (el verde de cuando se puede pelear queda igual)
+        #iniciar-combate:disabled {
+            --c: #52627a;
+            color: rgba(255, 255, 255, 0.7);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+                0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        // Los botones de vidrio (idioma, niveles, menús de información, sonido, inclinación, tema, ☰): vidrio azul oscuro con un reflejo tenue
+        .menu-desplegable,
+        #cambiar-idioma,
+        #cambiar-niveles,
+        #silenciar,
+        #inclinacion-invertida,
+        #tema,
+        #abrir-menu {
+            border-color: rgba(120, 190, 255, 0.38);
+            background:
+                $brillo-del-vidrio,
+                linear-gradient(180deg, color-mix(in srgb, var(--c) 84%, white) 0%, var(--c) 55%, color-mix(in srgb, var(--c) 78%, black) 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(180, 220, 255, 0.4),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+                0 3px 8px rgba(0, 0, 0, 0.5);
+
+            &:active:not(:disabled),
+            &[aria-expanded="true"],
+            &.silenciado,
+            &[aria-pressed="true"] {
+                box-shadow: var(--sombra-hundida);
+            }
+        }
+
+        .sn-opcion img {
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+        }
+
+        // Menús de información: la lista que se abre debajo
+        .menu-info ul {
+            border-color: $borde;
+            background: $panel;
+            box-shadow: $sombra-panel;
+
+            button {
+                color: $texto;
+
+                &:hover,
+                &:focus-visible {
+                    background: linear-gradient(180deg, #2e4d8c, #213a70);
+                    box-shadow:
+                        inset 0 1px 0 $luz,
+                        0 0 0 1px rgba(110, 180, 255, 0.4);
+                }
+            }
+        }
+
+        // Progreso de la carga
+        .carga {
+            label {
+                color: #9fc4ea;
+                text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+            }
+
+            progress {
+                border-color: rgba(115, 185, 255, 0.3);
+                background: linear-gradient(180deg, #050b1c, #14234a);
+                box-shadow:
+                    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+                    0 1px 0 rgba(140, 200, 255, 0.14);
+            }
+        }
+    }
+
+    // Botones que se sacan de la barra un momento (llamada de atención): ver _barra.scss. El aro blanco del claro se vuelve celeste suave
+    body > #silenciar,
+    body > #inclinacion-invertida,
+    body > #tema {
+        border-color: rgba(120, 190, 255, 0.5);
+        box-shadow:
+            inset 0 1px 0 rgba(180, 220, 255, 0.4),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+            0 0 0 2px rgba(150, 205, 255, 0.55),
+            0 5px 14px rgba(0, 0, 0, 0.7);
+    }
+
+    // ---- Filtros y buscador --------------------------------------------------------------------------------------------------
+    #filtros {
+        border-top-color: rgba(115, 185, 255, 0.22);
+        box-shadow: inset 0 1px 0 rgba(140, 200, 255, 0.12);
+
+        .f-titulo {
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+        }
+
+        .f-buscar {
+            border-color: rgba(115, 185, 255, 0.32);
+            background: $hundido;
+            box-shadow:
+                inset 0 2px 4px rgba(0, 0, 0, 0.6),
+                0 1px 0 rgba(140, 200, 255, 0.14);
+
+            &:focus-within {
+                border-color: #4aa6f5;
+                box-shadow:
+                    inset 0 2px 4px rgba(0, 0, 0, 0.6),
+                    0 0 0 3px rgba(60, 150, 240, 0.5);
+            }
+
+            input::placeholder {
+                color: #6d8cb2;
+            }
+        }
+
+        .f-x {
+            background: rgba(150, 200, 255, 0.18);
+
+            &:hover {
+                background: rgba(150, 200, 255, 0.34);
+            }
+        }
+
+        // Botones de cada filtro (sin elegir nada, o X-Antibody indistinto): vidrio oscuro, igual que los de la barra
+        .f-btn:not(.tiene):not([data-estado="con"]):not([data-estado="sin"]) {
+            border-color: rgba(120, 190, 255, 0.38);
+            background: $brillo-del-vidrio, linear-gradient(#4a6694 0%, #2c4876 55%, #1f3358 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(180, 220, 255, 0.4),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+                0 3px 8px rgba(0, 0, 0, 0.5);
+
+            &:active,
+            &[aria-expanded="true"] {
+                box-shadow: var(--sombra-hundida);
+            }
+        }
+
+        // Las demás (con filtros elegidos, con o sin X-Antibody) ya son de color: solo se les quita el reflejo blanco de abajo
+        .f-btn.tiene {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+                0 0 12px rgba(60, 150, 240, 0.4),
+                0 3px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .f-panel {
+            background: $panel;
+            border-color: $borde;
+            box-shadow: $sombra-panel;
+        }
+
+        // Las opciones sin elegir: píldoras oscuras (al elegirlas se llenan con su color, que queda igual)
+        .f-chip:not([aria-pressed="true"]) {
+            background: linear-gradient(#2a4274, #1b2f58);
+            box-shadow:
+                0 1px 2px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(165, 213, 255, 0.18);
+
+            i {
+                background: rgba(150, 200, 255, 0.16);
+            }
+        }
+
+        .f-chip .f-lv,
+        .f-tag .f-lv {
+            box-shadow:
+                inset 0 -1px 2px rgba(0, 0, 0, 0.35),
+                0 0 0 1px rgba(255, 255, 255, 0.45);
+        }
+
+        .f-cuenta b {
+            color: #6fc3ff;
+        }
+
+        button:focus-visible {
+            outline-color: #8fd0ff;
+            box-shadow: 0 0 0 5px rgba(60, 150, 240, 0.75);
+        }
+    }
+
+    #f-vacio {
+        background: linear-gradient(rgba(34, 58, 108, 0.9), rgba(20, 34, 72, 0.88));
+        border-color: rgba(115, 185, 255, 0.3);
+        box-shadow:
+            inset 0 1px 0 $luz,
+            0 8px 22px rgba(0, 0, 0, 0.55);
+    }
+
+    // ---- Cartas ---------------------------------------------------------------------------------------------------------------
+    // El cuerpo se tiñe con el color del tipo (ya ajustado al nivel) y se apaga hacia un azul noche. El marco, las etiquetas de tipo y de elemento,
+    // la gema del nivel y la X son los de siempre.
+    #listado-digimons li {
+        --tinte: color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.58), #101a3a);
+        --fondo: linear-gradient(160deg, var(--tinte) 0%, #0b1330 88%);
+    }
+
+    #listado-digimons li {
+        // La placa del nombre: metal oscuro con un toque del color del tipo
+        .c-cab {
+            border-color: rgba(0, 0, 0, 0.55);
+            background: linear-gradient(
+                180deg,
+                rgba(205, 225, 255, 0.2) 0%,
+                color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.42), #1a2750) 52%,
+                color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.62), #0e1736) 100%
+            );
+            box-shadow:
+                inset 0 1px 0 rgba(215, 232, 255, 0.35),
+                0 1px 2px rgba(0, 0, 0, 0.55);
+        }
+
+        .c-cab h4,
+        .c-nombre {
+            color: #eef5ff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+        }
+
+        // La imagen sigue en su ventanita clara; solo el halo blanco de afuera se apaga
+        .c-arte {
+            box-shadow:
+                0 0 0 var(--halo-arte) rgba(255, 255, 255, 0.16),
+                0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .c-sub {
+            color: #9bb3d3;
+
+            .c-nivel:hover {
+                color: #ffffff;
+                background: rgba(255, 255, 255, 0.12);
+            }
+
+            .c-nivel:active {
+                background: rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        // Dorso
+        .c-cuerpo {
+            color: #d7e4f6;
+            background: rgba(7, 13, 32, 0.84);
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
+
+            .dato b {
+                color: color-mix(in srgb, var(--tipo) 62%, white);
+            }
+
+            .c-idioma {
+                color: #8aa2c2;
+            }
+        }
+
+        .c-flip {
+            color: #b4d8ff;
+            border-color: rgba(140, 200, 255, 0.55);
+            background: linear-gradient(180deg, #3a5c94 0%, #25416f 45%, #172c52 100%);
+            background-clip: padding-box;
+            box-shadow:
+                inset 0 1px 1.5px rgba(200, 230, 255, 0.5),
+                0 2px 4px rgba(0, 0, 0, 0.6);
+
+            &:active {
+                background: linear-gradient(180deg, #172c52 0%, #25416f 100%);
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+            }
+        }
+    }
+
+    // ---- Carteles de ayuda y globitos ------------------------------------------------------------------------------------------
+    .aviso-ayuda,
+    .aviso-contador,
+    .aviso-globo {
+        background: $panel-suave;
+        border-color: $borde;
+        box-shadow:
+            0 8px 20px rgba(0, 0, 0, 0.6),
+            inset 0 1px 0 $luz;
+    }
+
+    .aviso-contador::before,
+    .aviso-globo::before {
+        background: #223a6c;
+        border-color: $borde;
+    }
+
+    .aviso-globo.sobre-el-boton::before {
+        background: #14224a;
+    }
+
+    // ---- Menú ☰ del celular ---------------------------------------------------------------------------------------------------
+    #navbar .menu-movil {
+        border-color: $borde;
+        background: $panel-suave;
+        box-shadow:
+            0 14px 30px rgba(0, 0, 0, 0.65),
+            inset 0 1px 0 $luz;
+    }
+
+    // ---- Ventanas emergentes (SweetAlert) ---------------------------------------------------------------------------------------
+    .swal2-popup:not(.combate-popup) {
+        color: $texto;
+        background: $panel;
+        border: 1px solid $borde;
+        box-shadow: $sombra-panel;
+    }
+
+    .swal2-title {
+        color: #eef5ff;
+    }
+
+    .swal2-html-container {
+        color: $texto;
+    }
+
+    .swal2-popup .swal2-close {
+        color: $texto-suave;
+
+        &:hover {
+            color: #ffffff;
+        }
+    }
+
+    .popup-ataques {
+        .ataques-ayuda,
+        .ataque-boton small {
+            color: $texto-suave;
+        }
+
+        .ataque-boton {
+            border-color: rgba(150, 200, 255, 0.24);
+            background: rgba(150, 200, 255, 0.08);
+
+            &:hover,
+            &:focus-visible {
+                background: rgba(150, 200, 255, 0.16);
+            }
+
+            &[aria-expanded="true"] {
+                background: rgba(150, 200, 255, 0.2);
+                border-color: rgba(150, 200, 255, 0.42);
+            }
+        }
+
+        .ataque-detalle {
+            background: rgba(0, 0, 0, 0.2);
+            border-color: rgba(150, 200, 255, 0.3);
+        }
+
+        .ataque-desc {
+            color: #d3e1f3;
+
+            &.sin-desc-texto {
+                color: $texto-suave;
+            }
+        }
+
+        .ataque-digimons-seccion {
+            border-top-color: rgba(150, 200, 255, 0.25);
+        }
+
+        .ataque-solo-este {
+            color: $texto-suave;
+        }
+    }
+
+    .swal2-html-container {
+        .info-datos {
+            background: rgba(150, 200, 255, 0.08);
+        }
+
+        .info-pie {
+            color: $texto-suave;
+        }
+
+        // Los enlaces llevan el color del tipo o del elemento (--link-c), pensado para fondo claro: sobre el oscuro se aclara
+        .info-link {
+            color: color-mix(in srgb, var(--link-c, #b9d8f8) 55%, white);
+
+            &:hover,
+            &:focus-visible {
+                background: rgba(150, 200, 255, 0.14);
+            }
+
+            &:focus-visible {
+                outline-color: color-mix(in srgb, var(--link-c, #b9d8f8) 55%, white) !important;
+            }
+        }
+    }
+
+    // ---- Línea evolutiva ----------------------------------------------------------------------------------------------------------
+    .evo {
+        --linea: #5d7ba6;
+    }
+
+    .evo-volver,
+    .evo-mas {
+        border-color: rgba(130, 190, 255, 0.4);
+        background: linear-gradient(180deg, #34568c, #223d6b);
+
+        &:hover {
+            background: linear-gradient(180deg, #4067a6, #2b4a80);
+        }
+    }
+
+    .evo-col > h5,
+    .evo-datos,
+    .evo-nombre small {
+        color: $texto-suave;
+    }
+
+    .evo-vacio {
+        color: $texto-suave;
+        border-color: rgba(150, 200, 255, 0.28);
+    }
+
+    .evo-nodo {
+        color: #e4efff;
+        background: linear-gradient(180deg, #223963, #172947);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+
+        &:hover,
+        &:focus-visible {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+    }
+
+    .evo-nodo img,
+    .evo-actual img {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .evo-nv {
+        color: color-mix(in srgb, var(--c) 55%, white);
+    }
+
+    .evo-etiqueta {
+        color: color-mix(in srgb, var(--e) 45%, white);
+        border-color: color-mix(in srgb, var(--e) 60%, transparent);
+        background: color-mix(in srgb, var(--e) 26%, #101b3a);
+    }
+
+    .evo-lore {
+        border-color: rgba(150, 200, 255, 0.28);
+        background: linear-gradient(180deg, rgba(150, 200, 255, 0.1), rgba(150, 200, 255, 0.05));
+
+        > summary:hover {
+            color: #ffffff;
+        }
+    }
+
+    .evo-lore-texto {
+        color: #c5d6ec;
+    }
+
+    .evo-huevo,
+    .evo-huevo:hover {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+
+    .evo-huevo-img {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: color-mix(in srgb, var(--c) 18%, #15233f);
+    }
+
+    .evo-actual {
+        background: linear-gradient(180deg, #25406e, #182b4d);
+        box-shadow:
+            0 0 0 4px color-mix(in srgb, var(--c) 28%, transparent),
+            0 3px 10px rgba(0, 0, 0, 0.55);
+    }
+
+    // ---- Combate (ventana de la pelea y del ganador) ------------------------------------------------------------------------------------
+    .combate-popup {
+        border-color: rgba(125, 195, 255, 0.5);
+        background: linear-gradient(180deg, #1d3262 0%, #132245 55%, #0c1632 100%);
+        box-shadow:
+            0 24px 60px rgba(0, 0, 0, 0.7),
+            inset 0 1px 0 $luz;
+
+        // La barra del título: el mismo azul brillante, pero más profundo
+        .combate-titulo {
+            background: linear-gradient(180deg, #4a8fe0 0%, #2468bd 48%, #17509f 52%, #2c74c8 100%);
+            border-bottom-color: rgba(0, 20, 70, 0.7);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        }
+
+        .vs-luchador figcaption {
+            color: $texto;
+        }
+
+        .vs-luchador.ganador figcaption {
+            color: #ffd45f;
+        }
+
+        .vs-centro {
+            text-shadow:
+                0 2px 0 rgba(0, 0, 0, 0.5),
+                0 0 14px rgba(255, 59, 59, 0.55);
+        }
+
+        .vs-ataque {
+            border-color: rgba(150, 200, 255, 0.2);
+            border-left-color: var(--c, #3a8dde);
+            background: rgba(150, 200, 255, 0.08);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .vs-ataque-linea {
+            color: $texto;
+
+            em {
+                color: #ff9d70;
+            }
+        }
+
+        .vs-ataque-desc {
+            color: #b5c8e2;
+        }
+
+        .combate-boton {
+            border-color: rgba(120, 190, 255, 0.7);
+            background: linear-gradient(180deg, #5aa3f0 0%, #2a73d0 50%, #1a58ad 54%, #3484dc 100%);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        }
+    }
+}

@@ -82,6 +82,7 @@ export const DICCIONARIO = {
         'aviso.inclinacion.invertida': 'Pasá el mouse por las cartas mientras mantenés apretado Shift para inclinarlas, y con este botón podés cambiarlo',
         'aviso.inclinacion.invertida.boton': 'Con este botón podés cambiar cómo se inclinan las cartas',
         'aviso.audio': 'Con este botón podés silenciar el sonido de la página',
+        'aviso.tema': 'Con este botón podés elegir el tema: claro, oscuro o el de tu dispositivo',
         'aviso.audio.vibracion': 'Con este botón podés apagar el sonido y la vibración de la página',
         'aviso.zoomExtra':
             'Girá la rueda hacia arriba con el mouse sobre la carta para acercarte todavía más, y hacia abajo para volver. Ya acercada, agarrala y arrastrala para moverla',
@@ -107,6 +108,11 @@ export const DICCIONARIO = {
         'audio.nada': 'Sin sonido ni vibración. Tocá para activar todo',
         'inclinacion.normal': 'Las cartas se inclinan al pasar el mouse (con Shift apretado, no). Hacé clic para invertirlo',
         'inclinacion.invertida': 'Las cartas se inclinan solo mientras mantenés apretado Shift. Hacé clic para que se inclinen al pasar el mouse',
+        'tema.auto': 'Tema automático: usa el de tu dispositivo (ahora, {actual}). Tocá para elegir el claro',
+        'tema.claro': 'Tema claro. Tocá para elegir el oscuro',
+        'tema.oscuro': 'Tema oscuro. Tocá para volver al automático (el de tu dispositivo)',
+        'tema.actual.claro': 'claro',
+        'tema.actual.oscuro': 'oscuro',
         'carta.sinDescripcion': 'Sin descripción disponible.',
         'carta.idiomaOriginal': 'Descripción original en inglés',
 
@@ -268,6 +274,7 @@ export const DICCIONARIO = {
         'aviso.inclinacion.invertida': 'Move the mouse over the cards while holding Shift to tilt them, and use this button to change it',
         'aviso.inclinacion.invertida.boton': 'Use this button to change how the cards tilt',
         'aviso.audio': "Use this button to mute the page's sound",
+        'aviso.tema': "Use this button to choose the theme: light, dark or your device's",
         'aviso.audio.vibracion': "Use this button to turn off the page's sound and vibration",
         'aviso.zoomExtra':
             'With the mouse over the card, scroll up to zoom in even closer, and scroll down to go back. Once zoomed in, grab the card and drag it around',
@@ -293,6 +300,11 @@ export const DICCIONARIO = {
         'audio.nada': 'No sound or vibration. Tap to turn everything on',
         'inclinacion.normal': 'Cards tilt when the mouse moves over them (not while holding Shift). Click to invert it',
         'inclinacion.invertida': 'Cards tilt only while you hold Shift. Click to make them tilt when the mouse moves over them',
+        'tema.auto': 'Automatic theme: it follows your device (now, {actual}). Tap to choose the light one',
+        'tema.claro': 'Light theme. Tap to choose the dark one',
+        'tema.oscuro': "Dark theme. Tap to go back to automatic (your device's)",
+        'tema.actual.claro': 'light',
+        'tema.actual.oscuro': 'dark',
         'carta.sinDescripcion': 'No description available.',
         'carta.idiomaOriginal': '',
 

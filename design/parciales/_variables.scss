@@ -12,13 +12,13 @@ $desenfoque-del-fondo: 10px;
 $corte-celular: 700px;
 
 // ---- Colores que se repiten ---------------------------------------------------------------------------------------------
-$tinta: #24476a; // texto de los botones de vidrio claro (idioma, niveles, menús de información, ☰...)
-$tinta-oscura: #1d4468; // textos de los carteles y avisos sobre fondo claro
-$vidrio-claro: #cfdde9; // color base de los botones de vidrio claro (va en --c, que usa el mixin boton-de-gel)
-$brillo-de-texto: 0 1px 0 rgba(255, 255, 255, 0.85); // el reflejo blanco debajo de los textos sobre vidrio
-$sombra-hundida:
-    inset 0 3px 6px rgba(0, 40, 90, 0.3),
-    0 1px 0 rgba(255, 255, 255, 0.6); // botón apretado o activado
+// Los que cambian con el tema (claro / oscuro) no son colores de Sass sino variables de CSS: acá solo se les da un nombre corto para usarlos
+// en las demás partes ($tinta, $vidrio-claro...). Sus valores están en _base.scss (tema claro) y en _tema-oscuro.scss (tema oscuro).
+$tinta: var(--tinta); // texto de los botones de vidrio claro (idioma, niveles, menús de información, ☰...)
+$tinta-oscura: var(--tinta-oscura); // textos de los carteles y avisos sobre fondo claro
+$vidrio-claro: var(--vidrio-claro); // color base de los botones de vidrio claro (va en --c, que usa el mixin boton-de-gel)
+$brillo-de-texto: var(--brillo-de-texto); // el reflejo blanco debajo de los textos sobre vidrio
+$sombra-hundida: var(--sombra-hundida); // botón apretado o activado
 $arcoiris:
     #ff5fa2,
     #ffd85f 25%,

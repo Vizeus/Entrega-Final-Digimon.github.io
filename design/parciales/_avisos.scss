@@ -117,7 +117,7 @@
     }
 }
 
-// Globito con flechita que sale de un botón (lo usan el aviso del contador y los de los botones redondos de sonido e inclinación). Arranca
+// Globito con flechita que sale de un botón (lo usan el aviso del contador y los de los botones redondos de sonido, inclinación y tema). Arranca
 // chiquito, desde la punta de la flecha (--punta, que pone avisos.js), y crece hasta su tamaño; al irse vuelve a achicarse hacia el botón.
 // No frena los clics (pointer-events: none). Por defecto va debajo del botón (la flechita arriba); con "sobre-el-boton" va encima de él
 // (la flechita abajo): avisos.js lo usa para el botón de sonido flotante del celular, que está en la esquina de abajo.
@@ -205,10 +205,11 @@
 }
 
 // En computadora, con cualquier cartel abierto (información, ataques, evolución, combate...) la cortina de SweetAlert (2000) tapa a los
-// botones de sonido e inclinación y a sus globitos: se los sube por encima de ella
+// botones de sonido, inclinación y tema y a sus globitos: se los sube por encima de ella
 @include computadora {
     body:has(.swal2-container) > #silenciar,
-    body:has(.swal2-container) > #inclinacion-invertida {
+    body:has(.swal2-container) > #inclinacion-invertida,
+    body:has(.swal2-container) > #tema {
         z-index: capa(botones-sobre-las-ventanas);
     }
 

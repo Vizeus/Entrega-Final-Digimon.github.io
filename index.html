@@ -4,7 +4,23 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="color-scheme" content="only light" />
+        <meta name="color-scheme" content="light dark" />
+        <!-- El tema (claro u oscuro) se decide acá, antes de que se dibuje nada: si no, con el tema oscuro la página aparecería un instante en claro
+             y se oscurecería recién cuando cargara el resto. Es lo mismo que hace tema.js, que después maneja el botón de la barra. Lo elegido
+             se guarda en el navegador como "auto", "claro" u "oscuro" (auto: el del dispositivo). -->
+        <script>
+            (function () {
+                var preferencia = 'auto';
+                try {
+                    preferencia = localStorage.getItem('digimon-tema') || 'auto';
+                } catch (error) {
+                    // sin memoria del navegador se usa el del dispositivo
+                }
+                var oscuro = preferencia === 'oscuro' || (preferencia !== 'claro' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.dataset.temaPref = preferencia;
+                document.documentElement.dataset.tema = oscuro ? 'oscuro' : 'claro';
+            })();
+        </script>
         <title>Digimon</title>
 
         <meta
@@ -33,31 +49,33 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261008-1619",
-                    "./datos.js": "./datos.js?v=20261008-1619",
-                    "./i18n.js": "./i18n.js?v=20261008-1619",
-                    "./nombres.js": "./nombres.js?v=20261008-1619",
-                    "./pagina.js": "./pagina.js?v=20261008-1619",
-                    "./api.js": "./api.js?v=20261008-1619",
-                    "./combate.js": "./combate.js?v=20261008-1619",
-                    "./avisos.js": "./avisos.js?v=20261008-1619",
-                    "./descartar.js": "./descartar.js?v=20261008-1619",
-                    "./cartas.js": "./cartas.js?v=20261008-1619",
-                    "./zoom.js": "./zoom.js?v=20261008-1619",
-                    "./gestos.js": "./gestos.js?v=20261008-1619",
-                    "./inclinacion.js": "./inclinacion.js?v=20261008-1619",
-                    "./audio.js": "./audio.js?v=20261008-1619",
-                    "./sonidos.js": "./sonidos.js?v=20261008-1619",
-                    "./filtros.js": "./filtros.js?v=20261008-1619",
-                    "./info.js": "./info.js?v=20261008-1619",
-                    "./barra.js": "./barra.js?v=20261008-1619",
-                    "./evolucion.js": "./evolucion.js?v=20261008-1619",
-                    "./ventanas.js": "./ventanas.js?v=20261008-1619",
-                    "./baile.js": "./baile.js?v=20261008-1619"
+                    "./util.js": "./util.js?v=20261008-1756",
+                    "./datos.js": "./datos.js?v=20261008-1756",
+                    "./i18n.js": "./i18n.js?v=20261008-1756",
+                    "./nombres.js": "./nombres.js?v=20261008-1756",
+                    "./pagina.js": "./pagina.js?v=20261008-1756",
+                    "./api.js": "./api.js?v=20261008-1756",
+                    "./combate.js": "./combate.js?v=20261008-1756",
+                    "./avisos.js": "./avisos.js?v=20261008-1756",
+                    "./descartar.js": "./descartar.js?v=20261008-1756",
+                    "./cartas.js": "./cartas.js?v=20261008-1756",
+                    "./zoom.js": "./zoom.js?v=20261008-1756",
+                    "./gestos.js": "./gestos.js?v=20261008-1756",
+                    "./inclinacion.js": "./inclinacion.js?v=20261008-1756",
+                    "./audio.js": "./audio.js?v=20261008-1756",
+                    "./sonidos.js": "./sonidos.js?v=20261008-1756",
+                    "./filtros.js": "./filtros.js?v=20261008-1756",
+                    "./info.js": "./info.js?v=20261008-1756",
+                    "./barra.js": "./barra.js?v=20261008-1756",
+                    "./evolucion.js": "./evolucion.js?v=20261008-1756",
+                    "./ventanas.js": "./ventanas.js?v=20261008-1756",
+                    "./baile.js": "./baile.js?v=20261008-1756",
+                    "./tema.js": "./tema.js?v=20261008-1756",
+                    "./menus.js": "./menus.js?v=20261008-1756"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261008-1619"></script>
+        <script type="module" src="./main.js?v=20261008-1756"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -68,7 +86,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261008-1619" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261008-1756" />
     </head>
 
     <body>
@@ -231,6 +249,41 @@
                                 <path d="M4.3 8.1 12.7 6.3v7.84L4.3 13.46zM4.3 15.7l5.4 1" stroke-width="1.3" />
                             </g>
                             <path class="inclinacion-shift" d="M19.6 11.4 16.3 15.6h2.1V20h2.4v-4.4h2.1z" fill="currentColor" stroke-width="1" />
+                        </svg>
+                    </button>
+                    <!-- Tema: botón chiquito y redondo, al lado del de inclinación (en celular no está ese: queda junto al de idioma, dentro del menú ☰).
+             Tiene tres pasos que se recorren con cada toque: automático (el del dispositivo), claro y oscuro; la elección se guarda en el
+             navegador. El ícono (data-modo) y la ayuda los escribe tema.js: mitad sol y mitad luna (auto), sol (claro) o luna (oscuro) -->
+                    <button
+                        type="button"
+                        id="tema"
+                        data-modo="auto"
+                        title="Tema automático: usa el de tu dispositivo. Tocá para elegir el claro"
+                        aria-label="Tema automático: usa el de tu dispositivo. Tocá para elegir el claro"
+                    >
+                        <svg
+                            class="tema-icono"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <g class="tema-auto">
+                                <circle cx="12" cy="12" r="8.2" />
+                                <path d="M12 3.8a8.2 8.2 0 0 1 0 16.4z" fill="currentColor" />
+                            </g>
+                            <g class="tema-sol">
+                                <circle cx="12" cy="12" r="4.2" />
+                                <path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" />
+                            </g>
+                            <g class="tema-luna">
+                                <path d="M20.2 14.6A8.4 8.4 0 0 1 9.4 3.8a8.4 8.4 0 1 0 10.8 10.8z" />
+                                <path d="M16.6 3.4v2.8M15.2 4.8H18" stroke-width="1.4" />
+                            </g>
                         </svg>
                     </button>
                 </div>

@@ -3,21 +3,21 @@
 //
 // La puerta de entrada: el index.html carga solo este archivo, y los import de cada archivo traen el resto.
 // Cada parte está en su archivo (pagina.js, api.js, combate.js, avisos.js, descartar.js, ventanas.js, cartas.js, zoom.js, gestos.js, inclinacion.js,
-// audio.js, sonidos.js, filtros.js, info.js, barra.js, evolucion.js y baile.js). Acá se ponen en marcha, en este orden, y se
+// audio.js, sonidos.js, filtros.js, info.js, barra.js, evolucion.js, baile.js, tema.js y menus.js). Acá se ponen en marcha, en este orden, y se
 // conectan los botones que usan varias partes a la vez. Cuando la página termina de armarse, empieza la carga de los digimons.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { emitir } from './util.js';
+import { activarDeteccionDeDedo, emitir } from './util.js';
 import { nombreParaMostrar } from './nombres.js';
 import { botonCambiarNiveles, botonIniciarCombate, cambiarClasificacion, listaDigimons, mostrarSistemaDeNiveles } from './pagina.js';
 import { crearListaDeDigimons } from './api.js';
 import { iniciarCombate } from './combate.js';
-import { activarAvisoDeInclinacion, activarAvisoDeZoomExtra, activarAvisosDeAyuda } from './avisos.js';
+import { activarAvisoDeInclinacion, activarAvisoDeTema, activarAvisoDeZoomExtra, activarAvisosDeAyuda } from './avisos.js';
 import { activarCartelesDeInfoEnCartas, ajustarNombre, cartasEnEspera, escribirNivel, escribirNombre } from './cartas.js';
 import { activarArrastreDeZoomExtra, activarReflejoQuieto, activarZoom } from './zoom.js';
 import { activarVoltearConDedo, gestionarVisitasYFlechasMovil } from './gestos.js';
 import { activarInclinacion, activarRuedaConShift, evitarFocoYSeleccionConShift } from './inclinacion.js';
-import { activarBotonDeAudio, activarDesbloqueoAudio, activarToqueEnBotonesDeCarta, activarVibracion, aplicarSilencio } from './audio.js';
+import { activarBotonDeAudio, activarDesbloqueoAudio, activarToqueEnBotonesConEspera, activarVibracion, aplicarSilencio } from './audio.js';
 import { activarSonidoBotones, activarSonidoDeDesplegables } from './sonidos.js';
 import { prepararFiltros } from './filtros.js';
 import { activarInfo } from './info.js';
@@ -25,6 +25,8 @@ import { activarBarraQueSeEsconde, activarLogo, activarMenuMovil } from './barra
 import { activarEvolucion } from './evolucion.js';
 import { activarBaileDeCartas } from './baile.js';
 import { activarPaginaQuietaConVentanas } from './ventanas.js';
+import { activarTema } from './tema.js';
+import { activarCierreDeMenus } from './menus.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     mostrarSistemaDeNiveles();
@@ -32,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
     crearListaDeDigimons();
 });
 
+activarDeteccionDeDedo(); // primero: las demás partes y el CSS preguntan si se apunta con el dedo o con el mouse
+activarCierreDeMenus(); // (también antes que el resto: tiene que ver los menús abiertos antes de que un toque los cierre)
+activarTema(); // deja el tema (claro u oscuro) como lo eligió la persona
 activarPaginaQuietaConVentanas(); // el dedo no desplaza la página con una ventana abierta
 activarInclinacion();
 activarRuedaConShift();
@@ -43,10 +48,11 @@ activarReflejoQuieto();
 activarAvisosDeAyuda();
 activarAvisoDeInclinacion(); // después de los avisos de ayuda: usa el contador de visitas que ellos cuentan
 activarAvisoDeZoomExtra(); // (este también)
+activarAvisoDeTema(); // (y este)
 gestionarVisitasYFlechasMovil();
 activarDesbloqueoAudio();
 activarVoltearConDedo();
-activarToqueEnBotonesDeCarta(); // antes del sonido y la vibración: son los que escuchan su aviso
+activarToqueEnBotonesConEspera(); // antes del sonido y la vibración: son los que escuchan su aviso
 activarSonidoBotones();
 activarSonidoDeDesplegables();
 activarBotonDeAudio();

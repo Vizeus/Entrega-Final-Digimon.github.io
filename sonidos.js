@@ -6,12 +6,13 @@
 
 import {
     destinoDeAudio,
-    esToqueEnBotonDeCarta,
+    esToqueEnBotonConEspera,
     obtenerContextoAudio,
     perfilAudioActual,
     sonarCuandoElAudioEsteListo,
     sonarSinAvisarAlBotonDeAudio,
 } from './audio.js';
+import { toqueQueSoloCierraMenus } from './menus.js';
 
 // ---- Tecla de teclado mecánico ------------------------------------------------------------------------------------
 // Una tecla real suena a tres cosas juntas: un "clic" agudo (el mecanismo), un golpe seco (la tecla llegando al fondo)
@@ -442,7 +443,7 @@ export function activarSonidoBotones() {
         const boton = evento.target.closest('button, [role="button"]');
         if (!boton || boton.disabled) return null;
         if (boton.id === 'silenciar') return null; // el botón de sonido tiene su propio criterio (ver activarBotonDeAudio)
-        if (boton.id === 'inclinacion-invertida') return TECLA_SIN_AVISO;
+        if (boton.id === 'inclinacion-invertida' || boton.id === 'tema') return TECLA_SIN_AVISO; // (los de ajustes no le avisan al de sonido)
         // El botón de hacer flip de la carta no debe hacer sonido
         if (boton.closest('.c-flip')) return null;
         // Los botones de cada ataque (desplegar la descripción) no suenan a tecla: suena el fichero (info.js)
@@ -457,7 +458,8 @@ export function activarSonidoBotones() {
     };
     document.addEventListener('pointerdown', evento => {
         if (evento.pointerType === 'mouse' && evento.button !== 0) return; // solo el botón izquierdo
-        if (esToqueEnBotonDeCarta(evento)) return; // con el dedo, los de las cartas suenan al terminar el toque (ver más abajo)
+        if (esToqueEnBotonConEspera(evento)) return; // con el dedo, los de las cartas y las ventanas suenan al terminar el toque (ver más abajo)
+        if (toqueQueSoloCierraMenus()) return; // el toque que cierra un menú desde una carta no suena (el menú al cerrarse suena solo)
         const tecla = teclaDe(evento);
         if (tecla) {
             apretado = tecla;
@@ -475,9 +477,10 @@ export function activarSonidoBotones() {
     document.addEventListener('pointercancel', () => {
         apretado = null;
     });
-    // Los botones de las cartas, con el dedo: no suenan al apoyar (podría ser el comienzo de un desplazamiento de la página) sino cuando el
-    // toque terminó y fue un toque de verdad (ver activarToqueEnBotonesDeCarta en audio.js). Ahí suenan la bajada y, un instante después, la subida.
-    document.addEventListener('toque-en-boton-de-carta', evento => {
+    // Los botones de las cartas y de las ventanas (ataques, evolución, información), con el dedo: no suenan al apoyar (podría ser el comienzo de un
+    // desplazamiento) sino cuando el toque terminó y fue un toque de verdad (ver activarToqueEnBotonesConEspera en audio.js). Ahí suenan la
+    // bajada y, un instante después, la subida.
+    document.addEventListener('toque-en-boton', evento => {
         const tecla = teclaDe({ target: evento.detail.boton });
         if (!tecla) return;
         sonarTeclaDeBoton(true, tecla);

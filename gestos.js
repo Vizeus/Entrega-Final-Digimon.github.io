@@ -2,7 +2,7 @@
 // GESTOS CON EL DEDO (pantallas táctiles)
 //
 // Doble toque y pellizco para el zoom, barrido rápido para dar vuelta la carta (y las flechas de ayuda, que se dejan de
-// mostrar cuando ya se aprendió) y el toque con "hundimiento" de los botones del dorso.
+// mostrar cuando ya se aprendió), barrido vertical para salir del zoom y el toque con "hundimiento" de los botones del dorso.
 // -----------------------------------------------------------------------------------------------------------------
 
 import { emitir, guardarTexto, hayMarcaDeSesion, HAY_PANTALLA_TACTIL, leerTexto, ponerMarcaDeSesion } from './util.js';
@@ -15,26 +15,74 @@ import {
     cartaEnZoom,
     cerrarZoom,
     ponerZoomExtra,
+    puedeCerrarseConDobleToque,
     restaurarSeleccion,
+    volverAlZoomNormal,
+    zonaConScroll,
     zoomExtra,
     zoomExtraDisponible,
     zoomOcupado,
 } from './zoom.js';
 import { inclinandoConDedo } from './inclinacion.js';
 import { vibrar } from './audio.js';
+import { toqueQueSoloCierraMenus } from './menus.js';
 
 // En celulares la carta también se amplía con doble toque (dos toques cortos seguidos sobre la misma carta). Igual que con el
 // doble clic, el primer toque ya eligió la carta y el segundo la desmarcó: al ampliar se deja la selección como estaba antes.
+// Y con la carta ya ampliada, un doble toque sobre ella la devuelve a su lugar (ahí los toques no eligen la carta, así que no hay nada que deshacer;
+// y no cuenta sobre los botones ni los botoncitos de la carta, que tienen su propia función).
 // (Se detecta acá y no con "dblclick" porque no todos los navegadores del celular lo mandan con un doble toque.)
 const DOBLE_TOQUE_ESPERA = 320; // ms máximos entre el final de un toque y el principio del siguiente
 const DOBLE_TOQUE_DISTANCIA = 30; // px máximos entre los dos toques
 const TOQUE_DURACION = 250; // ms máximos que el dedo puede estar apoyado para que cuente como toque (más es una presión larga)
 const TOQUE_MOVIMIENTO = 12; // px máximos que se puede mover el dedo durante un toque
 
+// Un doble toque sobre un botoncito del frente de la carta (la gema, el nivel, el tipo o el elemento) también quiere ampliar la carta: abrir la
+// ventana de información del botoncito y cerrarla enseguida no tiene sentido. Como el primer toque ya abriría esa ventana, con el dedo el clic del
+// botoncito espera un instante (lo que dura la espera del doble toque, más un pequeño margen) a ver si llega el segundo toque: si llega, se amplía la
+// carta y la ventana no se abre; si no, la ventana se abre como siempre. (Los botones del dorso y los clics de mouse o de teclado no esperan nada.)
+const CHIPS_DEL_FRENTE = '#listado-digimons > li :is(.c-gema, .c-nivel, .c-tipo, .c-elem)';
+const ESPERA_DEL_CHIP = DOBLE_TOQUE_ESPERA + 40; // ms que espera el clic de un botoncito
+const CLIC_DESPUES_DEL_TOQUE = 700; // ms máximos entre que se levanta el dedo y el clic que le sigue para que cuente como "hecho con el dedo"
+
 export function activarZoomConDobleToque() {
     if (!HAY_PANTALLA_TACTIL) return;
-    let apoyado = null; // { carta, t, x, y, estado }: el dedo que está apoyado ahora
-    let anterior = null; // { carta, tFin, x, y, estado }: el último toque corto
+    let apoyado = null; // { carta, t, x, y, estado, cerrar }: el dedo que está apoyado ahora ("cerrar": la carta ya estaba ampliada)
+    let anterior = null; // { carta, tFin, x, y, estado, cerrar }: el último toque corto
+    let pendiente = null; // { chip, carta, espera }: el clic de un botoncito del frente que espera a ver si es el primero de un doble toque
+    let descartarClicHasta = 0; // hasta cuándo se descarta el clic de un botoncito: es el del segundo toque de un doble toque
+    let ultimoToqueTerminado = -Infinity; // cuándo se levantó el dedo la última vez
+    let reenviando = false;
+
+    // Le entrega al botoncito su clic, que estaba esperando (si ya se lo entregó o no hay, no hace nada)
+    const soltarPendiente = () => {
+        if (!pendiente) return;
+        const { chip, espera } = pendiente;
+        pendiente = null;
+        clearTimeout(espera);
+        reenviando = true;
+        try {
+            chip.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, view: window, detail: 1 }));
+        } finally {
+            reenviando = false;
+        }
+    };
+
+    // (En window y en captura: va antes que el manejador que abre las ventanas de los botoncitos, en cartas.js)
+    window.addEventListener(
+        'click',
+        evento => {
+            if (reenviando || evento.detail === 0 || cartaEnZoom || zoomOcupado) return; // (detail 0: clic del teclado o de un lector de pantalla)
+            const chip = evento.target.closest?.(CHIPS_DEL_FRENTE);
+            if (!chip || evento.timeStamp - ultimoToqueTerminado > CLIC_DESPUES_DEL_TOQUE) return; // no es un botoncito, o el clic no vino de un dedo
+            evento.stopPropagation();
+            evento.preventDefault();
+            if (performance.now() < descartarClicHasta) return; // el segundo toque de un doble toque: la carta se amplía y la ventana no se abre
+            soltarPendiente();
+            pendiente = { chip, carta: chip.closest('#listado-digimons > li'), espera: setTimeout(soltarPendiente, ESPERA_DEL_CHIP) };
+        },
+        true,
+    );
 
     document.addEventListener(
         'touchstart',
@@ -42,13 +90,21 @@ export function activarZoomConDobleToque() {
             apoyado = null;
             const toque = evento.touches[0];
             const carta = evento.touches.length === 1 ? toque.target.closest?.('#listado-digimons > li') : null;
-            if (!carta || cartaEnZoom || zoomOcupado || toque.target.closest('button')) {
+            const cerrar = !!cartaEnZoom; // con una carta ampliada el doble toque es para devolverla a su lugar; si no, para ampliarla
+            // (un toque que solo cierra un menú abierto no cuenta como el primero de un doble toque: ver menus.js)
+            const sirve = cerrar
+                ? carta === cartaEnZoom && puedeCerrarseConDobleToque(toque.target)
+                : !!carta && !zoomOcupado && !toque.target.closest('button') && !toqueQueSoloCierraMenus();
+            if (!sirve) {
                 anterior = null;
+                soltarPendiente();
                 return;
             }
             // "estado" es la selección de antes del primer toque (el clic de ese toque llega recién al soltar el dedo)
-            const esSegundo = anterior && anterior.carta === carta && evento.timeStamp - anterior.tFin <= DOBLE_TOQUE_ESPERA;
-            apoyado = { carta, t: evento.timeStamp, x: toque.clientX, y: toque.clientY, estado: esSegundo ? anterior.estado : seleccionados.slice() };
+            const esSegundo = anterior && anterior.carta === carta && anterior.cerrar === cerrar && evento.timeStamp - anterior.tFin <= DOBLE_TOQUE_ESPERA;
+            // Puede ser el segundo toque de un doble toque sobre un botoncito: se deja de esperar el tiempo del primero, y se decide cuando termine este
+            if (esSegundo && pendiente?.carta === carta) clearTimeout(pendiente.espera);
+            apoyado = { carta, t: evento.timeStamp, x: toque.clientX, y: toque.clientY, estado: esSegundo ? anterior.estado : seleccionados.slice(), cerrar };
         },
         { passive: true },
     );
@@ -61,6 +117,7 @@ export function activarZoomConDobleToque() {
             if (Math.hypot(toque.clientX - apoyado.x, toque.clientY - apoyado.y) > TOQUE_MOVIMIENTO) {
                 apoyado = null;
                 anterior = null;
+                soltarPendiente(); // (no era el segundo toque: el del botoncito sigue su camino)
             }
         },
         { passive: true },
@@ -69,25 +126,42 @@ export function activarZoomConDobleToque() {
     document.addEventListener(
         'touchend',
         evento => {
+            ultimoToqueTerminado = evento.timeStamp;
             const toque = apoyado;
             apoyado = null;
             if (!toque) return;
             if (evento.timeStamp - toque.t > TOQUE_DURACION) {
                 // presión larga (la inclinación): no cuenta como toque
                 anterior = null;
+                soltarPendiente();
                 return;
             }
             const previo = anterior;
             const esDoble =
                 previo &&
                 previo.carta === toque.carta &&
+                previo.cerrar === toque.cerrar &&
                 toque.t - previo.tFin <= DOBLE_TOQUE_ESPERA &&
                 Math.hypot(toque.x - previo.x, toque.y - previo.y) <= DOBLE_TOQUE_DISTANCIA;
             if (!esDoble) {
-                anterior = { carta: toque.carta, tFin: evento.timeStamp, x: toque.x, y: toque.y, estado: toque.estado };
+                anterior = { carta: toque.carta, tFin: evento.timeStamp, x: toque.x, y: toque.y, estado: toque.estado, cerrar: toque.cerrar };
+                soltarPendiente(); // (si venía otro botoncito esperando, este toque no lo anuló)
                 return;
             }
             anterior = null;
+            if (toque.cerrar) {
+                // Doble toque sobre la carta ampliada: vuelve a su lugar (también acá se espera un instante, a que el clic del segundo toque termine de procesarse)
+                setTimeout(() => {
+                    if (cartaEnZoom !== toque.carta || zoomOcupado) return;
+                    vibrar(12);
+                    cerrarZoom();
+                }, 60);
+                return;
+            }
+            // Doble toque: la carta se amplía. Si el primer toque fue en un botoncito, su ventana no se abre ni se abre la del segundo (que llega justo ahora)
+            if (pendiente) clearTimeout(pendiente.espera);
+            pendiente = null;
+            descartarClicHasta = performance.now() + CLIC_DESPUES_DEL_TOQUE;
             // Se espera un instante a que el segundo toque termine de procesarse como clic, y ahí se deshace lo que hicieron los dos
             setTimeout(() => {
                 restaurarSeleccion(previo.estado);
@@ -104,6 +178,7 @@ export function activarZoomConDobleToque() {
         () => {
             apoyado = null;
             anterior = null;
+            soltarPendiente();
         },
         { passive: true },
     );
@@ -111,8 +186,9 @@ export function activarZoomConDobleToque() {
 
 // Con el dedo la carta también se amplía con el gesto de zoom (dos dedos que se separan sobre la carta) y vuelve
 // a su lugar juntando los dedos. Tocar afuera o la ✕ también la cierra, como siempre.
-// Con la carta ya ampliada y de frente, separar los dedos la agranda todavía más y juntarlos la devuelve (ver "ZOOM EXTRA"); si ya está en su
-// tamaño normal, juntar los dedos la cierra, como siempre. En el dorso, juntar los dedos cierra y separarlos no hace nada.
+// Con la carta ya ampliada y de frente, separar los dedos la agranda todavía más (ver "ZOOM EXTRA") y solo mientras se mantiene el pellizco: al
+// soltar los dedos (o uno solo) vuelve sola al tamaño normal del zoom. Si ya está en su tamaño normal, juntar los dedos la cierra, como siempre.
+// En el dorso, juntar los dedos cierra y separarlos no hace nada.
 // (El CSS deja las cartas con touch-action: pan-y: se pueden desplazar hacia arriba y abajo, pero el navegador no amplía la
 // página con ese pellizco y los dedos le llegan al código.)
 const PELLIZCO_ABRIR = 1.3; // los dedos se separaron un 30%
@@ -186,7 +262,11 @@ export function activarZoomConPellizco() {
     );
 
     const terminar = evento => {
-        if (evento.touches.length < 2) pellizco = null;
+        if (evento.touches.length >= 2) return;
+        // Se terminó un pellizco hecho con la carta ya ampliada: si la agrandó de más, vuelve sola al tamaño normal (el zoom extra dura lo que dura el pellizco)
+        const eraPellizcoConLaCartaAmpliada = pellizco && !pellizco.carta;
+        pellizco = null;
+        if (eraPellizcoConLaCartaAmpliada && zoomExtra && cartaEnZoom) volverAlZoomNormal(cartaEnZoom);
     };
     document.addEventListener('touchend', terminar);
     document.addEventListener('touchcancel', terminar);
@@ -426,4 +506,67 @@ export function activarVoltearConDedo() {
         },
         true,
     );
+}
+
+// Con la carta ampliada, un barrido de un dedo hacia arriba o hacia abajo que empieza SOBRE la carta la devuelve a su lugar (el barrido hacia un
+// costado la da vuelta, como siempre). Cuenta de dos maneras: un movimiento rápido (los mismos números que para dar vuelta la carta) o un arrastre
+// largo y bien vertical aunque sea lento. Si antes se la mantuvo apretada para inclinarla, mover el dedo es parte de la inclinación: ahí solo
+// cuenta un barrido muchísimo más rápido y largo (los números de la inclinación, como para dar vuelta). En el dorso, si empieza sobre la
+// descripción y esta se puede desplazar, ese barrido es para desplazarla y no cierra.
+const SALIR_DISTANCIA_LARGO = 80; // px de arrastre vertical desde donde se apoyó el dedo (si sube este número, cuesta más salir arrastrando despacio)
+
+export function activarSalirDelZoomConBarrido() {
+    if (!HAY_PANTALLA_TACTIL) return;
+    let gesto = null; // { x0, y0, muestras, resuelto }: el dedo que está apoyado en la carta ampliada
+
+    document.addEventListener(
+        'touchstart',
+        evento => {
+            gesto = null;
+            if (evento.touches.length !== 1 || !cartaEnZoom || zoomOcupado || zoomExtra) return;
+            const toque = evento.touches[0];
+            if (!cartaEnZoom.contains(toque.target) || zonaConScroll(toque.target) || document.querySelector('.swal2-container')) return;
+            gesto = { x0: toque.clientX, y0: toque.clientY, muestras: [{ t: evento.timeStamp, x: toque.clientX, y: toque.clientY }], resuelto: false };
+        },
+        { passive: true },
+    );
+
+    document.addEventListener(
+        'touchmove',
+        evento => {
+            if (!gesto || gesto.resuelto) return;
+            if (evento.touches.length !== 1 || !cartaEnZoom || zoomOcupado || zoomExtra) {
+                gesto = null;
+                return;
+            }
+            const toque = evento.touches[0];
+            const muestras = gesto.muestras;
+            muestras.push({ t: evento.timeStamp, x: toque.clientX, y: toque.clientY });
+            while (muestras.length > 2 && evento.timeStamp - muestras[0].t > BARRIDO_VENTANA) muestras.shift();
+
+            const primera = muestras[0];
+            const ultima = muestras[muestras.length - 1];
+            const dx = ultima.x - primera.x;
+            const dy = ultima.y - primera.y;
+            const ms = Math.max(1, ultima.t - primera.t);
+            const distanciaMinima = inclinandoConDedo ? BARRIDO_DISTANCIA_INCLINANDO : BARRIDO_DISTANCIA;
+            const velocidadMinima = inclinandoConDedo ? BARRIDO_VELOCIDAD_INCLINANDO : BARRIDO_VELOCIDAD;
+            const rapido = Math.abs(dy) >= distanciaMinima && Math.abs(dy) > Math.abs(dx) * 2 && Math.abs(dy) / ms >= velocidadMinima;
+            const dxTotal = toque.clientX - gesto.x0;
+            const dyTotal = toque.clientY - gesto.y0;
+            const largo = !inclinandoConDedo && Math.abs(dyTotal) >= SALIR_DISTANCIA_LARGO && Math.abs(dyTotal) > Math.abs(dxTotal) * 2;
+            if (rapido || largo) {
+                gesto.resuelto = true;
+                vibrar(8);
+                cerrarZoom();
+            }
+        },
+        { passive: true },
+    );
+
+    const terminar = () => {
+        gesto = null;
+    };
+    document.addEventListener('touchend', terminar);
+    document.addEventListener('touchcancel', terminar);
 }

@@ -7,10 +7,19 @@
 // Los tamaños viven en variables porque cartas.js también los lee para ajustar el largo de los nombres.
 // -----------------------------------------------------------------------------------------------------------------
 :root {
-    // La página tiene un solo aspecto, el claro. Con "only light" se le avisa al navegador que no la oscurezca por su cuenta (el "modo noche" de
-    // algunos celulares, que invierte los colores de las páginas que no traen versión oscura); sin esto, las cartas y la barra se veían apagadas.
+    // La página tiene dos aspectos, el claro y el oscuro (tema.js pone data-tema="claro" u "oscuro" en <html>; ver _tema-oscuro.scss).
+    // "color-scheme" le avisa al navegador cuál es, y con eso no la oscurece por su cuenta (el "modo noche" de algunos celulares, que invierte
+    // los colores de las páginas que no avisan que ya tienen versión oscura: sin esto las cartas y la barra se veían apagadas) y pinta a su
+    // modo lo que no controlamos (barras de desplazamiento, campos de texto). "only light" es "solo claro": ni el modo noche del navegador lo toca.
     // (Lo mismo va en el index.html, en un <meta>: así se sabe desde el primer momento, antes de que cargue este archivo.)
     color-scheme: only light;
+
+    // Colores del tema claro que se repiten en toda la página (los del oscuro están en _tema-oscuro.scss, con los mismos nombres)
+    --tinta: #24476a;
+    --tinta-oscura: #1d4468;
+    --vidrio-claro: #cfdde9;
+    --brillo-de-texto: 0 1px 0 rgba(255, 255, 255, 0.85);
+    --sombra-hundida: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
 
     --f-titulo: "Orbitron";
     --f-etiqueta: "Pixelify Sans";

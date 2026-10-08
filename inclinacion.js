@@ -11,6 +11,7 @@ import { listaDigimons } from './pagina.js';
 import { PERSPECTIVA, reducirMovimiento } from './cartas.js';
 import { zoomEsperaMovimiento, zoomExtra, zoomOcupado } from './zoom.js';
 import { vibrar } from './audio.js';
+import { toqueQueSoloCierraMenus } from './menus.js';
 
 // Preferencia de la inclinación con el mouse (solo computadora): por defecto las cartas se inclinan al pasar el mouse y Shift apretada lo
 // anula; con "invertida" es al revés (no se inclinan al pasar el mouse y solo lo hacen mientras se mantiene apretada Shift). Se cambia con
@@ -136,6 +137,18 @@ export function activarInclinacion() {
         avisarInclinacion();
     }
 
+    // ¿El puntero sigue en la zona de la carta que se está siguiendo? Es la caja con la que empezó (sin inclinar) más un margen: al
+    // inclinarse, la carta aparta el borde que está cerca del puntero y este queda un instante afuera, aunque no se movió. Con la carta
+    // ampliada el margen crece con su tamaño: ahí los bordes se apartan mucho más.
+    function enLaZonaDeLaCarta(clienteX, clienteY) {
+        if (!cartaActual || !caja) return false;
+        const px = clienteX + scrollX;
+        const py = clienteY + scrollY;
+        const margenX = Math.max(12, caja.ancho * 0.055);
+        const margenY = Math.max(22, caja.alto * 0.067);
+        return px >= caja.x - margenX && px <= caja.x + caja.ancho + margenX && py >= caja.y - margenY && py <= caja.y + caja.alto + margenY;
+    }
+
     function seguir(clienteX, clienteY) {
         if (!caja) return; // la carta está dándose vuelta y ya no sigue al dedo
         const limitar = valor => Math.max(-1, Math.min(1, valor));
@@ -194,16 +207,7 @@ export function activarInclinacion() {
             // Si la carta actual se inclinó o levantó y el puntero quedó un instante en el borde que se apartó,
             // no la soltamos de inmediato: verificamos si el puntero sigue dentro de su zona de interacción (caja base con tolerancia).
             // Esto evita que la carta vibre (se active y desactive a 60 fps) al entrar lentamente desde cualquier borde.
-            if (!carta && cartaActual && caja) {
-                const px = evento.clientX + scrollX;
-                const py = evento.clientY + scrollY;
-                const margenX = 12;
-                const margenY = 22;
-                const dentro = px >= caja.x - margenX && px <= caja.x + caja.ancho + margenX && py >= caja.y - margenY && py <= caja.y + caja.alto + margenY;
-                if (dentro) {
-                    carta = cartaActual;
-                }
-            }
+            if (!carta && enLaZonaDeLaCarta(evento.clientX, evento.clientY)) carta = cartaActual;
 
             if (!carta) {
                 soltar(cartaActual);
@@ -245,7 +249,29 @@ export function activarInclinacion() {
             if (evento.key === 'Shift') ponerShift(evento.shiftKey); // (por si queda la otra Shift apretada)
         });
 
+        // Con la carta ampliada, lo que rodea a la carta es el fondo del zoom, que no es parte de la lista: al inclinarse y apartar su borde, el
+        // puntero "sale de la lista" y los movimientos siguientes ya no llegan a ella. Si sigue en la zona de la carta, no se la suelta (si no,
+        // se endereza, el puntero vuelve a quedar sobre ella, se inclina de nuevo... y titila); ver el pointermove de document, más abajo.
         listaDigimons.addEventListener('pointerleave', evento => {
+            if (evento.pointerType === 'touch') return;
+            if (enLaZonaDeLaCarta(evento.clientX, evento.clientY)) return;
+            puntero = null;
+            soltar(cartaActual);
+        });
+
+        // El puntero se mueve fuera de la lista mientras una carta lo seguía (el caso de recién): mientras siga en su zona, la carta lo sigue
+        // igual que cuando el puntero queda un instante entre dos cartas; al salirse de la zona, se suelta
+        document.addEventListener('pointermove', evento => {
+            if (evento.pointerType === 'touch' || !cartaActual || evento.target.closest?.('#listado-digimons')) return; // dentro de la lista, lo atiende su pointermove
+            if (zoomOcupado || anulada() || zoomExtra || zoomEsperaMovimiento || !enLaZonaDeLaCarta(evento.clientX, evento.clientY)) {
+                puntero = null;
+                soltar(cartaActual);
+                return;
+            }
+            seguir(evento.clientX, evento.clientY);
+        });
+        // Si el puntero sale de la página, la carta se suelta
+        document.documentElement.addEventListener('pointerleave', evento => {
             if (evento.pointerType === 'touch') return;
             puntero = null;
             soltar(cartaActual);
@@ -321,7 +347,16 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
                 return;
             }
             const carta = evento.target.closest('#listado-digimons > li');
-            if (!carta || carta.classList.contains('de-dorso') || carta.girando || zoomOcupado || zoomExtra || evento.target.closest('button')) return;
+            if (
+                !carta ||
+                carta.classList.contains('de-dorso') ||
+                carta.girando ||
+                zoomOcupado ||
+                zoomExtra ||
+                evento.target.closest('button') ||
+                toqueQueSoloCierraMenus()
+            )
+                return;
             const toque = evento.touches[0];
             inicio = { x: toque.clientX, y: toque.clientY };
             clearTimeout(espera);

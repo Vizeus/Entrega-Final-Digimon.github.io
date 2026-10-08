@@ -189,7 +189,7 @@
 }
 
 // En pantallas táctiles no hay tecla Esc
-@media (hover: none) {
+@include con-dedo {
     #zoom-fondo .zoom-ayuda {
         display: none;
     }

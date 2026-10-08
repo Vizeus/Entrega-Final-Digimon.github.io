@@ -17,6 +17,26 @@
     }
 }
 
+// Lo que vale cuando se apunta con el dedo. Es el @media (hover: none) de siempre MÁS la clase "con-dedo" de <html> (util.js, activarDeteccionDeDedo):
+// casi todos los Samsung le dicen al navegador que tienen un mouse aunque se usen con el dedo, y ahí el @media nunca se cumple. La clase sí acierta
+// (y además sigue a una computadora con pantalla táctil según se toque o se use el mouse). ":where" para que la clase no sume especificidad:
+// las reglas quedan con el mismo peso que tenían con el @media solo.
+@mixin con-dedo {
+    @media (hover: none) {
+        @content;
+    }
+
+    @if & {
+        :where(:root.con-dedo) & {
+            @content;
+        }
+    } @else {
+        :where(:root.con-dedo) {
+            @content;
+        }
+    }
+}
+
 // ---- Botones ---------------------------------------------------------------------------------------------------------------
 // Botón de gel: color base en --c, brillo arriba, biselado abajo y sombra que lo despega del fondo.
 // Lo usan los botones de la barra de arriba y el botón de sonido cuando flota en el celular (fuera de la barra).
@@ -227,6 +247,58 @@
             display: inline;
         }
     }
+}
+
+// Botón de tema (claro / oscuro / automático): chiquito y redondo, igual al de sonido y al de inclinación. Su ícono sigue el paso en que está
+// (data-modo, lo escribe tema.js): mitad sol y mitad luna (automático, el del dispositivo), sol (claro) o luna (oscuro). El sol es ámbar y la luna
+// azul índigo para que se distingan de un vistazo (con el tema oscuro, el CSS los aclara: ver _tema-oscuro.scss).
+// (Cuando aparece el cartel que lo explica salta y lanza ondas, igual que el de sonido en su primer sonido: ver boton-que-llama.)
+@mixin boton-de-tema {
+    @include boton-redondo;
+
+    .tema-icono {
+        width: 20px;
+        height: 20px;
+        filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+    }
+
+    // Por defecto (modo "auto"): la mitad de un círculo, sin color propio
+    .tema-sol,
+    .tema-luna {
+        display: none;
+    }
+
+    .tema-sol {
+        stroke: #d98500;
+    }
+
+    .tema-luna {
+        stroke: #3b4fb8;
+    }
+
+    &[data-modo="claro"] {
+        .tema-auto,
+        .tema-luna {
+            display: none;
+        }
+
+        .tema-sol {
+            display: inline;
+        }
+    }
+
+    &[data-modo="oscuro"] {
+        .tema-auto,
+        .tema-sol {
+            display: none;
+        }
+
+        .tema-luna {
+            display: inline;
+        }
+    }
+
+    @include boton-que-llama;
 }
 
 // ---- Cartas --------------------------------------------------------------------------------------------------------------

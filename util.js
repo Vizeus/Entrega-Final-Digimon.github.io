@@ -65,9 +65,58 @@ export function emitir(nombre, detalle) {
 // escuchar con .addEventListener('change', ...).
 // El corte de 700 px es el mismo que $corte-celular en design/parciales/_variables.scss: si se cambia uno, se cambia el otro.
 export const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
-export const CON_DEDO = window.matchMedia('(hover: none)'); // pantalla táctil, sin "hover"
-export const CON_MOUSE = window.matchMedia('(hover: hover) and (pointer: fine)');
 export const HAY_PANTALLA_TACTIL = navigator.maxTouchPoints > 0 || 'ontouchstart' in window; // aunque también tenga mouse
+
+// ---- Dedo o mouse ----------------------------------------------------------------------------------------------------
+// CON_DEDO y CON_MOUSE dicen con qué se está apuntando ahora (se leen con .matches; a diferencia de las pantallas, no avisan los cambios).
+// Lo normal sería preguntárselo al navegador con "(hover: none)", pero casi todos los celulares y tablets de Samsung (en cualquier navegador:
+// Samsung Internet, Chrome...) contestan que tienen un mouse ("hover: hover" y "pointer: fine") aunque se usen solo con el dedo, porque su
+// pantalla táctil se presenta ante Android también como un panel táctil de mouse (https://www.ctrl.blog/entry/css-media-hover-samsung.html).
+// En esos aparatos la página se creía en una computadora: el "hover" quedaba pegado en la carta tocada y su brillo se quedaba suspendido ahí.
+// Entonces se decide así, en este orden:
+//   1. Si ya se vio qué se usó por última vez, manda eso (activarDeteccionDeDedo): un toque es un dedo; el mouse o el lápiz, no.
+//      Así también acierta una computadora con pantalla táctil, que va cambiando según se toque o se mueva el mouse.
+//   2. Si todavía no se tocó nada: el navegador cuando dice que no hay "hover", y además cualquier aparato Android con pantalla táctil.
+//      (Un Android con un mouse conectado arranca creyéndose con dedo hasta que se mueva el mouse; no es una combinación común.)
+const SIN_HOVER = window.matchMedia('(hover: none)');
+const CON_HOVER_Y_PUNTERO_FINO = window.matchMedia('(hover: hover) and (pointer: fine)');
+const ES_ANDROID_TACTIL = HAY_PANTALLA_TACTIL && /Android/i.test(navigator.userAgent);
+let ultimoPuntero = null; // "touch", "mouse" o "pen": lo último que se usó para apuntar (null: todavía no se usó nada)
+
+const conDedoAhora = () => (ultimoPuntero ? ultimoPuntero === 'touch' : SIN_HOVER.matches || ES_ANDROID_TACTIL);
+
+export const CON_DEDO = {
+    get matches() {
+        return conDedoAhora();
+    },
+};
+export const CON_MOUSE = {
+    get matches() {
+        return CON_HOVER_Y_PUNTERO_FINO.matches && !conDedoAhora();
+    },
+};
+
+// Escucha qué se usa para apuntar y se lo cuenta al CSS con la clase "con-dedo" de <html> (equivale al @media (hover: none), pero con la
+// corrección de arriba: ver el mixin con-dedo en design/parciales/_mixins.scss). Se pone en marcha apenas arranca la página.
+export function activarDeteccionDeDedo() {
+    const raiz = document.documentElement;
+    const reflejar = () => raiz.classList.toggle('con-dedo', conDedoAhora());
+    const mirar = evento => {
+        if (!evento.pointerType || evento.pointerType === ultimoPuntero) return;
+        ultimoPuntero = evento.pointerType;
+        reflejar();
+    };
+    // (en la fase de captura, para ir antes que cualquier otro manejador; "pointermove" solo de mouse y lápiz: un dedo avisa con "pointerdown")
+    document.addEventListener('pointerdown', mirar, { capture: true, passive: true });
+    document.addEventListener(
+        'pointermove',
+        evento => {
+            if (evento.pointerType !== 'touch') mirar(evento);
+        },
+        { capture: true, passive: true },
+    );
+    reflejar();
+}
 
 // ---- Ayudas --------------------------------------------------------------------------------------------------------
 // El texto que se ve al dejar el puntero encima (title) y el que leen los lectores de pantalla (aria-label): casi siempre el mismo

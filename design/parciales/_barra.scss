@@ -284,7 +284,8 @@
     .menu-desplegable,
     #cambiar-idioma,
     #silenciar,
-    #inclinacion-invertida {
+    #inclinacion-invertida,
+    #tema {
         @include boton-de-gel;
     }
 
@@ -438,27 +439,20 @@
         }
     }
 
-    // Sonido (en computadora): botón chiquito y redondo, junto al de idioma (ver el mixin boton-de-sonido).
+    // Los botones redondos (sonido, inclinación —solo con mouse— y tema) van juntos, a 8 px uno del otro, y el grupo queda centrado entre el idioma y
+    // los menús de información: del idioma lo separan 8 px (el espacio entre botones de este grupo) y a los menús les llegan 16 (el espacio entre
+    // grupos de la barra, que es siempre ese: ver "margin-left: auto" de .ajustes más abajo). Con 4 px más del lado del idioma (en el de sonido) y 4 px
+    // menos del otro (en el de tema, que siempre es el último) quedan 12 y 12, haya o no botón de inclinación. (Mientras uno está afuera de la barra,
+    // llamando la atención, en su lugar queda un hueco del mismo tamaño y con los mismos márgenes: cuenta igual.)
+    // En celular el de sonido flota afuera de la barra, el de inclinación no existe y el de tema queda junto al de idioma, en el menú ☰.
+
+    // Sonido (en computadora): ver el mixin boton-de-sonido.
     // En celular audio.js lo saca de la barra y lo deja flotando en la esquina de abajo a la derecha (más abajo)
     #silenciar {
         @include boton-de-sonido;
 
-        // Queda centrado entre el idioma y los menús de información: a su izquierda hay 8 px (el espacio entre botones de este grupo)
-        // y a su derecha 16 (el espacio entre grupos de la barra, que es siempre ese: ver "margin-left: auto" de .ajustes más abajo).
-        // Con 4 px más de un lado y 4 menos del otro quedan 12 y 12.
         @include computadora {
-            margin-inline: 4px -4px;
-        }
-    }
-
-    // Inclinación con el mouse (solo computadora): botón chiquito y redondo, igual al de sonido y pegado a él (8 px). Si está a la vista,
-    // el par de botones redondos queda centrado entre el idioma y los menús: el de sonido conserva solo los 4 px de su izquierda
-    // (8 + 4 = 12) y el de inclinación se queda con los -4 px de la derecha (16 - 4 = 12). Sin él (pantallas táctiles), el de sonido
-    // sigue centrado solo, como arriba.
-    // (Mientras el de inclinación está afuera de la barra, llamando la atención, en su lugar queda un hueco: cuenta igual)
-    .ajustes:has(#inclinacion-invertida:not([hidden]), [data-hueco="inclinacion-invertida"]) #silenciar {
-        @include computadora {
-            margin-inline: 4px 0;
+            margin-left: 4px;
         }
     }
 
@@ -466,12 +460,17 @@
     #inclinacion-invertida {
         @include boton-de-inclinacion;
 
-        @include computadora {
-            margin-inline: 0 -4px;
-        }
-
         @include celular {
             display: none;
+        }
+    }
+
+    // Tema (claro / oscuro / automático): ver el mixin boton-de-tema. Siempre es el último de los botones redondos.
+    #tema {
+        @include boton-de-tema;
+
+        @include computadora {
+            margin-right: -4px;
         }
     }
 
@@ -739,7 +738,8 @@
 // mismo lugar de la pantalla) para que se vea por encima de la cortina y se pueda tocar. Al terminar vuelve a la barra.
 @include computadora {
     body > #silenciar,
-    body > #inclinacion-invertida {
+    body > #inclinacion-invertida,
+    body > #tema {
         @include boton-de-gel;
         position: fixed;
         z-index: capa(botones-flotantes);
@@ -757,6 +757,10 @@
 
     body > #inclinacion-invertida {
         @include boton-de-inclinacion;
+    }
+
+    body > #tema {
+        @include boton-de-tema;
     }
 
     // "Hundidos" (sonido apagado, inclinación invertida) siguen con su aro blanco y su sombra para despegarse de la cortina
