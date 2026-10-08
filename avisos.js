@@ -240,8 +240,7 @@ function ubicarAvisos() {
     if (!cajaDeAvisos) return;
     // Debajo de la barra, que cambia de alto según el ancho de la pantalla. En celular la barra se esconde al bajar por la lista: ahí
     // los avisos suben al margen de arriba de la página (en vez de guardarle el lugar a una barra que ya no está) y bajan de nuevo
-    // cuando la barra reaparece. Mientras está escondida se cuenta con su alto igual, así un aviso que entra en ese momento no queda
-    // fuera de la pantalla: nace en el margen de arriba.
+    // cuando la barra reaparece. Un aviso que entra mientras la barra está escondida nace directamente en el margen de arriba.
     const barra = document.getElementById('navbar');
     const escondida = PANTALLA_DE_CELULAR.matches && barra.classList.contains('barra-escondida');
     cajaDeAvisos.style.top = `${(escondida ? 0 : Math.round(barra.getBoundingClientRect().height)) + 12}px`;

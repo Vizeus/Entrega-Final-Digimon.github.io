@@ -148,8 +148,9 @@ export function sonidoTecla(bajada = true, tecla = TECLA_NORMAL) {
 
 // El toquecito de una carta que se apoya (al terminar de girar y al volver a su lugar desde el zoom): un roce seco de papel,
 // muy bajito y casi sin cuerpo grave. Una carta casi no pesa: no es un golpe sobre la mesa.
-function toqueDeCarta(contexto, llegada) {
-    rafagaDeRuido(contexto, destinoDeAudio(contexto), { inicio: llegada, frecuencia: 2200, q: 1, pico: 0.09, duracion: 0.04, cola: 0.02 });
+// ("volumen" lo multiplica: 1 es el de siempre; el giro de la carta lo usa más bajito)
+function toqueDeCarta(contexto, llegada, volumen = 1) {
+    rafagaDeRuido(contexto, destinoDeAudio(contexto), { inicio: llegada, frecuencia: 2200, q: 1, pico: 0.09 * volumen, duracion: 0.04, cola: 0.02 });
 
     const cuerpo = contexto.createOscillator();
     const volumenCuerpo = contexto.createGain();
@@ -157,7 +158,7 @@ function toqueDeCarta(contexto, llegada) {
     cuerpo.frequency.setValueAtTime(200, llegada);
     cuerpo.frequency.exponentialRampToValueAtTime(120, llegada + 0.05);
     volumenCuerpo.gain.setValueAtTime(0.0001, llegada);
-    volumenCuerpo.gain.exponentialRampToValueAtTime(0.035, llegada + 0.003);
+    volumenCuerpo.gain.exponentialRampToValueAtTime(0.035 * volumen, llegada + 0.003);
     volumenCuerpo.gain.exponentialRampToValueAtTime(0.0001, llegada + 0.06);
     cuerpo.connect(volumenCuerpo);
     volumenCuerpo.connect(destinoDeAudio(contexto));
@@ -198,7 +199,10 @@ export function sonidoSeleccion(elegida) {
     }
 }
 
-// Carta que se da vuelta: un "fshh" de papel cortando el aire mientras gira y, al terminar, el toquecito de apoyarse
+// Carta que se da vuelta: un "fshh" de papel cortando el aire mientras gira y, al terminar, el toquecito de apoyarse.
+// Suena más bajito que el resto de los efectos de las cartas (en celular y en computadora): 1 sería el volumen original, que sobresalía.
+const VOLUMEN_DEL_GIRO = 0.55;
+
 export function sonidoVuelta() {
     sonarCuandoElAudioEsteListo(sonidoVueltaAhora);
 }
@@ -225,9 +229,9 @@ function sonidoVueltaAhora() {
 
         const volumenRuido = contexto.createGain();
         volumenRuido.gain.setValueAtTime(0.0001, t);
-        volumenRuido.gain.exponentialRampToValueAtTime(0.22, t + 0.11);
-        volumenRuido.gain.exponentialRampToValueAtTime(0.05, t + 0.24);
-        volumenRuido.gain.exponentialRampToValueAtTime(0.13, t + 0.34);
+        volumenRuido.gain.exponentialRampToValueAtTime(0.22 * VOLUMEN_DEL_GIRO, t + 0.11);
+        volumenRuido.gain.exponentialRampToValueAtTime(0.05 * VOLUMEN_DEL_GIRO, t + 0.24);
+        volumenRuido.gain.exponentialRampToValueAtTime(0.13 * VOLUMEN_DEL_GIRO, t + 0.34);
         volumenRuido.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
 
         ruido.connect(banda);
@@ -237,7 +241,7 @@ function sonidoVueltaAhora() {
         ruido.start(t);
         ruido.stop(t + 0.55);
 
-        toqueDeCarta(contexto, t + 0.46); // el roce final cuando termina de girar
+        toqueDeCarta(contexto, t + 0.46, VOLUMEN_DEL_GIRO); // el roce final cuando termina de girar
     } catch (error) {
         // Si el navegador no permite audio, simplemente no suena
     }
