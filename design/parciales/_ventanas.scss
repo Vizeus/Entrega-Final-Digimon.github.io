@@ -94,10 +94,26 @@ $cruz-de-ventana-margen: 10px;
         }
     }
 
-    // En su riel se queda pegada arriba (con el margen de siempre, y por debajo de la muesca de los celulares) mientras la ventana se desplaza
+    // El "aire" de abajo de una ventana corrida de su lugar (ventanas.js, actualizarElAire): no se ve ni se toca, solo hace que el margen de abajo se pueda
+    // desplazar hasta ver
+    .ventana-aire {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 1px;
+        height: var(--aire-de-la-ventana, 0);
+        pointer-events: none;
+        visibility: hidden;
+    }
+
+    // En su riel se queda pegada arriba (con el margen de siempre, y por debajo de la muesca de los celulares) mientras la ventana se desplaza.
+    // Cuando la ventana está corrida de su lugar (ventanas.js, mantenerEnSuLugar: para que un desplegable no mueva su botón) todo lo que lleva se corre con
+    // ella, pero el pegado de arriba se calcula sin ese corrimiento: se lo resta (--corrimiento-de-la-ventana) para que la cruz quede en el mismo lugar
+    // de la pantalla en cualquier caso, y no más abajo, hacia el centro
     .ventana-riel button.swal2-close {
         position: sticky;
-        inset: max($cruz-de-ventana-margen, env(safe-area-inset-top, 0px)) auto auto;
+        inset: auto;
+        top: calc(max(#{$cruz-de-ventana-margen}, env(safe-area-inset-top, 0px)) - var(--corrimiento-de-la-ventana, 0px));
         margin: $cruz-de-ventana-margen 0 0 (-($cruz-de-ventana-tamano + $cruz-de-ventana-margen));
         justify-self: start; // (el "end" de SweetAlert la alinearía al final del riel, que no tiene ancho, y anularía el margen)
         pointer-events: auto;

@@ -621,6 +621,34 @@
                     font-weight: 700;
                     color: color-mix(in srgb, var(--atributo) 70%, black);
                 }
+
+                // Los grupos que tienen ventana de información se pueden tocar (línea punteada al pasar el puntero, como los enlaces de las ventanas)
+                .c-campo {
+                    cursor: pointer;
+                    border-radius: 3px;
+                    text-decoration: underline dotted transparent;
+                    text-underline-offset: 3px;
+                    text-decoration-thickness: 1.5px;
+                    transition:
+                        text-decoration-color 0.15s ease,
+                        background-color 0.15s ease;
+
+                    &:hover,
+                    &:focus-visible {
+                        text-decoration-color: currentcolor;
+                        background: rgba(36, 71, 106, 0.1);
+                        outline: none;
+                    }
+
+                    &:focus-visible {
+                        outline: 2px solid currentcolor;
+                        outline-offset: 1px;
+                    }
+
+                    &:active {
+                        opacity: 0.75;
+                    }
+                }
             }
 
             .c-desc {

@@ -117,6 +117,7 @@ export const ASCENSOS = {
     1197: 'Super Ultimate', // Omegamon Zwart Defeat
     1209: 'Super Ultimate', // Omegamon Alter-S
     1235: 'Super Ultimate', // Omegamon (Merciful Mode)
+    481: 'Super Ultimate', // Imperialdramon (Paladin Mode): la forma de Rey Real (las otras cuatro formas de Imperialdramon siguen siendo Mega)
     // Nivel 7 · Los 5 Soberanos
     272: 'Super Ultimate', // Baihumon
     361: 'Super Ultimate', // Zhuqiaomon
@@ -289,17 +290,90 @@ export const ORDEN_CAMPOS = [
     'Unknown',
 ];
 
+// INFORMACIÓN DE LOS GRUPOS (ver ORDEN_CAMPOS): para cada uno, la clave de sus textos en i18n.js ("campo.<clave>.*"), su ícono y unos digimon
+// de ejemplo (con el nombre que trae la API; se comprobó que de verdad tienen ese grupo). La usan el menú "Info. grupos" de la barra (info.js)
+// y el dorso de la carta (cartas.js), donde los grupos que estén acá se pueden tocar para abrir su ventana.
+export const INFO_DE_CAMPOS = {
+    'Nature Spirits': { clave: 'naturespirits', emoji: '🌿', ejemplos: ['Tentomon', 'Tailmon', 'Triceramon', 'Leomon'] },
+    'Deep Savers': { clave: 'deepsavers', emoji: '🌊', ejemplos: ['Gomamon', 'Ikkakumon', 'Zudomon', 'Metal Seadramon'] },
+    'Nightmare Soldiers': { clave: 'nightmaresoldiers', emoji: '👻', ejemplos: ['Devimon', 'Lady Devimon', 'Wizarmon', 'Piemon'] },
+    'Wind Guardians': { clave: 'windguardians', emoji: '🌬️', ejemplos: ['Piyomon', 'Patamon', 'Birdramon', 'Garudamon'] },
+    'Metal Empire': { clave: 'metalempire', emoji: '⚙️', ejemplos: ['Andromon', 'Megadramon', 'Giromon', 'Metal Greymon'] },
+    'Virus Busters': { clave: 'virusbusters', emoji: '😇', ejemplos: ['Angemon', 'Holy Angemon', 'Omegamon', 'Manticoremon'] },
+    "Dragon's Roar": { clave: 'dragonsroar', emoji: '🐉', ejemplos: ['Gigadramon', 'Chaosdramon', 'Guilmon', 'Geo Greymon'] },
+    'Jungle Troopers': { clave: 'jungletroopers', emoji: '🌴', ejemplos: ['Kabuterimon', 'Kunemon', 'Stingmon', 'Togemon'] },
+    'Dark Area': { clave: 'darkarea', emoji: '🌑', ejemplos: ['Devimon', 'Infermon', 'Beelzebumon', 'Barbamon'] },
+    'Unknown': { clave: 'unknown', emoji: '❓', ejemplos: ['Digitamamon', 'Numemon', 'Nanimon', 'Etemon'] },
+};
+
+// AGRUPAR POR GRUPO (botón "Agrupar" de los filtros): un digimon puede tener varios grupos, pero en la lista tiene que ir en uno solo. Va en el
+// más específico de los suyos, que es el que menos digimons tiene (así los grupos grandes, como Nature Spirits, no se tragan a los chicos).
+// De más chico a más grande, según lo que trae la API; "Unknown" es el último porque es lo que cuenta un digimon sin grupo (ver SIN_DATO).
+// Un grupo que traiga la API y no esté acá se considera todavía más específico (se supone que es nuevo y chico).
+export const PRIORIDAD_DE_CAMPOS = [
+    'Jungle Troopers',
+    'Dark Area',
+    "Dragon's Roar",
+    'Deep Savers',
+    'Virus Busters',
+    'Wind Guardians',
+    'Metal Empire',
+    'Nightmare Soldiers',
+    'Nature Spirits',
+    'Unknown',
+];
+
 // SIN DATO: la API trae algunos digimons sin especie o sin grupo (una lista vacía). Para que ninguno quede afuera de los filtros (si se eligen todas
 // las opciones tienen que aparecer todos), un digimon sin dato cuenta como "Unknown": es lo mismo, y es una opción que esos dos filtros ya tienen.
 export const SIN_DATO = 'Unknown';
 
-// XROS WARS: la API no trae un dato "Xros Wars" (los grupos son solo 10 y ninguno es ese; Ganemon o Gravimon vienen con el grupo vacío). Lo que
-// sí trae es el año de estreno, y los digimons que debutaron en 2010, 2011 y 2012 son los de la serie Digimon Xros Wars y su continuación
-// (Hunters). Se comprobó con los 1488 de la API: los 10 que nombran "Xros Wars" en su descripción están todos en esos años, y los de 2009 y 2013
-// ya son de otros juegos. Con eso la carta lleva un circulito naranja "XW" (como las marcas de Armor y Hybrid) y el buscador los encuentra al
-// escribir "xros wars". Es una aproximación: algún digimon de esos años podría no ser de la serie.
+// XROS WARS: la API no trae un dato "Xros Wars" (los grupos son solo 10 y ninguno es ese; Ganemon o Gravimon vienen con el grupo vacío). La marca (el
+// circulito naranja "XW") es de las FORMAS FUSIONADAS por DigiXros: se marca un tipo de digimon, no la temporada (el Shoutmon común, un digimon normal,
+// no la lleva). Se reconocen de tres maneras:
+//   · por el nombre: "Xros Up ...", "Gattai ..." ("fusionado" en japonés) y los Shoutmon X2, X3... X7 ("X" más un número: la X es de Xros y el
+//     número, cuántos digimon se fusionaron);
+//   · por la especie: Wikimon les pone "Enhancement" o "Composite" a las fusiones. Vale solo para los estrenados en 2010-2012, porque hay otros cinco con esa
+//     especie que no son de Xros Wars (Deltamon, Unimon, Chimairamon y Millenniumon, de 1998-1999, y Marin Chimairamon, de 2020);
+//   · por una lista a mano (FUSIONES_XROS_WARS): fusiones que no tienen ninguna de las dos pistas anteriores (la mayoría se comprobó en Wikimon; los "Mode" de
+//     Mad Leomon, Skull Knightmon, Dorbickmon, Neo Vamdemon, Splashmon y Grandis Kuwagamon, y G-Cutemon, se agregaron por pedido, sin comprobarlos).
+// Antes se marcaban todos los estrenados en 2010-2012 (241), pero la API trae una entrada por cada forma, variante y objeto (37 solo de Shoutmon).
+// Puede faltar alguna fusión: no todas se reconocen por el nombre o la especie. Los nombres se comparan sin espacios, tildes ni símbolos (claveDeNombre).
 export const ANIOS_XROS_WARS = [2010, 2011, 2012];
-export const esXrosWars = estreno => ANIOS_XROS_WARS.includes(Number(String(estreno).match(/\d{4}/)?.[0]));
+export const ESPECIES_DE_FUSION = ['Enhancement', 'Composite'];
+export const FUSIONES_XROS_WARS = [
+    'Grey Knightsmon',
+    'ShouCutemon',
+    'Jiji Shoutmon',
+    'Golem Jiji Kamemon',
+    'Shoutmon SH',
+    'Sparrowmon AB',
+    'Ballistamon MC',
+    'Ballistamon SR',
+    'Majuu Lilithmon',
+    'Grand Generamon',
+    'Omega Armamon Burst Mode',
+    'Super Dark Knightmon',
+    'Neo Vamdemon Darkness Mode (Vampire Army)',
+    'Deadly Tuwarmon Hell Mode',
+    'Sethmon Wild Mode',
+    'Knightmon Wise Sword Mode',
+    'Pawn Gaossmon',
+    'Pawn Shoutmon',
+    'G-Cutemon',
+    'Mad Leomon (Final Mode)',
+    'Mad Leomon (Orochi Mode)',
+    'Mad Leomon (Armed Mode)',
+    'Skull Knightmon (Naginata Mode)',
+    'Skull Knightmon (Arrow Mode)',
+    'Dorbickmon Darkness Mode (Dragon Army)',
+    'Dorbickmon Darkness Mode (Flare Lizamon)',
+    'Dorbickmon Darkness Mode (Huanglongmon)',
+    'Neo Vamdemon Darkness Mode (Metal Greymon)',
+    'Neo Vamdemon Darkness Mode (Shoutmon)',
+    'Splashmon Darkness Mode (Drippins)',
+    'Splashmon Darkness Mode',
+    'Grandis Kuwagamon Honey Mode',
+];
 
 // ---- Especies (los "types" de la API) --------------------------------------------------------------------------
 // Alien, Cyborg, Slime, God Beast, Mythical Beast...: son muchísimas y un digimon puede tener varias, así que el filtro de especies arma sus
@@ -398,6 +472,7 @@ export const COLOR_BUSQUEDA = '#2f7fd0';
 export const COLOR_CAMPO = '#5f7287'; // gris azulado
 export const COLOR_ESPECIE = '#7a6b62'; // gris tierra
 export const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas
+export const COLOR_XW = '#ff8a1f'; // el naranja de la esfera XW de las cartas
 export const COLOR_ESTRENO = '#3f7d70'; // verde azulado, para la etiqueta del período de estreno
 
 // Colores del texto de los enlaces que hay dentro de las ventanas de información. Son más oscuros que los de arriba (los de las

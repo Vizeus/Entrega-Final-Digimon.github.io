@@ -49,33 +49,33 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261009-1254",
-                    "./datos.js": "./datos.js?v=20261009-1254",
-                    "./i18n.js": "./i18n.js?v=20261009-1254",
-                    "./nombres.js": "./nombres.js?v=20261009-1254",
-                    "./pagina.js": "./pagina.js?v=20261009-1254",
-                    "./api.js": "./api.js?v=20261009-1254",
-                    "./combate.js": "./combate.js?v=20261009-1254",
-                    "./avisos.js": "./avisos.js?v=20261009-1254",
-                    "./descartar.js": "./descartar.js?v=20261009-1254",
-                    "./cartas.js": "./cartas.js?v=20261009-1254",
-                    "./zoom.js": "./zoom.js?v=20261009-1254",
-                    "./gestos.js": "./gestos.js?v=20261009-1254",
-                    "./inclinacion.js": "./inclinacion.js?v=20261009-1254",
-                    "./audio.js": "./audio.js?v=20261009-1254",
-                    "./sonidos.js": "./sonidos.js?v=20261009-1254",
-                    "./filtros.js": "./filtros.js?v=20261009-1254",
-                    "./info.js": "./info.js?v=20261009-1254",
-                    "./barra.js": "./barra.js?v=20261009-1254",
-                    "./evolucion.js": "./evolucion.js?v=20261009-1254",
-                    "./ventanas.js": "./ventanas.js?v=20261009-1254",
-                    "./baile.js": "./baile.js?v=20261009-1254",
-                    "./tema.js": "./tema.js?v=20261009-1254",
-                    "./menus.js": "./menus.js?v=20261009-1254"
+                    "./util.js": "./util.js?v=20261009-2016",
+                    "./datos.js": "./datos.js?v=20261009-2016",
+                    "./i18n.js": "./i18n.js?v=20261009-2016",
+                    "./nombres.js": "./nombres.js?v=20261009-2016",
+                    "./pagina.js": "./pagina.js?v=20261009-2016",
+                    "./api.js": "./api.js?v=20261009-2016",
+                    "./combate.js": "./combate.js?v=20261009-2016",
+                    "./avisos.js": "./avisos.js?v=20261009-2016",
+                    "./descartar.js": "./descartar.js?v=20261009-2016",
+                    "./cartas.js": "./cartas.js?v=20261009-2016",
+                    "./zoom.js": "./zoom.js?v=20261009-2016",
+                    "./gestos.js": "./gestos.js?v=20261009-2016",
+                    "./inclinacion.js": "./inclinacion.js?v=20261009-2016",
+                    "./audio.js": "./audio.js?v=20261009-2016",
+                    "./sonidos.js": "./sonidos.js?v=20261009-2016",
+                    "./filtros.js": "./filtros.js?v=20261009-2016",
+                    "./info.js": "./info.js?v=20261009-2016",
+                    "./barra.js": "./barra.js?v=20261009-2016",
+                    "./evolucion.js": "./evolucion.js?v=20261009-2016",
+                    "./ventanas.js": "./ventanas.js?v=20261009-2016",
+                    "./baile.js": "./baile.js?v=20261009-2016",
+                    "./tema.js": "./tema.js?v=20261009-2016",
+                    "./menus.js": "./menus.js?v=20261009-2016"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261009-1254"></script>
+        <script type="module" src="./main.js?v=20261009-2016"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,7 +86,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261009-1254" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261009-2016" />
     </head>
 
     <body>
@@ -339,6 +339,21 @@
                     <div class="menu-info">
                         <button
                             type="button"
+                            id="abrir-grupos"
+                            class="menu-desplegable"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="lista-grupos"
+                            data-i18n="menu.grupos"
+                        >
+                            Info. grupos
+                        </button>
+                        <ul id="lista-grupos"></ul>
+                    </div>
+
+                    <div class="menu-info">
+                        <button
+                            type="button"
                             id="abrir-misc"
                             class="menu-desplegable"
                             aria-haspopup="true"
@@ -464,11 +479,42 @@
                     </div>
                 </div>
 
-                <!-- X-Antibody: un solo botón con tres estados. Cada clic pasa al siguiente (indistinto → solo con X-Antibody → solo sin X-Antibody).
-         El texto y el estado los escribe filtros.js -->
-                <button type="button" class="f-btn f-xa" data-estado="indistinto" aria-label="X-Antibody">
-                    <span class="f-xa-gema" aria-hidden="true">X</span><span class="f-xa-texto">X-Antibody</span>
+                <!-- X-Antibody y Xros Wars: un solo botón con tres estados cada uno. Cada clic pasa al siguiente (indistinto → solo con la marca →
+         solo sin la marca). El texto y el estado los escribe filtros.js; el data-g es el nombre del filtro -->
+                <button type="button" class="f-btn f-tres f-xa" data-g="x" data-estado="indistinto" aria-label="X-Antibody">
+                    <span class="f-gema" aria-hidden="true">X</span><span class="f-texto">X-Antibody</span>
                 </button>
+                <button type="button" class="f-btn f-tres f-xw" data-g="xw" data-estado="indistinto" aria-label="Fusión XW">
+                    <span class="f-gema" aria-hidden="true">XW</span><span class="f-texto">Fusión XW</span>
+                </button>
+
+                <!-- Agrupar: no filtra nada. Junta en bloques a los digimons que comparten atributo, nivel, elemento o grupo (todos los de nivel 1,
+         después todos los de nivel 2...). Se pueden marcar varios criterios: el número de cada uno es el orden en que se marcó y el de los bloques.
+         Las opciones y el reordenamiento los maneja filtros.js -->
+                <div class="f-grupo" data-g="agrupar">
+                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                        <span data-i18n="filtros.agrupar">Agrupar</span><b class="f-n" hidden>0</b>
+                    </button>
+                    <div class="f-panel f-panel-orden f-panel-agrupar" role="group" aria-label="Agrupar por" data-i18n-attr="aria-label:filtros.agruparPor">
+                        <p class="f-panel-titulo" data-i18n="filtros.agruparPor">Agrupar por</p>
+                        <button type="button" class="f-orden-op f-agrupar-op" role="checkbox" aria-checked="false" data-agrupar="atributo">
+                            <span class="f-orden-punto" aria-hidden="true"></span><span data-i18n="filtros.atributo">Atributo</span>
+                        </button>
+                        <button type="button" class="f-orden-op f-agrupar-op" role="checkbox" aria-checked="false" data-agrupar="nivel">
+                            <span class="f-orden-punto" aria-hidden="true"></span><span data-i18n="filtros.nivel">Nivel</span>
+                        </button>
+                        <button type="button" class="f-orden-op f-agrupar-op" role="checkbox" aria-checked="false" data-agrupar="elemento">
+                            <span class="f-orden-punto" aria-hidden="true"></span><span data-i18n="filtros.elemento">Elemento</span>
+                        </button>
+                        <button type="button" class="f-orden-op f-agrupar-op" role="checkbox" aria-checked="false" data-agrupar="campo">
+                            <span class="f-orden-punto" aria-hidden="true"></span><span data-i18n="filtros.campo">Grupo</span>
+                        </button>
+                        <p class="f-panel-nota" data-i18n="filtros.agrupar.nota">
+                            Se agrupa en el orden en que los marques. Dentro de cada bloque rige el Orden elegido. Un digimon con varios grupos va en el más
+                            chico de los suyos.
+                        </p>
+                    </div>
+                </div>
 
                 <!-- Ordenar por: no filtra nada, solo cambia el orden de la lista (por número o alfabético). Es un desplegable como los de los
          filtros, pero con una sola opción a la vez. Su texto, su valor y el reordenamiento los maneja filtros.js -->

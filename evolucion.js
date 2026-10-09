@@ -400,7 +400,11 @@ function crearLoreEvo() {
         evento.preventDefault();
         mantenerEnSuLugar(titulo, () => {
             detalle.open = !detalle.open;
+            ajustarAlturaDeListas(); // (acá y no después: así la ventana se corre una sola vez, con el alto que va a tener)
         });
+        // Con una lista recortada la ventana ocupa toda la pantalla y el texto se abre achicando las listas: el botón sube en vez de quedarse, porque dejarlo
+        // en su lugar sacaría la ventana de la pantalla. Se la deja centrada.
+        if (hayListaConScroll()) centrarVentana();
     });
 
     const parrafos = [t('evo.lore.1'), t('evo.lore.2')];
@@ -425,12 +429,12 @@ function crearPieEvo() {
     return pie;
 }
 
-// Una lista desplegada reparte sus ramas en una grilla de una o de dos columnas, según el ancho que le toque (ver ".evo-col.abierta" en el CSS).
-// Cuando solo entra una columna, la lista tiene que medir lo de una rama y no lo de toda la columna: si no, la rama queda contra un costado y el
-// rótulo ("Viene de" / "Evoluciona a") y el botón "ver menos" quedan centrados sobre la columna entera y no sobre las ramas. El CSS no puede saber
-// cuántas columnas le tocaron a la grilla, por eso se mira acá y se le pone la clase "una-pista" a la columna (se mide con el ancho que le da el CSS
-// sin la clase, y se la pone después). Se vuelve a medir al desplegar o recoger una lista y cada vez que cambia el ancho del árbol (al agrandar o
-// achicar la ventana del navegador).
+// Una lista desplegada reparte sus ramas en una grilla de una, dos o tres columnas, según el ancho que le toque (la ventana se ensancha al desplegar una lista:
+// ver ".popup-evo" y ".evo-col.abierta" en el CSS). Cuando solo entra una columna, la lista tiene que medir lo de una rama y no lo de toda la columna: si no, la
+// rama queda contra un costado y el rótulo ("Viene de" / "Evoluciona a") y el botón "ver menos" quedan centrados sobre la columna entera y no sobre las ramas. El
+// CSS no puede saber cuántas columnas le tocaron a la grilla, por eso se mira acá y se le pone la clase "una-pista" a la columna (se mide con el ancho que le da
+// el CSS sin la clase, y se la pone después). Se vuelve a medir al desplegar o recoger una lista y cada vez que cambia el ancho del árbol (al agrandar o achicar
+// la ventana del navegador).
 let anchoDelArbol = 0;
 const ajustarListasDesplegadas = () => {
     const columnas = [...(contenedorEvo()?.querySelectorAll('.evo-col.abierta') ?? [])];
@@ -442,12 +446,61 @@ const ajustarListasDesplegadas = () => {
         return estilo.display === 'grid' && estilo.gridTemplateColumns.split(' ').length === 1;
     });
     angostas.forEach(columna => columna.classList.add('una-pista'));
+    ajustarAlturaDeListas(); // (con otras columnas las listas miden otro alto)
 };
 const observadorDelArbol = new ResizeObserver(entradas => {
     const ancho = entradas[entradas.length - 1].contentRect.width;
     if (ancho === anchoDelArbol) return; // (solo importa el ancho: un cambio de alto no cambia cuántas columnas entran)
     anchoDelArbol = ancho;
     ajustarListasDesplegadas();
+});
+
+// Una lista desplegada con muchas ramas no puede ser más alta que la pantalla: si lo fuera, se desplazaría la ventana entera (con el título, el digimon del
+// medio y la otra lista). En cambio, cada lista desplegada tiene su propio scroll vertical y el resto de la ventana se queda quieto. El CSS no sabe cuánto
+// lugar sobra, así que se calcula acá y se escribe en --alto-de-lista (en el árbol; el CSS se lo pone a las listas desplegadas): es lo que mide la pantalla
+// menos lo que ocupa todo lo de la ventana que no es la lista (el título, el pie, el texto desplegable, lo que sobra arriba y abajo del árbol...).
+// Ese "resto" es siempre el alto de la ventana menos el del árbol, valga lo que valga la lista en ese momento, así que el resultado es el mismo con la lista
+// ya recortada o sin recortar, y volver a calcularlo no cambia nada. En el celular las listas no tienen scroll propio (el árbol va en una columna: ver el CSS).
+const AIRE_DE_LA_VENTANA = 8; // px de pantalla que quedan libres arriba y abajo de la ventana, además del margen del contenedor de SweetAlert
+const ALTO_MINIMO_DE_LISTA = 150; // aunque la pantalla sea muy baja, la lista deja ver al menos dos o tres ramas
+
+function ajustarAlturaDeListas() {
+    const arbol = contenedorEvo()?.querySelector('.evo-arbol');
+    const ventana = Swal.getPopup();
+    const contenedor = Swal.getContainer();
+    if (!arbol || !ventana || !contenedor) return;
+
+    const sinScroll = arbol.querySelector('.evo-col.abierta') === null || getComputedStyle(arbol).flexDirection === 'column';
+    if (sinScroll) {
+        arbol.style.removeProperty('--alto-de-lista');
+        return;
+    }
+
+    // Todo en píxeles de la pantalla (lo que devuelve getBoundingClientRect). La ventana puede estar agrandada con "zoom" (pantallas grandes): lo que se
+    // le escribe al CSS tiene que estar en píxeles de la ventana, o sea, dividido por cuánto se agranda
+    const alturaDeLaVentana = ventana.getBoundingClientRect().height;
+    const agrandada = ventana.offsetHeight ? alturaDeLaVentana / ventana.offsetHeight : 1;
+    const altoDelArbol = Math.max(...[...arbol.querySelectorAll('.evo-col, .evo-centro')].map(elemento => elemento.getBoundingClientRect().height));
+    const estilo = getComputedStyle(contenedor);
+    const libre = window.innerHeight - parseFloat(estilo.paddingTop) - parseFloat(estilo.paddingBottom) - 2 * AIRE_DE_LA_VENTANA;
+    const resto = alturaDeLaVentana - altoDelArbol;
+
+    // Tampoco tiene sentido una lista más baja que lo que ya mide el árbol por otro lado (el digimon del medio, una lista sin desplegar): la ventana no
+    // se achicaría, y la lista quedaría con menos ramas a la vista para nada
+    const delResto = Math.max(
+        0,
+        ...[...arbol.querySelectorAll('.evo-centro, .evo-col:not(.abierta)')].map(elemento => elemento.getBoundingClientRect().height),
+    );
+    const alto = Math.max(ALTO_MINIMO_DE_LISTA, Math.ceil(delResto / agrandada), Math.floor((libre - resto) / agrandada));
+    if (arbol.style.getPropertyValue('--alto-de-lista') !== `${alto}px`) arbol.style.setProperty('--alto-de-lista', `${alto}px`);
+}
+const hayListaConScroll = () =>
+    [...(contenedorEvo()?.querySelectorAll('.evo-col.abierta .evo-lista') ?? [])].some(lista => lista.scrollHeight > lista.clientHeight + 1);
+
+// Cambia el alto de la ventana (se despliega el texto "¿Por qué hay evoluciones raras?", se cambia de idioma, se desplegó o recogió una lista...): se recalcula
+const observadorDeLaVentana = new ResizeObserver(() => ajustarAlturaDeListas());
+window.addEventListener('resize', () => {
+    if (estadoEvo) ajustarAlturaDeListas(); // (el alto de la pantalla cambia sin que cambie el de la ventana, cuando la lista ya está recortada)
 });
 
 function pintarEvolucion() {
@@ -480,6 +533,8 @@ function pintarEvolucion() {
     observadorDelArbol.disconnect();
     anchoDelArbol = 0;
     observadorDelArbol.observe(arbol); // (avisa enseguida, y así se ajustan las listas que ya vengan desplegadas)
+    observadorDeLaVentana.disconnect();
+    observadorDeLaVentana.observe(Swal.getPopup());
 }
 
 // ---- Ir a la carta: se cierra la ventana, se centra la carta en la parte visible de la pantalla y se la resalta ----
@@ -605,6 +660,8 @@ export function abrirEvolucion(carta) {
         },
         willClose: () => {
             estadoEvo = null;
+            observadorDelArbol.disconnect();
+            observadorDeLaVentana.disconnect();
         },
     });
 }

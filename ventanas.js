@@ -4,7 +4,7 @@
 //   1. LA PÁGINA QUEDA QUIETA CON UNA VENTANA ABIERTA (celular): ver activarPaginaQuietaConVentanas, más abajo.
 //   2. TODAS TIENEN SU CRUZ de cerrar arriba a la derecha, del mismo estilo (ver conCruzDeCierre).
 //   3. EL BOTÓN "ATRÁS" (el del sistema en Android, el del navegador o el gesto de volver) CIERRA LA VENTANA: ver activarCierreDeVentanas.
-//   4. LOS DESPLEGABLES NO MUEVEN SU BOTÓN: ver mantenerEnSuLugar.
+//   4. LOS DESPLEGABLES NO MUEVEN SU BOTÓN: ver mantenerEnSuLugar. Y al desplazar la ventana vuelve a quedar centrada: ver actualizarElAire.
 // -----------------------------------------------------------------------------------------------------------------
 
 import { DICCIONARIO, t } from './i18n.js';
@@ -86,7 +86,9 @@ export const conCruzDeCierre = (etiqueta = t('ventana.cerrar')) => ({ showCloseB
 // ("position: sticky", en _ventanas.scss) mientras la ventana se desplaza por debajo. También se le pone el texto de ayuda para el puntero.
 function prepararLaCruz(contenedor) {
     const ventana = contenedor.querySelector('.swal2-popup');
-    const cruz = ventana?.querySelector(':scope > .swal2-close');
+    if (!ventana) return;
+    prepararElAire(ventana);
+    const cruz = ventana.querySelector(':scope > .swal2-close');
     if (!cruz) return;
     if (!cruz.title) cruz.title = cruz.getAttribute('aria-label') ?? '';
     const riel = document.createElement('div');
@@ -167,11 +169,49 @@ function correrVentana(ventana, desplazamiento) {
     const escribir = corrimiento => {
         ventana.dataset.corrimiento = String(corrimiento);
         ventana.style.translate = `0 ${corrimiento}px`;
+        // La cruz de cerrar se queda pegada arriba de la pantalla mientras la ventana se desplaza (_ventanas.scss), pero el pegado se calcula sin contar este
+        // corrimiento, que después corre todo lo de la ventana, cruz incluida: se lo descuenta ahí. Si no, la cruz flotaría más abajo, hacia el centro
+        ventana.style.setProperty('--corrimiento-de-la-ventana', `${corrimiento}px`);
+        actualizarElAire(ventana);
     };
-    const corrimiento = Number(ventana.dataset.corrimiento || 0) + desplazamiento / agrandada;
+    // Nunca queda más arriba de donde la dejó SweetAlert (centrada, o con su margen de arriba): un corrimiento hacia arriba no se podría volver a desplazar,
+    // y la ventana quedaría pegada arriba y torcida. Así, al cerrar los desplegables que se abrieron vuelve a quedar centrada
+    const corrimiento = Math.max(0, Number(ventana.dataset.corrimiento || 0) + desplazamiento / agrandada);
     escribir(corrimiento);
-    const sobra = MARGEN_DE_LA_VENTANA - ventana.getBoundingClientRect().top;
+    // (Se mira dónde queda la ventana sin el desplazamiento del contenedor: si la persona ya desplazó hacia abajo, la ventana está por encima del borde de la
+    // pantalla porque así tiene que ser. Contándolo, cada desplegable que se cerraba la corría hacia abajo otra vez, y el corrimiento no paraba de crecer)
+    const contenedor = ventana.closest('.swal2-container');
+    const sobra = MARGEN_DE_LA_VENTANA - (ventana.getBoundingClientRect().top + (contenedor?.scrollTop ?? 0));
     if (sobra > 0) escribir(corrimiento + sobra / agrandada);
+}
+
+// Una ventana corrida de su lugar tiene que poder volver a quedar centrada al desplazarla. La ventana corrida (con "translate") ocupa en el layout el mismo
+// lugar de siempre (el que le da SweetAlert: centrada si entra en la pantalla y, si no, pegada arriba con su margen); el corrimiento es solo visual, y el
+// navegador no cuenta el margen de abajo en lo que se puede desplazar. Resultado: al llegar al final la ventana quedaba pegada al borde de abajo, sin margen,
+// y el espacio de arriba (el corrimiento) quedaba sin usar. Para arreglarlo se le pega a la ventana, debajo, un "aire" invisible, del alto del margen que la
+// ventana tiene arriba en el layout (que es el que le da SweetAlert: el margen de siempre, o el de centrarla): igual que sin corrimiento, el margen de abajo
+// es el de arriba. Desplazando hacia abajo la ventana sube y se come el corrimiento hasta quedar centrada (si entra en la pantalla) o con el margen de
+// siempre al final (si no entra).
+function prepararElAire(ventana) {
+    const aire = document.createElement('div');
+    aire.className = 'ventana-aire';
+    aire.setAttribute('aria-hidden', 'true');
+    ventana.append(aire);
+    // Si la ventana cambia de alto estando corrida (se abre otro desplegable, se acomoda una lista...), el margen de arriba que le da SweetAlert cambia
+    new ResizeObserver(() => {
+        if (ventana.dataset.corrimiento !== undefined) actualizarElAire(ventana);
+    }).observe(ventana);
+}
+
+function actualizarElAire(ventana) {
+    const contenedor = ventana.closest('.swal2-container');
+    if (!contenedor || ventana.dataset.corrimiento === undefined) return;
+    // Los píxeles de la pantalla (getBoundingClientRect) y los de la ventana (lo que se le escribe al CSS) son distintos si la ventana está agrandada con "zoom"
+    const agrandada = ventana.offsetHeight ? ventana.getBoundingClientRect().height / ventana.offsetHeight : 1;
+    const corrimiento = Number(ventana.dataset.corrimiento) * agrandada;
+    // Donde estaría la ventana sin el corrimiento y sin desplazar el contenedor, respecto del borde de arriba del contenedor
+    const arriba = ventana.getBoundingClientRect().top - contenedor.getBoundingClientRect().top - corrimiento + contenedor.scrollTop;
+    ventana.style.setProperty('--aire-de-la-ventana', `${Math.max(0, arriba) / agrandada}px`);
 }
 
 export function mantenerEnSuLugar(elemento, cambio) {
@@ -206,6 +246,8 @@ export function centrarVentana(ventana = document.querySelector('.swal2-popup'))
     if (!ventana) return;
     delete ventana.dataset.corrimiento;
     ventana.style.translate = '';
+    ventana.style.removeProperty('--corrimiento-de-la-ventana');
+    ventana.style.removeProperty('--aire-de-la-ventana');
 }
 
 window.addEventListener('resize', () => document.querySelectorAll('.swal2-popup[data-corrimiento]').forEach(ventana => centrarVentana(ventana)));

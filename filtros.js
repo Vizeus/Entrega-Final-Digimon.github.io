@@ -13,6 +13,8 @@
 //   · Las cartas que no cumplen se esconden con la clase "filtrada" (el CSS las oculta). Las cartas llegan de a poco
 //     mientras carga la página: cartas.js avisa con el evento "carta-agregada" y se vuelven a hacer las cuentas.
 //   · "Ordenar por" (no filtra nada): la lista va por número (ID, el de siempre) o en orden alfabético por el nombre que se ve en la carta.
+//   · "Agrupar" (tampoco filtra): junta en bloques los digimons con el mismo atributo, nivel, elemento o grupo, en el orden en que se marcaron
+//     los criterios; dentro de cada bloque rige el orden de arriba.
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -26,17 +28,20 @@ import {
     COLOR_NIVEL_DESCONOCIDO,
     COLOR_ATRIBUTO,
     COLOR_X,
+    COLOR_XW,
     EMOJIS_ELEMENTO,
     EMOJIS_ATRIBUTO,
     FAMILIAS_DE_ESPECIES_A_MANO,
     ORDEN_CAMPOS,
     ORDEN_ELEMENTOS,
     ORDEN_NIVELES,
+    PRIORIDAD_DE_CAMPOS,
+    SIN_DATO,
     numeracionNiveles,
 } from './datos.js';
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { listaDigimons, nombreNivel } from './pagina.js';
-import { nombreApiCompleto, nombreCompleto, nombreOccidentalCompleto } from './cartas.js';
+import { nombreApiCompleto, nombreCompleto, nombreOccidentalCompleto, separarXAntibody } from './cartas.js';
 
 // Cada filtro: qué opciones tiene (con el nombre interno), cómo se llama cada una y qué lleva de ícono (o null si no lleva)
 const GRUPOS_FILTRO = {
@@ -74,14 +79,21 @@ const GRUPOS_FILTRO = {
         color: () => COLOR_ESPECIE,
         icono: () => null,
     },
-    // X-Antibody: no tiene panel de opciones; se maneja con un solo botón (.f-xa) que rota entre "indistinto" (nada elegido),
-    // "con" y "sin"
+    // X-Antibody y Xros Wars: no tienen panel de opciones; se manejan con un solo botón cada uno (.f-xa y .f-xw) que rota entre "indistinto"
+    // (nada elegido), "con" y "sin"
     x: {
         claves: ['con', 'sin'],
         soloBoton: true,
         nombre: clave => t(`filtros.x.${clave}`),
         color: () => COLOR_X,
         icono: () => ({ clase: 'f-e', texto: 'X' }),
+    },
+    xw: {
+        claves: ['con', 'sin'],
+        soloBoton: true,
+        nombre: clave => t(`filtros.xw.${clave}`),
+        color: () => COLOR_XW,
+        icono: () => ({ clase: 'f-e', texto: 'XW' }),
     },
 };
 const GRUPOS = Object.keys(GRUPOS_FILTRO);
@@ -100,14 +112,14 @@ function colorDelTexto(hex) {
 const seccionFiltros = document.getElementById('filtros');
 const cajaBusqueda = seccionFiltros.querySelector('.f-buscar input');
 const botonBorrarBusqueda = seccionFiltros.querySelector('.f-x');
-const botonX = seccionFiltros.querySelector('.f-xa');
+const botonesDeTresEstados = seccionFiltros.querySelectorAll('.f-tres'); // X-Antibody y Xros Wars (su data-g dice de qué filtro es cada uno)
 const zonaActivos = seccionFiltros.querySelector('.f-activos');
 const textoCuenta = seccionFiltros.querySelector('.f-cuenta');
 const botonLimpiar = seccionFiltros.querySelector('.f-resumen .f-limpiar');
 const avisoVacio = document.getElementById('f-vacio');
 
 // ---- Qué está elegido ----------------------------------------------------------------------------------------------
-const elegidos = { atributo: new Set(), nivel: new Set(), elemento: new Set(), campo: new Set(), especie: new Set(), x: new Set() };
+const elegidos = { atributo: new Set(), nivel: new Set(), elemento: new Set(), campo: new Set(), especie: new Set(), x: new Set(), xw: new Set() };
 let desdeAnio = null; // estreno: primer año del período (null: sin límite)
 let hastaAnio = null; // estreno: último año del período (null: sin límite)
 const aniosVistos = new Set(); // los años de estreno de los digimons que ya llegaron (son los que se pueden elegir)
@@ -119,12 +131,21 @@ let busquedaEscrita = ''; // lo que se escribió, tal cual (para mostrar en la e
 const normalizar = texto => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 const compactar = texto => texto.replace(/[^a-z0-9]/g, ''); // "v-mon (black)" -> "vmonblack"
 
+// De los grupos de una carta, el más específico (el de menos digimons): es el que cuenta al agrupar. Sin grupos, "Unknown" (ver SIN_DATO).
+// Lo que no está en PRIORIDAD_DE_CAMPOS (un grupo nuevo de la API) gana a todos.
+function campoPrincipal(campos) {
+    if (!campos?.length) return SIN_DATO;
+    const prioridad = campo => PRIORIDAD_DE_CAMPOS.indexOf(campo);
+    return campos.reduce((elegido, campo) => (prioridad(campo) < prioridad(elegido) ? campo : elegido));
+}
+
 // Lo que se necesita saber de cada carta para filtrarla (se calcula una sola vez)
 function datosDeFiltro(carta) {
     if (!carta.datosFiltro) {
-        // Se busca por los dos nombres del digimon (el original de la API y el occidental), con el "(X-Antibody)" si lo tiene.
+        // Se busca por los dos nombres del digimon (el original de la API y el occidental), sin el "(X-Antibody)": eso se filtra con su botón.
         // El que se ve es siempre uno de los dos, así que no hace falta volver a calcularlo si cambia el idioma.
-        const nombres = [...new Set([nombreCompleto(carta), nombreApiCompleto(carta), nombreOccidentalCompleto(carta)].map(normalizar))].map(nombre => ({
+        const sinX = nombre => normalizar(separarXAntibody(nombre).nombre);
+        const nombres = [...new Set([nombreCompleto(carta), nombreApiCompleto(carta), nombreOccidentalCompleto(carta)].map(sinX))].map(nombre => ({
             nombre,
             compacto: compactar(nombre),
         }));
@@ -134,10 +155,11 @@ function datosDeFiltro(carta) {
             elemento: carta.dataset.elemento,
             // los grupos y las especies de la carta: listas (a diferencia de los demás datos, que son un solo valor)
             campo: carta.datosDorso?.campos ?? [],
+            campoPrincipal: campoPrincipal(carta.datosDorso?.campos), // el único grupo en que va al agrupar la lista (ver PRIORIDAD_DE_CAMPOS)
             especie: carta.datosDorso?.especies ?? [],
             x: carta.dataset.xAntibody ? 'con' : 'sin', // si tiene X-Antibody
+            xw: carta.dataset.xrosWars ? 'con' : 'sin', // si lleva la marca XW (forma fusionada de Digimon Xros Wars: ver datos.js)
             marca: carta.dataset.marca ? normalizar(carta.dataset.marca) : null, // 'armor' o 'hybrid'
-            xrosWars: Boolean(carta.dataset.xrosWars), // lleva la marca XW (estrenado en 2010-2012: Digimon Xros Wars)
             id: Number(carta.dataset.id),
             anio: Number(String(carta.datosDorso?.estreno ?? '').match(/\d{4}/)?.[0]) || null, // el año de estreno (null si no se sabe)
             nombres,
@@ -160,11 +182,10 @@ function coincideBusqueda(datos, consulta) {
     if (numero && datos.id === Number(numero[1])) return true;
 
     // Cada palabra tiene que estar en el mismo nombre (en cualquier orden): en el original o en el occidental, pero sin mezclarlos,
-    // o bien coincidir con una marca especial de la carta (Armor, Hybrid o Xros Wars).
+    // o bien coincidir con una marca especial de la carta (Armor o Hybrid; X-Antibody y Xros Wars tienen su propio botón).
     // Las que no llevan signos también se buscan sin signos: "vmon", "wargreymon"
     const palabras = consulta.split(' ');
     const coincideMarca = palabra => {
-        if (datos.xrosWars && (palabra === 'xros' || palabra === 'wars' || palabra === 'xroswars' || palabra === 'xros-wars')) return true;
         if (!datos.marca) return false;
         if (datos.marca === 'armor')
             return (
@@ -545,11 +566,15 @@ function refrescar() {
         chip.classList.toggle('vacio', total > 0 && cantidad === 0 && estado === 'false'); // sin cartas: se ve apagada
     });
 
-    // Botón de X-Antibody: su estado (indistinto, con o sin) y su texto en el idioma actual
-    const estadoX = [...elegidos.x][0] ?? 'indistinto';
-    if (botonX.dataset.estado !== estadoX) botonX.dataset.estado = estadoX;
-    cambiarTexto(botonX.querySelector('.f-xa-texto'), t(`filtros.x.boton.${estadoX}`));
-    cambiarAtributo(botonX, 'title', t(`filtros.x.ayuda.${estadoX}`));
+    // Botones de X-Antibody y Xros Wars: su estado (indistinto, con o sin) y su texto en el idioma actual
+    for (const boton of botonesDeTresEstados) {
+        const grupo = boton.dataset.g;
+        const estado = [...elegidos[grupo]][0] ?? 'indistinto';
+        if (boton.dataset.estado !== estado) boton.dataset.estado = estado;
+        cambiarTexto(boton.querySelector('.f-texto'), t(`filtros.${grupo}.boton.${estado}`));
+        cambiarAtributo(boton, 'title', t(`filtros.${grupo}.ayuda.${estado}`));
+        cambiarAtributo(boton, 'aria-label', t(`filtros.${grupo}`)); // (el nombre del filtro, en el idioma de ahora; el texto de adentro puede estar oculto en el celular)
+    }
 
     escribirEstreno();
 
@@ -594,7 +619,35 @@ const nombreParaOrdenar = carta => {
 // El lugar de la carta en el orden "por ID": su número, salvo las cartas propias, que van entre dos de la API (ver CARTAS_PROPIAS en datos.js)
 const lugarPorId = carta => Number(carta.dataset.lugarEnElOrden ?? carta.dataset.id);
 
+// Agrupar: la lista se parte en bloques según el dato elegido (todos los de nivel 1, después todos los de nivel 2...). Se pueden marcar varios
+// criterios: se agrupa por el primero que se marcó, dentro de cada bloque por el segundo, y así. Dentro del último bloque rige el Orden elegido.
+// Cada criterio compara dos cartas según el lugar de su dato en la lista de opciones del filtro (la misma que se ve en el desplegable);
+// lo que no está en esa lista (un valor raro de la API) va al final.
+let agrupar = []; // los criterios marcados, en el orden en que se marcaron: 'atributo' | 'nivel' | 'elemento' | 'campo'
+const lugarEn = (lista, valor) => {
+    const lugar = lista.indexOf(valor);
+    return lugar === -1 ? lista.length : lugar;
+};
+const COMPARADORES_DE_GRUPO = {
+    atributo: (a, b) => lugarEn(GRUPOS_FILTRO.atributo.claves, a.atributo) - lugarEn(GRUPOS_FILTRO.atributo.claves, b.atributo),
+    nivel: (a, b) => lugarEn(ORDEN_NIVELES, a.nivel) - lugarEn(ORDEN_NIVELES, b.nivel),
+    elemento: (a, b) => lugarEn(ORDEN_ELEMENTOS, a.elemento) - lugarEn(ORDEN_ELEMENTOS, b.elemento),
+    // Grupos: en el orden del filtro, pero "Unknown" (los que no tienen grupo) siempre al final, como "Desconocido" en los niveles
+    campo: (a, b) => {
+        const lugar = campo => (campo === SIN_DATO ? ORDEN_CAMPOS.length + 1 : lugarDelCampo(campo));
+        return lugar(a.campoPrincipal) - lugar(b.campoPrincipal) || a.campoPrincipal.localeCompare(b.campoPrincipal, 'en');
+    },
+};
+
 function compararCartas(a, b) {
+    if (agrupar.length > 0) {
+        const datosA = datosDeFiltro(a);
+        const datosB = datosDeFiltro(b);
+        for (const criterio of agrupar) {
+            const diferencia = COMPARADORES_DE_GRUPO[criterio](datosA, datosB);
+            if (diferencia !== 0) return diferencia;
+        }
+    }
     if (orden === 'az') {
         const porNombre = COMPARADOR_DE_NOMBRES.compare(nombreParaOrdenar(a), nombreParaOrdenar(b));
         if (porNombre !== 0) return porNombre;
@@ -637,6 +690,24 @@ function escribirOrden() {
     cambiarAtributo(grupo.querySelector('.f-btn'), 'title', t(`filtros.orden.${orden}.ayuda`)); // al dejar el puntero encima: cómo ordena
     grupo.querySelector('.f-btn').classList.toggle('tiene', orden !== 'id'); // con el orden de siempre el botón se ve como los demás sin nada elegido
     grupo.querySelectorAll('.f-orden-op').forEach(opcion => cambiarAtributo(opcion, 'aria-checked', String(opcion.dataset.orden === orden)));
+}
+
+// Escribe lo que se agrupa en el botón (la cantidad de criterios y qué dice al pasar el mouse) y en las opciones del desplegable (tildadas y con su número)
+function escribirAgrupar() {
+    const grupo = seccionFiltros.querySelector('.f-grupo[data-g="agrupar"]');
+    const boton = grupo.querySelector('.f-btn');
+    const contador = grupo.querySelector('.f-n');
+    const nombres = agrupar.map(criterio => t(`filtros.${criterio}`));
+    boton.classList.toggle('tiene', agrupar.length > 0);
+    cambiarTexto(contador, String(agrupar.length));
+    if (contador.hidden !== (agrupar.length === 0)) contador.hidden = agrupar.length === 0;
+    cambiarAtributo(boton, 'title', agrupar.length ? t('filtros.agrupar.ayuda.con', { criterios: nombres.join(' › ') }) : t('filtros.agrupar.ayuda.sin'));
+    grupo.querySelectorAll('.f-agrupar-op').forEach(opcion => {
+        const lugar = agrupar.indexOf(opcion.dataset.agrupar) + 1; // 0 si no está marcada
+        cambiarAtributo(opcion, 'aria-checked', String(lugar > 0));
+        cambiarTexto(opcion.querySelector('.f-orden-punto'), lugar > 0 ? String(lugar) : '');
+        cambiarAtributo(opcion, 'title', lugar > 0 ? t('filtros.agrupar.lugar', { n: lugar }) : t('filtros.agrupar.sacada'));
+    });
 }
 
 // Las cartas llegan de a poco: si llegan varias juntas, se hacen las cuentas una sola vez por cuadro
@@ -688,11 +759,29 @@ function activarFiltros() {
         cajaBusqueda.focus();
     });
 
-    // El panel nace alineado con su botón; si así se saliera por la derecha de la pantalla (el último botón de la fila), se corre hacia la izquierda
+    // El panel nace alineado con su botón; si así se saliera por la derecha de la pantalla (el último botón de la fila), se corre hacia la izquierda.
+    // Y si así se saliera por abajo (en el celular la barra tiene varias filas y el panel cae debajo de todas), se achica y se desplaza por dentro:
+    // lo que quedara fuera de la pantalla no se podría alcanzar, porque la barra no se desplaza con la página. Siempre se deja un poquito de aire
+    // abajo (MARGEN_ABAJO) para que se vean las cartas por debajo y se note que el panel termina ahí, sin pegarse al borde.
+    const MARGEN_ABAJO = 16;
     const mantenerPanelEnPantalla = panel => {
+        const desplazado = panel.scrollTop; // (al sacarle y volver a ponerle el alto máximo, el panel perdería su posición)
         panel.style.left = '';
+        panel.style.maxHeight = '';
+        const vista = window.visualViewport; // lo que de verdad se ve: descuenta la barra del navegador y el teclado del celular
+        const limite = (vista ? vista.offsetTop + vista.height : document.documentElement.clientHeight) - MARGEN_ABAJO;
         const sobra = panel.getBoundingClientRect().right - (document.documentElement.clientWidth - 8);
         if (sobra > 0) panel.style.left = `${-sobra}px`;
+        // Dónde empieza el panel, sin contar la animación con que aparece (que lo corre 6px mientras dura)
+        const base = panel.offsetParent;
+        const arriba = (base ? base.getBoundingClientRect().top + base.clientTop : 0) + panel.offsetTop;
+        if (arriba + panel.offsetHeight > limite) {
+            // (el alto máximo no cuenta el relleno ni el borde del panel: se les resta)
+            const estilo = getComputedStyle(panel);
+            const marco = panel.offsetHeight - panel.clientHeight + parseFloat(estilo.paddingTop) + parseFloat(estilo.paddingBottom);
+            panel.style.maxHeight = `${Math.max(limite - arriba - marco, 140)}px`;
+        }
+        panel.scrollTop = desplazado;
     };
 
     // Panel de opciones de cada filtro: se abre con el botón (uno a la vez)
@@ -719,6 +808,61 @@ function activarFiltros() {
                 grupo.querySelector('.f-btn').focus();
             }
         });
+    });
+
+    // Si cambia lo que se ve de la pantalla con un panel abierto (se gira el celular, aparece el teclado al escribir en la cajita de las especies,
+    // la barra del navegador se esconde), el panel se vuelve a acomodar para que siga sin tocar el borde de abajo
+    const reacomodarPanelAbierto = () => {
+        grupos.forEach(grupo => {
+            if (grupo.classList.contains('abierto')) mantenerPanelEnPantalla(grupo.querySelector('.f-panel'));
+        });
+    };
+    window.addEventListener('resize', reacomodarPanelAbierto);
+    window.visualViewport?.addEventListener('resize', reacomodarPanelAbierto);
+
+    // Deslizar de más para cerrar: un panel con scroll (el de las especies, que es largo) que ya llegó al fondo y recibe otro deslizar hacia abajo
+    // (el dedo sube un buen tramo) se interpreta como "ya no hay más, quiero salir": se cierra. Vale solo si el deslizar EMPEZÓ con el panel en el
+    // fondo: el mismo gesto que lo lleva hasta el fondo no lo cierra (eso es solo el primer deslizar). Se cierra al soltar el dedo, así lo que queda
+    // del gesto no pasa a mover la página de abajo.
+    const FONDO_CERCA = 2; // px de tolerancia para dar por llegado al fondo
+    const DESLIZAR_PARA_CERRAR = 48; // px que tiene que subir el dedo (un toque o un arrastre corto no cierran)
+    const estaEnElFondo = panel =>
+        panel.scrollHeight > panel.clientHeight + FONDO_CERCA && panel.scrollTop + panel.clientHeight >= panel.scrollHeight - FONDO_CERCA;
+    grupos.forEach(grupo => {
+        const panel = grupo.querySelector('.f-panel');
+        let gesto = null; // el deslizar en curso: dónde empezó, dónde está el dedo y si arrancó con el panel en el fondo
+        panel.addEventListener(
+            'touchstart',
+            evento => {
+                const y = evento.touches[0].clientY;
+                gesto = evento.touches.length === 1 ? { y, ultimaY: y, enElFondo: estaEnElFondo(panel) } : null;
+            },
+            { passive: true },
+        );
+        panel.addEventListener(
+            'touchmove',
+            evento => {
+                if (!gesto) return;
+                if (evento.touches.length !== 1 || !estaEnElFondo(panel))
+                    gesto = null; // se movió el contenido o hay más dedos: no es "deslizar de más"
+                else gesto.ultimaY = evento.touches[0].clientY;
+            },
+            { passive: true },
+        );
+        panel.addEventListener(
+            'touchend',
+            () => {
+                const actual = gesto;
+                gesto = null;
+                if (!actual?.enElFondo || !estaEnElFondo(panel)) return;
+                if (actual.y - actual.ultimaY >= DESLIZAR_PARA_CERRAR) {
+                    abrir(grupo, false);
+                    document.activeElement?.blur?.(); // (si estaba escribiendo en la cajita de las especies, se baja el teclado)
+                }
+            },
+            { passive: true },
+        );
+        panel.addEventListener('touchcancel', () => (gesto = null), { passive: true });
     });
 
     // Elegir o sacar una opción (el panel queda abierto para poder elegir más)
@@ -788,7 +932,7 @@ function activarFiltros() {
     });
 
     // Ordenar por: elegir una opción cierra el desplegable. Al cambiar de orden la lista es otra: se vuelve a mirarla desde arriba
-    seccionFiltros.querySelectorAll('.f-orden-op').forEach(opcion => {
+    seccionFiltros.querySelectorAll('.f-orden-op[data-orden]').forEach(opcion => {
         opcion.addEventListener('click', () => {
             abrir(opcion.closest('.f-grupo'), false);
             if (opcion.dataset.orden === orden) return;
@@ -799,16 +943,31 @@ function activarFiltros() {
         });
     });
 
-    // Botón de X-Antibody: cada clic pasa al siguiente estado (indistinto → con → sin → indistinto)
-    botonX.addEventListener('click', () => {
-        const actual = [...elegidos.x][0];
-        elegidos.x.clear();
-        if (actual === undefined) {
-            elegidos.x.add('con');
-        } else if (actual === 'con') {
-            elegidos.x.add('sin');
-        }
-        refrescar();
+    // Agrupar: cada opción se marca o se desmarca (el desplegable queda abierto para marcar más). El número de cada una es el orden en que se
+    // marcó: ese es el orden de los bloques. Al cambiar, la lista es otra y se vuelve a mirar desde arriba
+    seccionFiltros.querySelectorAll('.f-agrupar-op').forEach(opcion => {
+        opcion.addEventListener('click', () => {
+            const criterio = opcion.dataset.agrupar;
+            agrupar = agrupar.includes(criterio) ? agrupar.filter(otro => otro !== criterio) : [...agrupar, criterio];
+            escribirAgrupar();
+            acomodarLista();
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        });
+    });
+
+    // Botones de X-Antibody y Xros Wars: cada clic pasa al siguiente estado (indistinto → con → sin → indistinto)
+    botonesDeTresEstados.forEach(boton => {
+        boton.addEventListener('click', () => {
+            const conjunto = elegidos[boton.dataset.g];
+            const actual = [...conjunto][0];
+            conjunto.clear();
+            if (actual === undefined) {
+                conjunto.add('con');
+            } else if (actual === 'con') {
+                conjunto.add('sin');
+            }
+            refrescar();
+        });
     });
 
     botonLimpiar.addEventListener('click', limpiarTodo);
@@ -820,6 +979,7 @@ function activarFiltros() {
         document.addEventListener(aviso, () => {
             etiquetarChips();
             escribirOrden();
+            escribirAgrupar();
             refrescar();
         });
     }
@@ -839,5 +999,6 @@ export function prepararFiltros() {
     etiquetarChips();
     activarFiltros();
     escribirOrden();
+    escribirAgrupar();
     refrescar();
 }

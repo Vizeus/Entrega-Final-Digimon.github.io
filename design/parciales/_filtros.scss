@@ -9,6 +9,64 @@
 //     #f-vacio → aviso cuando ningún digimon cumple los filtros
 //   Cada opción lleva su color en --c y el color del texto en --t (los pone filtros.js).
 // -----------------------------------------------------------------------------------------------------------------
+// Botones de tres estados (indistinto, solo con la marca, solo sin ella): X-Antibody y Xros Wars. No abren ningún panel, así que no llevan la flechita.
+// La gema es la marca de la carta, en chiquito; con la marca elegida el botón se pinta de su color y sin ella, de gris (con la gema tachada).
+@mixin boton-de-tres-estados($gema, $con-borde, $con-sombra, $con-fondo, $con-letra, $letra-de-la-gema: 12px) {
+    &::after {
+        content: none;
+    }
+
+    .f-gema {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        font:
+            900 #{$letra-de-la-gema}/ 1 var(--f-titulo),
+            sans-serif;
+        letter-spacing: -0.3px;
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        background: $gema;
+        box-shadow:
+            0 0 0 1px #7e8791,
+            inset 0 1px 1px rgba(255, 255, 255, 0.7);
+    }
+
+    // Solo con la marca: de su color
+    &[data-estado="con"] {
+        color: #fff;
+        text-shadow: 0 1px 1px $con-sombra;
+        border-color: $con-borde;
+        background:
+            linear-gradient(rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%), $con-fondo;
+
+        .f-gema {
+            background: #ffffff;
+            color: $con-letra;
+            text-shadow: none;
+        }
+    }
+
+    // Solo sin la marca: gris oscuro, con la gema tachada
+    &[data-estado="sin"] {
+        color: #fff;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+        border-color: rgba(20, 30, 40, 0.7);
+        background:
+            linear-gradient(rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.08) 100%),
+            linear-gradient(#8996a3 0%, #55616d 55%, #3b4651 100%);
+
+        .f-gema {
+            background: #d9dee3;
+            color: #55616d;
+            text-shadow: none;
+            text-decoration: line-through;
+        }
+    }
+}
+
 #filtros {
     position: relative;
     z-index: capa(filtros);
@@ -48,8 +106,8 @@
         min-width: 160px;
         height: 34px;
 
-        // En las pantallas grandes sobra lugar: el buscador vuelve a ser ancho
-        @media (min-width: 1440px) {
+        // En las pantallas grandes (desde 1600px) sobra lugar: el buscador vuelve a ser ancho. Con 1536 y el botón de Agrupar, uno más ancho hacía que Agrupar y Orden bajaran a otra fila
+        @media (min-width: 1600px) {
             flex-basis: 260px;
         }
         border-radius: 13px;
@@ -201,61 +259,26 @@
         box-shadow: inset 0 -1px 2px rgba(0, 40, 100, 0.25);
     }
 
-    // Botón de X-Antibody: tres estados (indistinto, solo con, solo sin). No abre ningún panel, así que no lleva la flechita
+    // Botones de tres estados: X-Antibody (rojo) y Xros Wars (naranja)
     .f-xa {
-        &::after {
-            content: none;
-        }
+        @include boton-de-tres-estados(
+            $gema: radial-gradient(circle at 30% 25%, #ffd1dc 0%, #e0245e 52%, #7a0b2f 100%),
+            $con-borde: rgba(120, 10, 45, 0.7),
+            $con-sombra: rgba(90, 0, 30, 0.6),
+            $con-fondo: linear-gradient(#ff8fb0 0%, #e0245e 55%, #b01245 100%),
+            $con-letra: #c4164f
+        );
+    }
 
-        .f-xa-gema {
-            display: grid;
-            place-items: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            font:
-                900 12px/1 var(--f-titulo),
-                sans-serif;
-            color: #ffffff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-            background: radial-gradient(circle at 30% 25%, #ffd1dc 0%, #e0245e 52%, #7a0b2f 100%);
-            box-shadow:
-                0 0 0 1px #7e8791,
-                inset 0 1px 1px rgba(255, 255, 255, 0.7);
-        }
-
-        // Solo con X-Antibody: rojo
-        &[data-estado="con"] {
-            color: #fff;
-            text-shadow: 0 1px 1px rgba(90, 0, 30, 0.6);
-            border-color: rgba(120, 10, 45, 0.7);
-            background:
-                linear-gradient(rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%),
-                linear-gradient(#ff8fb0 0%, #e0245e 55%, #b01245 100%);
-
-            .f-xa-gema {
-                background: #ffffff;
-                color: #c4164f;
-                text-shadow: none;
-            }
-        }
-
-        // Solo sin X-Antibody: gris oscuro, con la X tachada
-        &[data-estado="sin"] {
-            color: #fff;
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
-            border-color: rgba(20, 30, 40, 0.7);
-            background:
-                linear-gradient(rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.08) 100%),
-                linear-gradient(#8996a3 0%, #55616d 55%, #3b4651 100%);
-
-            .f-xa-gema {
-                background: #d9dee3;
-                color: #55616d;
-                text-shadow: none;
-                text-decoration: line-through;
-            }
-        }
+    .f-xw {
+        @include boton-de-tres-estados(
+            $gema: radial-gradient(circle at 30% 25%, #ffe0c2 0%, #ff8a1f 52%, #8a3a00 100%),
+            $con-borde: rgba(140, 60, 0, 0.7),
+            $con-sombra: rgba(100, 40, 0, 0.6),
+            $con-fondo: linear-gradient(#ffb062 0%, #ff8a1f 55%, #d2650a 100%),
+            $con-letra: #c75a05,
+            $letra-de-la-gema: 9px
+        );
     }
 
     // Panel con las opciones de un filtro: se abre debajo del botón. Si tiene tantas opciones que no entran (las especies), se desplaza hacia abajo
@@ -418,6 +441,7 @@
     }
 
     .f-orden-op {
+        flex-shrink: 0; // (si el panel no entra en la pantalla, se desplaza: las opciones no se aplastan)
         display: flex;
         align-items: center;
         gap: 10px;
@@ -459,6 +483,36 @@
                 background: radial-gradient(#2a75cf 0 35%, #fff 40%);
             }
         }
+    }
+
+    // "Agrupar": usa el mismo desplegable que "Ordenar por", pero se pueden marcar varias opciones. En lugar del puntito, cada una muestra el número del
+    // lugar en que se marcó (1, 2, 3...), que es el orden de los bloques
+    .f-agrupar-op {
+        .f-orden-punto {
+            display: grid;
+            place-items: center;
+            width: 20px;
+            height: 20px;
+            font:
+                700 12px var(--f-boton),
+                sans-serif;
+            color: #1d5fa8;
+        }
+
+        &[aria-checked="true"] .f-orden-punto {
+            border-color: #fff;
+            background: #fff;
+            text-shadow: none;
+        }
+    }
+
+    .f-panel-nota {
+        max-width: 230px;
+        margin: 2px 0 0;
+        font:
+            500 12px/1.35 var(--f-etiqueta),
+            sans-serif;
+        color: #56606b;
     }
 
     // "Estreno": dos listas de años (desde / hasta), una al lado de la otra
@@ -888,24 +942,34 @@
             pointer-events: none;
         }
 
-        // X-Antibody comparte la fila con los otros: se queda con el ancho de su texto
-        .f-xa {
+        // X-Antibody y Xros Wars comparten la fila con los otros: se quedan con el ancho de su texto
+        .f-tres {
             flex: 0 0 auto;
             padding: 0 9px;
         }
 
-        // En pantallas angostas no entra el texto con los otros botones: queda solo la gema (su color dice el estado)
-        @media (max-width: 399px) {
-            .f-xa {
+        // En pantallas angostas no entra el texto con los otros botones (con los dos, Agrupar y Orden bajarían a una tercera fila): queda solo la gema
+        // (su color dice el estado y al mantener apretado o pasar el mouse por encima se lee su nombre)
+        @media (max-width: 499px) {
+            .f-tres {
                 padding: 0 8px;
             }
 
-            .f-xa-texto {
+            .f-texto {
                 display: none;
             }
         }
 
-        // En los más angostos (320px) hay que achicar un poco los botones para que entren los cuatro y X-Antibody en una fila
+        // Con menos de 407px los diez botones no entran en dos filas (tampoco achicándolos): Agrupar y Orden van juntos en una tercera, mitad y mitad
+        // (si no, Orden quedaría solo en esa fila, estirado de lado a lado)
+        @media (max-width: 406px) {
+            .f-grupo[data-g="agrupar"] .f-btn,
+            .f-grupo[data-g="orden"] .f-btn {
+                flex: 1 1 calc(50% - 3px);
+            }
+        }
+
+        // En los más angostos (320px) hay que achicar un poco los botones para que entren los cuatro y los de X-Antibody y Xros Wars en una fila
         @media (max-width: 340px) {
             .f-btn {
                 gap: 4px;
@@ -913,7 +977,7 @@
                 font-size: 12px;
             }
 
-            .f-xa {
+            .f-tres {
                 padding: 0 7px;
             }
         }

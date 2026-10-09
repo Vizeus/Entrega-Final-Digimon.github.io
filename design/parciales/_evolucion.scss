@@ -9,8 +9,15 @@
 // se reparte entre las columnas, y por eso el árbol de tres columnas solo se usa en pantallas más anchas que $corte-arbol; en las más angostas va en una sola columna.
 $evo-ancho-caja: 176px; // una rama (digimon) cuando entra holgada
 $evo-ancho-caja-minimo: 150px; // lo más angosta que puede quedar una rama dentro de una lista desplegada
-$evo-ancho-lista-abierta: 390px; // lo que le gustaría ocupar a una lista desplegada: dos ramas, sus espacios, el borde y un poco de aire
+$evo-ancho-lista-abierta: 560px; // lo que le gustaría ocupar a una lista desplegada: tres ramas, sus espacios, el borde y un poco de aire
 $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola columna
+
+// Ancho de la ventana: cerrada mide $evo-ancho-ventana; con una lista desplegada se ensancha (tres columnas de ramas) y con las dos, más todavía.
+// Siempre con tope en el ancho de la pantalla, así que en las pantallas angostas no cambia nada.
+$evo-ancho-ventana: 920px;
+$evo-ancho-ventana-con-una-lista: 1100px;
+$evo-ancho-ventana-con-dos-listas: 1480px;
+$evo-aumento: 1.3; // cuánto se agranda la ventana en las pantallas grandes (ver más abajo)
 
 /* Al ir a la carta desde la línea evolutiva: la carta salta hacia adelante (zoom), y el contorno y el resplandor titilan rápido */
 #listado-digimons > li.evo-resaltada {
@@ -60,12 +67,31 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
     }
 }
 
-/* Ventana de la línea evolutiva. (Los !important del ancho: SweetAlert escribe el ancho en el style de la ventana; sin ellos, el CSS no podría cambiarlo) */
+/* Ventana de la línea evolutiva. (Los !important del ancho: SweetAlert escribe el ancho en el style de la ventana; sin ellos, el CSS no podría cambiarlo)
+   Con una lista desplegada la ventana se ensancha para que las ramas se acomoden en más columnas (hasta tres por lado), y más con las dos desplegadas.
+   "divisor" es lo que se agranda la ventana: el ancho se divide por lo mismo, así sigue entrando en la pantalla. */
+@mixin ancho-de-la-ventana($divisor) {
+    .popup-evo {
+        width: min(calc(96vw / #{$divisor}), $evo-ancho-ventana) !important;
+        max-width: $evo-ancho-ventana !important;
+    }
+
+    .popup-evo:has(.evo-col.abierta) {
+        width: min(calc(96vw / #{$divisor}), $evo-ancho-ventana-con-una-lista) !important;
+        max-width: $evo-ancho-ventana-con-una-lista !important;
+    }
+
+    .popup-evo:has(.evo-prev.abierta):has(.evo-sig.abierta) {
+        width: min(calc(96vw / #{$divisor}), $evo-ancho-ventana-con-dos-listas) !important;
+        max-width: $evo-ancho-ventana-con-dos-listas !important;
+    }
+}
+
 .popup-evo {
     padding: 1.1em 1em 1em;
-    width: min(96vw, 920px) !important;
-    max-width: 920px !important;
 }
+
+@include ancho-de-la-ventana(1);
 
 .popup-evo .swal2-title {
     padding: 0 1.6em;
@@ -78,14 +104,13 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
     margin: 0.4em 0.4em 0.2em;
 }
 
-/* En pantallas grandes la ventana se ve más grande, todo en proporción (el ancho se divide por lo mismo que se agranda,
-   así sigue entrando en la pantalla). En pantallas más chicas queda como estaba. */
+/* En pantallas grandes la ventana se ve más grande, todo en proporción. En pantallas más chicas queda como estaba. */
 @media (min-width: 1000px) {
     .popup-evo {
-        zoom: 1.3;
-        width: min(calc(96vw / 1.3), 920px) !important;
-        max-width: 920px !important;
+        zoom: $evo-aumento;
     }
+
+    @include ancho-de-la-ventana($evo-aumento);
 }
 
 .evo {
@@ -571,9 +596,11 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
     border-color: transparent transparent transparent var(--linea);
 }
 
-/* Lista desplegada: se ven todas las ramas en una grilla (sin barra de desplazamiento propia: la lista crece cuanto haga falta y la ventana con ella) y
-   las líneas pasan a ser un solo corchete. Las columnas de la grilla se arman según el ancho que quede: dos ramas una al lado de la otra si entran
-   y, si no (por ejemplo con las dos listas desplegadas a la vez), una sola. Las ramas se pegan al corchete, del lado del digimon del medio. */
+/* Lista desplegada: se ven todas las ramas en una grilla y las líneas pasan a ser un solo corchete. Las columnas de la grilla se arman según el ancho
+   que quede (la ventana se ensancha cuando se despliega una lista, ver arriba): hasta tres ramas una al lado de la otra si entran y, si no, dos o una.
+   Las ramas se pegan al corchete, del lado del digimon del medio.
+   Si la grilla es más alta que la pantalla no crece más: tiene su propio scroll vertical, y el resto de la ventana (la otra lista, el digimon del medio, el
+   pie) se queda quieto. evolucion.js calcula cuánto lugar queda y lo escribe en --alto-de-lista (ver ajustarAlturaDeListas). */
 .evo-col.abierta {
     flex: 0 1 $evo-ancho-lista-abierta;
     min-width: 0;
@@ -582,7 +609,12 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
 .evo-col.abierta .evo-lista {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax($evo-ancho-caja-minimo, 1fr));
-    padding: 4px;
+    box-sizing: border-box;
+    max-height: var(--alto-de-lista, none);
+    padding: 6px; // lugar para que la rama que se agranda al apuntarla y su sombra no queden cortadas por el borde del scroll
+    overflow: hidden auto;
+    overscroll-behavior: contain; // al llegar al final de la lista, la rueda no arrastra a lo que hay atrás
+    scrollbar-width: thin;
 }
 
 .evo-col.abierta .evo-lista li {
@@ -678,12 +710,16 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
         transform: none;
     }
 
+    /* (En el celular las listas desplegadas crecen y se desplaza la ventana entera: con un scroll adentro del otro sería incómodo con el dedo) */
     .evo-lista,
     .evo-col.abierta .evo-lista {
         display: flex;
         flex-flow: row wrap;
         justify-content: center;
         gap: 5px;
+        max-height: none;
+        padding: 4px;
+        overflow: visible;
         border: 0;
     }
 

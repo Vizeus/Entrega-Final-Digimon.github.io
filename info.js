@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------------------------------------------------------
-// MENÚS DE INFORMACIÓN (atributos, elementos, niveles y misceláneos) y sus ventanas emergentes
+// MENÚS DE INFORMACIÓN (atributos, elementos, niveles, grupos y misceláneos) y sus ventanas emergentes
 //
-// Los cuatro menús de la barra tienen el mismo formato: al elegir una opción se abre una ventana con su descripción,
-// contra qué es fuerte o débil y cuánto pesa en el combate (los misceláneos, que son las marcas de la carta como la X-Antibody, explican qué son y cómo buscarlas). Los números salen de las mismas tablas que usa el combate
+// Los cinco menús de la barra tienen el mismo formato: al elegir una opción se abre una ventana con su descripción,
+// contra qué es fuerte o débil y cuánto pesa en el combate (los grupos explican qué reúne a cada uno, y los misceláneos, que son las marcas de la carta como la X-Antibody, qué son y cómo buscarlas). Los números salen de las mismas tablas que usa el combate
 // (datos.js y combate.js), así que lo que dice la ventana siempre coincide con lo que pasa en la pelea.
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
@@ -15,15 +15,18 @@ import {
     ELEMENTO_FUERTE_CONTRA,
     EMOJIS_ELEMENTO,
     EMOJIS_ATRIBUTO,
+    INFO_DE_CAMPOS,
     ORDEN_ELEMENTOS,
     ORDEN_NIVELES,
     ATRIBUTO_FUERTE_CONTRA,
+    SIN_DATO,
     nivelesAlternativos,
     numeracionNiveles,
 } from './datos.js';
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { conCruzDeCierre, mantenerEnSuLugar } from './ventanas.js';
-import { clasificacionAlternativa, nombreNivel } from './pagina.js';
+import { clasificacionAlternativa, listaDigimons, nombreNivel } from './pagina.js';
+import { nombreParaMostrar } from './nombres.js';
 import { PESO_ELEMENTO, PESO_NIVEL, PESO_ATRIBUTO, PODER_EN_COMBATE } from './combate.js';
 import { nombreCompleto } from './cartas.js';
 import { activarBotonDelDorso } from './gestos.js';
@@ -200,10 +203,37 @@ export function infoNivel(nivelApi) {
     );
 }
 
+// Los grupos (los "Fields" de la API: Nature Spirits, Deep Savers...): qué reúne a cada uno, dónde viven, quiénes son, unos ejemplos y cuántos hay en el simulador.
+// Se abren desde el menú "Info. grupos" de la barra o tocando un grupo en el dorso de una carta (cartas.js). El grupo se pide con el nombre de la API
+// ('Dragon\'s Roar'); los textos de cada uno están en i18n.js ("campo.<clave>.*", con la clave de INFO_DE_CAMPOS en datos.js).
+// El menú va en orden alfabético, con "Unknown" (el comodín) al final.
+const ORDEN_CAMPOS_MENU = Object.keys(INFO_DE_CAMPOS).sort((a, b) => (a === SIN_DATO) - (b === SIN_DATO) || a.localeCompare(b, 'en'));
+
+export function infoCampo(campo) {
+    const info = INFO_DE_CAMPOS[campo];
+    if (!info) return;
+    ultimaInfoAbierta = { fn: infoCampo, args: [campo] };
+    const { clave, emoji, ejemplos } = info;
+    const cartas = [...listaDigimons.children];
+    const cuantos = cartas.filter(carta => carta.datosDorso?.campos.includes(campo)).length;
+
+    mostrarInfo(
+        `${emoji} ${campo}`,
+        t(`campo.${clave}.desc`),
+        [
+            [t('campo.donde'), t(`campo.${clave}.donde`)],
+            [t('campo.quienes'), t(`campo.${clave}.quienes`)],
+            [t('campo.ejemplos'), ejemplos.map(nombreParaMostrar).join(', ')],
+            [t('campo.enElSimulador'), t('campo.cuantos', { n: cuantos, total: cartas.length })],
+        ],
+        t('campo.pie'),
+    );
+}
+
 // Las marcas de la carta (la gema de la X-Antibody y los círculos de Armor, Hybrid y Xros Wars de la esquina de arriba a la izquierda): qué es cada una
 // y cómo encontrarla con el buscador. Se abren tocando la marca en la carta (cartas.js) o desde el menú "Info. misceláneos" de la barra.
-// Las claves van en minúscula y sin espacios: xantibody, armor, hybrid y xroswars (los textos de cada una están en i18n.js: "misc.<clave>.*").
-const ORDEN_MISC = ['xantibody', 'armor', 'hybrid', 'xroswars'];
+// Las claves van en minúscula y sin espacios: armor, hybrid, xantibody y xroswars (los textos de cada una están en i18n.js: "misc.<clave>.*").
+const ORDEN_MISC = ['armor', 'hybrid', 'xantibody', 'xroswars']; // (en orden alfabético, como se ve en el menú)
 
 export function infoMisc(clave) {
     if (!ORDEN_MISC.includes(clave)) return;
@@ -211,6 +241,10 @@ export function infoMisc(clave) {
     const datos = [[t('misc.enCarta'), t(`misc.${clave}.enCarta`)]];
     // (Armor y Hybrid no son un nivel: dicen en cuál de los 8 quedó cada uno, con un enlace a su ventana)
     if (clave === 'armor' || clave === 'hybrid') datos.push([t('misc.nivel'), enlazarTexto(t(`misc.${clave}.nivel`))]);
+    // (Xros Wars se presta a confusión: la marca es de las fusiones, no de todos los digimon de la serie. Dice cuáles sí la llevan y cuáles no)
+    if (clave === 'xroswars') {
+        datos.push([t('misc.xroswars.si.etiqueta'), t('misc.xroswars.si')], [t('misc.xroswars.no.etiqueta'), t('misc.xroswars.no')]);
+    }
     datos.push([t('misc.buscar'), t(`misc.${clave}.buscar`)]);
     mostrarInfo(t(`misc.${clave}.titulo`), t(`misc.${clave}.desc`), datos, t(`misc.${clave}.pie`));
 }
@@ -483,6 +517,7 @@ const VENTANA_DE_CADA_MENU = {
     'lista-atributos': infoAtributo,
     'lista-elementos': infoElemento,
     'lista-niveles': infoNivel,
+    'lista-grupos': infoCampo,
     'lista-misc': infoMisc,
 };
 
@@ -519,6 +554,10 @@ function escribirMenus() {
         }),
     );
     escribirOpciones(
+        'lista-grupos',
+        ORDEN_CAMPOS_MENU.map(campo => [campo, `${INFO_DE_CAMPOS[campo].emoji} ${campo}`]),
+    );
+    escribirOpciones(
         'lista-misc',
         ORDEN_MISC.map(clave => [clave, t(`misc.${clave}.titulo`)]),
     );
@@ -537,7 +576,16 @@ function activarMenusInfo() {
     menus.forEach(menu => {
         const lista = menu.querySelector('ul');
 
-        menu.querySelector('.menu-desplegable').addEventListener('click', () => abrir(menu, !estaAbierto(menu)));
+        // Nunca hay más de una lista abierta: al abrir una se cierran las otras (con el mouse ya lo hace tocar afuera, pero con el dedo, dentro del panel del
+        // menú ☰, no: ver más abajo). Si al cerrar la de arriba el botón que se tocó se corre, se lo devuelve a su lugar (ver mantenerEnSuLugar)
+        const botonDelMenu = menu.querySelector('.menu-desplegable');
+        botonDelMenu.addEventListener('click', () => {
+            const abriendo = !estaAbierto(menu);
+            mantenerEnSuLugar(botonDelMenu, () => {
+                if (abriendo) menus.forEach(otro => otro !== menu && estaAbierto(otro) && abrir(otro, false));
+                abrir(menu, abriendo);
+            });
+        });
 
         lista.addEventListener('click', evento => {
             const boton = evento.target.closest('button[data-k]');
@@ -547,10 +595,10 @@ function activarMenusInfo() {
         });
     });
 
-    // Tocar afuera cierra las listas abiertas. Con el dedo, dentro del panel del menú ☰ no se cierra ninguna: las listas se abren y se cierran solo con
-    // su propio botón, y abrir una no cierra las otras. Así el botón que se toca nunca se corre de lugar (si al abrir una se cerrara otra que está más
-    // arriba, los botones de abajo subirían), y el panel se puede desplazar con el dedo sin que apoyarlo en cualquier lugar cierre la lista que se
-    // estaba mirando (el panel se desplaza cuando con una lista abierta no entra en la pantalla). El panel se cierra entero con ☰, tocando afuera o con Esc.
+    // Tocar afuera cierra las listas abiertas. Con el dedo, dentro del panel del menú ☰ no se cierra ninguna con solo apoyarlo: el panel se puede
+    // desplazar con el dedo sin que apoyarlo en cualquier lugar cierre la lista que se estaba mirando (el panel se desplaza cuando con una lista abierta
+    // no entra en la pantalla). Ahí las listas se cierran con su propio botón, o al abrir otra (más arriba). El panel se cierra entero con ☰, tocando
+    // afuera o con Esc.
     document.addEventListener('pointerdown', evento => {
         if (evento.pointerType === 'touch' && evento.target.closest('#menu-movil')) return;
         menus.forEach(menu => {

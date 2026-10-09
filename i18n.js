@@ -34,6 +34,7 @@ export const DICCIONARIO = {
         'menu.atributos': 'Info. atributos',
         'menu.elementos': 'Info. elementos',
         'menu.niveles': 'Info. niveles',
+        'menu.grupos': 'Info. grupos',
         'menu.misc': 'Info. misceláneos',
         'menu.abrir': 'Más opciones',
         'idioma.cambiar': 'Cambiar idioma (Español / English)',
@@ -190,7 +191,7 @@ export const DICCIONARIO = {
         'misc.xantibody.desc':
             'La X-Antibody es un factor que algunos digimon adquieren y que les da una forma "X": versiones renovadas de digimon ya conocidos, que suelen verse más fuertes. No es un nivel, un atributo ni un elemento: es una marca aparte.',
         'misc.xantibody.enCarta': 'Gema rosa con una "X" arriba a la izquierda, y "(X-Antibody)" en el nombre',
-        'misc.xantibody.buscar': 'Con el botón X-Antibody de los filtros (con o sin ella) o escribiendo X-Antibody en el buscador',
+        'misc.xantibody.buscar': 'Con el botón X-Antibody de los filtros (con o sin ella)',
         'misc.xantibody.pie': 'No suma ni resta nada en el combate: lo que cuenta es su nivel, su atributo y su elemento.',
         'misc.armor.titulo': '🛡️ Armor',
         'misc.armor.desc':
@@ -206,13 +207,65 @@ export const DICCIONARIO = {
         'misc.hybrid.nivel': 'Humanas: {nivel:Adult}. Bestia: {nivel:Perfect}. Fusiones y formas supremas: {nivel:Ultimate}',
         'misc.hybrid.buscar': 'Escribiendo Hybrid en el buscador',
         'misc.hybrid.pie': 'En el combate cuenta como un digimon de su nivel: no suma ni resta nada por ser Hybrid.',
-        'misc.xroswars.titulo': '🔶 Xros Wars',
+        'misc.xroswars.titulo': '🔶 Xros Wars (fusiones XW)',
         'misc.xroswars.desc':
-            'Los digimon de la serie Digimon Xros Wars y de su continuación (The Young Hunters), cuya idea central es el DigiXros: digimon que se fusionan para formar uno nuevo y más fuerte.',
+            'XW <b>no</b> quiere decir "digimon de la temporada Xros Wars": la marca es solo para las <b>fusiones temporales</b> de esa serie (y de su continuación, The Young Hunters). Con el DigiXros, varios digimon se fusionan por un rato para formar uno nuevo y más fuerte, y esa forma fusionada es la que lleva la marca (como los Shoutmon X2 a X7).',
         'misc.xroswars.enCarta': 'Círculo naranja con "XW" arriba a la izquierda',
-        'misc.xroswars.buscar': 'Escribiendo Xros Wars en el buscador',
+        'misc.xroswars.si.etiqueta': 'La llevan',
+        'misc.xroswars.si': 'Las fusiones temporales, como Shoutmon X2 a X7, los "Xros Up…", los "Gattai…" y algunas formas "… Mode"',
+        'misc.xroswars.no.etiqueta': 'No la llevan',
+        'misc.xroswars.no': 'Los digimon de esa temporada que no son fusiones, como Shoutmon, Ganemon o Gumdramon',
+        'misc.xroswars.buscar': 'Con el botón Fusión XW de los filtros (con o sin la marca)',
         'misc.xroswars.pie':
-            'Es una aproximación: la API no trae este dato, así que se marcan los digimon estrenados entre 2010 y 2012 (los de esas series). No suma ni resta nada en el combate.',
+            'La API no trae este dato, así que se reconocen por el nombre ("Xros Up", "Gattai", Shoutmon X2… X7), por la especie (Enhancement o Composite) y por una lista de fusiones conocidas: puede que falte alguna. No suma ni resta nada en el combate.',
+
+        // Ventanas de los grupos (los "Fields" de la API): se abren desde "Info. grupos" o tocando un grupo en el dorso de la carta. Los nombres de los grupos no se traducen.
+        'campo.donde': 'Dónde viven',
+        'campo.quienes': 'Quiénes son',
+        'campo.ejemplos': 'Ejemplos',
+        'campo.enElSimulador': 'En el simulador',
+        'campo.cuantos': '{n} de {total} digimon',
+        'campo.pie':
+            'El grupo es solo una etiqueta de la franquicia (por hábitat o temática): no suma ni resta nada en el combate. Un digimon puede estar en varios grupos a la vez, por eso las cuentas de todos los grupos suman más que el total.',
+        'campo.naturespirits.desc':
+            'Los digimon más cercanos a la naturaleza: criaturas de aspecto animal, insectos, dinosaurios y otros seres primitivos que viven en tierras verdes y desérticas. Suelen ser tranquilos a pesar de lo duro de su entorno.',
+        'campo.naturespirits.donde': 'Praderas, bosques y desiertos',
+        'campo.naturespirits.quienes': 'Animales, insectos y dinosaurios',
+        'campo.deepsavers.desc':
+            'Los digimon del mar digital y de las regiones heladas, casi todos de forma acuática. Su carácter cambia con el entorno: los que viven en aguas bravas tienden a ser más violentos.',
+        'campo.deepsavers.donde': 'Océanos, mares y zonas heladas',
+        'campo.deepsavers.quienes': 'Acuáticos y polares',
+        'campo.nightmaresoldiers.desc':
+            'Digimon sobrenaturales: fantasmas, demonios, muertos vivientes y criaturas del folclore. Se los asocia con bosques oscuros y siniestros, lugares embrujados y los ejércitos del mal.',
+        'campo.nightmaresoldiers.donde': 'Bosques oscuros y lugares embrujados',
+        'campo.nightmaresoldiers.quienes': 'Demonios, fantasmas y no muertos',
+        'campo.windguardians.desc':
+            'Digimon del cielo, de los bosques y de las zonas altas: sobre todo aves, criaturas voladoras y plantas. Sus territorios son peligrosos porque muchas de sus especies son violentas o venenosas.',
+        'campo.windguardians.donde': 'Cielos, praderas, bosques y zonas altas',
+        'campo.windguardians.quienes': 'Aves, voladores y plantas',
+        'campo.metalempire.desc':
+            'Digimon mecánicos o metálicos, desde máquinas completas hasta cyborgs, ligados a la industria y a las ciudades. Están organizados y en expansión, como un imperio.',
+        'campo.metalempire.donde': 'Ciudades y zonas industriales',
+        'campo.metalempire.quienes': 'Máquinas, cyborgs y mutantes',
+        'campo.virusbusters.desc':
+            'A diferencia de los otros grupos, no se define por un lugar sino por una misión: sus miembros se oponen a los digimon de atributo Virus. Los motivos son muy distintos: poderes sagrados, justicia o proteger ruinas. No todo digimon que persigue virus pertenece a este grupo.',
+        'campo.virusbusters.donde': 'Lugares sagrados y ruinas',
+        'campo.virusbusters.quienes': 'Ángeles, caballeros santos y cazavirus',
+        'campo.dragonsroar.desc': 'Digimon cuyo núcleo digital lleva datos de dragón: dragones, dinosaurios y reptiles. Son poderosos y feroces.',
+        'campo.dragonsroar.donde': 'Zonas volcánicas',
+        'campo.dragonsroar.quienes': 'Dragones, dinosaurios y reptiles',
+        'campo.jungletroopers.desc':
+            'Digimon de la selva y del bosque, sobre todo insectos y plantas, cuyo cuerpo se adapta a su entorno y es sensible a los cambios en él. A diferencia de los de Nature Spirits, se dedican a proteger el ambiente del Mundo Digital.',
+        'campo.jungletroopers.donde': 'Selvas y zonas tropicales',
+        'campo.jungletroopers.quienes': 'Insectos y plantas',
+        'campo.darkarea.desc':
+            'El grupo del Área Oscura del Mundo Digital: un lugar sombrío donde viven digimon malignos, demoníacos y aterradores, entre ellos varios Reyes Demonio.',
+        'campo.darkarea.donde': 'El Área Oscura',
+        'campo.darkarea.quienes': 'Digimon malvados y demoníacos',
+        'campo.unknown.desc':
+            'El comodín de los grupos: reúne a los digimon de origen incierto o que no encajan en ninguno de los otros, muchas veces mutantes o criaturas extrañas. En el simulador también lleva a los digimon a los que la API no les trae ningún grupo.',
+        'campo.unknown.donde': 'Sin lugar fijo',
+        'campo.unknown.quienes': 'Mutantes y criaturas extrañas',
 
         // Filtros y buscador
         'filtros.titulo': 'Filtros',
@@ -233,6 +286,19 @@ export const DICCIONARIO = {
         'filtros.x.ayuda.indistinto': 'X-Antibody: indistinto. Un clic para ver solo las que la tienen',
         'filtros.x.ayuda.con': 'Solo las que tienen X-Antibody. Un clic para ver solo las que no la tienen',
         'filtros.x.ayuda.sin': 'Solo las que no tienen X-Antibody. Un clic para volver a ver todas',
+        // (se habla de "fusión XW" y no de "Xros Wars" a secas: el botón no filtra los digimon de esa serie, sino las fusiones temporales DigiXros)
+        'filtros.xw': 'Fusión XW',
+        'filtros.xw.con': 'Con fusión XW',
+        'filtros.xw.sin': 'Sin fusión XW',
+        'filtros.xw.boton.indistinto': 'Fusión XW',
+        'filtros.xw.boton.con': 'Con XW',
+        'filtros.xw.boton.sin': 'Sin XW',
+        'filtros.xw.ayuda.indistinto':
+            'Fusión XW: indistinto. Un clic para ver solo las fusiones temporales de Xros Wars (DigiXros), como los Shoutmon X2 a X7',
+        'filtros.xw.ayuda.con':
+            'Solo las fusiones temporales de Xros Wars. Un clic para ver todo lo demás (incluso los digimon de esa serie que no son fusiones)',
+        'filtros.xw.ayuda.sin':
+            'Todo menos las fusiones temporales de Xros Wars (los digimon de esa serie que no son fusiones sí aparecen). Un clic para volver a ver todas',
         'filtros.busqueda': 'Búsqueda',
         'filtros.porAtributo': 'Filtrar por atributo',
         'filtros.porCampo': 'Filtrar por grupo',
@@ -242,6 +308,14 @@ export const DICCIONARIO = {
         'filtros.especies': 'Especies',
         'filtros.familia': 'Familia {nombre}: marca de una vez sus {n} especies',
         'filtros.familia.todas': '{nombre} (todas)',
+        'filtros.agrupar': 'Agrupar',
+        'filtros.agruparPor': 'Agrupar por',
+        'filtros.agrupar.nota':
+            'Se agrupa en el orden en que los marques. Dentro de cada bloque rige el Orden elegido. Un digimon con varios grupos va en el más chico de los suyos.',
+        'filtros.agrupar.ayuda.sin': 'Junta los digimon en bloques: por ejemplo, todos los de nivel 1, luego todos los de nivel 2, y así',
+        'filtros.agrupar.ayuda.con': 'Agrupado por: {criterios}',
+        'filtros.agrupar.lugar': 'Se agrupa en el lugar {n}. Un clic para sacarlo',
+        'filtros.agrupar.sacada': 'Un clic para agrupar por este dato',
         'filtros.orden': 'Orden',
         'filtros.ordenarPor': 'Ordenar por',
         'filtros.orden.id': 'Número (ID)',
@@ -286,6 +360,7 @@ export const DICCIONARIO = {
         'menu.atributos': 'Attributes info',
         'menu.elementos': 'Elements info',
         'menu.niveles': 'Levels info',
+        'menu.grupos': 'Groups info',
         'menu.misc': 'Misc. info',
         'menu.abrir': 'More options',
         'idioma.cambiar': 'Change language (Español / English)',
@@ -442,7 +517,7 @@ export const DICCIONARIO = {
         'misc.xantibody.desc':
             'The X-Antibody is a factor some Digimon acquire that gives them an "X" form: renewed versions of already known Digimon, which tend to look stronger. It is not a level, an attribute or an element: it is a mark of its own.',
         'misc.xantibody.enCarta': 'Pink gem with an "X" at the top left, and "(X-Antibody)" in the name',
-        'misc.xantibody.buscar': 'With the X-Antibody button in the filters (with or without it) or by typing X-Antibody in the search box',
+        'misc.xantibody.buscar': 'With the X-Antibody button in the filters (with or without it)',
         'misc.xantibody.pie': 'It adds or subtracts nothing in battle: what counts is its level, its attribute and its element.',
         'misc.armor.titulo': '🛡️ Armor',
         'misc.armor.desc':
@@ -458,13 +533,65 @@ export const DICCIONARIO = {
         'misc.hybrid.nivel': 'Human: {nivel:Adult}. Beast: {nivel:Perfect}. Fusions and supreme forms: {nivel:Ultimate}',
         'misc.hybrid.buscar': 'By typing Hybrid in the search box',
         'misc.hybrid.pie': 'In battle it counts as a Digimon of its level: it adds or subtracts nothing for being Hybrid.',
-        'misc.xroswars.titulo': '🔶 Xros Wars',
+        'misc.xroswars.titulo': '🔶 Xros Wars (XW fusions)',
         'misc.xroswars.desc':
-            'The Digimon from the Digimon Xros Wars series and its sequel (The Young Hunters), whose central idea is DigiXros: Digimon that fuse to form a new, stronger one.',
+            'XW does <b>not</b> mean "a digimon from the Xros Wars season": the mark is only for the <b>temporary fusions</b> of that series (and its sequel, The Young Hunters). With DigiXros, several digimon fuse for a while into a new, stronger one, and that fused form is the one that carries the mark (like Shoutmon X2 to X7).',
         'misc.xroswars.enCarta': 'Orange circle with "XW" at the top left',
-        'misc.xroswars.buscar': 'By typing Xros Wars in the search box',
+        'misc.xroswars.si.etiqueta': 'They have it',
+        'misc.xroswars.si': 'The temporary fusions, like Shoutmon X2 to X7, the "Xros Up…" and "Gattai…" forms and some "… Mode" forms',
+        'misc.xroswars.no.etiqueta': 'They do not',
+        'misc.xroswars.no': 'The digimon of that season that are not fusions, like Shoutmon, Ganemon or Gumdramon',
+        'misc.xroswars.buscar': 'With the XW fusion button in the filters (with or without the mark)',
         'misc.xroswars.pie':
-            'It is an approximation: the API does not have this data, so the Digimon released between 2010 and 2012 (those of those series) are marked. It adds or subtracts nothing in battle.',
+            'The API does not have this data, so they are recognized by name ("Xros Up", "Gattai", Shoutmon X2… X7), by species (Enhancement or Composite) and by a list of known fusions: some may be missing. It adds or subtracts nothing in battle.',
+
+        // Windows for the groups (the API's "Fields"): opened from "Groups info" or by tapping a group on the back of a card. Group names are not translated.
+        'campo.donde': 'Where they live',
+        'campo.quienes': 'Who they are',
+        'campo.ejemplos': 'Examples',
+        'campo.enElSimulador': 'In the simulator',
+        'campo.cuantos': '{n} of {total} Digimon',
+        'campo.pie':
+            'A group is just a label from the franchise (by habitat or theme): it adds or subtracts nothing in battle. A Digimon can be in several groups at once, so the counts of all the groups add up to more than the total.',
+        'campo.naturespirits.desc':
+            'The Digimon closest to nature: animal-like creatures, insects, dinosaurs and other primitive beings living in green lands and deserts. They tend to be calm despite how harsh their surroundings are.',
+        'campo.naturespirits.donde': 'Grasslands, forests and deserts',
+        'campo.naturespirits.quienes': 'Animals, insects and dinosaurs',
+        'campo.deepsavers.desc':
+            'The Digimon of the digital sea and the icy regions, almost all of them aquatic in shape. Their temper changes with their surroundings: those living in rough waters tend to be more violent.',
+        'campo.deepsavers.donde': 'Oceans, seas and icy regions',
+        'campo.deepsavers.quienes': 'Aquatic and polar Digimon',
+        'campo.nightmaresoldiers.desc':
+            'Supernatural Digimon: ghosts, demons, the undead and creatures out of folklore. They are tied to dark, sinister forests, haunted places and the armies of evil.',
+        'campo.nightmaresoldiers.donde': 'Dark forests and haunted places',
+        'campo.nightmaresoldiers.quienes': 'Demons, ghosts and the undead',
+        'campo.windguardians.desc':
+            'Digimon of the sky, the forests and the high places: mostly birds, flying creatures and plants. Their lands are dangerous because many of their species are violent or poisonous.',
+        'campo.windguardians.donde': 'Skies, grasslands, forests and high places',
+        'campo.windguardians.quienes': 'Birds, flyers and plants',
+        'campo.metalempire.desc':
+            'Mechanical or metallic Digimon, from full machines to cyborgs, tied to industry and cities. They are organized and expanding, like an empire.',
+        'campo.metalempire.donde': 'Cities and industrial areas',
+        'campo.metalempire.quienes': 'Machines, cyborgs and mutants',
+        'campo.virusbusters.desc':
+            'Unlike the other groups, it is defined not by a place but by a mission: its members stand against Virus-attribute Digimon. Their reasons vary widely: holy powers, justice or protecting ruins. Not every Digimon that hunts viruses belongs to this group.',
+        'campo.virusbusters.donde': 'Holy places and ruins',
+        'campo.virusbusters.quienes': 'Angels, holy knights and virus hunters',
+        'campo.dragonsroar.desc': 'Digimon whose digital core holds dragon data: dragons, dinosaurs and reptiles. They are powerful and fierce.',
+        'campo.dragonsroar.donde': 'Volcanic areas',
+        'campo.dragonsroar.quienes': 'Dragons, dinosaurs and reptiles',
+        'campo.jungletroopers.desc':
+            "Digimon of the jungle and the woods, mostly insects and plants, whose bodies adapt to their surroundings and are sensitive to changes in them. Unlike those of Nature Spirits, they work to protect the Digital World's environment.",
+        'campo.jungletroopers.donde': 'Jungles and tropical areas',
+        'campo.jungletroopers.quienes': 'Insects and plants',
+        'campo.darkarea.desc':
+            "The group of the Digital World's Dark Area: a gloomy place where evil, demonic and frightening Digimon live, including several Demon Lords.",
+        'campo.darkarea.donde': 'The Dark Area',
+        'campo.darkarea.quienes': 'Evil and demonic Digimon',
+        'campo.unknown.desc':
+            'The wildcard of the groups: it gathers Digimon of uncertain origin or that fit none of the others, often mutants or strange creatures. In the simulator it also holds the Digimon the API gives no group at all.',
+        'campo.unknown.donde': 'No fixed place',
+        'campo.unknown.quienes': 'Mutants and strange creatures',
 
         // Filters and search
         'filtros.titulo': 'Filters',
@@ -485,6 +612,17 @@ export const DICCIONARIO = {
         'filtros.x.ayuda.indistinto': 'X-Antibody: any. Click to show only those that have it',
         'filtros.x.ayuda.con': 'Only those with X-Antibody. Click to show only those without it',
         'filtros.x.ayuda.sin': 'Only those without X-Antibody. Click to show them all again',
+        // (it says "XW fusion" and not just "Xros Wars": the button does not filter the digimon of that series, only the temporary DigiXros fusions)
+        'filtros.xw': 'XW fusion',
+        'filtros.xw.con': 'With XW fusion',
+        'filtros.xw.sin': 'Without XW fusion',
+        'filtros.xw.boton.indistinto': 'XW fusion',
+        'filtros.xw.boton.con': 'With XW',
+        'filtros.xw.boton.sin': 'No XW',
+        'filtros.xw.ayuda.indistinto': 'XW fusion: any. Click to show only the temporary Xros Wars (DigiXros) fusions, like Shoutmon X2 to X7',
+        'filtros.xw.ayuda.con': 'Only the temporary Xros Wars fusions. Click to show everything else (even the digimon of that series that are not fusions)',
+        'filtros.xw.ayuda.sin':
+            'Everything but the temporary Xros Wars fusions (the digimon of that series that are not fusions do show up). Click to show them all again',
         'filtros.busqueda': 'Search',
         'filtros.porAtributo': 'Filter by attribute',
         'filtros.porCampo': 'Filter by group',
@@ -494,6 +632,14 @@ export const DICCIONARIO = {
         'filtros.especies': 'Species',
         'filtros.familia': '{nombre} family: ticks its {n} species at once',
         'filtros.familia.todas': '{nombre} (all)',
+        'filtros.agrupar': 'Group by', // ("Group" a secas se confundiría con el filtro de grupos)
+        'filtros.agruparPor': 'Group the list by',
+        'filtros.agrupar.nota':
+            'Grouped in the order you tick them. Inside each block, the chosen Sort applies. A digimon with several groups goes in the smallest of its own.',
+        'filtros.agrupar.ayuda.sin': 'Splits the list into blocks: for example, all the level 1s, then all the level 2s, and so on',
+        'filtros.agrupar.ayuda.con': 'Grouped by: {criterios}',
+        'filtros.agrupar.lugar': 'Grouped in position {n}. Click to remove it',
+        'filtros.agrupar.sacada': 'Click to group by this one',
         'filtros.orden': 'Sort',
         'filtros.ordenarPor': 'Sort by',
         'filtros.orden.id': 'Number (ID)',
