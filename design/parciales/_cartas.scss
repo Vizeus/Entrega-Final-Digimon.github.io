@@ -413,7 +413,11 @@
                 0 0 0 3px #7e8791,
                 0 2px 4px rgba(0, 0, 0, 0.4),
                 inset 0 1px 2px rgba(255, 255, 255, 0.7);
-            cursor: help;
+            cursor: pointer;
+            user-select: none;
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease;
         }
 
         // Marca de los digimons que la API trae como Armor (rojo, "A") o Hybrid (verde, "H"): igual que la gema de la X-Antibody
@@ -441,7 +445,11 @@
                 0 0 0 3px #7e8791,
                 0 2px 4px rgba(0, 0, 0, 0.4),
                 inset 0 1px 2px rgba(255, 255, 255, 0.7);
-            cursor: help;
+            cursor: pointer;
+            user-select: none;
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease;
         }
 
         &[data-marca="Hybrid"] .c-marca {
@@ -452,7 +460,7 @@
             top: 36px;
         }
 
-        // Marca de los digimons del grupo Xros Wars (naranja, "XW"): mismo lugar y mismo estilo que las otras. Si hay más de una marca,
+        // Marca de los digimons de Digimon Xros Wars (naranja, "XW"): mismo lugar y mismo estilo que las otras. Si hay más de una marca,
         // van una debajo de la otra (X-Antibody, después Armor/Hybrid, después Xros Wars).
         .c-xw {
             position: absolute;
@@ -477,7 +485,25 @@
                 0 0 0 3px #7e8791,
                 0 2px 4px rgba(0, 0, 0, 0.4),
                 inset 0 1px 2px rgba(255, 255, 255, 0.7);
-            cursor: help;
+            cursor: pointer;
+            user-select: none;
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease;
+        }
+
+        // Las tres marcas se tocan (abren su ventana de información): se agrandan un poco al pasar el mouse y se hunden al apretarlas, como la gema del nivel
+        .c-x:hover,
+        .c-marca:hover,
+        .c-xw:hover {
+            filter: brightness(1.15);
+            transform: scale(1.08);
+        }
+
+        .c-x:active,
+        .c-marca:active,
+        .c-xw:active {
+            transform: scale(0.95);
         }
 
         .c-x ~ .c-xw,
@@ -658,6 +684,7 @@
         // lo mostraría pegado hasta hacer clic en otro lado. Por eso es ":focus-visible" y no ":focus-within".)
         &:hover .c-flip,
         &.tilt-activo .c-flip,
+        &.hover-pegado .c-flip,
         .c-flip:focus-visible {
             opacity: 1;
             scale: 1;
@@ -678,7 +705,8 @@
         }
 
         &:hover .c-puente,
-        &.tilt-activo .c-puente {
+        &.tilt-activo .c-puente,
+        &.hover-pegado .c-puente {
             inset: -6px -8px -20px;
             border-radius: 16px;
             pointer-events: auto;
@@ -721,6 +749,13 @@
                     background-position 0.9s ease,
                     opacity 0.2s;
             }
+        }
+
+        // Después de dar vuelta la carta con el mouse quieto encima, el navegador no la vuelve a marcar como ":hover" hasta que el mouse se mueva:
+        // inclinacion.js le pone esta clase hasta ese primer movimiento, para que siga levantada y con su botón (sin el reflejo, que sigue al puntero)
+        &.hover-pegado {
+            --caida: 0 8px 16px rgba(0, 0, 0, 0.85);
+            translate: 0 -8px;
         }
 
         // Carta seleccionada para el combate: flota y el halo de afuera cambia de matiz de forma pareja (una vuelta cada 6 s).

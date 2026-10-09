@@ -4,16 +4,9 @@
 // Teclas, toque de carta, selección, giro, zoom, el papel de los ficheros (ataques y desplegables) y qué botones suenan.
 // -----------------------------------------------------------------------------------------------------------------
 
-import {
-    destinoDeAudio,
-    esToqueEnBotonConEspera,
-    obtenerContextoAudio,
-    perfilAudioActual,
-    sonarCuandoElAudioEsteListo,
-    sonarSinAvisarAlBotonDeAudio,
-} from './audio.js';
+import { destinoDeAudio, esToqueEnBoton, obtenerContextoAudio, perfilAudioActual, sonarCuandoElAudioEsteListo, sonarSinAvisarAlBotonDeAudio } from './audio.js';
 import { toqueQueSoloCierraMenus } from './menus.js';
-import { esElSegundoDeUnDoble } from './util.js';
+import { BOTONES_SUAVES, esElSegundoDeUnDoble } from './util.js';
 
 // ---- Tecla de teclado mecánico ------------------------------------------------------------------------------------
 // Una tecla real suena a tres cosas juntas: un "clic" agudo (el mecanismo), un golpe seco (la tecla llegando al fondo)
@@ -94,10 +87,13 @@ function crearSalidaTeclas(contexto) {
     return compresor;
 }
 
-// Las dos "teclas": la de siempre (barra, filtros y menús) y la de todos los botones de la carta (info, ataques y evolución),
-// que es la misma pero un toque más bajita de volumen y más aguda de tono (fuerza: multiplica el volumen; tono: multiplica la afinación)
+// Las tres "teclas": la de siempre (barra, filtros y menús), la de todos los botones de la carta (info, ataques y evolución), que es la misma
+// pero un toque más bajita de volumen y más aguda de tono (fuerza: multiplica el volumen; tono: multiplica la afinación), y el "tic" de los
+// botones suaves (etiquetas de los filtros elegidos, Aceptar y cruz de las ventanas): un chasquidito seco, bajo, apenas perceptible, sin el
+// golpe grave de la tecla y sin sonido al soltar, para que no sature tanto ruido de botón por cualquier cosa.
 const TECLA_NORMAL = { fuerza: 1, tono: 1 };
 const TECLA_DE_CARTA = { fuerza: 0.65, tono: 1.25 };
+const TECLA_TIC = { fuerza: 0.3, tono: 1, tic: true };
 
 // Arma una pulsación (bajada = true) o el soltar la tecla (bajada = false) en el instante t
 function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
@@ -125,6 +121,14 @@ function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
         oscilador.start(inicio);
         oscilador.stop(inicio + duracion + 0.01);
     };
+
+    if (tecla.tic) {
+        if (bajada) {
+            chasquido(0, 3600, 1.3, 5.4, 0.012); // un solo clic agudo y cortito
+            golpe(0, 'sine', 2800, 2400, 0.06, 0.01);
+        }
+        return;
+    }
 
     if (bajada) {
         chasquido(0, 3000, 1.1, 5.4, 0.03); // clic agudo del mecanismo
@@ -396,29 +400,41 @@ export function sonidoFichero(abrir = true, fuerza = FICHERO_DE_ATAQUES, retraso
     }
 }
 
-// Los desplegables de los filtros y de los menús "Info." marcan con la clase "abierto" que están desplegados. Se mira ese cambio en vez de
-// los clics: así suena igual cuando se abren con el botón, con el teclado, o cuando se cierran con un toque afuera, con Esc, al elegir una
-// opción o al cerrarse el menú ☰ del celular. Solo cuenta el cambio de abierto a cerrado (o al revés), no cualquier otra clase que se toque.
+// Los desplegables de los filtros y de los menús "Info." marcan con la clase "abierto" que están desplegados, y la barra del celular con
+// "menu-abierto" cuando está desplegado el menú ☰. Se mira ese cambio en vez de los clics: así suena igual cuando se abren con el botón, con el
+// teclado, o cuando se cierran con un toque afuera, con Esc o al elegir una opción. Solo cuenta el cambio de abierto a cerrado (o al revés), no
+// cualquier otra clase que se toque. El menú ☰ suena igual que los demás (el fichero, además de la tecla del botón). Al cerrarse el menú ☰ se
+// recogen también las listas "Info." que estuvieran abiertas: esas no suenan aparte, para que no se encimen dos ficheros iguales.
 export function activarSonidoDeDesplegables() {
+    const barra = document.getElementById('navbar');
+    const claseAbierto = desplegable => (desplegable === barra ? 'menu-abierto' : 'abierto');
     const estaba = new WeakMap(); // si cada desplegable estaba abierto la última vez que se miró
     const observador = new MutationObserver(cambios => {
+        const cambiados = []; // los que de verdad pasaron de abierto a cerrado (o al revés) en esta tanda
         for (const cambio of cambios) {
             const desplegable = cambio.target;
-            const abierto = desplegable.classList.contains('abierto');
+            const abierto = desplegable.classList.contains(claseAbierto(desplegable));
             if (estaba.get(desplegable) === abierto) continue;
             estaba.set(desplegable, abierto);
+            cambiados.push({ desplegable, abierto });
+        }
+        const seCerroElMenu = cambiados.some(({ desplegable, abierto }) => desplegable === barra && !abierto);
+        for (const { desplegable, abierto } of cambiados) {
+            if (seCerroElMenu && !abierto && desplegable.classList.contains('menu-info')) continue;
             sonidoFichero(abierto, FICHERO_DE_DESPLEGABLES, RETRASO_FICHERO_DESPLEGABLES);
         }
     });
-    document.querySelectorAll('.f-grupo, .menu-info').forEach(desplegable => {
-        estaba.set(desplegable, desplegable.classList.contains('abierto'));
+    document.querySelectorAll('.f-grupo, .menu-info, #navbar').forEach(desplegable => {
+        estaba.set(desplegable, desplegable.classList.contains(claseAbierto(desplegable)));
         observador.observe(desplegable, { attributes: true, attributeFilter: ['class'] });
     });
 }
 
 // Sonido de tecla al tocar los botones de la barra de arriba, los menús de información y los filtros. Los botones "⚔️ Ataques" y
-// "🧬 Evolución" del reverso de las cartas suenan igual, pero con la tecla de las cartas (un poco más bajita y más aguda).
-// Suena al apretar (se siente inmediato y no lo corta el reload del botón de niveles) y, si se llegó a apretar, también al soltar.
+// "🧬 Evolución" del reverso de las cartas suenan igual, pero con la tecla de las cartas (un poco más bajita y más aguda). Las etiquetas de
+// los filtros elegidos, el Aceptar y la cruz de las ventanas hacen solo un "tic" muy bajito (TECLA_TIC).
+// Con el mouse suena al apretar (se siente inmediato y no lo corta el reload del botón de niveles) y, si se llegó a apretar, también al soltar. Con
+// el dedo suena un instante después de apoyarlo, si el dedo se queda quieto (así el desplazamiento de la página no hace sonar los botones que cruza).
 // El teclado dispara solo 'click': ahí suenan las dos cosas seguidas.
 // (La vibración en el celular la maneja activarVibracion: vale para todos los botones, también los del reverso de las cartas.)
 // El botón de sonido (#silenciar) es la excepción en las dos cosas: no suena ni vibra al apretarlo sino según a dónde lleva el toque
@@ -445,6 +461,7 @@ export function activarSonidoBotones() {
         if (!boton || boton.disabled) return null;
         if (boton.id === 'silenciar') return null; // el botón de sonido tiene su propio criterio (ver activarBotonDeAudio)
         if (boton.id === 'inclinacion-invertida' || boton.id === 'tema') return TECLA_SIN_AVISO; // (los de ajustes no le avisan al de sonido)
+        if (boton.matches(BOTONES_SUAVES)) return TECLA_TIC; // etiquetas de filtros, Aceptar y cruz de cerrar: un "tic" bajito
         // El botón de hacer flip de la carta no debe hacer sonido
         if (boton.closest('.c-flip')) return null;
         // Los botones de cada ataque (desplegar la descripción) no suenan a tecla: suena el fichero (info.js)
@@ -459,7 +476,7 @@ export function activarSonidoBotones() {
     };
     document.addEventListener('pointerdown', evento => {
         if (evento.pointerType === 'mouse' && evento.button !== 0) return; // solo el botón izquierdo
-        if (esToqueEnBotonConEspera(evento)) return; // con el dedo, los de las cartas y las ventanas suenan al terminar el toque (ver más abajo)
+        if (esToqueEnBoton(evento)) return; // con el dedo, los botones no suenan al apoyar (podría ser el comienzo de un desplazamiento): ver más abajo
         if (toqueQueSoloCierraMenus()) return; // el toque que cierra un menú desde una carta no suena (el menú al cerrarse suena solo)
         if (esElSegundoDeUnDoble()) return; // el segundo clic de un doble clic sobre un botoncito de la carta (amplía la carta) no suena otra vez
         const tecla = teclaDe(evento);
@@ -479,9 +496,20 @@ export function activarSonidoBotones() {
     document.addEventListener('pointercancel', () => {
         apretado = null;
     });
-    // Los botones de las cartas y de las ventanas (ataques, evolución, información), con el dedo: no suenan al apoyar (podría ser el comienzo de un
-    // desplazamiento) sino cuando el toque terminó y fue un toque de verdad (ver activarToqueEnBotonesConEspera en audio.js). Ahí suenan la
-    // bajada y, un instante después, la subida.
+    // Con el dedo, los botones no suenan al apoyar (podría ser el comienzo de un desplazamiento, y el barrido por los botones sonaría una vez por cada
+    // uno) sino cuando el dedo se queda quieto un instante (bajada) y al levantarlo (subida), o, si el toque fue rápido, las dos juntas al levantar. Los
+    // botoncitos del frente de la carta con la inclinación activada y las etiquetas de los filtros elegidos suenan una sola vez, al levantar el dedo
+    // (ver activarToqueEnBotonesConEspera en audio.js).
+    let apretadoConDedo = null; // la tecla que el dedo tiene apretada, o null
+    document.addEventListener('boton-apretado', evento => {
+        apretadoConDedo = teclaDe({ target: evento.detail.boton });
+        if (apretadoConDedo) sonarTeclaDeBoton(true, apretadoConDedo);
+    });
+    document.addEventListener('boton-soltado', () => {
+        const tecla = apretadoConDedo;
+        apretadoConDedo = null;
+        if (tecla) sonarTeclaDeBoton(false, tecla);
+    });
     document.addEventListener('toque-en-boton', evento => {
         const tecla = teclaDe({ target: evento.detail.boton });
         if (!tecla) return;

@@ -49,33 +49,33 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261009-0038",
-                    "./datos.js": "./datos.js?v=20261009-0038",
-                    "./i18n.js": "./i18n.js?v=20261009-0038",
-                    "./nombres.js": "./nombres.js?v=20261009-0038",
-                    "./pagina.js": "./pagina.js?v=20261009-0038",
-                    "./api.js": "./api.js?v=20261009-0038",
-                    "./combate.js": "./combate.js?v=20261009-0038",
-                    "./avisos.js": "./avisos.js?v=20261009-0038",
-                    "./descartar.js": "./descartar.js?v=20261009-0038",
-                    "./cartas.js": "./cartas.js?v=20261009-0038",
-                    "./zoom.js": "./zoom.js?v=20261009-0038",
-                    "./gestos.js": "./gestos.js?v=20261009-0038",
-                    "./inclinacion.js": "./inclinacion.js?v=20261009-0038",
-                    "./audio.js": "./audio.js?v=20261009-0038",
-                    "./sonidos.js": "./sonidos.js?v=20261009-0038",
-                    "./filtros.js": "./filtros.js?v=20261009-0038",
-                    "./info.js": "./info.js?v=20261009-0038",
-                    "./barra.js": "./barra.js?v=20261009-0038",
-                    "./evolucion.js": "./evolucion.js?v=20261009-0038",
-                    "./ventanas.js": "./ventanas.js?v=20261009-0038",
-                    "./baile.js": "./baile.js?v=20261009-0038",
-                    "./tema.js": "./tema.js?v=20261009-0038",
-                    "./menus.js": "./menus.js?v=20261009-0038"
+                    "./util.js": "./util.js?v=20261009-1254",
+                    "./datos.js": "./datos.js?v=20261009-1254",
+                    "./i18n.js": "./i18n.js?v=20261009-1254",
+                    "./nombres.js": "./nombres.js?v=20261009-1254",
+                    "./pagina.js": "./pagina.js?v=20261009-1254",
+                    "./api.js": "./api.js?v=20261009-1254",
+                    "./combate.js": "./combate.js?v=20261009-1254",
+                    "./avisos.js": "./avisos.js?v=20261009-1254",
+                    "./descartar.js": "./descartar.js?v=20261009-1254",
+                    "./cartas.js": "./cartas.js?v=20261009-1254",
+                    "./zoom.js": "./zoom.js?v=20261009-1254",
+                    "./gestos.js": "./gestos.js?v=20261009-1254",
+                    "./inclinacion.js": "./inclinacion.js?v=20261009-1254",
+                    "./audio.js": "./audio.js?v=20261009-1254",
+                    "./sonidos.js": "./sonidos.js?v=20261009-1254",
+                    "./filtros.js": "./filtros.js?v=20261009-1254",
+                    "./info.js": "./info.js?v=20261009-1254",
+                    "./barra.js": "./barra.js?v=20261009-1254",
+                    "./evolucion.js": "./evolucion.js?v=20261009-1254",
+                    "./ventanas.js": "./ventanas.js?v=20261009-1254",
+                    "./baile.js": "./baile.js?v=20261009-1254",
+                    "./tema.js": "./tema.js?v=20261009-1254",
+                    "./menus.js": "./menus.js?v=20261009-1254"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261009-0038"></script>
+        <script type="module" src="./main.js?v=20261009-1254"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,7 +86,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261009-0038" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261009-1254" />
     </head>
 
     <body>
@@ -188,7 +188,7 @@
                     <!-- Sonido: botón chiquito y redondo que apaga (o vuelve a prender) el sonido de la página. En computadora queda en la barra,
              junto al selector de idioma. En celular audio.js lo saca de acá y lo deja suelto en el <body>: flota siempre en la
              esquina de abajo a la derecha (lo dibuja el CSS) y la primera vez que suena algo en la sesión hace una animación para
-             que se vea. En celular da tres vueltas (sonido y vibración → solo vibración → nada → todo); en computadora, dos.
+             que se vea. En celular que puede vibrar (Android) da tres vueltas (sonido y vibración → solo vibración → nada → todo); en computadora y en iPhone, dos.
              La ayuda y el paso en que está (data-modo) los escribe audio.js; la elección queda guardada en el navegador.
              El ícono cambia con el paso: parlante con ondas (suena), celular que vibra (solo vibración) o parlante con una cruz (nada) -->
                     <button type="button" id="silenciar" data-modo="todo" title="Silenciar el sonido" aria-label="Silenciar el sonido">
@@ -288,7 +288,7 @@
                     </button>
                 </div>
 
-                <!-- Herramientas de la barra (secundarias): tres menús de información. Cada uno es un botón de verdad, se abre con clic
+                <!-- Herramientas de la barra (secundarias): cuatro menús de información. Cada uno es un botón de verdad, se abre con clic
          (o Enter/Espacio) y se cierra con Esc o al hacer clic afuera. Las opciones las escribe info.js (así siguen el idioma) -->
                 <div class="herramientas">
                     <div class="menu-info">
@@ -334,6 +334,21 @@
                             Info. niveles
                         </button>
                         <ul id="lista-niveles"></ul>
+                    </div>
+
+                    <div class="menu-info">
+                        <button
+                            type="button"
+                            id="abrir-misc"
+                            class="menu-desplegable"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="lista-misc"
+                            data-i18n="menu.misc"
+                        >
+                            Info. misceláneos
+                        </button>
+                        <ul id="lista-misc"></ul>
                     </div>
                 </div>
             </div>
@@ -389,6 +404,25 @@
                     <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
                 </div>
 
+                <!-- Estreno: un período de años, con un año inicial, uno final o los dos (la API solo trae el año). Los años que se pueden elegir son los
+         de los digimons que van llegando: los arma filtros.js -->
+                <div class="f-grupo" data-g="estreno">
+                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                        <span data-i18n="filtros.estreno">Estreno</span>
+                    </button>
+                    <div class="f-panel f-panel-estreno" role="group" aria-label="Filtrar por fecha de estreno" data-i18n-attr="aria-label:filtros.porEstreno">
+                        <p class="f-panel-titulo" data-i18n="filtros.estreno.titulo">Año de estreno</p>
+                        <label class="f-anio">
+                            <span data-i18n="filtros.estreno.desde">Desde</span>
+                            <select data-lado="desde"></select>
+                        </label>
+                        <label class="f-anio">
+                            <span data-i18n="filtros.estreno.hasta">Hasta</span>
+                            <select data-lado="hasta"></select>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Grupos (los "Fields" de la API): sus opciones las arma filtros.js a medida que llegan los digimons -->
                 <div class="f-grupo" data-g="campo">
                     <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
@@ -403,19 +437,30 @@
                     <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
                         <span data-i18n="filtros.especie">Especie</span><b class="f-n" hidden>0</b>
                     </button>
-                    <div class="f-panel" role="group" aria-label="Filtrar por especie" data-i18n-attr="aria-label:filtros.porEspecie">
-                        <label class="f-opciones-buscar">
-                            <input
-                                type="text"
-                                autocomplete="off"
-                                autocapitalize="off"
-                                spellcheck="false"
-                                enterkeyhint="search"
-                                placeholder="Buscar especie…"
-                                aria-label="Buscar especie…"
-                                data-i18n-attr="placeholder:filtros.buscarEspecie;aria-label:filtros.buscarEspecie"
-                            />
-                        </label>
+                    <div class="f-panel" role="group" aria-label="Filtrar por especie" data-i18n-attr="aria-label:filtros.porEspecie" data-vista="familias">
+                        <div class="f-opciones-buscar">
+                            <label>
+                                <input
+                                    type="text"
+                                    autocomplete="off"
+                                    autocapitalize="off"
+                                    spellcheck="false"
+                                    enterkeyhint="search"
+                                    placeholder="Buscar especie…"
+                                    aria-label="Buscar especie…"
+                                    data-i18n-attr="placeholder:filtros.buscarEspecie;aria-label:filtros.buscarEspecie"
+                                />
+                            </label>
+                            <!-- Dos vistas de lo mismo: las familias (marcan varias especies juntas) y las especies sueltas. Al escribir en la cajita se ven las dos -->
+                            <div class="f-vistas">
+                                <button type="button" class="f-vista" data-v="familias" aria-pressed="true" data-i18n="filtros.familias">Familias</button>
+                                <button type="button" class="f-vista" data-v="especies" aria-pressed="false" data-i18n="filtros.especies">Especies</button>
+                            </div>
+                        </div>
+                        <p class="f-subtitulo" data-i18n="filtros.familias">Familias</p>
+                        <div class="f-lista f-familias"></div>
+                        <p class="f-subtitulo" data-i18n="filtros.especies">Especies</p>
+                        <div class="f-lista f-especies"></div>
                     </div>
                 </div>
 
@@ -424,6 +469,39 @@
                 <button type="button" class="f-btn f-xa" data-estado="indistinto" aria-label="X-Antibody">
                     <span class="f-xa-gema" aria-hidden="true">X</span><span class="f-xa-texto">X-Antibody</span>
                 </button>
+
+                <!-- Ordenar por: no filtra nada, solo cambia el orden de la lista (por número o alfabético). Es un desplegable como los de los
+         filtros, pero con una sola opción a la vez. Su texto, su valor y el reordenamiento los maneja filtros.js -->
+                <div class="f-grupo" data-g="orden">
+                    <button type="button" class="f-btn f-orden-btn" aria-haspopup="true" aria-expanded="false">
+                        <span data-i18n="filtros.orden">Orden</span><b class="f-orden-valor">ID</b>
+                    </button>
+                    <div class="f-panel f-panel-orden" role="radiogroup" aria-label="Ordenar por" data-i18n-attr="aria-label:filtros.ordenarPor">
+                        <p class="f-panel-titulo" data-i18n="filtros.ordenarPor">Ordenar por</p>
+                        <button
+                            type="button"
+                            class="f-orden-op"
+                            role="radio"
+                            aria-checked="true"
+                            data-orden="id"
+                            title="Ordena por número de ID, que coincide con la fecha de estreno: de los más antiguos a los más nuevos (ascendente)"
+                            data-i18n-attr="title:filtros.orden.id.ayuda"
+                        >
+                            <span class="f-orden-punto" aria-hidden="true"></span><span data-i18n="filtros.orden.id">Número (ID)</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="f-orden-op"
+                            role="radio"
+                            aria-checked="false"
+                            data-orden="az"
+                            title="Ordena por nombre, de la A a la Z (ascendente)"
+                            data-i18n-attr="title:filtros.orden.az.ayuda"
+                        >
+                            <span class="f-orden-punto" aria-hidden="true"></span><span data-i18n="filtros.orden.az">Alfabético (A–Z)</span>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
                 <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>

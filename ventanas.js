@@ -4,6 +4,7 @@
 //   1. LA PÁGINA QUEDA QUIETA CON UNA VENTANA ABIERTA (celular): ver activarPaginaQuietaConVentanas, más abajo.
 //   2. TODAS TIENEN SU CRUZ de cerrar arriba a la derecha, del mismo estilo (ver conCruzDeCierre).
 //   3. EL BOTÓN "ATRÁS" (el del sistema en Android, el del navegador o el gesto de volver) CIERRA LA VENTANA: ver activarCierreDeVentanas.
+//   4. LOS DESPLEGABLES NO MUEVEN SU BOTÓN: ver mantenerEnSuLugar.
 // -----------------------------------------------------------------------------------------------------------------
 
 import { DICCIONARIO, t } from './i18n.js';
@@ -13,7 +14,7 @@ Object.assign(DICCIONARIO.en, { 'ventana.cerrar': 'Close window' });
 
 // ---- 1. La página queda quieta con una ventana abierta (celular) -----------------------------------------------------------
 // Mientras hay una ventana abierta (ataques, línea evolutiva, información o combate) la página de atrás no se desplaza con el dedo: lo
-// único que se mueve es lo que tiene scroll propio dentro de la ventana (una descripción larga, el árbol evolutivo...). Si ese scroll
+// único que se mueve es lo que tiene scroll propio dentro de la ventana (la ventana entera, cuando es más alta que la pantalla). Si ese scroll
 // ya llegó al final, el dedo tampoco arrastra a la página (se frena ahí). La página tenía que quedar libre de overflow (ver _base.scss:
 // SweetAlert le pone overflow hidden al body y, sin esa regla, la grilla saltaría al aparecer y desaparecer la barra de scroll), así que
 // el freno se hace acá, en el movimiento del dedo, igual que con el zoom de una carta (zoom.js) y con el combate (combate.js).
@@ -143,3 +144,68 @@ export function activarCierreDeVentanas() {
         if (hayVentana()) Swal.close();
     });
 }
+
+// ---- 4. Los desplegables no mueven su botón -------------------------------------------------------------------------------------
+// Las ventanas están centradas en la pantalla: cuando un desplegable de adentro se abre (un ataque, "¿Por qué hay evoluciones raras?") la ventana
+// crece y se vuelve a centrar, y el botón que se acaba de tocar se corre de lugar. Obliga a perseguir el botón con el mouse o el dedo para volver a
+// cerrarlo. Con esta función el botón se queda donde estaba y lo que cambia lo hace por debajo: se hace el cambio ("cambio" es lo que abre o cierra el
+// desplegable) y, si el botón se corrió, se lo devuelve a su lugar:
+//   1. Si la ventana se corrió sola (porque su alto cambió y se volvió a centrar), se la vuelve a poner donde estaba.
+//   2. Si el botón se corrió dentro de la ventana (porque lo de arriba cambió de alto), se corrige con el desplazamiento de lo que lo contiene (una lista
+//      con scroll, la ventana si es más alta que la pantalla, el panel del menú ☰ del celular).
+//   3. Si todavía falta (no había por dónde desplazar), se corre la ventana.
+// Cuando el desplegable se cierra, todo vuelve a su lugar (la ventana queda otra vez centrada). Ver también centrarVentana.
+const MARGEN_DE_LA_VENTANA = 8; // px que como mínimo queda libre arriba cuando se corre una ventana
+
+const conDesplazamientoVertical = elemento => /auto|scroll/.test(getComputedStyle(elemento).overflowY) && elemento.scrollHeight > elemento.clientHeight + 1;
+
+// Corre la ventana "desplazamiento" píxeles de la pantalla hacia abajo (negativo: hacia arriba), sin dejarla subir por encima del borde de arriba.
+// Algunas ventanas están agrandadas con "zoom" (la línea evolutiva en pantallas grandes): lo que se le escribe a la ventana se agranda con ella,
+// y lo que se mide en la pantalla no
+function correrVentana(ventana, desplazamiento) {
+    const agrandada = ventana.offsetHeight ? ventana.getBoundingClientRect().height / ventana.offsetHeight : 1;
+    const escribir = corrimiento => {
+        ventana.dataset.corrimiento = String(corrimiento);
+        ventana.style.translate = `0 ${corrimiento}px`;
+    };
+    const corrimiento = Number(ventana.dataset.corrimiento || 0) + desplazamiento / agrandada;
+    escribir(corrimiento);
+    const sobra = MARGEN_DE_LA_VENTANA - ventana.getBoundingClientRect().top;
+    if (sobra > 0) escribir(corrimiento + sobra / agrandada);
+}
+
+export function mantenerEnSuLugar(elemento, cambio) {
+    const ventana = elemento.closest('.swal2-popup');
+    const altura = () => elemento.getBoundingClientRect().top;
+    const antes = altura();
+    const ventanaAntes = ventana?.getBoundingClientRect().top ?? 0;
+    cambio();
+    const desvio = () => altura() - antes; // positivo: el botón bajó
+    if (Math.abs(desvio()) < 0.5) return;
+
+    // 1. La ventana se corrió sola
+    if (ventana) {
+        const corridaSola = ventana.getBoundingClientRect().top - ventanaAntes;
+        if (Math.abs(corridaSola) >= 0.5) correrVentana(ventana, -corridaSola);
+    }
+
+    // 2. El botón se corrió dentro de la ventana
+    const limite = elemento.closest('.swal2-container, .menu-movil');
+    for (let contenedor = elemento.parentElement; contenedor && Math.abs(desvio()) >= 0.5; contenedor = contenedor.parentElement) {
+        if (conDesplazamientoVertical(contenedor)) contenedor.scrollTop += desvio();
+        if (contenedor === limite) break;
+    }
+
+    // 3. Todavía falta
+    if (ventana && Math.abs(desvio()) >= 0.5) correrVentana(ventana, -desvio());
+}
+
+// Devuelve la ventana a su lugar (centrada en la pantalla): cuando su contenido se rearma de cero (por ejemplo, al pasar a otro digimon en la línea
+// evolutiva) o cambia el tamaño de la pantalla
+export function centrarVentana(ventana = document.querySelector('.swal2-popup')) {
+    if (!ventana) return;
+    delete ventana.dataset.corrimiento;
+    ventana.style.translate = '';
+}
+
+window.addEventListener('resize', () => document.querySelectorAll('.swal2-popup[data-corrimiento]').forEach(ventana => centrarVentana(ventana)));

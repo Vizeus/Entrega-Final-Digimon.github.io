@@ -29,7 +29,6 @@
             --salto: 10px;
             flex: none;
             height: 34px;
-            margin-right: auto;
         }
 
         // El panel de combate deja de ser una caja: el contador y el botón quedan sueltos en la barra
@@ -44,7 +43,7 @@
         .contador {
             order: 2;
             min-width: 40px;
-            margin: 0;
+            margin: 0 auto; // centrado en el hueco que queda entre el logo y el botón de combate (el espacio sobrante se reparte a los dos lados)
             padding: 3px 8px;
             font-size: 13px;
         }
@@ -96,7 +95,9 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            max-height: calc(100dvh - 80px);
+            // Nunca más alto que lo que queda de pantalla debajo de la barra (--barra-alto lo mide barra.js): si el contenido no entra, se desplaza
+            max-height: calc(100dvh - var(--barra-alto, 74px) - 20px);
+            box-sizing: border-box; // (el alto máximo cuenta el relleno y el borde del panel)
             overflow-y: auto;
             overscroll-behavior: contain;
             padding: 14px 12px;

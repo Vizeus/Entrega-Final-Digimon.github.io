@@ -127,7 +127,20 @@ $cruz-de-ventana-margen: 10px;
     font-family: var(--f-boton), sans-serif;
 }
 
-// Ventana de ataques de una carta (info.js, abrirAtaques): una lista donde cada ataque se despliega al tocarlo (de a uno)
+// Su "Aceptar" (info.js, mostrarInfo: buttonsStyling en false para que SweetAlert no le ponga su violeta de fábrica): el mismo botón de gel que los de
+// la barra de arriba, en azul. La versión para el tema oscuro está en _tema-oscuro.scss.
+// (El selector con "button" va para ganarle al ":focus" de más arriba, que le sacaría la sombra apenas se lo toca)
+.swal2-popup button.ventana-boton {
+    @include boton-de-gel;
+    --c: #2f86dc;
+    min-width: 140px;
+    padding: 0 32px;
+    font-size: 17px;
+}
+
+// Ventana de ataques de una carta (info.js, abrirAtaques): una lista donde cada ataque se despliega al tocarlo (se pueden abrir varios a la vez).
+// Sin barras de desplazamiento propias: la lista y la grilla de digimons crecen con lo que se abre, y la ventana crece con ellas (solo si no entra en
+// la pantalla se desplaza la ventana entera: ver el contenedor de SweetAlert)
 .popup-ataques {
     .ataques-ayuda {
         margin: 0 0 10px;
@@ -139,10 +152,7 @@ $cruz-de-ventana-margen: 10px;
     .ataques-lista {
         list-style: none;
         margin: 0;
-        padding: 0 4px 2px 0;
-        max-height: min(65vh, 480px);
-        overflow-y: auto;
-        overscroll-behavior: contain;
+        padding: 0;
         text-align: left;
         display: flex;
         flex-direction: column;
@@ -185,12 +195,6 @@ $cruz-de-ventana-margen: 10px;
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
         }
-
-        small {
-            font-weight: 400;
-            font-size: 0.85em;
-            color: #5b6b7b;
-        }
     }
 
     .ataque-flecha {
@@ -209,6 +213,15 @@ $cruz-de-ventana-margen: 10px;
         border-top: none;
         border-bottom-left-radius: 10px;
         border-bottom-right-radius: 10px;
+    }
+
+    // La traducción del nombre del ataque (solo la tienen algunos), entre paréntesis y arriba de la descripción
+    .ataque-alias {
+        margin: 0 0 8px;
+        font-family: var(--f-descripcion), sans-serif;
+        font-size: 1rem;
+        font-style: italic;
+        color: #5b6b7b;
     }
 
     .ataque-desc {
@@ -251,9 +264,6 @@ $cruz-de-ventana-margen: 10px;
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        max-height: 230px;
-        overflow-y: auto;
-        overscroll-behavior: contain;
         padding: 2px;
     }
 
@@ -408,9 +418,11 @@ $cruz-de-ventana-margen: 10px;
             margin: 12px 0 0;
         }
 
-        .swal2-confirm {
-            padding: 8px 14px;
-            font-size: 0.9em;
+        .ventana-boton {
+            min-width: 120px;
+            height: 38px;
+            padding: 0 26px;
+            font-size: 16px;
         }
     }
 }
@@ -441,8 +453,9 @@ $cruz-de-ventana-margen: 10px;
             margin-top: 8px;
         }
 
-        .swal2-confirm {
-            padding: 7px 12px;
+        .ventana-boton {
+            height: 36px;
+            padding: 0 22px;
         }
     }
 }

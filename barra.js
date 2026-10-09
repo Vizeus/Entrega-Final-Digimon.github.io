@@ -19,6 +19,12 @@ export function activarMenuMovil() {
     const boton = document.getElementById('abrir-menu');
     const panel = document.getElementById('menu-movil');
     const estaAbierto = () => barra.classList.contains('menu-abierto');
+    // El panel no puede pasarse del borde de abajo de la pantalla: su alto máximo es lo que queda debajo de la barra (que cambia de alto cuando se
+    // suman o se quitan etiquetas de filtros, por eso se mide). Si lo que tiene adentro no entra (por ejemplo, con una lista de información
+    // abierta), el panel se desplaza por su cuenta (lo dibuja el CSS: --barra-alto).
+    const medirBarra = () => barra.style.setProperty('--barra-alto', `${barra.offsetHeight}px`);
+    medirBarra();
+    if ('ResizeObserver' in window) new ResizeObserver(medirBarra).observe(barra);
     const abrir = abierto => {
         barra.classList.toggle('menu-abierto', abierto);
         boton.setAttribute('aria-expanded', String(abierto));
@@ -68,6 +74,10 @@ export function activarMenuMovil() {
 // (si no, se iría de la pantalla en pleno uso). Tampoco se esconde mientras está a la vista el cartel del contador de cartas elegidas (el que sale
 // de la bolita "2/2" al terminar el primer combate): se puede esconder recién cuando el cartel se va, con lo que se baje después. En computadora no
 // hace nada: la barra queda fija como siempre.
+// Tampoco se esconde mientras al irse dejaría un hueco: la barra es "sticky" pero ocupa su lugar en la página, así que si todavía no se
+// bajó lo que ella mide (arriba de todo, o con pocas cartas filtradas que casi no dan para desplazarse), al esconderse quedaría un espacio
+// muerto arriba. Recién se puede esconder cuando las cartas ya subieron hasta ocupar ese lugar; y al revés, al subir, tiene que estar
+// de vuelta antes de que ese hueco vuelva a asomar.
 // Solo la esconde un desplazamiento hecho por la persona. Cuando la página se acomoda sola (por ejemplo al quitar un filtro: vuelven las cartas que
 // estaban escondidas, la barra cambia de alto y el navegador corre la página para que lo que se está mirando no salte) también llegan eventos
 // de scroll, y si eran hacia abajo la barra se iba aunque la pantalla estuviera quieta. Con el dedo, entonces, cuenta como desplazamiento de la
@@ -75,7 +85,7 @@ export function activarMenuMovil() {
 // (El CSS hace el movimiento: la clase "barra-escondida" la desliza hacia arriba, fuera de la pantalla.)
 export function activarBarraQueSeEsconde() {
     const barra = document.getElementById('navbar');
-    const SIEMPRE_VISIBLE_ARRIBA = 60; // px desde el borde de arriba de la página: ahí la barra siempre se ve
+    const SIEMPRE_VISIBLE_ARRIBA = 60; // px desde el borde de arriba de la página: ahí la barra siempre se ve (como mínimo; ver lugarDeLaBarra)
     const BAJADA_PARA_ESCONDER = 14; // px seguidos hacia abajo para que se esconda (un temblor del dedo no alcanza)
     const SUBIDA_PARA_MOSTRAR = 8; // px seguidos hacia arriba para que aparezca
     const DEDO_MOVIDO = 6; // px que tiene que moverse el dedo para que cuente como arrastre (un toque quieto no desplaza nada)
@@ -84,6 +94,9 @@ export function activarBarraQueSeEsconde() {
     let recorrido = 0; // px que se lleva recorridos en la dirección actual (positivo: bajando, negativo: subiendo)
 
     const mostrar = () => barra.classList.remove('barra-escondida');
+    // Hasta dónde (px desde el borde de arriba de la página) la barra tiene que verse sí o sí: el lugar que ocupa arriba de la lista, que
+    // cambia de alto cuando se suman o se quitan las etiquetas de los filtros. Más abajo de ahí las cartas ya llenan el borde de la pantalla
+    const lugarDeLaBarra = () => Math.max(SIEMPRE_VISIBLE_ARRIBA, barra.offsetHeight);
     // ¿La persona está usando la barra ahora? Menú ☰ abierto, opciones de un filtro desplegadas o cursor en el buscador
     const enUso = () => barra.classList.contains('menu-abierto') || barra.querySelector('.f-grupo.abierto, input:focus') !== null;
     // ¿Está a la vista el cartel del contador (avisos.js, mostrarAvisoDelContador)? Sale de la barra: si se esconde, el cartel se quedaría sin su contador
@@ -137,7 +150,7 @@ export function activarBarraQueSeEsconde() {
             }
             recorrido = dy > 0 === recorrido > 0 && recorrido !== 0 ? recorrido + dy : dy;
 
-            if (y <= SIEMPRE_VISIBLE_ARRIBA || enUso()) {
+            if (y < lugarDeLaBarra() || enUso()) {
                 mostrar();
             } else if (recorrido >= BAJADA_PARA_ESCONDER) {
                 if (loHaceLaPersona()) barra.classList.add('barra-escondida');

@@ -17,7 +17,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 12px;
+    gap: 8px 10px;
     padding: 9px 0 0;
     border-top: 1px solid rgba(0, 70, 130, 0.2); // una línea fina la separa de las herramientas de arriba
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
@@ -44,9 +44,14 @@
         position: relative;
         display: flex;
         align-items: center;
-        flex: 0 1 260px;
+        flex: 0 1 190px; // (con ocho botones, un buscador más ancho hacía que el último pasara a la fila de abajo en las pantallas de 1280 y 1366)
         min-width: 160px;
         height: 34px;
+
+        // En las pantallas grandes sobra lugar: el buscador vuelve a ser ancho
+        @media (min-width: 1440px) {
+            flex-basis: 260px;
+        }
         border-radius: 13px;
         border: 1px solid rgba(0, 40, 90, 0.35);
         cursor: text;
@@ -127,7 +132,7 @@
         align-items: center;
         gap: 8px;
         height: 34px;
-        padding: 0 14px;
+        padding: 0 12px;
         border-radius: 12px;
         border: 1px solid rgba(0, 40, 90, 0.4);
         cursor: pointer;
@@ -321,6 +326,184 @@
         }
     }
 
+    // Las dos vistas del panel de las especies (familias / especies sueltas), debajo de la cajita de búsqueda
+    .f-vistas {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .f-vista {
+        flex: 1 1 0;
+        height: 28px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 40, 90, 0.3);
+        background: linear-gradient(#fff, #eaf3fb);
+        color: $tinta;
+        font:
+            600 13px var(--f-etiqueta),
+            sans-serif;
+        cursor: pointer;
+
+        &[aria-pressed="true"] {
+            color: #fff;
+            border-color: #1d5fa8;
+            background: linear-gradient(#7cc4f5, #2a75cf);
+            text-shadow: 0 1px 1px rgba(0, 40, 90, 0.5);
+        }
+    }
+
+    // Las dos listas del panel de las especies: se ve una según la vista elegida; mientras se busca, las dos y con su título
+    .f-lista {
+        flex: 1 1 100%;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 8px;
+    }
+
+    .f-subtitulo {
+        flex: 1 1 100%;
+        margin: 2px 0 -2px;
+        font:
+            700 12px var(--f-etiqueta),
+            sans-serif;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: #56606b;
+    }
+
+    .f-panel:not(.buscando) .f-subtitulo,
+    .f-panel[data-vista="familias"]:not(.buscando) .f-especies,
+    .f-panel[data-vista="especies"]:not(.buscando) .f-familias {
+        display: none;
+    }
+
+    // "Ordenar por": el botón lleva al lado lo que está elegido (ID o A–Z); se ve como los demás hasta que se cambia el orden, y ahí se pone azul
+    .f-orden-valor {
+        display: inline-grid;
+        place-items: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 10px;
+        background: rgba(0, 50, 110, 0.12);
+        font:
+            700 12px var(--f-boton),
+            sans-serif;
+    }
+
+    .f-btn.tiene .f-orden-valor {
+        background: #fff;
+        color: #2a6fc0;
+        text-shadow: none;
+        box-shadow: inset 0 -1px 2px rgba(0, 40, 100, 0.25);
+    }
+
+    // Su desplegable es corto: las opciones van una debajo de la otra, y se elige una sola
+    .f-panel-orden {
+        flex-flow: column nowrap;
+        gap: 6px;
+        min-width: 210px;
+    }
+
+    .f-panel-titulo {
+        margin: 0 0 2px;
+        font:
+            700 12px var(--f-etiqueta),
+            sans-serif;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: #56606b;
+    }
+
+    .f-orden-op {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 34px;
+        padding: 0 14px 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 40, 90, 0.3);
+        background: linear-gradient(#fff, #eaf3fb);
+        color: $tinta;
+        font:
+            600 14px var(--f-etiqueta),
+            sans-serif;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+            filter: brightness(0.97);
+        }
+
+        // El puntito de "esta es la elegida" (como en un grupo de botones de opción)
+        .f-orden-punto {
+            flex: none;
+            width: 14px;
+            height: 14px;
+            box-sizing: border-box;
+            border-radius: 50%;
+            border: 2px solid #2a75cf;
+            background: #fff;
+        }
+
+        &[aria-checked="true"] {
+            color: #fff;
+            border-color: #1d5fa8;
+            background: linear-gradient(#7cc4f5, #2a75cf);
+            text-shadow: 0 1px 1px rgba(0, 40, 90, 0.5);
+
+            .f-orden-punto {
+                border-color: #fff;
+                background: radial-gradient(#2a75cf 0 35%, #fff 40%);
+            }
+        }
+    }
+
+    // "Estreno": dos listas de años (desde / hasta), una al lado de la otra
+    .f-panel-estreno {
+        gap: 8px 12px;
+        min-width: 280px;
+
+        .f-panel-titulo {
+            flex: 1 1 100%;
+        }
+    }
+
+    .f-anio {
+        flex: 1 1 110px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font:
+            700 12px var(--f-etiqueta),
+            sans-serif;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: #56606b;
+
+        select {
+            height: 34px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 40, 90, 0.3);
+            background: linear-gradient(#fff, #eaf3fb);
+            color: $tinta;
+            font:
+                600 14px var(--f-etiqueta),
+                sans-serif;
+            letter-spacing: 0;
+            text-transform: none;
+            cursor: pointer;
+
+            &:focus-visible {
+                outline: 2px solid #3a8dde;
+                outline-offset: 1px;
+            }
+        }
+    }
+
     // Opción de un filtro: píldora clara; al elegirla se llena con su color
     .f-chip {
         --c: #888;
@@ -391,6 +574,53 @@
         // Las opciones sin ícono (grupos y especies) llevan un poco más de aire a la izquierda
         &.sin-icono {
             padding-left: 12px;
+        }
+
+        // Familias de especies: llevan una casilla (vacía, con un guion si solo algunas de sus especies están elegidas, o con un tilde)
+        &.f-familia {
+            padding-left: 8px;
+
+            &[aria-pressed="mixed"] {
+                border-color: var(--c);
+                background: linear-gradient(color-mix(in srgb, var(--c) 10%, #fff), color-mix(in srgb, var(--c) 24%, #fff));
+            }
+        }
+
+        .f-casilla {
+            position: relative;
+            flex: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 2px solid color-mix(in srgb, var(--c) 85%, #000);
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        &[aria-pressed="true"] .f-casilla {
+            border-color: #fff;
+            background: #fff;
+        }
+
+        &[aria-pressed="true"] .f-casilla::after,
+        &[aria-pressed="mixed"] .f-casilla::after {
+            position: absolute;
+            inset: -3px 0 0;
+            display: grid;
+            place-items: center;
+            color: var(--c);
+            font:
+                900 13px/1 var(--f-etiqueta),
+                sans-serif;
+        }
+
+        &[aria-pressed="true"] .f-casilla::after {
+            content: "\2713";
+        }
+
+        &[aria-pressed="mixed"] .f-casilla::after {
+            content: "\2212";
+            inset: -1px 0 0;
         }
     }
 
@@ -675,16 +905,6 @@
             }
         }
 
-        // Con seis botones no entran en una fila: los tres primeros llenan la primera (cada uno con un tercio del ancho) y los demás pasan
-        // a la segunda. Desde 600px de ancho sí entran todos juntos.
-        @media (max-width: 599px) {
-            .f-grupo[data-g="atributo"] .f-btn,
-            .f-grupo[data-g="nivel"] .f-btn,
-            .f-grupo[data-g="elemento"] .f-btn {
-                flex: 1 1 calc((100% - 13px) / 3);
-            }
-        }
-
         // En los más angostos (320px) hay que achicar un poco los botones para que entren los cuatro y X-Antibody en una fila
         @media (max-width: 340px) {
             .f-btn {
@@ -696,6 +916,11 @@
             .f-xa {
                 padding: 0 7px;
             }
+        }
+
+        // (con 16px o más iPhone no agranda la pantalla al tocar una lista)
+        .f-anio select {
+            font-size: 16px;
         }
 
         .f-panel {

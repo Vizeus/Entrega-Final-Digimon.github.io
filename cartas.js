@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 import { emitir, ponerAyuda } from './util.js';
-import { EMOJIS_ELEMENTO, EMOJIS_ATRIBUTO, MARCAS_DE_NIVEL, esXrosWars, numeracionNiveles } from './datos.js';
+import { EMOJIS_ELEMENTO, EMOJIS_ATRIBUTO, MARCAS_DE_NIVEL, SIN_DATO, esXrosWars, numeracionNiveles } from './datos.js';
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { claveDeNombre, inicioDeLoAparte, nombreOccidental, nombreParaMostrar } from './nombres.js';
 import { cartasPorId, listaDigimons, nombreNivel } from './pagina.js';
@@ -15,7 +15,7 @@ import { seleccionados, verificarSeleccion } from './combate.js';
 import { cartaEnZoom, volverAlZoomNormal, zoomExtra, zoomOcupado } from './zoom.js';
 import { vibrar } from './audio.js';
 import { sonidoSeleccion, sonidoVuelta } from './sonidos.js';
-import { abrirAtaques, crearBotonAtaques, infoElemento, infoNivel, infoAtributo } from './info.js';
+import { abrirAtaques, crearBotonAtaques, infoElemento, infoNivel, infoAtributo, infoMisc } from './info.js';
 import { abrirEvolucion, crearBotonEvolucion } from './evolucion.js';
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -326,16 +326,21 @@ export async function voltearCarta(carta, direccion = 1) {
 
 // Las ventanas que se abren desde los botones de una carta (info.js y evolucion.js). Los del frente (atributo, elemento y nivel)
 // necesitan un dato de la carta y avisan con "click-chip-carta"; los del dorso (ataques y evolución) reciben la carta entera.
+// (Los del frente, además de atributo, elemento y nivel, son las marcas de la esquina: X-Antibody, Armor, Hybrid y Xros Wars.)
 const VENTANAS_DE_LA_CARTA = [
     { boton: '.c-atributo', dato: 'atributo', aviso: 'atributo', abrir: infoAtributo },
     { boton: '.c-elem', dato: 'elemento', aviso: 'elemento', abrir: infoElemento },
     { boton: '.c-gema, .c-nivel', dato: 'nivelApi', aviso: 'nivel', abrir: infoNivel },
+    // Las marcas de la esquina de arriba a la izquierda (X-Antibody, Armor o Hybrid, Xros Wars): cada una abre la ventana que explica qué es y cómo buscarla
+    { boton: '.c-x', dato: 'xAntibody', aviso: 'misc', abrir: () => infoMisc('xantibody') },
+    { boton: '.c-marca', dato: 'marca', aviso: 'misc', abrir: marca => infoMisc(marca.toLowerCase()) },
+    { boton: '.c-xw', dato: 'xrosWars', aviso: 'misc', abrir: () => infoMisc('xroswars') },
     { boton: '.c-ataques', abrir: abrirAtaques },
     { boton: '.c-evo', abrir: abrirEvolucion },
 ];
 const dentroDeUnaCarta = botones => `#listado-digimons li :is(${botones})`;
 
-// Al hacer clic en el nivel (la gema o el nombre), atributo o elemento de una carta, se abre su ventana de información (info.js)
+// Al hacer clic en el nivel (la gema o el nombre), atributo, elemento o marca (X-Antibody, Armor, Hybrid, Xros Wars) de una carta, se abre su ventana de información (info.js)
 // sin seleccionar la carta para el combate ni cerrarla si está en modo zoom. Lo mismo con los botones del dorso.
 export function activarCartelesDeInfoEnCartas() {
     document.addEventListener(
@@ -383,7 +388,11 @@ const observadorDeMarcos =
 export let seleccionAntesDelClic = { carta: null, estado: [] }; // cómo estaba la selección antes del primer clic de un doble clic (zoom.js la usa)
 
 // Crea una carta, la agrega a la lista y avisa a los filtros. La usan los digimons de la API y las cartas propias.
-export function agregarCarta({ id, etiquetaId, nombre, imagen, atributo, nivelOriginal, marca, elemento, datosDorso }) {
+export function agregarCarta({ id, etiquetaId, despuesDelId, nombre, imagen, atributo, nivelOriginal, marca, elemento, datosDorso: datosDeLaCarta }) {
+    // Sin especie o sin grupo = "Unknown" (ver SIN_DATO en datos.js): así el dorso y los filtros ven siempre al menos uno
+    const conDato = lista => (lista?.length ? lista : [SIN_DATO]);
+    const datosDorso = { ...datosDeLaCarta, especies: conDato(datosDeLaCarta?.especies), campos: conDato(datosDeLaCarta?.campos) };
+
     // Datos que usa el combate y el diseño de la carta
     const nivelNumerico = numeracionNiveles[nivelOriginal]; // undefined si el nivel es desconocido
     const { nombre: nombreEnCarta, xAntibody } = separarXAntibody(nombre); // el X-Antibody va en su propia gema
@@ -395,6 +404,8 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, atributo, nivelOr
     // El atributo y el elemento van en español porque el combate y los filtros los usan como identificadores;
     // data-nivel-api es el nivel tal cual lo trae la API (no depende del idioma ni del sistema de clasificación).
     elementoLista.dataset.id = id;
+    // Dónde va en el orden "por ID": las cartas propias (que no están en la API) van después de un ID de la API; el resto, en su propio lugar
+    if (despuesDelId !== undefined) elementoLista.dataset.lugarEnElOrden = String(despuesDelId + 0.5);
     elementoLista.dataset.atributo = atributo;
     elementoLista.dataset.elemento = elemento;
     elementoLista.dataset.nivelApi = nivelOriginal;
@@ -406,7 +417,7 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, atributo, nivelOr
     if (datosMarca) {
         elementoLista.dataset.marca = datosMarca.nombre;
     }
-    const xrosWars = Boolean(datosDorso?.campos?.some(esXrosWars)); // grupo "Xros Wars" de la API: lleva su propia marca (XW)
+    const xrosWars = esXrosWars(datosDorso.estreno); // estrenado en 2010-2012 (los de Digimon Xros Wars): lleva su propia marca (XW)
     if (xrosWars) {
         elementoLista.dataset.xrosWars = 'true';
     }
@@ -424,9 +435,9 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, atributo, nivelOr
             <div class="c-cab"><h4></h4></div>
             <div class="c-arte">
                 <img alt="" loading="lazy" decoding="async" draggable="false">
-                ${xAntibody ? '<span class="c-x" title="X-Antibody">X</span>' : ''}
-                ${datosMarca ? `<span class="c-marca" title="${datosMarca.nombre}" role="img" aria-label="${datosMarca.nombre}">${datosMarca.letra}</span>` : ''}
-                ${xrosWars ? '<span class="c-xw" title="Xros Wars" role="img" aria-label="Xros Wars">XW</span>' : ''}
+                ${xAntibody ? '<span class="c-x" title="X-Antibody" role="button" tabindex="0" aria-label="X-Antibody">X</span>' : ''}
+                ${datosMarca ? `<span class="c-marca" title="${datosMarca.nombre}" role="button" tabindex="0" aria-label="${datosMarca.nombre}">${datosMarca.letra}</span>` : ''}
+                ${xrosWars ? '<span class="c-xw" title="Xros Wars" role="button" tabindex="0" aria-label="Xros Wars">XW</span>' : ''}
                 <span class="c-gema" role="button" tabindex="0"><small></small>${nivelNumerico ?? '?'}</span>
             </div>
             <div class="c-sub"><span class="c-nivel" role="button" tabindex="0"></span><span>#${etiquetaId ?? String(id).padStart(3, '0')}</span></div>

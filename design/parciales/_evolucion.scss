@@ -9,7 +9,7 @@
 // se reparte entre las columnas, y por eso el árbol de tres columnas solo se usa en pantallas más anchas que $corte-arbol; en las más angostas va en una sola columna.
 $evo-ancho-caja: 176px; // una rama (digimon) cuando entra holgada
 $evo-ancho-caja-minimo: 150px; // lo más angosta que puede quedar una rama dentro de una lista desplegada
-$evo-ancho-lista-abierta: 390px; // lo que le gustaría ocupar a una lista desplegada: dos ramas, sus espacios, el borde y la barra de desplazamiento
+$evo-ancho-lista-abierta: 390px; // lo que le gustaría ocupar a una lista desplegada: dos ramas, sus espacios, el borde y un poco de aire
 $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola columna
 
 /* Al ir a la carta desde la línea evolutiva: la carta salta hacia adelante (zoom), y el contorno y el resplandor titilan rápido */
@@ -571,9 +571,9 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
     border-color: transparent transparent transparent var(--linea);
 }
 
-/* Lista desplegada: se ven todas las ramas en una grilla con scroll hacia abajo (nunca hacia los costados) y las líneas pasan a ser un solo corchete.
-   Las columnas de la grilla se arman según el ancho que quede: dos ramas una al lado de la otra si entran y, si no (por ejemplo con las dos listas
-   desplegadas a la vez), una sola. Las ramas se pegan al corchete, del lado del digimon del medio. */
+/* Lista desplegada: se ven todas las ramas en una grilla (sin barra de desplazamiento propia: la lista crece cuanto haga falta y la ventana con ella) y
+   las líneas pasan a ser un solo corchete. Las columnas de la grilla se arman según el ancho que quede: dos ramas una al lado de la otra si entran
+   y, si no (por ejemplo con las dos listas desplegadas a la vez), una sola. Las ramas se pegan al corchete, del lado del digimon del medio. */
 .evo-col.abierta {
     flex: 0 1 $evo-ancho-lista-abierta;
     min-width: 0;
@@ -582,9 +582,7 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
 .evo-col.abierta .evo-lista {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax($evo-ancho-caja-minimo, 1fr));
-    max-height: min(46vh, 340px);
     padding: 4px;
-    overflow: hidden auto; // hacia los costados nunca se desplaza; hacia abajo, si hace falta
 }
 
 .evo-col.abierta .evo-lista li {
@@ -606,6 +604,17 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
 .evo-prev.abierta .evo-lista {
     justify-items: end;
     border-right: 2px solid var(--linea);
+}
+
+/* Cuando en la lista desplegada solo entra una columna de ramas (evolucion.js le pone "una-pista" a la columna), la lista y la columna miden lo de una
+   rama: el rótulo y el botón "ver menos" quedan centrados justo sobre y debajo de ellas, y no sobre un ancho de dos ramas que no se usa. */
+.evo-col.abierta.una-pista {
+    flex: 0 1 auto;
+    width: fit-content;
+}
+
+.evo-col.abierta.una-pista .evo-lista {
+    grid-template-columns: minmax(0, $evo-ancho-caja);
 }
 
 .evo-arbol:has(.evo-sig.abierta) .evo-centro::after,
@@ -676,10 +685,6 @@ $corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola co
         justify-content: center;
         gap: 5px;
         border: 0;
-    }
-
-    .evo-col.abierta .evo-lista {
-        max-height: 260px;
     }
 
     .evo-lista li,

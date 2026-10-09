@@ -6,11 +6,13 @@
 //   · Los grupos son los "Fields" de la API (Deep Savers, Metal Empire...) y las especies, sus "types" (Alien, Cyborg, Slime...). Un digimon
 //     puede tener varios o ninguno, y sus opciones no están escritas de antemano: se suman a medida que llegan los digimons
 //     (descubrirOpciones). El panel de las especies, que son muchísimas, lleva arriba una cajita para buscar entre ellas.
+//   · El filtro de estreno es un período de años (desde, hasta o los dos): la API solo trae el año de estreno de cada digimon.
 //   · Cada opción muestra cuántos digimons quedarían si se elige, teniendo en cuenta los otros filtros y la búsqueda.
 //   · El buscador ignora mayúsculas, acentos, espacios de más y signos (v-mon = vmon), acepta varias palabras en cualquier orden
 //     y también el número del digimon ("15" o "#15").
 //   · Las cartas que no cumplen se esconden con la clase "filtrada" (el CSS las oculta). Las cartas llegan de a poco
 //     mientras carga la página: cartas.js avisa con el evento "carta-agregada" y se vuelven a hacer las cuentas.
+//   · "Ordenar por" (no filtra nada): la lista va por número (ID, el de siempre) o en orden alfabético por el nombre que se ve en la carta.
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -19,12 +21,14 @@ import {
     COLOR_CAMPO,
     COLOR_ESPECIE,
     COLOR_ELEMENTO,
+    COLOR_ESTRENO,
     COLOR_NIVEL,
     COLOR_NIVEL_DESCONOCIDO,
     COLOR_ATRIBUTO,
     COLOR_X,
     EMOJIS_ELEMENTO,
     EMOJIS_ATRIBUTO,
+    FAMILIAS_DE_ESPECIES_A_MANO,
     ORDEN_CAMPOS,
     ORDEN_ELEMENTOS,
     ORDEN_NIVELES,
@@ -104,6 +108,9 @@ const avisoVacio = document.getElementById('f-vacio');
 
 // ---- Qué está elegido ----------------------------------------------------------------------------------------------
 const elegidos = { atributo: new Set(), nivel: new Set(), elemento: new Set(), campo: new Set(), especie: new Set(), x: new Set() };
+let desdeAnio = null; // estreno: primer año del período (null: sin límite)
+let hastaAnio = null; // estreno: último año del período (null: sin límite)
+const aniosVistos = new Set(); // los años de estreno de los digimons que ya llegaron (son los que se pueden elegir)
 let busqueda = ''; // lo que se escribió, ya normalizado (para comparar)
 let busquedaEscrita = ''; // lo que se escribió, tal cual (para mostrar en la etiqueta)
 
@@ -130,12 +137,19 @@ function datosDeFiltro(carta) {
             especie: carta.datosDorso?.especies ?? [],
             x: carta.dataset.xAntibody ? 'con' : 'sin', // si tiene X-Antibody
             marca: carta.dataset.marca ? normalizar(carta.dataset.marca) : null, // 'armor' o 'hybrid'
-            xrosWars: Boolean(carta.dataset.xrosWars), // lleva la marca XW (grupo Xros Wars)
+            xrosWars: Boolean(carta.dataset.xrosWars), // lleva la marca XW (estrenado en 2010-2012: Digimon Xros Wars)
             id: Number(carta.dataset.id),
+            anio: Number(String(carta.datosDorso?.estreno ?? '').match(/\d{4}/)?.[0]) || null, // el año de estreno (null si no se sabe)
             nombres,
         };
     }
     return carta.datosFiltro;
+}
+
+// ¿Su año de estreno cae dentro del período elegido? Sin ningún límite elegido entran todas; con alguno, las que no tienen año quedan afuera
+function coincideEstreno(anio) {
+    if (desdeAnio === null && hastaAnio === null) return true;
+    return anio !== null && (desdeAnio === null || anio >= desdeAnio) && (hastaAnio === null || anio <= hastaAnio);
 }
 
 function coincideBusqueda(datos, consulta) {
@@ -223,10 +237,102 @@ function descubrirOpciones(grupo, valores) {
     claves.sort(orden);
 
     const panel = seccionFiltros.querySelector(`.f-grupo[data-g="${grupo}"] .f-panel`);
-    const existentes = new Map([...panel.querySelectorAll('.f-chip')].map(chip => [chip.dataset.k, chip]));
-    panel.append(...claves.map(clave => existentes.get(clave) ?? crearChip(grupo, clave))); // (al volver a poner uno que ya estaba, solo se lo cambia de lugar)
+    const lista = panel.querySelector('.f-especies') ?? panel; // las especies tienen su propia lista (la otra es la de las familias)
+    const existentes = new Map([...lista.querySelectorAll('.f-chip')].map(chip => [chip.dataset.k, chip]));
+    lista.append(...claves.map(clave => existentes.get(clave) ?? crearChip(grupo, clave))); // (al volver a poner uno que ya estaba, solo se lo cambia de lugar)
+    if (grupo === 'especie') actualizarFamilias();
     etiquetarChips();
     buscarEntreLasOpciones(grupo); // si había algo escrito en la cajita de búsqueda, las nuevas también lo cumplen o se esconden
+}
+
+// ---- Familias de especies ------------------------------------------------------------------------------------------
+// Grupos de especies que se marcan de una vez (ver FAMILIAS_DE_ESPECIES_A_MANO en datos.js). Lo elegido sigue siendo siempre la lista de especies:
+// la familia es solo un atajo, y se ve marcada del todo, a medias o sin marcar según cuántas de sus especies estén elegidas.
+let familias = new Map(); // nombre de la familia → Set con sus especies
+let familiasDe = new Map(); // especie → nombres de las familias a las que pertenece
+
+// Arma las familias con las palabras que comparten los nombres de las especies
+function calcularFamilias(especies) {
+    const palabras = nombre =>
+        normalizar(nombre)
+            .split(/[\s\-/]+/)
+            .filter(palabra => palabra.length >= 3);
+    const porClave = new Map(); // palabra (sin mayúsculas ni acentos) → { nombre, miembros }
+    const sumar = (clave, nombre, especie) => {
+        if (!porClave.has(clave)) porClave.set(clave, { nombre, miembros: new Set() });
+        porClave.get(clave).miembros.add(especie);
+    };
+    for (const especie of especies) {
+        for (const palabra of palabras(especie)) {
+            // el nombre de la familia es la palabra tal cual está escrita en la especie ("Dragon"), no la normalizada
+            const original = especie.split(/[\s\-/]+/).find(parte => normalizar(parte) === palabra) ?? palabra;
+            sumar(palabra, original, especie);
+        }
+    }
+    for (const [nombre, extra] of Object.entries(FAMILIAS_DE_ESPECIES_A_MANO)) {
+        for (const especie of extra.filter(nombreExtra => especies.includes(nombreExtra))) sumar(normalizar(nombre), nombre, especie);
+    }
+    const resultado = new Map();
+    const firmas = new Set(); // dos familias con exactamente las mismas especies serían lo mismo: se queda una
+    const ordenadas = [...porClave.values()].filter(({ miembros }) => miembros.size >= 2).sort((a, b) => a.nombre.localeCompare(b.nombre, 'en'));
+    for (const { nombre, miembros } of ordenadas) {
+        const firma = [...miembros].sort().join('|');
+        if (firmas.has(firma)) continue;
+        firmas.add(firma);
+        resultado.set(nombre, miembros);
+    }
+    return resultado;
+}
+
+// Cuántas especies de la familia están elegidas: 'false' (ninguna), 'mixed' (algunas) o 'true' (todas)
+function estadoDeFamilia(nombre) {
+    const miembros = familias.get(nombre);
+    if (!miembros) return 'false';
+    let elegidas = 0;
+    for (const especie of miembros) if (elegidos.especie.has(especie)) elegidas++;
+    return elegidas === 0 ? 'false' : elegidas === miembros.size ? 'true' : 'mixed';
+}
+
+function crearChipFamilia(nombre) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'f-chip f-familia';
+    chip.dataset.g = 'especie';
+    chip.dataset.fam = nombre;
+    chip.setAttribute('aria-pressed', 'false');
+    chip.style.setProperty('--c', COLOR_ESPECIE);
+    chip.style.setProperty('--t', colorDelTexto(COLOR_ESPECIE));
+    chip.innerHTML = '<span class="f-casilla" aria-hidden="true"></span><span class="f-k"></span><i>0</i>';
+    return chip;
+}
+
+// Se rehacen cada vez que llega una especie nueva (las cartas llegan de a poco)
+function actualizarFamilias() {
+    familias = calcularFamilias(GRUPOS_FILTRO.especie.claves);
+    familiasDe = new Map();
+    for (const [nombre, miembros] of familias) {
+        for (const especie of miembros) {
+            if (!familiasDe.has(especie)) familiasDe.set(especie, []);
+            familiasDe.get(especie).push(nombre);
+        }
+    }
+    const lista = seccionFiltros.querySelector('.f-grupo[data-g="especie"] .f-familias');
+    const existentes = new Map([...lista.querySelectorAll('.f-chip')].map(chip => [chip.dataset.fam, chip]));
+    lista.replaceChildren(...[...familias.keys()].map(nombre => existentes.get(nombre) ?? crearChipFamilia(nombre)));
+}
+
+// Marca todas las especies de la familia, o las saca si ya estaban todas
+function alternarFamilia(nombre) {
+    const miembros = familias.get(nombre);
+    if (!miembros) return;
+    const todas = estadoDeFamilia(nombre) === 'true';
+    for (const especie of miembros) {
+        if (todas) {
+            elegidos.especie.delete(especie);
+        } else {
+            elegidos.especie.add(especie);
+        }
+    }
 }
 
 // ---- Búsqueda dentro del panel (las especies) ----------------------------------------------------------------------
@@ -236,9 +342,18 @@ function buscarEntreLasOpciones(grupo) {
     const caja = seccionFiltros.querySelector(`.f-grupo[data-g="${grupo}"] .f-opciones-buscar input`);
     if (!caja) return;
     const consulta = normalizar(caja.value);
+    const panel = caja.closest('.f-panel');
+    panel.classList.toggle('buscando', consulta !== ''); // mientras se busca se ven las dos listas (familias y especies) con sus títulos
     seccionFiltros.querySelectorAll(`.f-chip[data-g="${grupo}"]`).forEach(chip => {
-        const sirve = !consulta || normalizar(chip.dataset.k).includes(consulta) || elegidos[grupo].has(chip.dataset.k);
+        const { k: clave, fam } = chip.dataset;
+        const elegida = fam ? estadoDeFamilia(fam) !== 'false' : elegidos[grupo].has(clave);
+        const sirve = !consulta || normalizar(fam ?? clave).includes(consulta) || elegida;
         if (chip.hidden === sirve) chip.hidden = !sirve;
+    });
+    // un título sin ninguna opción debajo no se muestra
+    panel.querySelectorAll('.f-subtitulo').forEach(titulo => {
+        const hayAlgo = Boolean(titulo.nextElementSibling?.querySelector('.f-chip:not([hidden])'));
+        if (titulo.hidden === hayAlgo) titulo.hidden = !hayAlgo;
     });
 }
 
@@ -253,7 +368,12 @@ function borrarBusquedaDeOpciones(grupo) {
 // Escribe en el idioma actual el nombre de cada opción
 function etiquetarChips() {
     seccionFiltros.querySelectorAll('.f-chip').forEach(chip => {
-        const { g: grupo, k: clave } = chip.dataset;
+        const { g: grupo, k: clave, fam } = chip.dataset;
+        if (fam) {
+            chip.querySelector('.f-k').textContent = fam; // las familias son nombres propios de la API: no se traducen
+            chip.title = t('filtros.familia', { nombre: fam, n: familias.get(fam)?.size ?? 0 });
+            return;
+        }
         const nombre = GRUPOS_FILTRO[grupo].nombre(clave);
         chip.querySelector('.f-k').textContent = nombre;
         chip.title = `${t(`filtros.${grupo}`)}: ${nombre}`;
@@ -286,7 +406,15 @@ function crearEtiqueta(grupo, clave, color, icono, texto, nombreGrupo) {
     return etiqueta;
 }
 
+// El período de estreno elegido, con palabras: "2005–2010", "desde 2005", "hasta 2010" o "2005" (si es un solo año)
+function textoDelPeriodo() {
+    if (desdeAnio !== null && hastaAnio !== null)
+        return t(desdeAnio === hastaAnio ? 'filtros.estreno.uno' : 'filtros.estreno.rango', { desde: desdeAnio, hasta: hastaAnio });
+    return desdeAnio !== null ? t('filtros.estreno.desdeSolo', { desde: desdeAnio }) : t('filtros.estreno.hastaSolo', { hasta: hastaAnio });
+}
+
 let firmaEtiquetas = ''; // las etiquetas que hay ahora (para no rehacerlas si no cambiaron)
+const PREFIJO_FAMILIA = 'familia:'; // en la etiqueta de una familia, la clave es este prefijo y el nombre de la familia
 
 function escribirEtiquetas() {
     const etiquetas = [];
@@ -295,9 +423,31 @@ function escribirEtiquetas() {
     }
     for (const grupo of GRUPOS) {
         const definicion = GRUPOS_FILTRO[grupo];
-        for (const clave of definicion.claves.filter(opcion => elegidos[grupo].has(opcion))) {
+        let claves = definicion.claves.filter(opcion => elegidos[grupo].has(opcion));
+        if (grupo === 'especie') {
+            // Una familia con todas sus especies elegidas es una sola etiqueta ("Dragon (todas)") en vez de una por especie. Las familias más
+            // grandes van primero, y una que ya está cubierta por otras no se muestra. Las especies que no entran en ninguna etiqueta de familia van sueltas.
+            const completas = [...familias.keys()]
+                .filter(nombre => estadoDeFamilia(nombre) === 'true')
+                .sort((a, b) => familias.get(b).size - familias.get(a).size || a.localeCompare(b, 'en'));
+            const cubiertas = new Set();
+            for (const nombre of completas) {
+                const miembros = familias.get(nombre);
+                if ([...miembros].every(especie => cubiertas.has(especie))) continue;
+                miembros.forEach(especie => cubiertas.add(especie));
+                etiquetas.push(
+                    crearEtiqueta(grupo, `${PREFIJO_FAMILIA}${nombre}`, COLOR_ESPECIE, null, t('filtros.familia.todas', { nombre }), t(`filtros.${grupo}`)),
+                );
+            }
+            claves = claves.filter(especie => !cubiertas.has(especie));
+        }
+        for (const clave of claves) {
             etiquetas.push(crearEtiqueta(grupo, clave, definicion.color(clave), definicion.icono(clave), definicion.nombre(clave), t(`filtros.${grupo}`)));
         }
+    }
+    if (desdeAnio !== null || hastaAnio !== null) {
+        const texto = textoDelPeriodo();
+        etiquetas.push(crearEtiqueta('estreno', 'periodo', COLOR_ESTRENO, { clase: 'f-e', texto: '📅' }, texto, t('filtros.estreno')));
     }
     // Si las etiquetas son las mismas que ya están, no se rehacen (si no, un toque sobre una podía perderse)
     const firma = etiquetas.map(etiqueta => etiqueta.outerHTML).join('');
@@ -315,10 +465,33 @@ function cambiarAtributo(elemento, nombre, valor) {
     if (elemento.getAttribute(nombre) !== valor) elemento.setAttribute(nombre, valor);
 }
 
+// Escribe el filtro de estreno: los años que se pueden elegir (los de los digimons que ya llegaron), lo elegido y el botón
+let firmaAnios = '';
+function escribirEstreno() {
+    const grupo = seccionFiltros.querySelector('.f-grupo[data-g="estreno"]');
+    const selectores = grupo.querySelectorAll('select');
+    const anios = [...aniosVistos].sort((a, b) => a - b);
+    const libre = t('filtros.estreno.libre');
+    const firma = `${libre}|${anios.join(',')}`;
+    if (firma !== firmaAnios) {
+        firmaAnios = firma;
+        selectores.forEach(selector => {
+            selector.replaceChildren(new Option(libre, ''), ...anios.map(anio => new Option(String(anio), String(anio))));
+        });
+    }
+    const valores = { desde: desdeAnio, hasta: hastaAnio };
+    selectores.forEach(selector => {
+        const valor = String(valores[selector.dataset.lado] ?? '');
+        if (selector.value !== valor) selector.value = valor;
+    });
+    grupo.querySelector('.f-btn').classList.toggle('tiene', desdeAnio !== null || hastaAnio !== null);
+}
+
 // ---- Filtrar y contar ----------------------------------------------------------------------------------------------
 // Muestra u oculta cada carta y actualiza cuentas, botones, etiquetas y avisos
 function refrescar() {
     const conteo = Object.fromEntries(GRUPOS.map(grupo => [grupo, {}]));
+    const conteoFamilias = {}; // cuántas cartas tendría cada familia de especies (con las mismas reglas que el conteo de las opciones)
     let total = 0;
     let visibles = 0;
 
@@ -335,7 +508,9 @@ function refrescar() {
             cumple[grupo] =
                 elegidos[grupo].size === 0 || (Array.isArray(valor) ? valor.some(opcion => elegidos[grupo].has(opcion)) : elegidos[grupo].has(valor));
         }
-        const cumpleBusqueda = coincideBusqueda(datos, busqueda);
+        // La búsqueda y el período de estreno valen para todo: también para la cuenta de cada opción de los otros filtros
+        if (datos.anio !== null) aniosVistos.add(datos.anio);
+        const cumpleBusqueda = coincideBusqueda(datos, busqueda) && coincideEstreno(datos.anio);
         const cumpleTodo = cumpleBusqueda && GRUPOS.every(grupo => cumple[grupo]);
 
         if (cumpleTodo) visibles++;
@@ -349,6 +524,11 @@ function refrescar() {
                 for (const opcion of Array.isArray(valor) ? valor : [valor]) {
                     conteo[grupo][opcion] = (conteo[grupo][opcion] || 0) + 1;
                 }
+                if (grupo === 'especie') {
+                    // una carta suma una sola vez a cada familia, aunque tenga varias especies de ella
+                    const deEstaCarta = new Set(valor.flatMap(especie => familiasDe.get(especie) ?? []));
+                    for (const nombre of deEstaCarta) conteoFamilias[nombre] = (conteoFamilias[nombre] || 0) + 1;
+                }
             }
         }
     }
@@ -356,12 +536,13 @@ function refrescar() {
     // Solo se toca lo que cambió: mientras cargan las cartas esto se repite muchas veces, y reescribir textos iguales
     // hacía que el navegador redibujara la barra a cada rato (en el celular, los botones tardaban en responder)
     seccionFiltros.querySelectorAll('.f-chip').forEach(chip => {
-        const { g: grupo, k: clave } = chip.dataset;
-        const elegido = elegidos[grupo].has(clave);
-        const cantidad = conteo[grupo][clave] || 0;
-        cambiarAtributo(chip, 'aria-pressed', String(elegido));
+        const { g: grupo, k: clave, fam } = chip.dataset;
+        // aria-pressed: 'true' (elegida), 'false' o, en las familias con solo algunas de sus especies elegidas, 'mixed'
+        const estado = fam ? estadoDeFamilia(fam) : String(elegidos[grupo].has(clave));
+        const cantidad = (fam ? conteoFamilias[fam] : conteo[grupo][clave]) || 0;
+        cambiarAtributo(chip, 'aria-pressed', estado);
         cambiarTexto(chip.querySelector('i'), String(cantidad));
-        chip.classList.toggle('vacio', total > 0 && cantidad === 0 && !elegido); // sin cartas: se ve apagada
+        chip.classList.toggle('vacio', total > 0 && cantidad === 0 && estado === 'false'); // sin cartas: se ve apagada
     });
 
     // Botón de X-Antibody: su estado (indistinto, con o sin) y su texto en el idioma actual
@@ -370,7 +551,10 @@ function refrescar() {
     cambiarTexto(botonX.querySelector('.f-xa-texto'), t(`filtros.x.boton.${estadoX}`));
     cambiarAtributo(botonX, 'title', t(`filtros.x.ayuda.${estadoX}`));
 
+    escribirEstreno();
+
     seccionFiltros.querySelectorAll('.f-grupo').forEach(grupo => {
+        if (!(grupo.dataset.g in elegidos)) return; // (los desplegables de "Estreno" y "Ordenar por" no eligen opciones de las de arriba)
         const cuantos = elegidos[grupo.dataset.g].size;
         const contador = grupo.querySelector('.f-n');
         grupo.querySelector('.f-btn').classList.toggle('tiene', cuantos > 0);
@@ -385,9 +569,74 @@ function refrescar() {
     const cuenta = `<span class="f-cuenta-larga">${t('filtros.cuenta', datos)}</span><span class="f-cuenta-corta">${t('filtros.cuenta.corta', datos)}</span>`;
     if (textoCuenta.innerHTML !== cuenta) textoCuenta.innerHTML = cuenta;
 
-    const hayFiltros = busqueda !== '' || GRUPOS.some(grupo => elegidos[grupo].size > 0);
+    const hayFiltros = busqueda !== '' || desdeAnio !== null || hastaAnio !== null || GRUPOS.some(grupo => elegidos[grupo].size > 0);
     botonLimpiar.hidden = !hayFiltros;
     avisoVacio.hidden = !(total > 0 && visibles === 0);
+}
+
+// ---- Orden de la lista ---------------------------------------------------------------------------------------------
+// Por número (ID: el orden de siempre, el de llegada, que en la API coincide con la fecha de estreno) o alfabético por el nombre que se ve en la carta (sin importar mayúsculas ni tildes;
+// si dos son iguales, por número). Se reordenan los <li> de verdad (no con la propiedad "order" del CSS): así las flechas del zoom, el teclado
+// y los lectores de pantalla siguen el mismo orden que se ve.
+// Las cartas siguen llegando mientras se está ordenando: las nuevas se meten cada una en su lugar sin tocar a las que ya estaban (si no, cada
+// tanda movería todas las cartas de la lista). Solo al cambiar de orden se reacomoda todo, una vez.
+let orden = 'id'; // 'id' | 'az'
+const ORDENES = { id: 'filtros.orden.id.corto', az: 'filtros.orden.az.corto' };
+const COMPARADOR_DE_NOMBRES = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
+const TANDA_QUE_SE_REACOMODA_ENTERA = 200; // con tantas cartas fuera de lugar conviene reordenar todo de una vez y no una por una
+const nombresVisibles = new WeakMap(); // carta → el nombre que se ve (se vuelve a leer si cambia el idioma)
+
+const nombreParaOrdenar = carta => {
+    if (!nombresVisibles.has(carta)) nombresVisibles.set(carta, nombreCompleto(carta));
+    return nombresVisibles.get(carta);
+};
+
+// El lugar de la carta en el orden "por ID": su número, salvo las cartas propias, que van entre dos de la API (ver CARTAS_PROPIAS en datos.js)
+const lugarPorId = carta => Number(carta.dataset.lugarEnElOrden ?? carta.dataset.id);
+
+function compararCartas(a, b) {
+    if (orden === 'az') {
+        const porNombre = COMPARADOR_DE_NOMBRES.compare(nombreParaOrdenar(a), nombreParaOrdenar(b));
+        if (porNombre !== 0) return porNombre;
+    }
+    return lugarPorId(a) - lugarPorId(b);
+}
+
+// Deja la lista en el orden elegido. Devuelve true si movió alguna carta.
+function acomodarLista() {
+    const cartas = [...listaDigimons.children];
+    let ordenadas = 1; // cuántas cartas del principio ya están en orden
+    while (ordenadas < cartas.length && compararCartas(cartas[ordenadas - 1], cartas[ordenadas]) <= 0) ordenadas++;
+    if (ordenadas >= cartas.length) return false;
+
+    if (cartas.length - ordenadas > TANDA_QUE_SE_REACOMODA_ENTERA) {
+        listaDigimons.append(...cartas.sort(compararCartas));
+        return true;
+    }
+    const enOrden = cartas.slice(0, ordenadas);
+    for (const carta of cartas.slice(ordenadas).sort(compararCartas)) {
+        // su lugar: antes de la primera que tiene que ir después de ella
+        let desde = 0;
+        let hasta = enOrden.length;
+        while (desde < hasta) {
+            const medio = (desde + hasta) >> 1;
+            if (compararCartas(enOrden[medio], carta) <= 0) desde = medio + 1;
+            else hasta = medio;
+        }
+        listaDigimons.insertBefore(carta, enOrden[desde] ?? null);
+        enOrden.splice(desde, 0, carta);
+    }
+    return true;
+}
+
+// Escribe el orden elegido en el botón y en las opciones del desplegable
+function escribirOrden() {
+    const grupo = seccionFiltros.querySelector('.f-grupo[data-g="orden"]');
+    const valor = grupo.querySelector('.f-orden-valor');
+    cambiarTexto(valor, t(ORDENES[orden]));
+    cambiarAtributo(grupo.querySelector('.f-btn'), 'title', t(`filtros.orden.${orden}.ayuda`)); // al dejar el puntero encima: cómo ordena
+    grupo.querySelector('.f-btn').classList.toggle('tiene', orden !== 'id'); // con el orden de siempre el botón se ve como los demás sin nada elegido
+    grupo.querySelectorAll('.f-orden-op').forEach(opcion => cambiarAtributo(opcion, 'aria-checked', String(opcion.dataset.orden === orden)));
 }
 
 // Las cartas llegan de a poco: si llegan varias juntas, se hacen las cuentas una sola vez por cuadro
@@ -396,6 +645,7 @@ function programarRefresco() {
     if (!refrescoPendiente) {
         refrescoPendiente = requestAnimationFrame(() => {
             refrescoPendiente = 0;
+            acomodarLista(); // (las cartas nuevas entran al final de la lista: se las pone en su lugar)
             refrescar();
         });
     }
@@ -403,6 +653,8 @@ function programarRefresco() {
 
 export function limpiarTodo() {
     GRUPOS.forEach(grupo => elegidos[grupo].clear());
+    desdeAnio = null;
+    hastaAnio = null;
     cajaBusqueda.value = '';
     leerBusqueda();
     refrescar();
@@ -473,14 +725,25 @@ function activarFiltros() {
     seccionFiltros.addEventListener('click', evento => {
         const chip = evento.target.closest('.f-chip');
         if (!chip) return;
-        const { g: grupo, k: clave } = chip.dataset;
-        if (elegidos[grupo].has(clave)) {
+        const { g: grupo, k: clave, fam } = chip.dataset;
+        if (fam) {
+            alternarFamilia(fam);
+        } else if (elegidos[grupo].has(clave)) {
             elegidos[grupo].delete(clave);
         } else {
             elegidos[grupo].add(clave);
         }
         refrescar();
         buscarEntreLasOpciones(grupo);
+    });
+
+    // Las dos vistas del panel de las especies: familias o especies sueltas
+    seccionFiltros.querySelectorAll('.f-vista').forEach(boton => {
+        boton.addEventListener('click', () => {
+            const panel = boton.closest('.f-panel');
+            panel.dataset.vista = boton.dataset.v;
+            panel.querySelectorAll('.f-vista').forEach(otro => otro.setAttribute('aria-pressed', String(otro === boton)));
+        });
     });
 
     // Cajita de búsqueda del panel de las especies
@@ -497,11 +760,43 @@ function activarFiltros() {
         if (grupo === 'q') {
             cajaBusqueda.value = '';
             leerBusqueda();
+        } else if (grupo === 'estreno') {
+            desdeAnio = null;
+            hastaAnio = null;
+        } else if (clave.startsWith(PREFIJO_FAMILIA)) {
+            familias.get(clave.slice(PREFIJO_FAMILIA.length))?.forEach(especie => elegidos.especie.delete(especie)); // se sacan todas las especies de la familia
         } else {
             elegidos[grupo].delete(clave);
         }
         refrescar();
         if (grupo in OPCIONES_QUE_LLEGAN) buscarEntreLasOpciones(grupo);
+    });
+
+    // Estreno: al elegir un año inicial mayor que el final (o al revés) el otro límite se corre hasta ese año, así el período nunca queda al revés
+    seccionFiltros.querySelectorAll('.f-grupo[data-g="estreno"] select').forEach(selector => {
+        selector.addEventListener('change', () => {
+            const anio = selector.value === '' ? null : Number(selector.value);
+            if (selector.dataset.lado === 'desde') {
+                desdeAnio = anio;
+                if (anio !== null && hastaAnio !== null && anio > hastaAnio) hastaAnio = anio;
+            } else {
+                hastaAnio = anio;
+                if (anio !== null && desdeAnio !== null && anio < desdeAnio) desdeAnio = anio;
+            }
+            refrescar();
+        });
+    });
+
+    // Ordenar por: elegir una opción cierra el desplegable. Al cambiar de orden la lista es otra: se vuelve a mirarla desde arriba
+    seccionFiltros.querySelectorAll('.f-orden-op').forEach(opcion => {
+        opcion.addEventListener('click', () => {
+            abrir(opcion.closest('.f-grupo'), false);
+            if (opcion.dataset.orden === orden) return;
+            orden = opcion.dataset.orden;
+            escribirOrden();
+            acomodarLista();
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        });
     });
 
     // Botón de X-Antibody: cada clic pasa al siguiente estado (indistinto → con → sin → indistinto)
@@ -524,9 +819,18 @@ function activarFiltros() {
     for (const aviso of ['idioma-cambiado', 'niveles-cambiados']) {
         document.addEventListener(aviso, () => {
             etiquetarChips();
+            escribirOrden();
             refrescar();
         });
     }
+    // Los nombres de las cartas cambian con el idioma: con el orden alfabético se vuelve a ordenar (cuando ya se escribieron los nuevos nombres)
+    document.addEventListener('idioma-cambiado', () => {
+        requestAnimationFrame(() => {
+            if (orden !== 'az') return;
+            listaDigimons.querySelectorAll(':scope > li').forEach(carta => nombresVisibles.delete(carta));
+            acomodarLista();
+        });
+    });
 }
 
 // Pone en marcha los filtros (lo llama main.js)
@@ -534,5 +838,6 @@ export function prepararFiltros() {
     crearChips();
     etiquetarChips();
     activarFiltros();
+    escribirOrden();
     refrescar();
 }

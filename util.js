@@ -76,6 +76,10 @@ export const esElSegundoDeUnDoble = () => segundoDeUnDoble;
 // escuchar con .addEventListener('change', ...).
 // El corte de 700 px es el mismo que $corte-celular en design/parciales/_variables.scss: si se cambia uno, se cambia el otro.
 export const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
+
+// Los botones "suaves": las etiquetas de los filtros elegidos (se tocan para quitarlos), el Aceptar de las ventanas y su cruz de cerrar.
+// Aparecen todo el tiempo, así que no suenan como una tecla sino con un "tic" bajito, y vibran menos (ver sonidos.js y audio.js).
+export const BOTONES_SUAVES = '.f-tag, .swal2-confirm, .swal2-close';
 export const HAY_PANTALLA_TACTIL = navigator.maxTouchPoints > 0 || 'ontouchstart' in window; // aunque también tenga mouse
 
 // ---- Dedo o mouse ----------------------------------------------------------------------------------------------------
@@ -92,6 +96,10 @@ export const HAY_PANTALLA_TACTIL = navigator.maxTouchPoints > 0 || 'ontouchstart
 const SIN_HOVER = window.matchMedia('(hover: none)');
 const CON_HOVER_Y_PUNTERO_FINO = window.matchMedia('(hover: hover) and (pointer: fine)');
 const ES_ANDROID_TACTIL = HAY_PANTALLA_TACTIL && /Android/i.test(navigator.userAgent);
+
+// ¿Es un iPhone o un iPad? (en cualquier navegador: todos usan el motor de Safari, que no deja vibrar). El iPad nuevo se presenta como una Mac,
+// de ahí el segundo chequeo: una Mac con pantalla táctil.
+export const ES_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 let ultimoPuntero = null; // "touch", "mouse" o "pen": lo último que se usó para apuntar (null: todavía no se usó nada)
 
 const conDedoAhora = () => (ultimoPuntero ? ultimoPuntero === 'touch' : SIN_HOVER.matches || ES_ANDROID_TACTIL);

@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------------------------------------------------------
-// MENÚS DE INFORMACIÓN (atributos, elementos y niveles) y sus ventanas emergentes
+// MENÚS DE INFORMACIÓN (atributos, elementos, niveles y misceláneos) y sus ventanas emergentes
 //
-// Los tres menús de la barra tienen el mismo formato: al elegir una opción se abre una ventana con su descripción,
-// contra qué es fuerte o débil y cuánto pesa en el combate. Los números salen de las mismas tablas que usa el combate
+// Los cuatro menús de la barra tienen el mismo formato: al elegir una opción se abre una ventana con su descripción,
+// contra qué es fuerte o débil y cuánto pesa en el combate (los misceláneos, que son las marcas de la carta como la X-Antibody, explican qué son y cómo buscarlas). Los números salen de las mismas tablas que usa el combate
 // (datos.js y combate.js), así que lo que dice la ventana siempre coincide con lo que pasa en la pelea.
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ import {
     numeracionNiveles,
 } from './datos.js';
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
-import { conCruzDeCierre } from './ventanas.js';
+import { conCruzDeCierre, mantenerEnSuLugar } from './ventanas.js';
 import { clasificacionAlternativa, nombreNivel } from './pagina.js';
 import { PESO_ELEMENTO, PESO_NIVEL, PESO_ATRIBUTO, PODER_EN_COMBATE } from './combate.js';
 import { nombreCompleto } from './cartas.js';
@@ -92,7 +92,7 @@ function enlazarTexto(texto) {
 
 let ultimaInfoAbierta = null;
 
-// Ventana común a los tres menús: descripción, lista de datos (con la etiqueta en negrita) y un pie con el peso en el combate
+// Ventana común a los cuatro menús: descripción, lista de datos (con la etiqueta en negrita) y un pie con el peso en el combate
 function mostrarInfo(titulo, descripcion, datos, pie) {
     const filas = datos.map(([etiqueta, valor]) => `<li><b>${etiqueta}:</b> ${valor}</li>`).join('');
     const descHtml = enlazarTexto(descripcion);
@@ -105,7 +105,9 @@ function mostrarInfo(titulo, descripcion, datos, pie) {
         ...conCruzDeCierre(),
         confirmButtonText: t('aceptar'),
         focusConfirm: false,
-        customClass: { popup: 'popup-info' }, // para darle al título la fuente pixelada de la barra (ver styles.scss)
+        buttonsStyling: false, // sin el botón violeta de fábrica de SweetAlert: el "Aceptar" lleva el gel azul de la página (_ventanas.scss)
+        // (el popup lleva la fuente pixelada de la barra en el título; ver _ventanas.scss)
+        customClass: { popup: 'popup-info', confirmButton: 'ventana-boton' },
         didOpen: popup => {
             popup.querySelector('.swal2-confirm')?.blur();
         },
@@ -198,6 +200,21 @@ export function infoNivel(nivelApi) {
     );
 }
 
+// Las marcas de la carta (la gema de la X-Antibody y los círculos de Armor, Hybrid y Xros Wars de la esquina de arriba a la izquierda): qué es cada una
+// y cómo encontrarla con el buscador. Se abren tocando la marca en la carta (cartas.js) o desde el menú "Info. misceláneos" de la barra.
+// Las claves van en minúscula y sin espacios: xantibody, armor, hybrid y xroswars (los textos de cada una están en i18n.js: "misc.<clave>.*").
+const ORDEN_MISC = ['xantibody', 'armor', 'hybrid', 'xroswars'];
+
+export function infoMisc(clave) {
+    if (!ORDEN_MISC.includes(clave)) return;
+    ultimaInfoAbierta = { fn: infoMisc, args: [clave] };
+    const datos = [[t('misc.enCarta'), t(`misc.${clave}.enCarta`)]];
+    // (Armor y Hybrid no son un nivel: dicen en cuál de los 8 quedó cada uno, con un enlace a su ventana)
+    if (clave === 'armor' || clave === 'hybrid') datos.push([t('misc.nivel'), enlazarTexto(t(`misc.${clave}.nivel`))]);
+    datos.push([t('misc.buscar'), t(`misc.${clave}.buscar`)]);
+    mostrarInfo(t(`misc.${clave}.titulo`), t(`misc.${clave}.desc`), datos, t(`misc.${clave}.pie`));
+}
+
 // Clics en referencias cruzadas (links)
 const alTocarUnaReferencia = evento => {
     const linkT = evento.target.closest('.info-link-atributo');
@@ -245,7 +262,7 @@ const redibujarInfoAbierta = () => {
 
 // ---- Ventana de ataques de una carta ---------------------------------------------------------------------------------
 // El botón "⚔️ Ataques" del dorso (lo arma cartas.js al construir el dorso). Abre una lista con todos los ataques de la carta; al tocar
-// uno se despliega qué hace (la descripción viene de la API, en inglés). Se abre de a uno, para que la lista no se alargue.
+// uno se despliega qué hace (la descripción viene de la API, en inglés). Se abren de a uno o varios a la vez: abrir uno no cierra los otros (ver más abajo).
 let cartaDeAtaques = null; // la carta cuya ventana de ataques está abierta (para reescribirla si se cambia el idioma)
 
 export function crearBotonAtaques(carta) {
@@ -327,27 +344,15 @@ function crearListaDeAtaques(habilidades, cartaActual) {
     const lista = document.createElement('ul');
     lista.className = 'ataques-lista';
 
-    const cerrarTodos = salvo => {
-        for (const otro of lista.querySelectorAll('.ataque-boton[aria-expanded="true"]')) {
-            if (otro === salvo) continue;
-            otro.setAttribute('aria-expanded', 'false');
-            const detalle = otro.nextElementSibling;
-            if (detalle) detalle.hidden = true;
-        }
-    };
-
     for (const habilidad of habilidades) {
         const item = document.createElement('li');
         item.className = 'ataque-item';
 
+        // En la lista cada ataque lleva un solo nombre: el de la API (el nombre japonés escrito con letras latinas, como en Wikimon: "Baby Flame" o "Surudoi Tsume").
+        // La traducción (la API la trae solo para algunos, los de nombre japonés de verdad) se muestra recién al abrir el ataque, entre paréntesis
         const nombre = document.createElement('span');
         nombre.className = 'ataque-nombre';
         nombre.textContent = habilidad.nombre;
-        if (habilidad.traduccion) {
-            const traduccion = document.createElement('small');
-            traduccion.textContent = `(${habilidad.traduccion})`;
-            nombre.append(' ', traduccion);
-        }
 
         const boton = document.createElement('button');
         boton.type = 'button';
@@ -362,6 +367,15 @@ function crearListaDeAtaques(habilidades, cartaActual) {
         const detalle = document.createElement('div');
         detalle.className = 'ataque-detalle';
         detalle.hidden = true;
+
+        const traduccion = (habilidad.traduccion || '').trim();
+        if (traduccion && traduccion.toLowerCase() !== habilidad.nombre.trim().toLowerCase()) {
+            const alias = document.createElement('p');
+            alias.className = 'ataque-alias';
+            alias.title = t('ataques.traduccion'); // al dejar el puntero encima
+            alias.textContent = `(${traduccion})`;
+            detalle.append(alias);
+        }
 
         if (habilidad.descripcion) {
             const descripcion = document.createElement('p');
@@ -404,9 +418,12 @@ function crearListaDeAtaques(habilidades, cartaActual) {
 
         boton.addEventListener('click', () => {
             const abrir = boton.getAttribute('aria-expanded') !== 'true';
-            cerrarTodos(boton);
-            boton.setAttribute('aria-expanded', String(abrir));
-            detalle.hidden = !abrir;
+            // El botón se queda donde está aunque la ventana crezca (ver mantenerEnSuLugar, en ventanas.js). Por eso abrir un ataque no cierra los otros: al
+            // cerrarse uno que está más arriba, los de abajo subirían y el botón que se acaba de tocar se correría de lugar
+            mantenerEnSuLugar(boton, () => {
+                boton.setAttribute('aria-expanded', String(abrir));
+                detalle.hidden = !abrir;
+            });
             sonidoFichero(abrir, FICHERO_DE_ATAQUES); // el fichero que se abre o se cierra (sonidos.js): sin tecla
             if (abrir) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         });
@@ -437,13 +454,9 @@ export function abrirAtaques(carta) {
         titleText: t('ataques.titulo', { nombre: nombreCompleto(carta) }),
         html: cuerpo,
         ...conCruzDeCierre(),
-        confirmButtonText: t('aceptar'),
-        focusConfirm: false,
+        showConfirmButton: false, // se cierra con la cruz, tocando afuera o con Esc: sin "Aceptar"
         width: 'min(94vw, 680px)',
         customClass: { popup: 'popup-info popup-ataques' }, // el título con la fuente pixelada, como las otras ventanas de información
-        didOpen: popup => {
-            popup.querySelector('.swal2-confirm')?.blur();
-        },
         willClose: () => {
             cartaDeAtaques = null;
         },
@@ -457,13 +470,12 @@ const traducirVentanaDeAtaques = () => {
     if (titulo) titulo.textContent = t('ataques.titulo', { nombre: nombreCompleto(cartaDeAtaques) });
     const ayuda = document.querySelector('.popup-ataques .ataques-ayuda');
     if (ayuda) ayuda.textContent = t('ataques.ayuda');
+    document.querySelectorAll('.popup-ataques .ataque-alias').forEach(alias => (alias.title = t('ataques.traduccion')));
     const pie = document.querySelector('.popup-ataques .ataques-pie');
     if (pie) {
         pie.textContent = t('carta.idiomaOriginal');
         pie.hidden = !pie.textContent;
     }
-    const confirmar = Swal.getConfirmButton();
-    if (confirmar) confirmar.textContent = t('aceptar');
 };
 
 // Qué ventana abre cada menú (por el id de su lista)
@@ -471,6 +483,7 @@ const VENTANA_DE_CADA_MENU = {
     'lista-atributos': infoAtributo,
     'lista-elementos': infoElemento,
     'lista-niveles': infoNivel,
+    'lista-misc': infoMisc,
 };
 
 // Escribe las opciones de un menú: cada botón guarda en data-k el identificador de lo que abre
@@ -505,6 +518,10 @@ function escribirMenus() {
             return [nivelApi, poder === undefined ? nombre : t('info.nivelItem', { nombre, n: poder })];
         }),
     );
+    escribirOpciones(
+        'lista-misc',
+        ORDEN_MISC.map(clave => [clave, t(`misc.${clave}.titulo`)]),
+    );
 }
 
 // Comportamiento de los menús: un botón que abre y cierra la lista con el clic (también con teclado).
@@ -530,7 +547,12 @@ function activarMenusInfo() {
         });
     });
 
+    // Tocar afuera cierra las listas abiertas. Con el dedo, dentro del panel del menú ☰ no se cierra ninguna: las listas se abren y se cierran solo con
+    // su propio botón, y abrir una no cierra las otras. Así el botón que se toca nunca se corre de lugar (si al abrir una se cerrara otra que está más
+    // arriba, los botones de abajo subirían), y el panel se puede desplazar con el dedo sin que apoyarlo en cualquier lugar cierre la lista que se
+    // estaba mirando (el panel se desplaza cuando con una lista abierta no entra en la pantalla). El panel se cierra entero con ☰, tocando afuera o con Esc.
     document.addEventListener('pointerdown', evento => {
+        if (evento.pointerType === 'touch' && evento.target.closest('#menu-movil')) return;
         menus.forEach(menu => {
             if (estaAbierto(menu) && !menu.contains(evento.target)) abrir(menu, false);
         });

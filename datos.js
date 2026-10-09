@@ -286,27 +286,47 @@ export const ORDEN_CAMPOS = [
     "Dragon's Roar",
     'Jungle Troopers',
     'Dark Area',
-    'Xros Wars',
     'Unknown',
 ];
 
-// XROS WARS: es uno de los grupos de la API, pero son pocos digimons (los de la serie Digimon Xros Wars) y se buscan mucho por nombre de serie,
-// así que además de estar en el filtro de grupos la carta lleva un circulito naranja con "XW" (como las marcas de Armor y Hybrid) y el buscador
-// los encuentra al escribir "xros wars".
-export const esXrosWars = campo => /^xros\s*wars$/i.test(String(campo).trim());
+// SIN DATO: la API trae algunos digimons sin especie o sin grupo (una lista vacía). Para que ninguno quede afuera de los filtros (si se eligen todas
+// las opciones tienen que aparecer todos), un digimon sin dato cuenta como "Unknown": es lo mismo, y es una opción que esos dos filtros ya tienen.
+export const SIN_DATO = 'Unknown';
+
+// XROS WARS: la API no trae un dato "Xros Wars" (los grupos son solo 10 y ninguno es ese; Ganemon o Gravimon vienen con el grupo vacío). Lo que
+// sí trae es el año de estreno, y los digimons que debutaron en 2010, 2011 y 2012 son los de la serie Digimon Xros Wars y su continuación
+// (Hunters). Se comprobó con los 1488 de la API: los 10 que nombran "Xros Wars" en su descripción están todos en esos años, y los de 2009 y 2013
+// ya son de otros juegos. Con eso la carta lleva un circulito naranja "XW" (como las marcas de Armor y Hybrid) y el buscador los encuentra al
+// escribir "xros wars". Es una aproximación: algún digimon de esos años podría no ser de la serie.
+export const ANIOS_XROS_WARS = [2010, 2011, 2012];
+export const esXrosWars = estreno => ANIOS_XROS_WARS.includes(Number(String(estreno).match(/\d{4}/)?.[0]));
 
 // ---- Especies (los "types" de la API) --------------------------------------------------------------------------
 // Alien, Cyborg, Slime, God Beast, Mythical Beast...: son muchísimas y un digimon puede tener varias, así que el filtro de especies arma sus
 // opciones con las que van trayendo los digimons (ordenadas por nombre). Son nombres propios: se ven siempre como los trae la API.
 // Sin ícono ni color propio por opción (ver COLOR_ESPECIE).
 
+// FAMILIAS DE ESPECIES: para ordenar tantas especies (más de 150), el panel las agrupa en "familias" que se marcan de una vez. Se arman solas con las
+// palabras que comparten los nombres: "Ancient Dragon", "Holy Dragon" y "Dragon" son de la familia Dragon, y "Ancient Dragon" además de la familia Ancient
+// (una especie puede estar en varias familias). Una familia necesita al menos dos especies. Estas pocas se suman a mano porque no comparten la palabra:
+// la clave es el nombre de la familia y el valor, las especies que se le agregan (si alguna no existe en la API, no pasa nada).
+export const FAMILIAS_DE_ESPECIES_A_MANO = {
+    'Angel': ['Archangel', 'Cherub', 'Seraph', 'Ophan', 'Dominion', 'Principality', 'Virtue'], // la jerarquía de los ángeles
+    'Dinosaur': ['Ankylosaur', 'Ceratopsian', 'Plesiosaur', 'Pterosaur', 'Stegosaur'],
+    'Unknown': ['No Data', 'Unanalyzable'],
+};
+
 // ---- Cartas propias -------------------------------------------------------------------------------------------
 
-// Cartas que no están en la API: las agrega el simulador (después de las de la API). Su ID es alto para no chocar con los de ella.
+// Cartas que no están en la API: las agrega el simulador (después de las de la API). Su ID es alto para no chocar con los de ella (los números
+// de las cartas son los ID de la API y se usan para pedir sus datos, enlazar las evoluciones y buscar por número, así que no se corren).
+// Para el orden "por ID" (que en la API coincide con el orden por fecha de estreno: ningún ID tiene un año menor que el de uno anterior) llevan
+// "despuesDelId": van justo después de ese ID de la API, o sea, al principio de su año. Con solo el año no se puede afinar más.
 export const CARTAS_PROPIAS = [
     {
         id: 9001,
         etiquetaId: '★',
+        despuesDelId: 751, // 2005 (la película Digital Monster X-evolution, enero de 2005): el último de 2004 es el 751 y el primero de 2005, el 752
         nombre: 'Yggdrasil',
         imagen: './img/yggdrasil.webp',
         atributo: 'Datos',
@@ -315,7 +335,7 @@ export const CARTAS_PROPIAS = [
         datosDorso: {
             especies: ['Host Computer'],
             campos: [],
-            estreno: '–',
+            estreno: '2005',
             habilidades: [],
             descripcion:
                 'The host computer that rules over the Digital World, treated in many adaptations as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
@@ -325,6 +345,7 @@ export const CARTAS_PROPIAS = [
     {
         id: 9002,
         etiquetaId: '★',
+        despuesDelId: 128, // 1999 (el anime Digimon Adventure): el último de 1998 es el 128 y el primero de 1999, el 129
         nombre: 'Homeostasis (Kami)',
         imagen: './img/homeostasis.webp',
         atributo: 'Vacuna',
@@ -333,7 +354,7 @@ export const CARTAS_PROPIAS = [
         datosDorso: {
             especies: ['Security System'],
             campos: [],
-            estreno: '–',
+            estreno: '1999',
             habilidades: [],
             descripcion:
                 'The security system of the Digital World, which keeps the balance between good and evil. In some stories it takes the place of Yggdrasil as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
@@ -377,6 +398,7 @@ export const COLOR_BUSQUEDA = '#2f7fd0';
 export const COLOR_CAMPO = '#5f7287'; // gris azulado
 export const COLOR_ESPECIE = '#7a6b62'; // gris tierra
 export const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas
+export const COLOR_ESTRENO = '#3f7d70'; // verde azulado, para la etiqueta del período de estreno
 
 // Colores del texto de los enlaces que hay dentro de las ventanas de información. Son más oscuros que los de arriba (los de las
 // cartas y los filtros), que son colores de fondo, para que el texto se lea sobre el fondo claro de la ventana.

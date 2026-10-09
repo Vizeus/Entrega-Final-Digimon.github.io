@@ -17,7 +17,7 @@
 import { CON_MOUSE } from './util.js';
 import { COLOR_NIVEL, COLOR_NIVEL_DESCONOCIDO, EMOJIS_ELEMENTO, EMOJIS_ATRIBUTO } from './datos.js';
 import { DICCIONARIO, nombreElemento, nombreAtributo, t } from './i18n.js';
-import { conCruzDeCierre } from './ventanas.js';
+import { centrarVentana, conCruzDeCierre, mantenerEnSuLugar } from './ventanas.js';
 import { cartaPorId, listaDigimons, nombreNivel } from './pagina.js';
 import { nombreCompleto, reducirMovimiento } from './cartas.js';
 import { inicioDeLoAparte } from './nombres.js';
@@ -395,6 +395,13 @@ function crearLoreEvo() {
 
     const titulo = document.createElement('summary');
     titulo.textContent = t('evo.lore.titulo');
+    // Se abre y se cierra acá y no con lo que hace solo el navegador, para que el título se quede en su lugar (ver mantenerEnSuLugar, en ventanas.js)
+    titulo.addEventListener('click', evento => {
+        evento.preventDefault();
+        mantenerEnSuLugar(titulo, () => {
+            detalle.open = !detalle.open;
+        });
+    });
 
     const parrafos = [t('evo.lore.1'), t('evo.lore.2')];
     // Solo con mouse: el dato extra de cada digimon (qué es la etiqueta, la condición) está en el texto que aparece al dejar el puntero encima
@@ -417,6 +424,31 @@ function crearPieEvo() {
     pie.textContent = t('evo.pie');
     return pie;
 }
+
+// Una lista desplegada reparte sus ramas en una grilla de una o de dos columnas, según el ancho que le toque (ver ".evo-col.abierta" en el CSS).
+// Cuando solo entra una columna, la lista tiene que medir lo de una rama y no lo de toda la columna: si no, la rama queda contra un costado y el
+// rótulo ("Viene de" / "Evoluciona a") y el botón "ver menos" quedan centrados sobre la columna entera y no sobre las ramas. El CSS no puede saber
+// cuántas columnas le tocaron a la grilla, por eso se mira acá y se le pone la clase "una-pista" a la columna (se mide con el ancho que le da el CSS
+// sin la clase, y se la pone después). Se vuelve a medir al desplegar o recoger una lista y cada vez que cambia el ancho del árbol (al agrandar o
+// achicar la ventana del navegador).
+let anchoDelArbol = 0;
+const ajustarListasDesplegadas = () => {
+    const columnas = [...(contenedorEvo()?.querySelectorAll('.evo-col.abierta') ?? [])];
+    columnas.forEach(columna => columna.classList.remove('una-pista'));
+    // Primero se miran todas y recién después se les pone la clase (al achicarse una, la otra recibe más lugar y ya no mediría lo mismo)
+    const angostas = columnas.filter(columna => {
+        const estilo = getComputedStyle(columna.querySelector('.evo-lista'));
+        // (en el celular la lista no es una grilla sino filas que se parten: ahí no hace falta nada)
+        return estilo.display === 'grid' && estilo.gridTemplateColumns.split(' ').length === 1;
+    });
+    angostas.forEach(columna => columna.classList.add('una-pista'));
+};
+const observadorDelArbol = new ResizeObserver(entradas => {
+    const ancho = entradas[entradas.length - 1].contentRect.width;
+    if (ancho === anchoDelArbol) return; // (solo importa el ancho: un cambio de alto no cambia cuántas columnas entran)
+    anchoDelArbol = ancho;
+    ajustarListasDesplegadas();
+});
 
 function pintarEvolucion() {
     const contenedor = contenedorEvo();
@@ -444,6 +476,10 @@ function pintarEvolucion() {
     arbol.append(crearColumna('evo-sig', t('evo.va'), siguientes));
 
     contenedor.replaceChildren(...barra, arbol, crearLoreEvo(), crearPieEvo());
+    centrarVentana(); // (el árbol nuevo puede tener otro alto: la ventana vuelve a quedar centrada)
+    observadorDelArbol.disconnect();
+    anchoDelArbol = 0;
+    observadorDelArbol.observe(arbol); // (avisa enseguida, y así se ajustan las listas que ya vengan desplegadas)
 }
 
 // ---- Ir a la carta: se cierra la ventana, se centra la carta en la parte visible de la pantalla y se la resalta ----
@@ -550,6 +586,7 @@ function alTocarEnEvolucion(evento) {
         const abierta = columna.classList.toggle('abierta');
         mas.setAttribute('aria-expanded', String(abierta));
         mas.textContent = abierta ? t('evo.menos') : t('evo.masN', { n: mas.dataset.extras });
+        ajustarListasDesplegadas();
     }
 }
 

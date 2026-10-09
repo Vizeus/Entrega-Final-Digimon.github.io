@@ -295,7 +295,7 @@ function bloquearFondoDelCombate(bloquear) {
 async function abrirCartelDeCombate({ didOpen, ...opciones }) {
     const respuesta = await Swal.fire({
         ...CARTEL_COMBATE,
-        ...conCruzDeCierre(t('combate.anular')),
+        ...conCruzDeCierre(t('zoom.cerrar')), // al dejar el puntero encima, en todos los carteles del combate, solo dice "Cerrar (Esc)"
         confirmButtonText: t('aceptar'),
         ...opciones,
         didOpen: ventana => {

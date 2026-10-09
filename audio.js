@@ -7,7 +7,9 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 import {
+    BOTONES_SUAVES,
     CON_DEDO,
+    ES_IOS,
     PANTALLA_DE_CELULAR,
     emitir,
     esElSegundoDeUnDoble,
@@ -34,69 +36,110 @@ export function vibrar(duracion = 8, forzar = false) {
     }
 }
 
-// ---- Toques con el dedo en los botones de las cartas y de las ventanas ---------------------------------------------------
-// Al desplazar la página con el dedo, muchas veces el dedo cae justo sobre un botoncito de una carta (dar vuelta, nivel, atributo, elemento...).
-// Lo mismo pasa dentro de las ventanas (ataques, evolución, información): están llenas de botones y para recorrerlas se desplaza el dedo.
-// Al apoyarlo todavía no se sabe si es un toque o el comienzo de un desplazamiento, y si en ese momento sonaba y vibraba, lo hacía aunque
-// no se tocara nada. Por eso, en esos botones, con el dedo se espera a que el toque termine: recién al levantar el dedo se avisa con
-// "toque-en-boton" (es lo que escuchan el sonido, en sonidos.js, y la vibración, acá abajo). No se avisa si la página o la ventana se desplazó
-// (el navegador cancela el toque), si el dedo se movió, si se lo dejó apretado (la carta se empieza a inclinar, o es una pulsación larga) o
-// si apareció un segundo dedo (el pellizco del zoom).
+// ---- Apretar y soltar con el dedo ----------------------------------------------------------------------------------------
+// Con el dedo, los botones se sienten como una tecla: al apretar suenan y vibran, y al levantar el dedo vuelven a sonar y a vibrar ("soltar"),
+// cada cosa en su momento. Lo que hace el botón (abrir una ventana, dar vuelta la carta...) pasa siempre al soltar: es el "click" de la página,
+// que el navegador manda al levantar el dedo (y no si el dedo se fue arrastrando la página).
+// Pero al apoyar el dedo todavía no se sabe si es un toque o el comienzo de un desplazamiento: casi cualquier botón (los del menú ☰, los de las
+// ventanas, los de las cartas, los filtros...) se toca justo cuando se quiere desplazar la página o una lista, y si sonaban y vibraban al apoyar,
+// el barrido del dedo por los botones sonaba y vibraba como si se estuvieran apretando uno tras otro. Por eso, con el dedo, hay tres momentos:
+//  - Apretar: si el dedo sigue quieto un instante (APRETADO_DESDE) se avisa con "boton-apretado" (suena la bajada y vibra). Si antes se movió, o
+//    el navegador empezó a desplazar la página (cancela el toque), no pasa nada y el botón nunca se apretó.
+//  - Soltar: al levantar el dedo de un botón apretado se avisa con "boton-soltado" (suena la subida y vibra, un poco más suave).
+//  - Toque rápido: si el dedo se levantó antes de ese instante, se avisa con "toque-en-boton", y suena la bajada y, un momento después, la
+//    subida, con una única vibración (cuando el toque es muy rápido, la vibración va junta).
+// (Es lo que escuchan el sonido, en sonidos.js, y la vibración, acá abajo.) Ninguno de los avisos sale si apareció un segundo dedo (el pellizco del
+// zoom) ni si el toque solo cierra un menú abierto (ver menus.js).
+// Esperan al final del toque, sin "apretar" (suenan y vibran una sola vez, al levantar el dedo, si fue un toque quieto y corto):
+//  - Los botoncitos del frente de la carta (gema, nivel, atributo y elemento) cuando la inclinación está activada: mantener el dedo apoyado
+//    sobre la carta, aunque sea encima de uno de ellos, la empieza a inclinar (y tampoco suenan si el dedo se queda: es una pulsación larga).
+//  - Las etiquetas de los filtros elegidos, que se recorren con el dedo de costado cuando son varias.
+// Con el mouse no hace falta nada de esto: apretar y soltar suenan al momento (ver sonidos.js).
 const TOQUE_DISTANCIA_MAXIMA = 10; // px que se puede mover el dedo y que siga siendo un toque (los mismos que tolera la inclinación)
-const TOQUE_DURACION_MAXIMA = 500; // ms que se puede tener apoyado el dedo (más que eso es una pulsación larga)
+const TOQUE_DURACION_MAXIMA = 500; // ms que se puede tener apoyado el dedo en los botones que esperan (más que eso es una pulsación larga)
+const APRETADO_DESDE = 120; // ms con el dedo quieto para que cuente como "apretado" (menos que eso es un toque rápido)
+const BOTONES_QUE_ESPERAN = '.f-tag, #listado-digimons.tilt-on li .c-frente';
 
-// ¿Este toque cayó con el dedo sobre un botón de una carta o de una ventana? (En el frente de la carta son <span role="button">: gema, nivel, atributo
-// y elemento. Las ventanas son las de SweetAlert: ataques, evolución, información...)
-export function esToqueEnBotonConEspera(evento) {
-    return evento.pointerType === 'touch' && Boolean(evento.target.closest?.('button, [role="button"]')?.closest('#listado-digimons li, .swal2-popup'));
+// ¿Este toque cayó con el dedo sobre un botón? (Con el dedo, todos los botones suenan y vibran desde activarToqueEnBotonesConEspera y no al apoyar.)
+export function esToqueEnBoton(evento) {
+    return evento.pointerType === 'touch' && Boolean(evento.target.closest?.('button, [role="button"]'));
 }
 
 export function activarToqueEnBotonesConEspera() {
-    let apoyado = null; // el toque que espera terminar: en qué botón, dónde y cuándo empezó
+    let apoyado = null; // el toque en curso: { boton, x, y, desde, espera (el aviso de "apretado" pendiente), apretado }
+    const dejar = () => {
+        clearTimeout(apoyado?.espera);
+        apoyado = null;
+    };
     document.addEventListener('pointerdown', evento => {
-        // (un segundo dedo, que no es el principal, también deja sin efecto el toque que estaba esperando)
-        // (y si el toque solo cierra un menú abierto, ni se espera: ver menus.js)
-        const boton =
-            evento.isPrimary && esToqueEnBotonConEspera(evento) && !toqueQueSoloCierraMenus() ? evento.target.closest('button, [role="button"]') : null;
-        apoyado = boton && { boton, x: evento.clientX, y: evento.clientY, desde: evento.timeStamp };
+        dejar(); // (un segundo dedo, que no es el principal, también deja sin efecto el toque que estaba en curso)
+        if (!evento.isPrimary || !esToqueEnBoton(evento) || toqueQueSoloCierraMenus()) return;
+        const boton = evento.target.closest('button, [role="button"]');
+        if (boton.disabled) return;
+        const toque = { boton, x: evento.clientX, y: evento.clientY, desde: evento.timeStamp, espera: 0, apretado: false };
+        apoyado = toque;
+        // (el segundo toque de un doble toque sobre un botoncito, que amplía la carta, no suena ni vibra otra vez: el primero ya lo hizo)
+        if (!boton.closest(BOTONES_QUE_ESPERAN) && !esElSegundoDeUnDoble()) {
+            toque.espera = setTimeout(() => {
+                if (apoyado !== toque) return;
+                toque.apretado = true;
+                emitir('boton-apretado', { boton });
+            }, APRETADO_DESDE);
+        }
     });
+    document.addEventListener(
+        'pointermove',
+        evento => {
+            // Antes de apretar, mover el dedo más que un temblor es empezar a desplazar: el botón no se aprieta
+            if (
+                apoyado &&
+                !apoyado.apretado &&
+                evento.pointerType === 'touch' &&
+                Math.hypot(evento.clientX - apoyado.x, evento.clientY - apoyado.y) > TOQUE_DISTANCIA_MAXIMA
+            )
+                dejar();
+        },
+        { passive: true },
+    );
     document.addEventListener('pointerup', evento => {
         const toque = apoyado;
-        apoyado = null;
+        dejar();
         if (!toque || evento.pointerType !== 'touch') return;
+        if (toque.apretado) {
+            emitir('boton-soltado', { boton: toque.boton });
+            return;
+        }
         const sinMoverse = Math.hypot(evento.clientX - toque.x, evento.clientY - toque.y) <= TOQUE_DISTANCIA_MAXIMA;
-        // (el segundo toque de un doble toque sobre un botoncito, que amplía la carta, no suena ni vibra otra vez: el primero ya lo hizo)
         if (sinMoverse && evento.timeStamp - toque.desde <= TOQUE_DURACION_MAXIMA && !esElSegundoDeUnDoble()) emitir('toque-en-boton', { boton: toque.boton });
     });
-    for (const nombre of ['pointercancel', 'inclinacion-con-dedo']) {
-        document.addEventListener(nombre, () => {
-            apoyado = null;
-        });
-    }
+    for (const nombre of ['pointercancel', 'inclinacion-con-dedo']) document.addEventListener(nombre, dejar);
 }
 
 // Los "botones" que son <span role="button"> (gema, nivel, atributo y elemento del frente de la carta) vibran con una mini vibración, como su
-// tecla, que también es más suave
-const vibrarAlTocar = boton => vibrar(boton.matches('[role="button"]') ? 6 : 8);
+// tecla, que también es más suave. Los botones suaves (etiquetas de filtros, Aceptar y cruz de las ventanas) vibran todavía menos.
+// Al soltar, la vibración es un poco más suave que al apretar.
+const vibrarAlTocar = boton => vibrar(boton.matches(BOTONES_SUAVES) ? 4 : boton.matches('[role="button"]') ? 6 : 8);
+const vibrarAlSoltar = (boton, forzar) => vibrar(boton.matches(BOTONES_SUAVES) ? 3 : boton.matches('[role="button"]') ? 4 : 6, forzar);
 
 export function activarVibracion() {
     if (!navigator.vibrate) return;
-    // Los botones de las cartas vibran al terminar el toque, no al apoyar el dedo (ver más arriba)
-    document.addEventListener('toque-en-boton', evento => {
-        if (!evento.detail.boton.disabled) vibrarAlTocar(evento.detail.boton);
-    });
-    document.addEventListener('pointerdown', evento => {
-        if (evento.pointerType !== 'touch' || esToqueEnBotonConEspera(evento)) return;
-        const boton = evento.target.closest('button, [role="button"]');
-        if (!boton || boton.disabled) return;
-        if (boton.id === 'silenciar') {
-            // El botón de sonido vibra según a dónde lleva el toque y no según cómo está ahora: al pasar a "solo vibración" y al volver a
-            // activar todo vibra; al pasar a "nada" (donde ya no hay vibración) ese toque no vibra. Cuando vuelve a "todo" la vibración
-            // todavía figura apagada, por eso se fuerza.
-            if (modoSiguienteDelAudio() !== 'nada') vibrar(8, true);
-            return;
-        }
-        vibrarAlTocar(boton);
+    // El botón de sonido vibra según a dónde lleva el toque y no según cómo está ahora: al pasar a "solo vibración" y al volver a activar todo
+    // vibra; al pasar a "nada" (donde ya no hay vibración) ese toque no vibra, ni al apretar ni al soltar. Cuando vuelve a "todo" la vibración
+    // todavía figura apagada, por eso se fuerza. (Al soltar, el modo todavía no cambió: eso pasa recién con el clic, que viene después.)
+    const esElDeSonido = boton => boton.id === 'silenciar';
+    const alApretar = boton => {
+        if (boton.disabled) return;
+        if (!esElDeSonido(boton)) vibrarAlTocar(boton);
+        else if (modoSiguienteDelAudio() !== 'nada') vibrar(8, true);
+    };
+    // Un toque rápido vibra una sola vez (junta, al levantar el dedo); si el dedo se queda apretado, vibra al apretar y otra vez, más suave, al soltar
+    document.addEventListener('toque-en-boton', evento => alApretar(evento.detail.boton));
+    document.addEventListener('boton-apretado', evento => alApretar(evento.detail.boton));
+    document.addEventListener('boton-soltado', evento => {
+        const boton = evento.detail.boton;
+        if (boton.disabled) return;
+        if (!esElDeSonido(boton)) vibrarAlSoltar(boton, false);
+        else if (modoSiguienteDelAudio() !== 'nada') vibrarAlSoltar(boton, true);
     });
 }
 
@@ -116,8 +159,10 @@ let contextoAudio;
 const AUDIO_ALMACEN = 'digimon-audio';
 
 // Mismo criterio que usa la página para lo que es solo del celular: pantalla táctil sin "hover" y con navigator.vibrate
-// (Android; en iPhone el navegador no deja vibrar y en computadora no hay con qué)
-const VIBRACION_DISPONIBLE = Boolean(navigator.vibrate) && CON_DEDO.matches;
+// (Android; en iPhone y iPad el navegador no deja vibrar y en computadora no hay con qué). Si es un iPhone o un iPad, se lo descarta aunque el
+// navegador diga que sí (por ejemplo, al simular un iPhone desde las herramientas de una computadora): ahí el botón tiene solo dos pasos
+// (suena / silenciado) y ninguno de sus textos habla de vibración.
+const VIBRACION_DISPONIBLE = Boolean(navigator.vibrate) && !ES_IOS && CON_DEDO.matches;
 
 function leerAudioGuardado() {
     const guardado = leerJSON(AUDIO_ALMACEN); // sin memoria (o con un dato roto) queda todo activado

@@ -159,6 +159,20 @@ export function activarInclinacion() {
 
     if (conMouse) {
         let puntero = null; // última posición del mouse sobre las cartas (para retomar la inclinación al terminar un giro)
+        // Última posición conocida del mouse en toda la página: a diferencia de "puntero", no se borra cuando el mouse sale de la lista. En el medio
+        // de un giro la carta no tiene ancho y el mouse "sale" de la lista un instante (con la carta ampliada queda sobre el fondo del zoom): ahí
+        // "puntero" se borra, pero al terminar el giro hay que saber dónde sigue el mouse
+        let ultimoMouse = null;
+        document.addEventListener(
+            'pointermove',
+            evento => {
+                if (evento.pointerType !== 'touch') ultimoMouse = { x: evento.clientX, y: evento.clientY };
+            },
+            true,
+        );
+        document.documentElement.addEventListener('pointerleave', evento => {
+            if (evento.pointerType !== 'touch') ultimoMouse = null;
+        });
         // Mientras la inclinación está "anulada", la carta se endereza y no sigue al mouse, y con la clase "inclinacion-anulada" el CSS
         // también apaga el reflejo y la textura holográfica (que siguen al puntero). El levante del hover NO se apaga: sigue como siempre.
         // Se puede pasar el mouse por todas las cartas sin que ninguna se incline ni brille. Por defecto se anula mientras se mantiene
@@ -222,13 +236,52 @@ export function activarInclinacion() {
             seguir(evento.clientX, evento.clientY);
         });
 
+        // ¿El puntero está sobre la carta o sobre su botón de dar vuelta? Ese botón asoma 8 px por la esquina de arriba a la izquierda, y solo se
+        // puede tocar mientras la carta está "levantada" (hover o inclinándose): en el momento en que se lo busca puede no estarlo, y la carta
+        // además puede estar levantada o no (se levanta 8 px). Por eso no se pregunta "qué hay bajo el puntero" sino dónde está el puntero: dentro
+        // de la carta (con su levante) o dentro de la zona del botón. (La carta puede estar ampliada: lo que asoma se agranda con ella.)
+        function puntoSobreLaCarta(carta, px, py) {
+            const r = carta.getBoundingClientRect();
+            const escala = carta.offsetWidth ? r.width / carta.offsetWidth : 1;
+            const levante = 8 * escala; // lo que sube la carta con el hover
+            const asoma = 8 * escala; // lo que asoma el botón por fuera de la carta
+            const botonTamano = 30 * escala;
+            const enLaCarta = px >= r.left && px <= r.right && py >= r.top - levante && py <= r.bottom;
+            const enElBoton =
+                px >= r.left - asoma &&
+                px <= r.left - asoma + botonTamano &&
+                py >= r.top - levante - asoma &&
+                py <= r.top - levante - asoma + botonTamano + levante;
+            return enLaCarta || enElBoton;
+        }
+
+        // Al dar vuelta la carta, el navegador no vuelve a marcarla como ":hover" hasta que el mouse se mueva (en el medio del giro la carta no
+        // tiene ancho: el puntero queda "afuera"): sin mover el mouse la carta se bajaba y el botón de dar vuelta desaparecía. Si el puntero
+        // seguía encima, la clase "hover-pegado" (ver _cartas.scss) mantiene el aspecto del hover. Se saca cuando el navegador ya la marca como
+        // ":hover" o cuando el puntero sale de la carta y de su botón (hasta entonces, un movimiento por la parte del botón que asoma no la baja:
+        // con ese botón ahí, la carta no se podría tocar de nuevo si se bajara)
+        function pegarHover(carta) {
+            carta.classList.add('hover-pegado');
+            const soltarSiSeFue = evento => {
+                if (carta.matches(':hover') || !puntoSobreLaCarta(carta, evento.clientX, evento.clientY)) {
+                    carta.classList.remove('hover-pegado');
+                    document.removeEventListener('pointermove', soltarSiSeFue, true);
+                }
+            };
+            document.addEventListener('pointermove', soltarSiSeFue, true);
+        }
+
         // Si se dio vuelta una carta con el mouse encima y no se lo movió de ahí, la inclinación sigue sin pedir que se salga y se vuelva a entrar.
-        // Se mira qué hay bajo el puntero (y no ":hover"): al terminar el giro el navegador puede tardar en actualizar el "hover"
+        // Se mira dónde está el puntero (y no ":hover" ni qué elemento hay debajo: ver puntoSobreLaCarta)
         document.addEventListener('giro-terminado', evento => {
             const carta = evento.detail;
-            if (!puntero || zoomOcupado || zoomExtra || zoomEsperaMovimiento || anulada()) return;
-            const debajo = document.elementFromPoint(puntero.x, puntero.y);
-            if (!debajo || !carta.contains(debajo)) return;
+            if (!ultimoMouse || zoomOcupado || zoomExtra || zoomEsperaMovimiento) return;
+            if (!puntoSobreLaCarta(carta, ultimoMouse.x, ultimoMouse.y)) return;
+            if (anulada()) {
+                pegarHover(carta); // (sin inclinación el levante del hover igual se mantiene)
+                return;
+            }
+            puntero = ultimoMouse;
             tomar(carta);
             seguir(puntero.x, puntero.y);
         });

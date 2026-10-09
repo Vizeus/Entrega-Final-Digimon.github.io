@@ -298,6 +298,62 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
             box-shadow: $sombra-panel;
         }
 
+        .f-vista:not([aria-pressed="true"]) {
+            color: $texto;
+            border-color: $borde;
+            background: linear-gradient(#2a4274, #1b2f58);
+        }
+
+        .f-subtitulo,
+        .f-panel-titulo,
+        .f-anio {
+            color: #8fb0d8;
+        }
+
+        .f-anio select {
+            color: $texto;
+            border-color: $borde;
+            background: linear-gradient(#2a4274, #1b2f58);
+
+            option {
+                background: #1b2f58;
+                color: $texto;
+            }
+        }
+
+        .f-orden-valor {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .f-btn.tiene .f-orden-valor {
+            background: #fff;
+        }
+
+        .f-orden-op:not([aria-checked="true"]) {
+            color: $texto;
+            border-color: $borde;
+            background: linear-gradient(#2a4274, #1b2f58);
+
+            .f-orden-punto {
+                border-color: #8fb0d8;
+                background: transparent;
+            }
+        }
+
+        .f-chip:not([aria-pressed="true"]) .f-casilla {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: color-mix(in srgb, var(--c) 40%, #fff);
+        }
+
+        .f-chip.f-familia[aria-pressed="mixed"] .f-casilla::after {
+            color: #fff;
+        }
+
+        .f-chip.f-familia[aria-pressed="mixed"] {
+            color: $texto;
+            background: linear-gradient(color-mix(in srgb, var(--c) 35%, #1b2f58), color-mix(in srgb, var(--c) 55%, #1b2f58));
+        }
+
         // La cajita para buscar opciones (queda fija arriba del panel, así que lleva el color de arriba del panel y no es translúcida)
         .f-opciones-buscar {
             background: #1e3365;
@@ -498,13 +554,36 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
         color: #eef5ff;
     }
 
+    // El "Aceptar" de las ventanas de información: el gel azul de la página, con el brillo tenue de los botones de vidrio de la barra
+    .swal2-popup button.ventana-boton {
+        --c: #2a6fd0;
+        border-color: rgba(120, 190, 255, 0.55);
+        background:
+            $brillo-del-vidrio, linear-gradient(180deg, color-mix(in srgb, var(--c) 84%, white) 0%, var(--c) 55%, color-mix(in srgb, var(--c) 78%, black) 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(180, 220, 255, 0.45),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+            0 3px 8px rgba(0, 0, 0, 0.5);
+
+        &:active:not(:disabled) {
+            box-shadow: var(--sombra-hundida);
+        }
+
+        &:focus-visible {
+            box-shadow:
+                inset 0 1px 0 rgba(180, 220, 255, 0.45),
+                0 0 0 5px rgba(60, 150, 255, 0.7),
+                0 3px 8px rgba(0, 0, 0, 0.5);
+        }
+    }
+
     .swal2-html-container {
         color: $texto;
     }
 
     .popup-ataques {
         .ataques-ayuda,
-        .ataque-boton small {
+        .ataque-alias {
             color: $texto-suave;
         }
 
