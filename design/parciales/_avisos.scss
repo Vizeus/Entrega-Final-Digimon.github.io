@@ -7,8 +7,8 @@
 // Avisos de ayuda del inicio (avisos.js, activarAvisosDeAyuda): cartelitos discretos arriba a la derecha, debajo de la barra. Van
 // dentro de un contenedor (#avisos-ayuda) que los apila, así que si coinciden se ven uno debajo del otro.
 // No frenan los clics ni el mouse (pointer-events: none) y quedan por debajo de la barra (1000) y del zoom (1500), salvo mientras
-// hay una carta ampliada (clase "sobre-zoom"): ahí pasan por encima para que se lean, y suben al margen de arriba porque la barra no
-// se ve (avisos.js, ubicarAvisos). Con una ventana abierta (información, ataques, evolución, combate) quedan donde estaban, detrás de
+// hay una carta ampliada (clase "sobre-zoom"): ahí pasan por encima para que se lean, suben al margen de arriba porque la barra no
+// se ve (avisos.js, ubicarAvisos) y se corren un poco a la izquierda para no tapar la ✕ que cierra la carta. Con una ventana abierta (información, ataques, evolución, combate) quedan donde estaban, detrás de
 // su cortina, con el tiempo frenado (avisos.js, frenarPorVentanas). Al irse, el aviso se achica ("saliendo") y los de abajo suben sin
 // saltar (cada consejo es un cartelito aparte y se va cuando la persona ya hizo lo que cuenta).
 #avisos-ayuda {
@@ -28,11 +28,17 @@
     @media (prefers-reduced-motion: no-preference) {
         transition:
             opacity 0.3s ease,
-            top 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+            top 0.28s cubic-bezier(0.2, 0.8, 0.25, 1),
+            right 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
     }
 
+    // Por encima de la carta ampliada y corridos hacia la izquierda (hacia el centro) lo que ocupa la ✕ de arriba a la derecha del zoom más un
+    // respiro, para no taparla: así se puede cerrar la carta sin esperar a que se vayan. (El ancho se achica lo mismo.)
     &.sobre-zoom {
-        z-index: capa(avisos-sobre-el-zoom); // por encima de la carta ampliada
+        --lugar-de-la-cruz: #{$cruz-del-zoom-margen + $cruz-del-zoom-tamano + 10px};
+        z-index: capa(avisos-sobre-el-zoom);
+        right: var(--lugar-de-la-cruz);
+        width: min(330px, calc(100vw - var(--lugar-de-la-cruz) - 8px));
     }
 
     // Mientras una carta está agrandada de más (zoom extra), los avisos se esconden y su tiempo se frena (avisos.js, frenarCarteles)

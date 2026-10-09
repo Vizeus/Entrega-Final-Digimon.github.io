@@ -10,7 +10,7 @@
 //   4. Al cambiar de idioma se vuelven a escribir todos los textos y se avisa con el evento "idioma-cambiado",
 //      así cada parte de la página (cartas, filtros, menús) se traduce sin recargar.
 //
-// Ojo: por dentro, el tipo y el elemento de cada digimon siguen guardados en español ("Datos", "Fuego"...) porque el combate
+// Ojo: por dentro, el atributo y el elemento de cada digimon siguen guardados en español ("Datos", "Fuego"...) porque el combate
 // y los filtros los usan como identificadores. Lo que cambia con el idioma es solo el nombre que se muestra.
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ export const DICCIONARIO = {
         'niveles.rotulo': 'Niveles',
         'niveles.ayuda.japon': 'Nombres de los niveles: Japón (Child, Adult, Perfect…). Tocá para usar los de EE.UU. (Rookie, Champion, Ultimate…)',
         'niveles.ayuda.eeuu': 'Nombres de los niveles: EE.UU. (Rookie, Champion, Ultimate…). Tocá para usar los de Japón (Child, Adult, Perfect…)',
-        'menu.tipos': 'Info. tipos',
+        'menu.atributos': 'Info. atributos',
         'menu.elementos': 'Info. elementos',
         'menu.niveles': 'Info. niveles',
         'menu.abrir': 'Más opciones',
@@ -39,12 +39,12 @@ export const DICCIONARIO = {
         'carga.rotulo': 'Progreso de la carga de <br>digimons:',
 
         // Nombres que se muestran
-        'tipo.Datos': 'Datos',
-        'tipo.Virus': 'Virus',
-        'tipo.Vacuna': 'Vacuna',
-        'tipo.Libre': 'Libre',
-        'tipo.Variable': 'Variable',
-        'tipo.Desconocido': 'Desconocido',
+        'atributo.Datos': 'Datos',
+        'atributo.Virus': 'Virus',
+        'atributo.Vacuna': 'Vacuna',
+        'atributo.Libre': 'Libre',
+        'atributo.Variable': 'Variable',
+        'atributo.Desconocido': 'Desconocido',
         'elemento.Fuego': 'Fuego',
         'elemento.Agua': 'Agua',
         'elemento.Planta': 'Planta',
@@ -63,7 +63,7 @@ export const DICCIONARIO = {
         'carta.nv': 'NV',
         'carta.voltear': 'Dar vuelta la carta',
         'carta.infoNivel': 'Información del nivel {nivel}',
-        'carta.infoTipo': 'Información del tipo {tipo}',
+        'carta.infoAtributo': 'Información del atributo {atributo}',
         'carta.infoElemento': 'Información del elemento {elemento}',
         'zoom.cerrar': 'Cerrar (Esc)',
         'zoom.ayuda': 'Esc o un clic afuera para cerrar · ← → para cambiar de carta',
@@ -123,7 +123,7 @@ export const DICCIONARIO = {
         'combate.anular': 'Anular el combate',
         'aceptar': 'Aceptar',
 
-        // Ventanas de información (tipos, elementos y niveles)
+        // Ventanas de información (atributos, elementos y niveles)
         'info.fuerte': 'Fuerte contra',
         'info.debil': 'Débil frente a',
         'info.mutua': 'Ventaja mutua con',
@@ -141,20 +141,20 @@ export const DICCIONARIO = {
         'info.otraClasificacion': 'En la otra clasificación',
         'info.nivelTitulo': '{nombre} · nivel {n}',
         'info.nivelItem': '{nombre} · nv {n}',
-        'tipo.pie': 'Cada ventaja de tipo suma un {p}% de probabilidad de ganar.',
-        'tipo.pieSin': 'Los tipos sin ventaja no suman ni restan probabilidad en el combate.',
+        'atributo.pie': 'Cada ventaja de atributo suma un {p}% de probabilidad de ganar.',
+        'atributo.pieSin': 'Los atributos sin ventaja no suman ni restan probabilidad en el combate.',
         'elemento.pie': 'Cada ventaja de elemento suma un {p}% de probabilidad de ganar.',
         'elemento.pieNeutro': 'El elemento Neutro no suma ni resta probabilidad en el combate.',
         'nivel.pie': 'Cada nivel de diferencia con el rival suma o resta un {p}% de probabilidad de ganar.',
         'nivel.pieAlto':
-            'Rompe la escala: en el combate pesa como un nivel {n}. Cada nivel de diferencia con el rival suma o resta un {p}% de probabilidad de ganar, y contra un rival muy por debajo casi no cuentan el tipo ni el elemento.',
+            'Rompe la escala: en el combate pesa como un nivel {n}. Cada nivel de diferencia con el rival suma o resta un {p}% de probabilidad de ganar, y contra un rival muy por debajo casi no cuentan el atributo ni el elemento.',
         'nivel.pieSin': 'Sin nivel no se suma ni se resta probabilidad en el combate.',
-        'tipo.desc.Datos': 'Los Datos son digimon con habilidades equilibradas.',
-        'tipo.desc.Virus': 'Los Virus tienen habilidades ofensivas.',
-        'tipo.desc.Vacuna': 'Los Vacuna se destacan por sus habilidades defensivas.',
-        'tipo.desc.Libre': 'Los Libres no tienen atributos definidos, por lo que son equilibrados en combate.',
-        'tipo.desc.Variable': 'Los Variables son adaptables, con habilidades cambiantes; pueden ser difíciles de predecir.',
-        'tipo.desc.Desconocido': 'Los Desconocidos tienen atributos no clasificados, lo que los hace inesperados en combate.',
+        'atributo.desc.Datos': 'Los Datos son digimon con habilidades equilibradas.',
+        'atributo.desc.Virus': 'Los Virus tienen habilidades ofensivas.',
+        'atributo.desc.Vacuna': 'Los Vacuna se destacan por sus habilidades defensivas.',
+        'atributo.desc.Libre': 'Los Libres no tienen un atributo definido, por lo que son equilibrados en combate.',
+        'atributo.desc.Variable': 'Los Variables son adaptables, con habilidades cambiantes; pueden ser difíciles de predecir.',
+        'atributo.desc.Desconocido': 'Los Desconocidos tienen un atributo sin clasificar, lo que los hace inesperados en combate.',
         'elemento.desc.Fuego': 'Digimon que atacan con llamas, calor y explosiones.',
         'elemento.desc.Agua': 'Digimon de mares, olas y burbujas.',
         'elemento.desc.Planta': 'Digimon de hojas, espinas, flores y bosques.',
@@ -186,7 +186,9 @@ export const DICCIONARIO = {
         'filtros.region': 'Filtros y buscador de digimons',
         'filtros.buscar': 'Buscar digimon por nombre o número',
         'filtros.borrarBusqueda': 'Borrar búsqueda',
-        'filtros.tipo': 'Tipo',
+        'filtros.atributo': 'Atributo',
+        'filtros.campo': 'Grupo',
+        'filtros.especie': 'Especie',
         'filtros.nivel': 'Nivel',
         'filtros.elemento': 'Elemento',
         'filtros.x': 'X-Antibody',
@@ -199,7 +201,10 @@ export const DICCIONARIO = {
         'filtros.x.ayuda.con': 'Solo las que tienen X-Antibody. Un clic para ver solo las que no la tienen',
         'filtros.x.ayuda.sin': 'Solo las que no tienen X-Antibody. Un clic para volver a ver todas',
         'filtros.busqueda': 'Búsqueda',
-        'filtros.porTipo': 'Filtrar por tipo',
+        'filtros.porAtributo': 'Filtrar por atributo',
+        'filtros.porCampo': 'Filtrar por grupo',
+        'filtros.porEspecie': 'Filtrar por especie',
+        'filtros.buscarEspecie': 'Buscar especie…',
         'filtros.porNivel': 'Filtrar por nivel',
         'filtros.porElemento': 'Filtrar por elemento',
         'filtros.activos': 'Filtros activos',
@@ -223,7 +228,7 @@ export const DICCIONARIO = {
         'niveles.rotulo': 'Levels',
         'niveles.ayuda.japon': 'Level names: Japan (Child, Adult, Perfect…). Tap to use the US ones (Rookie, Champion, Ultimate…)',
         'niveles.ayuda.eeuu': 'Level names: USA (Rookie, Champion, Ultimate…). Tap to use the Japanese ones (Child, Adult, Perfect…)',
-        'menu.tipos': 'Types info',
+        'menu.atributos': 'Attributes info',
         'menu.elementos': 'Elements info',
         'menu.niveles': 'Levels info',
         'menu.abrir': 'More options',
@@ -231,12 +236,12 @@ export const DICCIONARIO = {
         'carga.rotulo': 'Loading progress of <br>Digimon:',
 
         // Displayed names
-        'tipo.Datos': 'Data',
-        'tipo.Virus': 'Virus',
-        'tipo.Vacuna': 'Vaccine',
-        'tipo.Libre': 'Free',
-        'tipo.Variable': 'Variable',
-        'tipo.Desconocido': 'Unknown',
+        'atributo.Datos': 'Data',
+        'atributo.Virus': 'Virus',
+        'atributo.Vacuna': 'Vaccine',
+        'atributo.Libre': 'Free',
+        'atributo.Variable': 'Variable',
+        'atributo.Desconocido': 'Unknown',
         'elemento.Fuego': 'Fire',
         'elemento.Agua': 'Water',
         'elemento.Planta': 'Plant',
@@ -255,7 +260,7 @@ export const DICCIONARIO = {
         'carta.nv': 'LV',
         'carta.voltear': 'Flip the card',
         'carta.infoNivel': '{nivel} level info',
-        'carta.infoTipo': '{tipo} type info',
+        'carta.infoAtributo': '{atributo} attribute info',
         'carta.infoElemento': '{elemento} element info',
         'zoom.cerrar': 'Close (Esc)',
         'zoom.ayuda': 'Press Esc or click outside to close · ← → to switch cards',
@@ -315,7 +320,7 @@ export const DICCIONARIO = {
         'combate.anular': 'Cancel the battle',
         'aceptar': 'OK',
 
-        // Info windows (types, elements and levels)
+        // Info windows (attributes, elements and levels)
         'info.fuerte': 'Strong against',
         'info.debil': 'Weak against',
         'info.mutua': 'Mutual advantage with',
@@ -333,20 +338,20 @@ export const DICCIONARIO = {
         'info.otraClasificacion': 'In the other classification',
         'info.nivelTitulo': '{nombre} · level {n}',
         'info.nivelItem': '{nombre} · lv {n}',
-        'tipo.pie': 'Each type advantage adds {p}% to the chance of winning.',
-        'tipo.pieSin': 'Types without an advantage neither add nor subtract chance in battle.',
+        'atributo.pie': 'Each attribute advantage adds {p}% to the chance of winning.',
+        'atributo.pieSin': 'Attributes without an advantage neither add nor subtract chance in battle.',
         'elemento.pie': 'Each element advantage adds {p}% to the chance of winning.',
         'elemento.pieNeutro': 'The Neutral element neither adds nor subtracts chance in battle.',
         'nivel.pie': 'Each level of difference with the rival adds or subtracts {p}% to the chance of winning.',
         'nivel.pieAlto':
-            'It breaks the scale: in battle it weighs as much as a level {n}. Each level of difference with the rival adds or subtracts {p}% to the chance of winning, and against a rival far below, type and element barely count.',
+            'It breaks the scale: in battle it weighs as much as a level {n}. Each level of difference with the rival adds or subtracts {p}% to the chance of winning, and against a rival far below, attribute and element barely count.',
         'nivel.pieSin': 'Without a level, no chance is added or subtracted in battle.',
-        'tipo.desc.Datos': 'Data Digimon have balanced abilities.',
-        'tipo.desc.Virus': 'Virus Digimon have offensive abilities.',
-        'tipo.desc.Vacuna': 'Vaccine Digimon stand out for their defensive abilities.',
-        'tipo.desc.Libre': 'Free Digimon have no defined attribute, so they are balanced in combat.',
-        'tipo.desc.Variable': 'Variable Digimon are adaptable, with changing abilities; they can be hard to predict.',
-        'tipo.desc.Desconocido': 'Unknown Digimon have unclassified attributes, which makes them unpredictable in combat.',
+        'atributo.desc.Datos': 'Data Digimon have balanced abilities.',
+        'atributo.desc.Virus': 'Virus Digimon have offensive abilities.',
+        'atributo.desc.Vacuna': 'Vaccine Digimon stand out for their defensive abilities.',
+        'atributo.desc.Libre': 'Free Digimon have no defined attribute, so they are balanced in combat.',
+        'atributo.desc.Variable': 'Variable Digimon are adaptable, with changing abilities; they can be hard to predict.',
+        'atributo.desc.Desconocido': 'Unknown Digimon have an unclassified attribute, which makes them unpredictable in combat.',
         'elemento.desc.Fuego': 'Digimon that attack with flames, heat and explosions.',
         'elemento.desc.Agua': 'Digimon of seas, waves and bubbles.',
         'elemento.desc.Planta': 'Digimon of leaves, thorns, flowers and forests.',
@@ -378,7 +383,9 @@ export const DICCIONARIO = {
         'filtros.region': 'Digimon filters and search',
         'filtros.buscar': 'Search Digimon by name or number',
         'filtros.borrarBusqueda': 'Clear search',
-        'filtros.tipo': 'Type',
+        'filtros.atributo': 'Attribute',
+        'filtros.campo': 'Group',
+        'filtros.especie': 'Species',
         'filtros.nivel': 'Level',
         'filtros.elemento': 'Element',
         'filtros.x': 'X-Antibody',
@@ -391,7 +398,10 @@ export const DICCIONARIO = {
         'filtros.x.ayuda.con': 'Only those with X-Antibody. Click to show only those without it',
         'filtros.x.ayuda.sin': 'Only those without X-Antibody. Click to show them all again',
         'filtros.busqueda': 'Search',
-        'filtros.porTipo': 'Filter by type',
+        'filtros.porAtributo': 'Filter by attribute',
+        'filtros.porCampo': 'Filter by group',
+        'filtros.porEspecie': 'Filter by species',
+        'filtros.buscarEspecie': 'Search species…',
         'filtros.porNivel': 'Filter by level',
         'filtros.porElemento': 'Filter by element',
         'filtros.activos': 'Active filters',
@@ -466,7 +476,7 @@ function cambiarIdioma(nuevo) {
 }
 
 // Nombres para mostrar (el valor interno sigue siendo el de español)
-export const nombreTipo = tipo => t(`tipo.${tipo}`);
+export const nombreAtributo = atributo => t(`atributo.${atributo}`);
 export const nombreElemento = elemento => t(`elemento.${elemento}`);
 
 aplicarTextos();

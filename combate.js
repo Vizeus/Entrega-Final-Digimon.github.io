@@ -1,13 +1,14 @@
 // -----------------------------------------------------------------------------------------------------------------
 // COMBATE
 //
-// Elegir los 2 digimons (el contador de la barra), calcular quién gana (tipo + nivel + elemento) y los tres carteles del
+// Elegir los 2 digimons (el contador de la barra), calcular quién gana (atributo + nivel + elemento) y los tres carteles del
 // combate (preparando → peleando → ganador).
 // -----------------------------------------------------------------------------------------------------------------
 
 import { emitir, ponerAyuda } from './util.js';
-import { ELEMENTO_FUERTE_CONTRA, TIPO_FUERTE_CONTRA } from './datos.js';
+import { ELEMENTO_FUERTE_CONTRA, ATRIBUTO_FUERTE_CONTRA } from './datos.js';
 import { t } from './i18n.js';
+import { conCruzDeCierre } from './ventanas.js';
 import { botonIniciarCombate, contadorSeleccion } from './pagina.js';
 import { AVISO_CONTADOR_ESPERA, mostrarAvisoDelContador, quitarAvisoDelContador, revisarLlamadas } from './avisos.js';
 import { nombreCompleto, reducirMovimiento } from './cartas.js';
@@ -31,16 +32,16 @@ import {
 } from './audio.js';
 
 // -----------------------------------------------------------------------------------------------------------------
-// SISTEMA DE COMBATE: la probabilidad de ganar combina TIPO + NIVEL + ELEMENTO
+// SISTEMA DE COMBATE: la probabilidad de ganar combina ATRIBUTO + NIVEL + ELEMENTO
 //
-//   probabilidad = 50% + (ventaja de tipo × 20%) + (diferencia de nivel × 15%) + (ventaja de elemento × 10%)
+//   probabilidad = 50% + (ventaja de atributo × 20%) + (diferencia de nivel × 15%) + (ventaja de elemento × 10%)
 //
-// Con esto, una doble ventaja (tipo + elemento = +30%) compensa justo 2 niveles de diferencia (2 × 15%).
-// Los niveles 7 y 8 rompen esa escala: pesan mucho más (PODER_EN_COMBATE) y contra ellos casi no sirve el tipo ni el elemento.
+// Con esto, una doble ventaja (atributo + elemento = +30%) compensa justo 2 niveles de diferencia (2 × 15%).
+// Los niveles 7 y 8 rompen esa escala: pesan mucho más (PODER_EN_COMBATE) y contra ellos casi no sirve el atributo ni el elemento.
 // -----------------------------------------------------------------------------------------------------------------
 
 // Cuánto pesa cada factor
-export const PESO_TIPO = 0.2;
+export const PESO_ATRIBUTO = 0.2;
 export const PESO_NIVEL = 0.15;
 export const PESO_ELEMENTO = 0.1;
 
@@ -50,7 +51,7 @@ export const PESO_ELEMENTO = 0.1;
 export const PODER_EN_COMBATE = { 7: 9, 8: 12 };
 const poderEnCombate = nivel => PODER_EN_COMBATE[nivel] ?? nivel;
 
-// Si uno de los dos es nivel 7 u 8 y el otro está muy por debajo, el tipo y el elemento valen cada vez menos:
+// Si uno de los dos es nivel 7 u 8 y el otro está muy por debajo, el atributo y el elemento valen cada vez menos:
 // hasta 1,5 niveles de diferencia valen todo; más allá valen 1,5 ÷ diferencia (con 3 niveles de diferencia, la mitad).
 const ALCANCE_VENTAJAS = 1.5;
 
@@ -115,7 +116,6 @@ const CARTEL_COMBATE = {
         title: 'combate-titulo',
         htmlContainer: 'combate-cuerpo',
         confirmButton: 'combate-boton',
-        closeButton: 'combate-cerrar',
     },
     showClass: { popup: 'combate-entra' }, // animaciones de entrada y salida (en el SCSS)
     hideClass: { popup: 'combate-sale' },
@@ -290,20 +290,16 @@ function bloquearFondoDelCombate(bloquear) {
 }
 
 // Abre uno de los carteles del combate. Devuelve true si tocaron "Aceptar" (se sigue con el próximo cartel) y false si lo anularon:
-// con la cruz de arriba a la derecha, tocando afuera o con Esc (ahí el combate se corta y no se muestran los que faltan)
-const CRUZ_ANULAR = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg>';
-
+// con la cruz de arriba a la derecha (la de todas las ventanas: ver ventanas.js), tocando afuera, con Esc o con el "atrás" del celular (ahí el
+// combate se corta y no se muestran los que faltan)
 async function abrirCartelDeCombate({ didOpen, ...opciones }) {
     const respuesta = await Swal.fire({
         ...CARTEL_COMBATE,
-        showCloseButton: true,
-        closeButtonHtml: CRUZ_ANULAR,
-        closeButtonAriaLabel: t('combate.anular'),
+        ...conCruzDeCierre(t('combate.anular')),
         confirmButtonText: t('aceptar'),
         ...opciones,
         didOpen: ventana => {
             bloquearFondoDelCombate(true); // queda activo hasta que termina todo el combate (así no hay hueco entre un cartel y el siguiente)
-            ventana.querySelector('.swal2-close')?.setAttribute('title', t('combate.anular'));
             didOpen?.(ventana);
         },
     });
@@ -327,7 +323,7 @@ export async function iniciarCombate() {
 async function correrCombate() {
     console.log('--- Variables de los digimons seleccionados para el combate 👇 ---');
 
-    // Leemos los datos de cada carta seleccionada (nombre, tipo, nivel y elemento)
+    // Leemos los datos de cada carta seleccionada (nombre, atributo, nivel y elemento)
     const luchador1 = leerLuchador(seleccionados[0]);
     const luchador2 = leerLuchador(seleccionados[1]);
     console.log(luchador1);
@@ -404,17 +400,17 @@ async function correrCombate() {
     }
 }
 
-// Función para leer los datos de una carta (los guardamos en el data-tipo, data-nivel y data-elemento)
+// Función para leer los datos de una carta (los guardamos en el data-atributo, data-nivel y data-elemento)
 function leerLuchador(carta) {
     return {
         nombre: nombreCompleto(carta),
-        tipo: carta.dataset.tipo,
+        atributo: carta.dataset.atributo,
         nivel: carta.dataset.nivel !== undefined ? Number(carta.dataset.nivel) : null, // null si el nivel es desconocido
         elemento: carta.dataset.elemento,
     };
 }
 
-// Probabilidad (de 0 a 1) de que gane el primer luchador, considerando nivel, tipo y elemento
+// Probabilidad (de 0 a 1) de que gane el primer luchador, considerando nivel, atributo y elemento
 function calcularProbabilidad(luchador1, luchador2) {
     console.log('--- Cálculos del combate 👇 ---');
 
@@ -432,20 +428,20 @@ function calcularProbabilidad(luchador1, luchador2) {
     console.log('Ajuste por nivel 👇');
     console.log(ajusteNivel);
 
-    // Contra un nivel 7 u 8 con el rival muy por debajo, el tipo y el elemento valen menos (1 = valen todo)
+    // Contra un nivel 7 u 8 con el rival muy por debajo, el atributo y el elemento valen menos (1 = valen todo)
     const brecha = Math.abs(diferenciaDeNivel);
     const hayNivelAlto = hayNiveles && Math.max(luchador1.nivel, luchador2.nivel) >= 7;
     const valorVentajas = hayNivelAlto && brecha > ALCANCE_VENTAJAS ? ALCANCE_VENTAJAS / brecha : 1;
-    console.log('Cuánto valen el tipo y el elemento (1 = todo) 👇');
+    console.log('Cuánto valen el atributo y el elemento (1 = todo) 👇');
     console.log(valorVentajas);
 
-    // Ajuste por tipo: +1 si el tipo 1 es fuerte contra el tipo 2, -1 si es débil, 0 si están parejos
-    const ventajaTipo = calcularVentaja(TIPO_FUERTE_CONTRA, luchador1.tipo, luchador2.tipo);
-    const ajusteTipo = ventajaTipo * PESO_TIPO * valorVentajas;
-    console.log('Ventaja de tipo (+1 a favor, -1 en contra) 👇');
-    console.log(ventajaTipo);
-    console.log('Ajuste por tipo 👇');
-    console.log(ajusteTipo);
+    // Ajuste por atributo: +1 si el atributo 1 es fuerte contra el atributo 2, -1 si es débil, 0 si están parejos
+    const ventajaAtributo = calcularVentaja(ATRIBUTO_FUERTE_CONTRA, luchador1.atributo, luchador2.atributo);
+    const ajusteAtributo = ventajaAtributo * PESO_ATRIBUTO * valorVentajas;
+    console.log('Ventaja de atributo (+1 a favor, -1 en contra) 👇');
+    console.log(ventajaAtributo);
+    console.log('Ajuste por atributo 👇');
+    console.log(ajusteAtributo);
 
     // Ajuste por elemento: +1 a favor, -1 en contra, 0 si están parejos (o alguno es Neutro)
     const ventajaElemento = calcularVentaja(ELEMENTO_FUERTE_CONTRA, luchador1.elemento, luchador2.elemento);
@@ -456,11 +452,11 @@ function calcularProbabilidad(luchador1, luchador2) {
     console.log(ajusteElemento);
 
     // Sumamos todo y nos aseguramos de que la probabilidad esté entre 0 y 1 (redondeada a 2 decimales)
-    const suma = probabilidadBase + ajusteTipo + ajusteNivel + ajusteElemento;
+    const suma = probabilidadBase + ajusteAtributo + ajusteNivel + ajusteElemento;
     return Math.min(1, Math.max(0, Number(suma.toFixed(2))));
 }
 
-// Función para determinar el ganador considerando tipo, nivel y elemento. Devuelve su lugar: 0 (el primero) o 1 (el segundo)
+// Función para determinar el ganador considerando atributo, nivel y elemento. Devuelve su lugar: 0 (el primero) o 1 (el segundo)
 function determinarGanador(luchador1, luchador2) {
     const probabilidadAjustada = calcularProbabilidad(luchador1, luchador2);
     console.log('El N° aleatorio debe ser inferior a este 👇 para ganar');

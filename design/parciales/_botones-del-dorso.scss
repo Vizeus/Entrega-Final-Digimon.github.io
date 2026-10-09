@@ -2,7 +2,7 @@
 // BOTONES DEL DORSO DE LA CARTA ("⚔️ Ataques" y "🧬 Evolución")
 // -----------------------------------------------------------------------------------------------------------------
 
-/* Botones del pie del dorso de la carta: "⚔️ Ataques" (info.js) y "🧬 Evolución" (evolucion.js), del color del tipo.
+/* Botones del pie del dorso de la carta: "⚔️ Ataques" (info.js) y "🧬 Evolución" (evolucion.js), del color del atributo.
    Van uno al lado del otro si entran; en las cartas angostas (celular) pasan uno debajo del otro */
 #listado-digimons li .c-botones {
     flex: none;
@@ -29,12 +29,17 @@
     color: #fff;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
     cursor: pointer;
-    border: 1px solid color-mix(in srgb, var(--tipo) 55%, black);
+    border: 1px solid color-mix(in srgb, var(--atributo) 55%, black);
     border-radius: 8px;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--tipo) 55%, white) 0%, var(--tipo) 50%, color-mix(in srgb, var(--tipo) 88%, black) 100%);
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--atributo) 55%, white) 0%,
+        var(--atributo) 50%,
+        color-mix(in srgb, var(--atributo) 88%, black) 100%
+    );
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.6),
-        0 1px 2px color-mix(in srgb, var(--tipo) 35%, rgba(0, 0, 0, 0.2));
+        0 1px 2px color-mix(in srgb, var(--atributo) 35%, rgba(0, 0, 0, 0.2));
     transition:
         transform 0.07s ease,
         box-shadow 0.07s ease,

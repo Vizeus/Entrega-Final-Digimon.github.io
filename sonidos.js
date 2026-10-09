@@ -13,6 +13,7 @@ import {
     sonarSinAvisarAlBotonDeAudio,
 } from './audio.js';
 import { toqueQueSoloCierraMenus } from './menus.js';
+import { esElSegundoDeUnDoble } from './util.js';
 
 // ---- Tecla de teclado mecánico ------------------------------------------------------------------------------------
 // Una tecla real suena a tres cosas juntas: un "clic" agudo (el mecanismo), un golpe seco (la tecla llegando al fondo)
@@ -312,7 +313,7 @@ export function sonidoZoom(abrir) {
 // ---- Sonido de fichero (papeles) ---------------------------------------------------------------------------------------
 // Dos sonidos muy sutiles de papeles que se abren y se vuelven a cerrar, como los de un fichero. Los usan:
 //   · los botones de cada ataque (se despliega o se recoge la descripción): suenan SOLOS, sin la tecla;
-//   · los desplegables de los filtros (Tipo, Nivel, Elemento) y de los menús "Info.": suenan después de la tecla del botón, más bajito.
+//   · los desplegables de los filtros (Atributo, Nivel, Elemento) y de los menús "Info.": suenan después de la tecla del botón, más bajito.
 // Abrir: un golpecito de tapa, un barrido de aire que sube y un crujido de hojas. Cerrar: el barrido baja, el crujido se apaga y las hojas se apoyan.
 export const FICHERO_DE_ATAQUES = 1; // fuerza con que suena en los botones de los ataques (el sonido de referencia)
 const FICHERO_DE_DESPLEGABLES = 0.7; // en los desplegables de los filtros y de "Info.": un poco más bajito que en los ataques
@@ -448,9 +449,9 @@ export function activarSonidoBotones() {
         if (boton.closest('.c-flip')) return null;
         // Los botones de cada ataque (desplegar la descripción) no suenan a tecla: suena el fichero (info.js)
         if (boton.classList.contains('ataque-boton')) return null;
-        // Todos los botones de la carta (los de info: gema, nivel, tipo, elemento; y los de ataque y evolución):
+        // Todos los botones de la carta (los de info: gema, nivel, atributo, elemento; y los de ataque y evolución):
         // suenan todos con la tecla de cartas (un toque más agudo y bajo)
-        if (boton.closest('.c-gema, .c-nivel, .c-tipo, .c-elem, .c-ataques, .c-evo, .c-botones') || boton.closest('#listado-digimons li')) {
+        if (boton.closest('.c-gema, .c-nivel, .c-atributo, .c-elem, .c-ataques, .c-evo, .c-botones') || boton.closest('#listado-digimons li')) {
             return TECLA_DE_CARTA;
         }
         if (boton.closest(ZONAS_CON_SONIDO) || boton.closest('.swal2-popup')) return TECLA_NORMAL;
@@ -460,6 +461,7 @@ export function activarSonidoBotones() {
         if (evento.pointerType === 'mouse' && evento.button !== 0) return; // solo el botón izquierdo
         if (esToqueEnBotonConEspera(evento)) return; // con el dedo, los de las cartas y las ventanas suenan al terminar el toque (ver más abajo)
         if (toqueQueSoloCierraMenus()) return; // el toque que cierra un menú desde una carta no suena (el menú al cerrarse suena solo)
+        if (esElSegundoDeUnDoble()) return; // el segundo clic de un doble clic sobre un botoncito de la carta (amplía la carta) no suena otra vez
         const tecla = teclaDe(evento);
         if (tecla) {
             apretado = tecla;

@@ -63,12 +63,12 @@
     // ✕ de vidrio arriba a la derecha
     .zoom-cerrar {
         position: absolute;
-        top: 14px;
-        right: 14px;
+        top: $cruz-del-zoom-margen;
+        right: $cruz-del-zoom-margen;
         display: grid;
         place-items: center;
-        width: 42px;
-        height: 42px;
+        width: $cruz-del-zoom-tamano;
+        height: $cruz-del-zoom-tamano;
         padding: 0;
         font:
             700 19px/1 var(--f-boton),

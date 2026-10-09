@@ -567,7 +567,7 @@ export function activarAvisoDeInclinacion() {
         });
     };
 
-    // Tercera condición de aparición: clic en los botones inferiores del frente de la carta (tipo o elemento).
+    // Tercera condición de aparición: clic en los botones inferiores del frente de la carta (atributo o elemento).
     // Si el cartel aún no salió en la sesión, sale con el cartel; si ya había pasado, sale solo la animación del botón.
     document.addEventListener('click-chip-carta', () => {
         if (!terminado && !inclinacionAvisoYaSalio()) {
@@ -696,27 +696,62 @@ export function activarAvisoDeTema() {
 // Cartel del zoom extra (solo computadora): al ampliar la primera carta de la sesión cuenta, en una línea, que con el mouse sobre la carta la
 // rueda hacia arriba la agranda todavía más y hacia abajo vuelve (ver "ZOOM EXTRA"). Una sola vez por sesión del navegador (si se cierra la
 // carta antes de que entre, todavía no lo vio y sale con la próxima), y solo en las primeras 5 sesiones de la persona (el mismo contador de
-// visitas de los avisos de ayuda): a partir de la sexta no sale más. Se va si la persona hace lo que cuenta, o al cerrar la carta. Es el único
-// cartel que no se frena con el zoom extra para seguir después: al hacerlo ya cumplió, así que se va de una vez y no vuelve.
+// visitas de los avisos de ayuda): a partir de la sexta no sale más. Se va para siempre si la persona hace lo que cuenta, si lo cierra a mano o
+// si se le acaba el tiempo. Es el único cartel que no se frena con el zoom extra para seguir después: al hacerlo ya cumplió, así que se va de
+// una vez y no vuelve.
+// Si se cierra la carta con el cartel a la vista (o cuando recién entró), no se pierde: queda CONGELADO. Se va (no se ve ni se puede tocar) y
+// su tiempo se frena con lo que le quedaba; cuando la persona vuelve a ampliar una carta, reaparece y sigue justo donde iba. Si al cerrar la
+// carta le quedaba muy poco, es que ya se pudo leer y no vuelve.
 const ZOOM_EXTRA_AVISO_SESION = 'digimon-aviso-zoom-extra'; // sessionStorage: en esta sesión ya salió
 const ZOOM_EXTRA_AVISO_ULTIMA_SESION = 5;
 const ZOOM_EXTRA_AVISO_ESPERA = 1500; // ms desde que se abre el zoom (la carta llega al centro a los 0,7 s)
-const ZOOM_EXTRA_AVISO_DURACION = 8000; // ms a la vista
+const ZOOM_EXTRA_AVISO_DURACION = 8000; // ms a la vista (en total, sumando las veces que reaparece)
+const ZOOM_EXTRA_AVISO_MINIMO = 1000; // ms: si al cerrar la carta le quedaba menos que esto, no reaparece
 
 export function activarAvisoDeZoomExtra() {
     if (!CON_MOUSE.matches) return; // en celular no
     if (memoriaAvisos.visitas > ZOOM_EXTRA_AVISO_ULTIMA_SESION) return;
     let salio = hayMarcaDeSesion(ZOOM_EXTRA_AVISO_SESION);
     let enZoom = false; // hay una carta ampliada (y no se está cerrando)
-    let espera = 0;
-    let cierre = 0;
+    let espera = 0; // la espera para que salga (o reaparezca) con la carta ya en el centro
+    let cierre = 0; // el tiempo que le queda a la vista
     let aviso = null;
+    let visibleDesde = 0; // desde cuándo está a la vista esta vez
+    let restante = 0; // lo que le queda de tiempo a la vista, contado desde visibleDesde
+    let congelado = false; // se cerró la carta con el cartel por salir o a la vista: espera a que se vuelva a ampliar una
 
-    const cerrar = () => {
+    // Se va para siempre (la persona hizo lo que cuenta, lo cerró a mano o se le acabó el tiempo)
+    const terminar = () => {
         clearTimeout(espera);
         clearTimeout(cierre);
         if (aviso) quitarAviso(aviso);
         aviso = null;
+        congelado = false;
+    };
+
+    // Sale a la vista con "ms" de tiempo por delante
+    const mostrar = ms => {
+        const nuevo = crearAviso('aviso-zoom-extra', [{ clave: 'zoom-extra', icono: '🔍', texto: 'aviso.zoomExtra' }], () => {
+            if (aviso === nuevo) terminar(); // (si ya estaba congelado, un clic atrasado no lo mata)
+        });
+        aviso = nuevo;
+        congelado = false;
+        escribirAviso(aviso);
+        ponerAviso(aviso);
+        visibleDesde = performance.now();
+        restante = ms;
+        cierre = setTimeout(terminar, ms);
+    };
+
+    // Se cerró la carta: si el cartel estaba a la vista, se va y se guarda lo que le quedaba
+    const congelar = () => {
+        clearTimeout(espera);
+        if (!aviso) return;
+        clearTimeout(cierre);
+        restante -= performance.now() - visibleDesde;
+        quitarAviso(aviso);
+        aviso = null;
+        congelado = restante >= ZOOM_EXTRA_AVISO_MINIMO; // si ya casi se iba, es que se pudo leer
     };
 
     document.addEventListener('zoom-cambio', () => {
@@ -724,24 +759,25 @@ export function activarAvisoDeZoomExtra() {
         if (abierto === enZoom) return; // también sale al pasar de una carta a otra: no es un zoom nuevo
         enZoom = abierto;
         if (!abierto) {
-            // se cerró la carta: lo que cuenta ya no sirve
-            cerrar();
+            congelar();
             return;
         }
-        if (salio) return;
+        if (salio && !congelado) return;
         espera = setTimeout(() => {
-            if (!enZoom || salio) return;
+            if (!enZoom) return;
+            if (congelado) {
+                mostrar(restante); // sigue justo donde iba
+                return;
+            }
+            if (salio) return;
             salio = true;
             ponerMarcaDeSesion(ZOOM_EXTRA_AVISO_SESION);
-            aviso = crearAviso('aviso-zoom-extra', [{ clave: 'zoom-extra', icono: '🔍', texto: 'aviso.zoomExtra' }], cerrar);
-            escribirAviso(aviso);
-            ponerAviso(aviso);
-            cierre = setTimeout(cerrar, ZOOM_EXTRA_AVISO_DURACION);
+            mostrar(ZOOM_EXTRA_AVISO_DURACION);
         }, ZOOM_EXTRA_AVISO_ESPERA);
     });
     document.addEventListener('zoom-extra', () => {
         // ya lo está haciendo: el cartel se va
-        if (zoomExtra) cerrar();
+        if (zoomExtra) terminar();
     });
     document.addEventListener('idioma-cambiado', () => escribirAviso(aviso));
 }
@@ -978,17 +1014,6 @@ export function revisarLlamadas() {
     llamadas.forEach(([boton, llamada], i) => {
         ubicarGloboDelBoton(boton, llamada.globo, llamadas.length < 2 ? 'centro' : i === 0 ? 'izquierda' : 'derecha');
     });
-    esquivarAvisosConElBotonDeSonido();
-}
-
-// En celular, con el zoom de una carta abierto, el botón de sonido está arriba a la izquierda y su globito se extiende hacia la derecha, justo
-// donde salen los cartelitos de ayuda (arriba a la derecha): si el botón está llamando la atención al mismo tiempo que hay cartelitos a la vista,
-// el CSS lo pasa a la esquina de abajo a la izquierda (clase "esquiva-avisos"). Vuelve arriba cuando se va el primero de los dos: el globito del
-// botón o los cartelitos (también si se frenan por el zoom extra). Sin zoom el botón flota abajo a la derecha, donde no molesta a nadie.
-function esquivarAvisosConElBotonDeSonido() {
-    const boton = document.getElementById('silenciar');
-    if (!boton) return;
-    boton.classList.toggle('esquiva-avisos', PANTALLA_DE_CELULAR.matches && llamadasActivas.has(boton) && hayCartelitosAVista());
 }
 
 function vigilarLlamadas() {
@@ -1091,7 +1116,6 @@ export function terminarLlamada(boton, { deGolpe = false } = {}) {
     const llamada = llamadasActivas.get(boton);
     if (!llamada) return;
     llamadasActivas.delete(boton);
-    boton.classList.remove('esquiva-avisos'); // (ya no llama la atención: vuelve a su lugar)
     llamada.temporizador?.cancelar();
     llamada.animacion?.quitar();
     alFrenar.delete(llamada.alFrenar);

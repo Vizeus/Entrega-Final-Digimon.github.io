@@ -25,7 +25,7 @@
 
         <meta
             name="description"
-            content="Simulador de combates Digimon: elegí dos cartas entre más de 1400 digimons y mirá quién gana según su tipo, su nivel y su elemento."
+            content="Simulador de combates Digimon: elegí dos cartas entre más de 1400 digimons y mirá quién gana según su atributo, su nivel y su elemento."
         />
         <link rel="icon" href="./img/favicon.ico" type="image/x-icon" />
 
@@ -49,33 +49,33 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261008-1756",
-                    "./datos.js": "./datos.js?v=20261008-1756",
-                    "./i18n.js": "./i18n.js?v=20261008-1756",
-                    "./nombres.js": "./nombres.js?v=20261008-1756",
-                    "./pagina.js": "./pagina.js?v=20261008-1756",
-                    "./api.js": "./api.js?v=20261008-1756",
-                    "./combate.js": "./combate.js?v=20261008-1756",
-                    "./avisos.js": "./avisos.js?v=20261008-1756",
-                    "./descartar.js": "./descartar.js?v=20261008-1756",
-                    "./cartas.js": "./cartas.js?v=20261008-1756",
-                    "./zoom.js": "./zoom.js?v=20261008-1756",
-                    "./gestos.js": "./gestos.js?v=20261008-1756",
-                    "./inclinacion.js": "./inclinacion.js?v=20261008-1756",
-                    "./audio.js": "./audio.js?v=20261008-1756",
-                    "./sonidos.js": "./sonidos.js?v=20261008-1756",
-                    "./filtros.js": "./filtros.js?v=20261008-1756",
-                    "./info.js": "./info.js?v=20261008-1756",
-                    "./barra.js": "./barra.js?v=20261008-1756",
-                    "./evolucion.js": "./evolucion.js?v=20261008-1756",
-                    "./ventanas.js": "./ventanas.js?v=20261008-1756",
-                    "./baile.js": "./baile.js?v=20261008-1756",
-                    "./tema.js": "./tema.js?v=20261008-1756",
-                    "./menus.js": "./menus.js?v=20261008-1756"
+                    "./util.js": "./util.js?v=20261009-0038",
+                    "./datos.js": "./datos.js?v=20261009-0038",
+                    "./i18n.js": "./i18n.js?v=20261009-0038",
+                    "./nombres.js": "./nombres.js?v=20261009-0038",
+                    "./pagina.js": "./pagina.js?v=20261009-0038",
+                    "./api.js": "./api.js?v=20261009-0038",
+                    "./combate.js": "./combate.js?v=20261009-0038",
+                    "./avisos.js": "./avisos.js?v=20261009-0038",
+                    "./descartar.js": "./descartar.js?v=20261009-0038",
+                    "./cartas.js": "./cartas.js?v=20261009-0038",
+                    "./zoom.js": "./zoom.js?v=20261009-0038",
+                    "./gestos.js": "./gestos.js?v=20261009-0038",
+                    "./inclinacion.js": "./inclinacion.js?v=20261009-0038",
+                    "./audio.js": "./audio.js?v=20261009-0038",
+                    "./sonidos.js": "./sonidos.js?v=20261009-0038",
+                    "./filtros.js": "./filtros.js?v=20261009-0038",
+                    "./info.js": "./info.js?v=20261009-0038",
+                    "./barra.js": "./barra.js?v=20261009-0038",
+                    "./evolucion.js": "./evolucion.js?v=20261009-0038",
+                    "./ventanas.js": "./ventanas.js?v=20261009-0038",
+                    "./baile.js": "./baile.js?v=20261009-0038",
+                    "./tema.js": "./tema.js?v=20261009-0038",
+                    "./menus.js": "./menus.js?v=20261009-0038"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261008-1756"></script>
+        <script type="module" src="./main.js?v=20261009-0038"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,7 +86,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261008-1756" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261009-0038" />
     </head>
 
     <body>
@@ -294,16 +294,16 @@
                     <div class="menu-info">
                         <button
                             type="button"
-                            id="abrir-tipos"
+                            id="abrir-atributos"
                             class="menu-desplegable"
                             aria-haspopup="true"
                             aria-expanded="false"
-                            aria-controls="lista-tipos"
-                            data-i18n="menu.tipos"
+                            aria-controls="lista-atributos"
+                            data-i18n="menu.atributos"
                         >
-                            Info. tipos
+                            Info. atributos
                         </button>
-                        <ul id="lista-tipos"></ul>
+                        <ul id="lista-atributos"></ul>
                     </div>
 
                     <div class="menu-info">
@@ -368,11 +368,11 @@
                     </button>
                 </label>
 
-                <div class="f-grupo" data-g="tipo">
+                <div class="f-grupo" data-g="atributo">
                     <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-                        <span data-i18n="filtros.tipo">Tipo</span><b class="f-n" hidden>0</b>
+                        <span data-i18n="filtros.atributo">Atributo</span><b class="f-n" hidden>0</b>
                     </button>
-                    <div class="f-panel" role="group" aria-label="Filtrar por tipo" data-i18n-attr="aria-label:filtros.porTipo"></div>
+                    <div class="f-panel" role="group" aria-label="Filtrar por atributo" data-i18n-attr="aria-label:filtros.porAtributo"></div>
                 </div>
 
                 <div class="f-grupo" data-g="nivel">
@@ -387,6 +387,36 @@
                         <span data-i18n="filtros.elemento">Elemento</span><b class="f-n" hidden>0</b>
                     </button>
                     <div class="f-panel" role="group" aria-label="Filtrar por elemento" data-i18n-attr="aria-label:filtros.porElemento"></div>
+                </div>
+
+                <!-- Grupos (los "Fields" de la API): sus opciones las arma filtros.js a medida que llegan los digimons -->
+                <div class="f-grupo" data-g="campo">
+                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                        <span data-i18n="filtros.campo">Grupo</span><b class="f-n" hidden>0</b>
+                    </button>
+                    <div class="f-panel" role="group" aria-label="Filtrar por grupo" data-i18n-attr="aria-label:filtros.porCampo"></div>
+                </div>
+
+                <!-- Especies (los "types" de la API): son muchísimas, así que el panel lleva arriba una cajita para buscar entre ellas.
+         Las opciones las arma filtros.js a medida que llegan los digimons -->
+                <div class="f-grupo" data-g="especie">
+                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                        <span data-i18n="filtros.especie">Especie</span><b class="f-n" hidden>0</b>
+                    </button>
+                    <div class="f-panel" role="group" aria-label="Filtrar por especie" data-i18n-attr="aria-label:filtros.porEspecie">
+                        <label class="f-opciones-buscar">
+                            <input
+                                type="text"
+                                autocomplete="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                                enterkeyhint="search"
+                                placeholder="Buscar especie…"
+                                aria-label="Buscar especie…"
+                                data-i18n-attr="placeholder:filtros.buscarEspecie;aria-label:filtros.buscarEspecie"
+                            />
+                        </label>
+                    </div>
                 </div>
 
                 <!-- X-Antibody: un solo botón con tres estados. Cada clic pasa al siguiente (indistinto → solo con X-Antibody → solo sin X-Antibody).

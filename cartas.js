@@ -2,12 +2,12 @@
 // LAS CARTAS
 //
 // Cómo se arma cada carta (nombre ajustado al largo, dorso, textos según el idioma, giro 3D), cómo entran a la lista (de a
-// tandas) y las ventanas que se abren desde sus chips y botones (tipo, elemento, nivel, ataques y evolución).
+// tandas) y las ventanas que se abren desde sus chips y botones (atributo, elemento, nivel, ataques y evolución).
 // -----------------------------------------------------------------------------------------------------------------
 
 import { emitir, ponerAyuda } from './util.js';
-import { EMOJIS_ELEMENTO, EMOJIS_TIPO, MARCAS_DE_NIVEL, numeracionNiveles } from './datos.js';
-import { nombreElemento, nombreTipo, t } from './i18n.js';
+import { EMOJIS_ELEMENTO, EMOJIS_ATRIBUTO, MARCAS_DE_NIVEL, esXrosWars, numeracionNiveles } from './datos.js';
+import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { claveDeNombre, inicioDeLoAparte, nombreOccidental, nombreParaMostrar } from './nombres.js';
 import { cartasPorId, listaDigimons, nombreNivel } from './pagina.js';
 import { actualizarBarraProgreso, contadorDigimons } from './api.js';
@@ -15,7 +15,7 @@ import { seleccionados, verificarSeleccion } from './combate.js';
 import { cartaEnZoom, volverAlZoomNormal, zoomExtra, zoomOcupado } from './zoom.js';
 import { vibrar } from './audio.js';
 import { sonidoSeleccion, sonidoVuelta } from './sonidos.js';
-import { abrirAtaques, crearBotonAtaques, infoElemento, infoNivel, infoTipo } from './info.js';
+import { abrirAtaques, crearBotonAtaques, infoElemento, infoNivel, infoAtributo } from './info.js';
 import { abrirEvolucion, crearBotonEvolucion } from './evolucion.js';
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -163,8 +163,8 @@ function construirDorso(carta) {
 
     const cuerpo = dorso.querySelector('.c-cuerpo');
     for (const [etiqueta, valor] of [
-        ['carta.especie', datos.especie],
-        ['carta.campos', datos.campos ?? '–'],
+        ['carta.especie', datos.especies?.length ? datos.especies.join(', ') : '–'],
+        ['carta.campos', datos.campos?.length ? datos.campos.join(', ') : '–'],
         ['carta.estreno', datos.estreno],
     ]) {
         const linea = document.createElement('p');
@@ -226,24 +226,24 @@ export function escribirNivel(carta) {
     }
 }
 
-// Escribe en el idioma actual los textos de una carta: "NV", el nivel, el tipo, el elemento y el botón de dar vuelta.
+// Escribe en el idioma actual los textos de una carta: "NV", el nivel, el atributo, el elemento y el botón de dar vuelta.
 // Si el dorso ya se había armado, se rehace para que también quede traducido.
 function traducirCarta(carta) {
-    const { tipo, elemento } = carta.dataset;
+    const { atributo, elemento } = carta.dataset;
 
     const gema = carta.querySelector('.c-gema');
-    const chipTipo = carta.querySelector('.c-tipo');
+    const chipAtributo = carta.querySelector('.c-atributo');
     const chipElem = carta.querySelector('.c-elem');
 
-    const textoTipo = nombreTipo(tipo);
+    const textoAtributo = nombreAtributo(atributo);
     const textoElem = nombreElemento(elemento);
 
     if (gema) gema.querySelector('small').textContent = t('carta.nv');
     escribirNivel(carta);
-    if (chipTipo) {
-        chipTipo.textContent = `${textoTipo} ${EMOJIS_TIPO[tipo]}`;
-        const ayudaTipo = t('carta.infoTipo', { tipo: textoTipo });
-        ponerAyuda(chipTipo, ayudaTipo);
+    if (chipAtributo) {
+        chipAtributo.textContent = `${textoAtributo} ${EMOJIS_ATRIBUTO[atributo]}`;
+        const ayudaAtributo = t('carta.infoAtributo', { atributo: textoAtributo });
+        ponerAyuda(chipAtributo, ayudaAtributo);
     }
     if (chipElem) {
         chipElem.textContent = `${textoElem} ${EMOJIS_ELEMENTO[elemento]}`;
@@ -324,10 +324,10 @@ export async function voltearCarta(carta, direccion = 1) {
     emitir('giro-terminado', carta); // la inclinación retoma si el mouse sigue encima
 }
 
-// Las ventanas que se abren desde los botones de una carta (info.js y evolucion.js). Los del frente (tipo, elemento y nivel)
+// Las ventanas que se abren desde los botones de una carta (info.js y evolucion.js). Los del frente (atributo, elemento y nivel)
 // necesitan un dato de la carta y avisan con "click-chip-carta"; los del dorso (ataques y evolución) reciben la carta entera.
 const VENTANAS_DE_LA_CARTA = [
-    { boton: '.c-tipo', dato: 'tipo', aviso: 'tipo', abrir: infoTipo },
+    { boton: '.c-atributo', dato: 'atributo', aviso: 'atributo', abrir: infoAtributo },
     { boton: '.c-elem', dato: 'elemento', aviso: 'elemento', abrir: infoElemento },
     { boton: '.c-gema, .c-nivel', dato: 'nivelApi', aviso: 'nivel', abrir: infoNivel },
     { boton: '.c-ataques', abrir: abrirAtaques },
@@ -335,7 +335,7 @@ const VENTANAS_DE_LA_CARTA = [
 ];
 const dentroDeUnaCarta = botones => `#listado-digimons li :is(${botones})`;
 
-// Al hacer clic en el nivel (la gema o el nombre), tipo o elemento de una carta, se abre su ventana de información (info.js)
+// Al hacer clic en el nivel (la gema o el nombre), atributo o elemento de una carta, se abre su ventana de información (info.js)
 // sin seleccionar la carta para el combate ni cerrarla si está en modo zoom. Lo mismo con los botones del dorso.
 export function activarCartelesDeInfoEnCartas() {
     document.addEventListener(
@@ -383,7 +383,7 @@ const observadorDeMarcos =
 export let seleccionAntesDelClic = { carta: null, estado: [] }; // cómo estaba la selección antes del primer clic de un doble clic (zoom.js la usa)
 
 // Crea una carta, la agrega a la lista y avisa a los filtros. La usan los digimons de la API y las cartas propias.
-export function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOriginal, marca, elemento, datosDorso }) {
+export function agregarCarta({ id, etiquetaId, nombre, imagen, atributo, nivelOriginal, marca, elemento, datosDorso }) {
     // Datos que usa el combate y el diseño de la carta
     const nivelNumerico = numeracionNiveles[nivelOriginal]; // undefined si el nivel es desconocido
     const { nombre: nombreEnCarta, xAntibody } = separarXAntibody(nombre); // el X-Antibody va en su propia gema
@@ -391,11 +391,11 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOrigin
     // ---Creación de la lista con el DOM---
     const elementoLista = document.createElement('li');
 
-    // Guardamos los datos en la propia carta (data-tipo, data-nivel y data-elemento).
-    // El tipo y el elemento van en español porque el combate y los filtros los usan como identificadores;
+    // Guardamos los datos en la propia carta (data-atributo, data-nivel y data-elemento).
+    // El atributo y el elemento van en español porque el combate y los filtros los usan como identificadores;
     // data-nivel-api es el nivel tal cual lo trae la API (no depende del idioma ni del sistema de clasificación).
     elementoLista.dataset.id = id;
-    elementoLista.dataset.tipo = tipo;
+    elementoLista.dataset.atributo = atributo;
     elementoLista.dataset.elemento = elemento;
     elementoLista.dataset.nivelApi = nivelOriginal;
     elementoLista.dataset.nombreApi = nombreEnCarta; // el nombre original; el que se ve sale de acá según el idioma (escribirNombre)
@@ -406,12 +406,16 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOrigin
     if (datosMarca) {
         elementoLista.dataset.marca = datosMarca.nombre;
     }
+    const xrosWars = Boolean(datosDorso?.campos?.some(esXrosWars)); // grupo "Xros Wars" de la API: lleva su propia marca (XW)
+    if (xrosWars) {
+        elementoLista.dataset.xrosWars = 'true';
+    }
     if (nivelNumerico !== undefined) {
         elementoLista.dataset.nivel = nivelNumerico;
         elementoLista.style.setProperty('--nivel', nivelNumerico); // el CSS lo usa para la intensidad del color
     }
 
-    // Creamos la "carta" del digimon. Los textos que cambian con el idioma (nivel, tipo, elemento, "NV"...) los pone
+    // Creamos la "carta" del digimon. Los textos que cambian con el idioma (nivel, atributo, elemento, "NV"...) los pone
     // traducirCarta(); el nombre lo pone ponerNombre para separar lo que va entre paréntesis.
     elementoLista.innerHTML = `
         ${nivelNumerico >= 7 ? '<span class="c-marco" aria-hidden="true"></span>' : ''}
@@ -422,11 +426,12 @@ export function agregarCarta({ id, etiquetaId, nombre, imagen, tipo, nivelOrigin
                 <img alt="" loading="lazy" decoding="async" draggable="false">
                 ${xAntibody ? '<span class="c-x" title="X-Antibody">X</span>' : ''}
                 ${datosMarca ? `<span class="c-marca" title="${datosMarca.nombre}" role="img" aria-label="${datosMarca.nombre}">${datosMarca.letra}</span>` : ''}
+                ${xrosWars ? '<span class="c-xw" title="Xros Wars" role="img" aria-label="Xros Wars">XW</span>' : ''}
                 <span class="c-gema" role="button" tabindex="0"><small></small>${nivelNumerico ?? '?'}</span>
             </div>
             <div class="c-sub"><span class="c-nivel" role="button" tabindex="0"></span><span>#${etiquetaId ?? String(id).padStart(3, '0')}</span></div>
             <div class="c-chips">
-                <span class="chip c-tipo" role="button" tabindex="0"></span>
+                <span class="chip c-atributo" role="button" tabindex="0"></span>
                 <span class="chip c-elem" role="button" tabindex="0"></span>
             </div>
         </div>

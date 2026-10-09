@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------------------------------------------
-// MENÚS DE INFORMACIÓN (tipos, elementos y niveles) y sus ventanas emergentes
+// MENÚS DE INFORMACIÓN (atributos, elementos y niveles) y sus ventanas emergentes
 //
 // Los tres menús de la barra tienen el mismo formato: al elegir una opción se abre una ventana con su descripción,
 // contra qué es fuerte o débil y cuánto pesa en el combate. Los números salen de las mismas tablas que usa el combate
@@ -11,36 +11,37 @@ import {
     COLOR_ELEMENTO_ENLACE,
     COLOR_NIVEL,
     COLOR_NIVEL_DESCONOCIDO,
-    COLOR_TIPO_ENLACE,
+    COLOR_ATRIBUTO_ENLACE,
     ELEMENTO_FUERTE_CONTRA,
     EMOJIS_ELEMENTO,
-    EMOJIS_TIPO,
+    EMOJIS_ATRIBUTO,
     ORDEN_ELEMENTOS,
     ORDEN_NIVELES,
-    TIPO_FUERTE_CONTRA,
+    ATRIBUTO_FUERTE_CONTRA,
     nivelesAlternativos,
     numeracionNiveles,
 } from './datos.js';
-import { nombreElemento, nombreTipo, t } from './i18n.js';
+import { nombreElemento, nombreAtributo, t } from './i18n.js';
+import { conCruzDeCierre } from './ventanas.js';
 import { clasificacionAlternativa, nombreNivel } from './pagina.js';
-import { PESO_ELEMENTO, PESO_NIVEL, PESO_TIPO, PODER_EN_COMBATE } from './combate.js';
+import { PESO_ELEMENTO, PESO_NIVEL, PESO_ATRIBUTO, PODER_EN_COMBATE } from './combate.js';
 import { nombreCompleto } from './cartas.js';
 import { activarBotonDelDorso } from './gestos.js';
 import { FICHERO_DE_ATAQUES, sonidoFichero } from './sonidos.js';
 import { irALaCarta } from './evolucion.js';
 
-const ORDEN_TIPOS_MENU = ['Datos', 'Virus', 'Vacuna', 'Libre', 'Variable', 'Desconocido'];
+const ORDEN_ATRIBUTOS_MENU = ['Datos', 'Virus', 'Vacuna', 'Libre', 'Variable', 'Desconocido'];
 
-const conEmojiTipo = tipo => `${nombreTipo(tipo)} ${EMOJIS_TIPO[tipo]}`;
+const conEmojiAtributo = atributo => `${nombreAtributo(atributo)} ${EMOJIS_ATRIBUTO[atributo]}`;
 const conEmojiElemento = elemento => `${nombreElemento(elemento)} ${EMOJIS_ELEMENTO[elemento]}`;
 const porcentaje = peso => Math.round(peso * 100);
 
 // Genera un botón con enlace de referencia cruzada (línea punteada al pasar el puntero)
-function linkTipo(tipo) {
-    const texto = conEmojiTipo(tipo);
-    const color = COLOR_TIPO_ENLACE[tipo] || 'currentColor';
-    const ayuda = t('info.verInfoDe', { nombre: nombreTipo(tipo) });
-    return `<button type="button" class="info-link info-link-tipo" data-info-tipo="${tipo}" style="--link-c: ${color};" title="${ayuda}" aria-label="${ayuda}">${texto}</button>`;
+function linkAtributo(atributo) {
+    const texto = conEmojiAtributo(atributo);
+    const color = COLOR_ATRIBUTO_ENLACE[atributo] || 'currentColor';
+    const ayuda = t('info.verInfoDe', { nombre: nombreAtributo(atributo) });
+    return `<button type="button" class="info-link info-link-atributo" data-info-atributo="${atributo}" style="--link-c: ${color};" title="${ayuda}" aria-label="${ayuda}">${texto}</button>`;
 }
 
 function linkElemento(elemento) {
@@ -59,7 +60,7 @@ function linkNivel(nivelApi, textoMostrar = null) {
 // "Vacuna 💉, Hielo ❄️" o, si no hay ninguno, "ninguno"
 const enLista = (elementos, formato) => (elementos.length ? elementos.map(formato).join(', ') : t('info.ninguno'));
 
-// Quiénes le ganan a "x" según una tabla de ventajas (ej.: TIPO_FUERTE_CONTRA)
+// Quiénes le ganan a "x" según una tabla de ventajas (ej.: ATRIBUTO_FUERTE_CONTRA)
 const quienesLeGanan = (tabla, x) => Object.keys(tabla).filter(clave => tabla[clave].includes(x));
 
 const MENCIONES_NIVEL_MAP = {
@@ -78,7 +79,7 @@ const MENCIONES_NIVEL_MAP = {
 // los nombres del sistema vigente (Japón o EE.UU.) y siguen siendo un enlace al nivel. Lo que no lleve la marca, se enlaza tal cual está escrito.
 const REGEX_NIVELES = /\{nivel:([^}]+)\}|\b(Super Ultimate|Absolute|Baby II|Baby I|Child|Adult|Perfect|Ultimate|Mega)\b/g;
 
-// Enlaza menciones de niveles, tipos o elementos que aparezcan en el texto de las descripciones
+// Enlaza menciones de niveles, atributos o elementos que aparezcan en el texto de las descripciones
 function enlazarTexto(texto) {
     if (!texto) return '';
     return texto.replace(REGEX_NIVELES, (match, marca) => {
@@ -101,6 +102,7 @@ function mostrarInfo(titulo, descripcion, datos, pie) {
         html: `<p class="info-desc">${descHtml}</p><ul class="info-datos">${filas}</ul><p class="info-pie">${pie}</p>`,
         icon: 'info',
         width: 'min(94vw, 680px)',
+        ...conCruzDeCierre(),
         confirmButtonText: t('aceptar'),
         focusConfirm: false,
         customClass: { popup: 'popup-info' }, // para darle al título la fuente pixelada de la barra (ver styles.scss)
@@ -110,20 +112,20 @@ function mostrarInfo(titulo, descripcion, datos, pie) {
     });
 }
 
-export function infoTipo(tipo) {
-    ultimaInfoAbierta = { fn: infoTipo, args: [tipo] };
-    const fuerte = TIPO_FUERTE_CONTRA[tipo] || [];
-    const debil = quienesLeGanan(TIPO_FUERTE_CONTRA, tipo);
+export function infoAtributo(atributo) {
+    ultimaInfoAbierta = { fn: infoAtributo, args: [atributo] };
+    const fuerte = ATRIBUTO_FUERTE_CONTRA[atributo] || [];
+    const debil = quienesLeGanan(ATRIBUTO_FUERTE_CONTRA, atributo);
     const sinVentajas = fuerte.length === 0 && debil.length === 0; // Libre, Variable y Desconocido
 
     mostrarInfo(
-        conEmojiTipo(tipo),
-        t(`tipo.desc.${tipo}`),
+        conEmojiAtributo(atributo),
+        t(`atributo.desc.${atributo}`),
         [
-            [t('info.fuerte'), enLista(fuerte, linkTipo)],
-            [t('info.debil'), enLista(debil, linkTipo)],
+            [t('info.fuerte'), enLista(fuerte, linkAtributo)],
+            [t('info.debil'), enLista(debil, linkAtributo)],
         ],
-        sinVentajas ? t('tipo.pieSin') : t('tipo.pie', { p: porcentaje(PESO_TIPO) }),
+        sinVentajas ? t('atributo.pieSin') : t('atributo.pie', { p: porcentaje(PESO_ATRIBUTO) }),
     );
 }
 
@@ -198,13 +200,13 @@ export function infoNivel(nivelApi) {
 
 // Clics en referencias cruzadas (links)
 const alTocarUnaReferencia = evento => {
-    const linkT = evento.target.closest('.info-link-tipo');
+    const linkT = evento.target.closest('.info-link-atributo');
     if (linkT) {
         evento.preventDefault();
         evento.stopPropagation();
-        const tipo = linkT.dataset.infoTipo;
-        if (tipo) {
-            infoTipo(tipo);
+        const atributo = linkT.dataset.infoAtributo;
+        if (atributo) {
+            infoAtributo(atributo);
         }
         return;
     }
@@ -434,6 +436,7 @@ export function abrirAtaques(carta) {
     Swal.fire({
         titleText: t('ataques.titulo', { nombre: nombreCompleto(carta) }),
         html: cuerpo,
+        ...conCruzDeCierre(),
         confirmButtonText: t('aceptar'),
         focusConfirm: false,
         width: 'min(94vw, 680px)',
@@ -465,7 +468,7 @@ const traducirVentanaDeAtaques = () => {
 
 // Qué ventana abre cada menú (por el id de su lista)
 const VENTANA_DE_CADA_MENU = {
-    'lista-tipos': infoTipo,
+    'lista-atributos': infoAtributo,
     'lista-elementos': infoElemento,
     'lista-niveles': infoNivel,
 };
@@ -487,8 +490,8 @@ function escribirOpciones(idLista, opciones) {
 // Se llama al cargar la página y cada vez que cambia el idioma
 function escribirMenus() {
     escribirOpciones(
-        'lista-tipos',
-        ORDEN_TIPOS_MENU.map(tipo => [tipo, conEmojiTipo(tipo)]),
+        'lista-atributos',
+        ORDEN_ATRIBUTOS_MENU.map(atributo => [atributo, conEmojiAtributo(atributo)]),
     );
     escribirOpciones(
         'lista-elementos',

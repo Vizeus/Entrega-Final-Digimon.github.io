@@ -82,6 +82,7 @@
 .combate-popup {
     position: relative;
     overflow: hidden;
+    overflow: clip; // (no "hidden": con hidden el cartel sería un contenedor de desplazamiento y la cruz de cerrar no se quedaría pegada arriba: ver _ventanas.scss)
     border: 2px solid rgba(255, 255, 255, 0.9);
     border-radius: 22px;
     background: linear-gradient(180deg, #ffffff 0%, #e8f5ff 55%, #cfe8ff 100%);
@@ -105,72 +106,6 @@
         background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 48%, #1479d1 52%, #3eb0f5 100%);
         border-bottom: 1px solid rgba(0, 60, 130, 0.6);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-    }
-
-    // La cruz de arriba a la derecha: anula el combate (lo mismo que tocar afuera o apretar Esc). Botón de gel rojo,
-    // redondo, sobre la barra de título
-    .combate-cerrar {
-        position: absolute; // SweetAlert la deja en el flujo del cartel; así queda flotando sobre la barra
-        inset: 10px 12px auto auto;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 34px;
-        height: 34px;
-        margin: 0;
-        padding: 0;
-        font-size: 1rem;
-        color: #fff;
-        border: 1px solid rgba(110, 10, 0, 0.75);
-        border-radius: 50%;
-        cursor: pointer;
-        background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
-        box-shadow:
-            0 2px 6px rgba(0, 30, 80, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        transition:
-            filter 0.15s ease,
-            translate 0.1s ease;
-
-        svg {
-            display: block;
-            width: 14px;
-            height: 14px;
-            fill: none;
-            stroke: currentcolor;
-            stroke-width: 2.2;
-            stroke-linecap: round;
-            filter: drop-shadow(0 1px 0 rgba(90, 0, 0, 0.6));
-        }
-
-        // Estos estados repiten el fondo y la sombra porque los de SweetAlert (:hover y :focus) los pisarían
-        &:hover,
-        &:focus {
-            color: #fff;
-            background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
-            box-shadow:
-                0 2px 6px rgba(0, 30, 80, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
-            transform: none;
-        }
-
-        &:hover {
-            filter: brightness(1.1);
-        }
-
-        &:active {
-            filter: brightness(0.95);
-            translate: 0 1px;
-        }
-
-        &:focus-visible {
-            outline: 3px solid #fff;
-            outline-offset: 1px;
-            box-shadow:
-                0 0 0 5px rgba(20, 121, 209, 0.6),
-                0 2px 6px rgba(0, 30, 80, 0.4);
-        }
     }
 
     .combate-cuerpo {

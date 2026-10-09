@@ -24,7 +24,7 @@ import { activarInfo } from './info.js';
 import { activarBarraQueSeEsconde, activarLogo, activarMenuMovil } from './barra.js';
 import { activarEvolucion } from './evolucion.js';
 import { activarBaileDeCartas } from './baile.js';
-import { activarPaginaQuietaConVentanas } from './ventanas.js';
+import { activarCierreDeVentanas, activarPaginaQuietaConVentanas } from './ventanas.js';
 import { activarTema } from './tema.js';
 import { activarCierreDeMenus } from './menus.js';
 
@@ -38,6 +38,7 @@ activarDeteccionDeDedo(); // primero: las demás partes y el CSS preguntan si se
 activarCierreDeMenus(); // (también antes que el resto: tiene que ver los menús abiertos antes de que un toque los cierre)
 activarTema(); // deja el tema (claro u oscuro) como lo eligió la persona
 activarPaginaQuietaConVentanas(); // el dedo no desplaza la página con una ventana abierta
+activarCierreDeVentanas(); // la cruz de las ventanas y el botón "atrás" que las cierra
 activarInclinacion();
 activarRuedaConShift();
 evitarFocoYSeleccionConShift();

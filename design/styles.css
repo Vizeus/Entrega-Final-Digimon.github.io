@@ -935,12 +935,6 @@ body::before {
     width: 25px;
     height: 25px;
   }
-  body:has(#zoom-fondo.abierto) > #silenciar {
-    inset: calc(12px + env(safe-area-inset-top, 0px)) auto auto 12px;
-  }
-  body:has(#zoom-fondo.abierto) > #silenciar.esquiva-avisos {
-    inset: auto auto calc(12px + env(safe-area-inset-bottom, 0px)) 12px;
-  }
   body > #inclinacion-invertida {
     display: none;
   }
@@ -1489,6 +1483,98 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   font-family: var(--f-titulo), sans-serif;
 }
 
+.swal2-popup:not(.combate-popup) .swal2-title {
+  padding-inline: 58px;
+}
+.swal2-popup .ventana-riel {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 3;
+  width: 0;
+  pointer-events: none;
+}
+.swal2-popup button.swal2-close {
+  --c: #8a96a3;
+  position: relative;
+  height: 42px;
+  margin: 0;
+  padding: 0 20px;
+  white-space: nowrap;
+  font-family: var(--f-boton), sans-serif;
+  font-size: var(--t-boton);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--c) 55%, black);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 100%), linear-gradient(180deg, color-mix(in srgb, var(--c) 78%, white) 0%, var(--c) 55%, color-mix(in srgb, var(--c) 82%, black) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 7px rgba(0, 30, 80, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+}
+.swal2-popup button.swal2-close:hover:not(:disabled) {
+  filter: brightness(1.08) saturate(1.1);
+  transform: translateY(-1px);
+}
+.swal2-popup button.swal2-close:active:not(:disabled) {
+  filter: brightness(0.96);
+  transform: translateY(1px);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.swal2-popup button.swal2-close:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(20, 160, 230, 0.75), 0 3px 7px rgba(0, 30, 80, 0.35);
+}
+.swal2-popup button.swal2-close:disabled {
+  cursor: not-allowed;
+}
+.swal2-popup button.swal2-close {
+  --c: var(--vidrio-claro);
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--tinta);
+  text-shadow: none;
+  border-color: rgba(0, 40, 90, 0.4);
+  border-radius: 50%;
+  position: absolute;
+  inset: 10px 10px auto auto;
+  z-index: 3;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  overflow: visible;
+  font-size: 1rem;
+}
+.swal2-popup button.swal2-close::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+.swal2-popup button.swal2-close svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7));
+}
+.swal2-popup .ventana-riel button.swal2-close {
+  position: sticky;
+  inset: max(10px, env(safe-area-inset-top, 0px)) auto auto;
+  margin: 10px 0 0 -48px;
+  justify-self: start;
+  pointer-events: auto;
+}
+
 .swal2-popup button,
 .swal2-styled {
   font-family: var(--f-boton), sans-serif;
@@ -1828,6 +1914,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 .combate-popup {
   position: relative;
   overflow: hidden;
+  overflow: clip;
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 22px;
   background: linear-gradient(180deg, #ffffff 0%, #e8f5ff 55%, #cfe8ff 100%);
@@ -1846,54 +1933,6 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   background: linear-gradient(180deg, #8fdcff 0%, #36a6f0 48%, #1479d1 52%, #3eb0f5 100%);
   border-bottom: 1px solid rgba(0, 60, 130, 0.6);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-.combate-popup .combate-cerrar {
-  position: absolute;
-  inset: 10px 12px auto auto;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  margin: 0;
-  padding: 0;
-  font-size: 1rem;
-  color: #fff;
-  border: 1px solid rgba(110, 10, 0, 0.75);
-  border-radius: 50%;
-  cursor: pointer;
-  background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
-  box-shadow: 0 2px 6px rgba(0, 30, 80, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transition: filter 0.15s ease, translate 0.1s ease;
-}
-.combate-popup .combate-cerrar svg {
-  display: block;
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentcolor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  filter: drop-shadow(0 1px 0 rgba(90, 0, 0, 0.6));
-}
-.combate-popup .combate-cerrar:hover, .combate-popup .combate-cerrar:focus {
-  color: #fff;
-  background: linear-gradient(180deg, #ffb4a3 0%, #ee4a32 48%, #c4210f 52%, #f26a4e 100%);
-  box-shadow: 0 2px 6px rgba(0, 30, 80, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transform: none;
-}
-.combate-popup .combate-cerrar:hover {
-  filter: brightness(1.1);
-}
-.combate-popup .combate-cerrar:active {
-  filter: brightness(0.95);
-  translate: 0 1px;
-}
-.combate-popup .combate-cerrar:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 1px;
-  box-shadow: 0 0 0 5px rgba(20, 121, 209, 0.6), 0 2px 6px rgba(0, 30, 80, 0.4);
 }
 .combate-popup .combate-cuerpo {
   margin: 0;
@@ -2361,16 +2400,21 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   text-decoration: line-through;
 }
 #filtros .f-panel {
+  --relleno: 12px;
   display: none;
   position: absolute;
   z-index: 5;
   top: calc(100% + 8px);
   left: 0;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 8px;
   width: max-content;
   max-width: min(470px, 100vw - 32px);
-  padding: 12px;
+  max-height: min(62vh, 440px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--relleno);
   border-radius: 16px;
   background: linear-gradient(rgba(255, 255, 255, 0.97), rgba(226, 241, 253, 0.95));
   border: 1px solid #fff;
@@ -2379,6 +2423,36 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 }
 #filtros .f-grupo.abierto .f-panel {
   display: flex;
+}
+@media (min-width: 701px) {
+  #filtros .f-grupo[data-g=especie] .f-panel {
+    min-width: min(470px, 100vw - 32px);
+  }
+}
+#filtros .f-opciones-buscar {
+  position: sticky;
+  top: calc(var(--relleno) * -1);
+  z-index: 1;
+  flex: 1 1 100%;
+  margin: calc(var(--relleno) * -1) calc(var(--relleno) * -1) 0;
+  padding: var(--relleno) var(--relleno) 6px;
+  background: #f1f8fe;
+}
+#filtros .f-opciones-buscar input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 40, 90, 0.35);
+  background: linear-gradient(rgba(0, 80, 140, 0.1), rgba(255, 255, 255, 0.85));
+  box-shadow: inset 0 2px 4px rgba(0, 60, 110, 0.25);
+  color: var(--tinta);
+  font: 500 14px var(--f-etiqueta), sans-serif;
+}
+#filtros .f-opciones-buscar input:focus {
+  outline: 2px solid #3a8dde;
+  outline-offset: 1px;
 }
 #filtros .f-chip {
   --c: #888;
@@ -2430,6 +2504,9 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 #filtros .f-chip.vacio {
   opacity: 0.4;
 }
+#filtros .f-chip.sin-icono {
+  padding-left: 12px;
+}
 #filtros .f-chip .f-lv,
 #filtros .f-tag .f-lv {
   display: inline-grid;
@@ -2448,6 +2525,9 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   gap: 6px;
   flex: 1 1 160px;
   min-width: 0;
+}
+#filtros .f-activos:empty {
+  flex-basis: 0;
 }
 #filtros .f-tag {
   --c: #888;
@@ -2487,6 +2567,9 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   font-size: 11px;
   background: rgba(255, 255, 255, 0.35);
   box-shadow: none;
+}
+#filtros .f-tag.sin-icono {
+  padding-left: 11px;
 }
 #filtros .f-resumen {
   margin-left: auto;
@@ -2606,6 +2689,21 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   #navbar #filtros .f-btn.tiene::after {
     display: none;
   }
+  #navbar #filtros .f-btn {
+    position: relative;
+  }
+  #navbar #filtros .f-n {
+    position: absolute;
+    top: -8px;
+    right: -5px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 50, 130, 0.45);
+    font-size: 10px;
+    pointer-events: none;
+  }
   #navbar #filtros .f-xa {
     flex: 0 0 auto;
     padding: 0 9px;
@@ -2617,6 +2715,13 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   }
   #navbar #filtros .f-xa-texto {
     display: none;
+  }
+}
+@media (max-width: 700px) and (max-width: 599px) {
+  #navbar #filtros .f-grupo[data-g=atributo] .f-btn,
+  #navbar #filtros .f-grupo[data-g=nivel] .f-btn,
+  #navbar #filtros .f-grupo[data-g=elemento] .f-btn {
+    flex: 1 1 calc((100% - 13px) / 3);
   }
 }
 @media (max-width: 700px) and (max-width: 340px) {
@@ -2638,10 +2743,10 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
     right: 8px;
     width: auto;
     max-width: none;
-    max-height: calc(100dvh - 175px);
+    max-height: calc(100dvh - 215px);
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 10px;
+    --relleno: 10px;
   }
   #navbar #filtros::after {
     content: "";
@@ -2718,11 +2823,11 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   overflow-x: clip;
 }
 #listado-digimons li {
-  --tipo: #59616d;
+  --atributo: #59616d;
   --claro: 12%;
   --oscuro: 0%;
   --fuerza: 64%;
-  --base: color-mix(in srgb, color-mix(in srgb, var(--tipo), white var(--claro)), black var(--oscuro));
+  --base: color-mix(in srgb, color-mix(in srgb, var(--atributo), white var(--claro)), black var(--oscuro));
   --tinte: color-mix(in srgb, var(--base) var(--fuerza), white);
   --borde-base: 2px;
   --borde: var(--borde-base);
@@ -2745,23 +2850,23 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   list-style-type: none;
   transition: translate 0.3s ease, box-shadow 0.3s ease;
 }
-#listado-digimons li[data-tipo=Vacuna] {
-  --tipo: #3a8dde;
+#listado-digimons li[data-atributo=Vacuna] {
+  --atributo: #3a8dde;
 }
-#listado-digimons li[data-tipo=Virus] {
-  --tipo: #8a4fc7;
+#listado-digimons li[data-atributo=Virus] {
+  --atributo: #8a4fc7;
 }
-#listado-digimons li[data-tipo=Datos] {
-  --tipo: #3fae5a;
+#listado-digimons li[data-atributo=Datos] {
+  --atributo: #3fae5a;
 }
-#listado-digimons li[data-tipo=Libre] {
-  --tipo: #1fa79f;
+#listado-digimons li[data-atributo=Libre] {
+  --atributo: #1fa79f;
 }
-#listado-digimons li[data-tipo=Variable] {
-  --tipo: #e2803a;
+#listado-digimons li[data-atributo=Variable] {
+  --atributo: #e2803a;
 }
-#listado-digimons li[data-tipo=Desconocido] {
-  --tipo: #59616d;
+#listado-digimons li[data-atributo=Desconocido] {
+  --atributo: #59616d;
 }
 #listado-digimons li[data-nivel="1"] {
   --claro: 58%;
@@ -3062,7 +3167,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--tipo) 45%, white) 0%, var(--tipo) 55%, color-mix(in srgb, var(--tipo) 65%, black) 100%);
+  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--atributo) 45%, white) 0%, var(--atributo) 55%, color-mix(in srgb, var(--atributo) 65%, black) 100%);
   box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.7);
   cursor: pointer;
   user-select: none;
@@ -3122,6 +3227,32 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 #listado-digimons li .c-x ~ .c-marca {
   top: 36px;
 }
+#listado-digimons li .c-xw {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  left: 6px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 900 11px/1 var(--f-titulo), sans-serif;
+  letter-spacing: -0.3px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #ffe0c2 0%, #ff8a1f 52%, #8a3a00 100%);
+  box-shadow: 0 0 0 2px #e4e8ed, 0 0 0 3px #7e8791, 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.7);
+  cursor: help;
+}
+#listado-digimons li .c-x ~ .c-xw,
+#listado-digimons li .c-marca ~ .c-xw {
+  top: 36px;
+}
+#listado-digimons li .c-x ~ .c-marca ~ .c-xw {
+  top: 66px;
+}
 #listado-digimons li .c-sub {
   display: flex;
   justify-content: space-between;
@@ -3154,7 +3285,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   gap: 5px;
 }
 #listado-digimons li .chip {
-  --c: var(--tipo);
+  --c: var(--atributo);
   flex: 1;
   min-width: 0;
   padding: 3px 4px;
@@ -3202,7 +3333,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 }
 #listado-digimons li .c-cuerpo .dato b {
   font-weight: 700;
-  color: color-mix(in srgb, var(--tipo) 70%, black);
+  color: color-mix(in srgb, var(--atributo) 70%, black);
 }
 #listado-digimons li .c-cuerpo .c-desc {
   margin: 8px 0 4px;
@@ -3623,11 +3754,14 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 }
 @media (prefers-reduced-motion: no-preference) {
   #avisos-ayuda {
-    transition: opacity 0.3s ease, top 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+    transition: opacity 0.3s ease, top 0.28s cubic-bezier(0.2, 0.8, 0.25, 1), right 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
   }
 }
 #avisos-ayuda.sobre-zoom {
+  --lugar-de-la-cruz: 66px;
   z-index: 1700;
+  right: var(--lugar-de-la-cruz);
+  width: min(330px, 100vw - var(--lugar-de-la-cruz) - 8px);
 }
 #avisos-ayuda.en-pausa {
   opacity: 0;
@@ -4028,7 +4162,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
     transition: none;
   }
 }
-/* Botones del pie del dorso de la carta: "⚔️ Ataques" (info.js) y "🧬 Evolución" (evolucion.js), del color del tipo.
+/* Botones del pie del dorso de la carta: "⚔️ Ataques" (info.js) y "🧬 Evolución" (evolucion.js), del color del atributo.
    Van uno al lado del otro si entran; en las cartas angostas (celular) pasan uno debajo del otro */
 #listado-digimons li .c-botones {
   flex: none;
@@ -4053,10 +4187,10 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   color: #fff;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
   cursor: pointer;
-  border: 1px solid color-mix(in srgb, var(--tipo) 55%, black);
+  border: 1px solid color-mix(in srgb, var(--atributo) 55%, black);
   border-radius: 8px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tipo) 55%, white) 0%, var(--tipo) 50%, color-mix(in srgb, var(--tipo) 88%, black) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px color-mix(in srgb, var(--tipo) 35%, rgba(0, 0, 0, 0.2));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--atributo) 55%, white) 0%, var(--atributo) 50%, color-mix(in srgb, var(--atributo) 88%, black) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px color-mix(in srgb, var(--atributo) 35%, rgba(0, 0, 0, 0.2));
   transition: transform 0.07s ease, box-shadow 0.07s ease, filter 0.07s ease;
 }
 
@@ -4170,18 +4304,19 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   justify-content: center;
   gap: var(--g);
   padding: 30px 6px 46px;
-  overflow-x: auto;
+  overflow-x: clip;
 }
 
 .evo-flecha-v {
   display: none;
 }
 
-/* Columnas: el rótulo y el botón "ver las restantes" quedan fuera del flujo para que la lista quede centrada con el digimon */
+/* Columnas: el rótulo y el botón "ver las restantes" quedan fuera del flujo para que la lista quede centrada con el digimon.
+   Cerrada, la columna mide lo de una rama; desplegada, quiere el ancho de dos y se achica sola si no hay lugar (ver .abierta más abajo). */
 .evo-col {
   position: relative;
-  flex: 0 1 auto;
-  min-width: 0;
+  flex: none;
+  width: 176px;
 }
 
 .evo-col > h5 {
@@ -4235,7 +4370,6 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 
 .evo-vacio {
   box-sizing: border-box;
-  width: 176px;
   margin: 0;
   padding: 10px;
   font-size: 12px;
@@ -4253,7 +4387,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 176px;
+  width: 100%;
   padding: 5px 8px 5px 5px;
   text-align: left;
   color: #1f2d3a;
@@ -4601,13 +4735,25 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   border-color: transparent transparent transparent var(--linea);
 }
 
-/* Lista desplegada: se ven todas las ramas en una grilla con scroll y las líneas pasan a ser un solo corchete */
+/* Lista desplegada: se ven todas las ramas en una grilla con scroll hacia abajo (nunca hacia los costados) y las líneas pasan a ser un solo corchete.
+   Las columnas de la grilla se arman según el ancho que quede: dos ramas una al lado de la otra si entran y, si no (por ejemplo con las dos listas
+   desplegadas a la vez), una sola. Las ramas se pegan al corchete, del lado del digimon del medio. */
+.evo-col.abierta {
+  flex: 0 1 390px;
+  min-width: 0;
+}
+
 .evo-col.abierta .evo-lista {
   display: grid;
-  grid-template-columns: repeat(2, 176px);
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   max-height: min(46vh, 340px);
   padding: 4px;
-  overflow-y: auto;
+  overflow: hidden auto;
+}
+
+.evo-col.abierta .evo-lista li {
+  width: 100%;
+  max-width: 176px;
 }
 
 .evo-col.abierta .evo-lista li::before,
@@ -4617,10 +4763,12 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 }
 
 .evo-sig.abierta .evo-lista {
+  justify-items: start;
   border-left: 2px solid var(--linea);
 }
 
 .evo-prev.abierta .evo-lista {
+  justify-items: end;
   border-right: 2px solid var(--linea);
 }
 
@@ -4629,11 +4777,12 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   width: var(--g);
 }
 
-/* En el celular el árbol va en una sola columna (los anteriores, el digimon del medio y los siguientes, uno debajo del otro) y todo se
-   compacta para que, con las ramas que se ven de entrada, la ventana entre en la pantalla sin desplazarla hacia abajo: el digimon del medio
-   es una cajita horizontal (la imagen al costado), las flechas y los espacios son más chicos y los botones "ver las restantes" van a la
-   altura del rótulo. Al desplegar las ramas que faltan sí hace falta desplazarse (ver "abierta" más abajo). */
-@media (max-width: 640px) {
+/* En el celular (y en cualquier pantalla de hasta $corte-arbol de ancho: más angosta, el árbol de tres columnas no entra sin desplazarse hacia los
+   costados) el árbol va en una sola columna (los anteriores, el digimon del medio y los siguientes, uno debajo del otro) y todo se compacta para
+   que, con las ramas que se ven de entrada, la ventana entre en la pantalla sin desplazarla hacia abajo: el digimon del medio es una cajita
+   horizontal (la imagen al costado), las flechas y los espacios son más chicos y los botones "ver las restantes" van a la altura del rótulo.
+   Al desplegar las ramas que faltan sí hace falta desplazarse hacia abajo (ver "abierta" más abajo). */
+@media (max-width: 767px) {
   .popup-evo {
     padding: 0.7em 0.6em 0.6em;
   }
@@ -4664,6 +4813,11 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
     gap: 4px;
     padding: 2px 0;
   }
+  .evo-col,
+  .evo-col.abierta {
+    flex: none;
+    width: auto;
+  }
   .evo-col > h5 {
     position: static;
     margin: 0 0 5px;
@@ -4681,8 +4835,11 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   .evo-col.abierta .evo-lista {
     max-height: 260px;
   }
-  .evo-lista li {
+  .evo-lista li,
+  .evo-col.abierta .evo-lista li {
     flex: 0 1 calc(50% - 2.5px);
+    width: auto;
+    max-width: none;
     min-width: 0;
   }
   .evo-nodo {
@@ -4702,7 +4859,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   .evo-centro {
     align-self: center;
   }
-  /* El digimon del medio: la imagen a un lado y, al otro, el nombre, el nivel y el tipo (en vez de uno debajo del otro) */
+  /* El digimon del medio: la imagen a un lado y, al otro, el nombre, el nivel y el atributo (en vez de uno debajo del otro) */
   .evo-actual {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -4958,6 +5115,21 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   border-color: rgba(115, 185, 255, 0.32);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(165, 213, 255, 0.3);
 }
+:root[data-tema=oscuro] #filtros .f-opciones-buscar {
+  background: #1e3365;
+}
+:root[data-tema=oscuro] #filtros .f-opciones-buscar input {
+  border-color: rgba(115, 185, 255, 0.32);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(70, 120, 200, 0.14));
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  color: #dce9fa;
+}
+:root[data-tema=oscuro] #filtros .f-opciones-buscar input::placeholder {
+  color: #6d8cb2;
+}
+:root[data-tema=oscuro] #filtros .f-opciones-buscar input:focus {
+  outline-color: #4aa6f5;
+}
 :root[data-tema=oscuro] #filtros .f-chip:not([aria-pressed=true]) {
   background: linear-gradient(#2a4274, #1b2f58);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(165, 213, 255, 0.18);
@@ -5014,7 +5186,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 :root[data-tema=oscuro] #listado-digimons li .c-cuerpo .dato b {
-  color: color-mix(in srgb, var(--tipo) 62%, white);
+  color: color-mix(in srgb, var(--atributo) 62%, white);
 }
 :root[data-tema=oscuro] #listado-digimons li .c-cuerpo .c-idioma {
   color: #8aa2c2;
@@ -5029,6 +5201,20 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 :root[data-tema=oscuro] #listado-digimons li .c-flip:active {
   background: linear-gradient(180deg, #172c52 0%, #25416f 100%);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+:root[data-tema=oscuro] #zoom-fondo .zoom-cerrar,
+:root[data-tema=oscuro] #zoom-flechas .zoom-flecha,
+:root[data-tema=oscuro] .swal2-popup button.swal2-close {
+  color: var(--tinta);
+  text-shadow: var(--brillo-de-texto);
+  border-color: rgba(120, 190, 255, 0.38);
+  background: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(165, 213, 255, 0.07) 49%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.12) 100%), linear-gradient(180deg, color-mix(in srgb, var(--vidrio-claro) 84%, white) 0%, var(--vidrio-claro) 55%, color-mix(in srgb, var(--vidrio-claro) 78%, black) 100%);
+  box-shadow: inset 0 1px 0 rgba(180, 220, 255, 0.4), inset 0 -2px 3px rgba(0, 0, 0, 0.3), 0 3px 8px rgba(0, 0, 0, 0.5);
+}
+:root[data-tema=oscuro] #zoom-fondo .zoom-cerrar svg,
+:root[data-tema=oscuro] #zoom-flechas .zoom-flecha svg,
+:root[data-tema=oscuro] .swal2-popup button.swal2-close svg {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
 }
 :root[data-tema=oscuro] .aviso-ayuda,
 :root[data-tema=oscuro] .aviso-contador,
@@ -5061,12 +5247,6 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 }
 :root[data-tema=oscuro] .swal2-html-container {
   color: #dce9fa;
-}
-:root[data-tema=oscuro] .swal2-popup .swal2-close {
-  color: #93abca;
-}
-:root[data-tema=oscuro] .swal2-popup .swal2-close:hover {
-  color: #ffffff;
 }
 :root[data-tema=oscuro] .popup-ataques .ataques-ayuda,
 :root[data-tema=oscuro] .popup-ataques .ataque-boton small {

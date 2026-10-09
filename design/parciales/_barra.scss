@@ -665,7 +665,7 @@
 
 // En pantallas anchas (1440 o más) la barra va en una sola fila y "space-between" reparte el espacio que sobra entre TODOS los huecos,
 // también el que hay entre los ajustes y los menús de información. Ese hueco crecía cuando el bloque de carga se retiraba, y el botón
-// de sonido (que está al borde derecho de los ajustes) dejaba de quedar centrado entre el idioma y "Info. tipos". Con margen automático
+// de sonido (que está al borde derecho de los ajustes) dejaba de quedar centrado entre el idioma y "Info. atributos". Con margen automático
 // a la izquierda del panel de combate y de los ajustes, lo que sobra se reparte solo ahí (el panel sigue en el medio) y los ajustes
 // quedan siempre a 16 px de los menús, igual que en las pantallas más angostas: el botón de sonido queda centrado con y sin la carga.
 @media (min-width: 1440px) {
@@ -688,8 +688,9 @@
 }
 
 // SONIDO EN CELULAR: audio.js saca el botón de la barra y lo deja suelto en el <body>. Flota siempre en la esquina de abajo a la
-// derecha, por encima de todo (cartas, ventanas de combate y de información, zoom y sus flechas): se puede apagar el sonido en
-// cualquier momento, también mientras suena la música del combate. En computadora sigue en la barra, junto al idioma.
+// derecha, por encima de todo (cartas, ventanas de combate y de información, zoom y sus flechas) y también con el zoom de una carta
+// abierto: se puede apagar el sonido en cualquier momento, también mientras suena la música del combate. Un barrido para pasar de carta
+// que empiece sobre él no lo toca (ver zoom.js). En computadora sigue en la barra, junto al idioma.
 @include celular {
     body > #silenciar {
         @include boton-de-gel;
@@ -711,19 +712,6 @@
             width: 25px;
             height: 25px;
         }
-    }
-
-    // Con el zoom de una carta abierto pasa a la esquina de arriba a la izquierda: abajo a la derecha queda el pulgar, que es
-    // el que desliza las cartas (al empezar a cerrarse el zoom vuelve a su lugar de siempre)
-    body:has(#zoom-fondo.abierto) > #silenciar {
-        inset: calc(12px + env(safe-area-inset-top, 0px)) auto auto 12px;
-    }
-
-    // Si justo entonces el botón llama la atención (el primer sonido de la visita suele ser el de abrir el zoom) y su globito coincide con los
-    // cartelitos de ayuda, que salen arriba a la derecha, el globito se les montaba encima. Mientras coinciden, el botón (con su globito) pasa a la
-    // esquina de abajo a la izquierda; cuando se va el primero de los dos, vuelve arriba. (avisos.js, revisarLlamadas, le pone esta clase.)
-    body:has(#zoom-fondo.abierto) > #silenciar.esquiva-avisos {
-        inset: auto auto calc(12px + env(safe-area-inset-bottom, 0px)) 12px;
     }
 
     // (El de inclinación no existe en celular; si se achica la ventana justo cuando está afuera de la barra, no se muestra)

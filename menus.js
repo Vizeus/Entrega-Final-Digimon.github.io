@@ -62,7 +62,10 @@ export function activarCierreDeMenus() {
         );
     }
 
-    // El clic de ese toque no le llega a las cartas ni a sus botones (se frena en window, antes de que baje hasta ellos)
+    // El clic de ese toque no le llega a las cartas ni a sus botones (se frena en window, antes de que baje hasta ellos).
+    // Se frena de verdad ("Immediate"): los otros manejadores de clic que también están en window y en captura (el que hace esperar el clic de los
+    // botoncitos del frente por si es un doble toque, en gestos.js) tampoco lo ven; si no, lo guardarían y se lo entregarían después al botoncito
+    // como un clic nuevo, con el menú ya cerrado, y la ventana se abriría. Por eso este manejador se registra primero (ver main.js).
     window.addEventListener(
         'click',
         evento => {
@@ -70,7 +73,7 @@ export function activarCierreDeMenus() {
             cierraMenus = false;
             clearTimeout(olvidar);
             ultimoClicFrenado = performance.now();
-            evento.stopPropagation();
+            evento.stopImmediatePropagation();
             evento.preventDefault();
         },
         true,
@@ -82,7 +85,7 @@ export function activarCierreDeMenus() {
         'dblclick',
         evento => {
             if (performance.now() - ultimoClicFrenado > ESPERA_DEL_CLIC) return;
-            evento.stopPropagation();
+            evento.stopImmediatePropagation();
             evento.preventDefault();
         },
         true,

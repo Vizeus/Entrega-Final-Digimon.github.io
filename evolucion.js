@@ -15,8 +15,9 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 import { CON_MOUSE } from './util.js';
-import { COLOR_NIVEL, COLOR_NIVEL_DESCONOCIDO, EMOJIS_ELEMENTO, EMOJIS_TIPO } from './datos.js';
-import { DICCIONARIO, nombreElemento, nombreTipo, t } from './i18n.js';
+import { COLOR_NIVEL, COLOR_NIVEL_DESCONOCIDO, EMOJIS_ELEMENTO, EMOJIS_ATRIBUTO } from './datos.js';
+import { DICCIONARIO, nombreElemento, nombreAtributo, t } from './i18n.js';
+import { conCruzDeCierre } from './ventanas.js';
 import { cartaPorId, listaDigimons, nombreNivel } from './pagina.js';
 import { nombreCompleto, reducirMovimiento } from './cartas.js';
 import { inicioDeLoAparte } from './nombres.js';
@@ -29,7 +30,6 @@ Object.assign(DICCIONARIO.es, {
     'evo.boton': '🧬 Evolución',
     'evo.boton.ayuda': 'Ver la línea evolutiva',
     'evo.titulo': '🧬 Línea evolutiva',
-    'evo.cerrar': 'Cerrar',
     'evo.viene': 'Viene de',
     'evo.va': 'Evoluciona a',
     'evo.vacio': 'Sin registros',
@@ -66,7 +66,6 @@ Object.assign(DICCIONARIO.en, {
     'evo.boton': '🧬 Evolution',
     'evo.boton.ayuda': 'See the evolution line',
     'evo.titulo': '🧬 Evolution line',
-    'evo.cerrar': 'Close',
     'evo.viene': 'Evolves from',
     'evo.va': 'Evolves into',
     'evo.vacio': 'No records',
@@ -297,10 +296,10 @@ function crearCentro(carta) {
     caja.className = 'evo-actual';
     caja.style.setProperty('--c', colorDelNivel(nivelDe(carta)));
 
-    const { tipo, elemento } = carta.dataset;
+    const { atributo, elemento } = carta.dataset;
     const datos = document.createElement('span');
     datos.className = 'evo-datos';
-    datos.textContent = `${nombreTipo(tipo)} ${EMOJIS_TIPO[tipo]} · ${nombreElemento(elemento)} ${EMOJIS_ELEMENTO[elemento]}`;
+    datos.textContent = `${nombreAtributo(atributo)} ${EMOJIS_ATRIBUTO[atributo]} · ${nombreElemento(elemento)} ${EMOJIS_ELEMENTO[elemento]}`;
 
     caja.append(imagenDe(carta), crearNombreEvo(nombreDe(carta)), crearNivelEvo(carta), datos);
 
@@ -560,8 +559,7 @@ export function abrirEvolucion(carta) {
         title: t('evo.titulo'),
         html: '<div class="evo"></div>',
         showConfirmButton: false,
-        showCloseButton: true,
-        closeButtonAriaLabel: t('evo.cerrar'),
+        ...conCruzDeCierre(),
         width: 'min(96vw, 920px)',
         customClass: { popup: 'popup-evo' },
         didOpen: () => {

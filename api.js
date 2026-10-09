@@ -14,7 +14,7 @@ import {
     NIVEL_DE_LOS_HYBRID,
     NIVEL_HYBRID_SIN_DATO,
     REGLAS_ELEMENTO,
-    tipoDeLaApi,
+    atributoDeLaApi,
 } from './datos.js';
 import { claveDeNombre } from './nombres.js';
 import { barraProgreso, listaDigimons } from './pagina.js';
@@ -280,8 +280,8 @@ export async function crearListaDeDigimons() {
                 continue;
             }
 
-            // Extraemos el tipo (atributo) o, sino tiene, le ponemos "Desconocido"
-            const tipo = tipoDeLaApi[detalles.attributes?.[0]?.attribute] || 'Desconocido';
+            // Extraemos el atributo o, si no tiene, le ponemos "Desconocido"
+            const atributo = atributoDeLaApi[detalles.attributes?.[0]?.attribute] || 'Desconocido';
 
             // Extraemos el nivel original de la API (sin traducir) o, sino tiene, le ponemos "Desconocido".
             // Un nivel "Unknown" de la API también es desconocido. Los Armor y los Hybrid se pasan a uno de los 8 niveles
@@ -293,13 +293,13 @@ export async function crearListaDeDigimons() {
                 id: digimon.id,
                 nombre: digimon.name,
                 imagen: digimon.image,
-                tipo,
+                atributo,
                 nivelOriginal,
                 marca,
                 elemento: deducirElemento(digimon.id, detalles),
                 datosDorso: {
-                    especie: (detalles.types || []).map(especie => especie.type).join(', ') || '–',
-                    campos: (detalles.fields || []).map(campo => campo.field).join(', ') || '–', // los "Fields" de la API: familias o temáticas (Deep Savers, Metal Empire...). Un digimon puede tener varios o ninguno
+                    especies: (detalles.types || []).map(especie => especie.type).filter(Boolean), // los "types" de la API (Alien, Cyborg, Slime...): una lista, que el dorso junta con comas y el filtro de especies usa tal cual
+                    campos: (detalles.fields || []).map(campo => campo.field).filter(Boolean), // los "Fields" de la API: familias o temáticas (Deep Savers, Metal Empire...). Un digimon puede tener varios o ninguno (el filtro de grupos los usa tal cual; el dorso los junta con comas)
                     estreno: detalles.releaseDate || '–',
                     // Todos los ataques con su descripción (en inglés): para el botón "⚔️ Ataques" del dorso y para la pelea
                     habilidades: (detalles.skills || [])

@@ -1,8 +1,11 @@
 // -----------------------------------------------------------------------------------------------------------------
 // FILTROS Y BUSCADOR
 //
-//   · Tres filtros (tipo, nivel y elemento): dentro de un mismo filtro se pueden elegir varias opciones (alcanza con que
-//     cumpla una) y entre filtros distintos tienen que cumplirse todos.
+//   · Cinco filtros (atributo, nivel, elemento, grupo y especie): dentro de un mismo filtro se pueden elegir varias opciones (alcanza con
+//     que cumpla una) y entre filtros distintos tienen que cumplirse todos.
+//   · Los grupos son los "Fields" de la API (Deep Savers, Metal Empire...) y las especies, sus "types" (Alien, Cyborg, Slime...). Un digimon
+//     puede tener varios o ninguno, y sus opciones no están escritas de antemano: se suman a medida que llegan los digimons
+//     (descubrirOpciones). El panel de las especies, que son muchísimas, lleva arriba una cajita para buscar entre ellas.
 //   · Cada opción muestra cuántos digimons quedarían si se elige, teniendo en cuenta los otros filtros y la búsqueda.
 //   · El buscador ignora mayúsculas, acentos, espacios de más y signos (v-mon = vmon), acepta varias palabras en cualquier orden
 //     y también el número del digimon ("15" o "#15").
@@ -13,28 +16,31 @@
 
 import {
     COLOR_BUSQUEDA,
+    COLOR_CAMPO,
+    COLOR_ESPECIE,
     COLOR_ELEMENTO,
     COLOR_NIVEL,
     COLOR_NIVEL_DESCONOCIDO,
-    COLOR_TIPO,
+    COLOR_ATRIBUTO,
     COLOR_X,
     EMOJIS_ELEMENTO,
-    EMOJIS_TIPO,
+    EMOJIS_ATRIBUTO,
+    ORDEN_CAMPOS,
     ORDEN_ELEMENTOS,
     ORDEN_NIVELES,
     numeracionNiveles,
 } from './datos.js';
-import { nombreElemento, nombreTipo, t } from './i18n.js';
+import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { listaDigimons, nombreNivel } from './pagina.js';
 import { nombreApiCompleto, nombreCompleto, nombreOccidentalCompleto } from './cartas.js';
 
-// Cada filtro: qué opciones tiene (con el nombre interno), cómo se llama cada una y qué lleva de ícono
+// Cada filtro: qué opciones tiene (con el nombre interno), cómo se llama cada una y qué lleva de ícono (o null si no lleva)
 const GRUPOS_FILTRO = {
-    tipo: {
+    atributo: {
         claves: ['Vacuna', 'Virus', 'Datos', 'Libre', 'Variable', 'Desconocido'],
-        nombre: nombreTipo,
-        color: clave => COLOR_TIPO[clave],
-        icono: clave => ({ clase: 'f-e', texto: EMOJIS_TIPO[clave] }),
+        nombre: nombreAtributo,
+        color: clave => COLOR_ATRIBUTO[clave],
+        icono: clave => ({ clase: 'f-e', texto: EMOJIS_ATRIBUTO[clave] }),
     },
     nivel: {
         claves: ORDEN_NIVELES,
@@ -47,6 +53,22 @@ const GRUPOS_FILTRO = {
         nombre: nombreElemento,
         color: clave => COLOR_ELEMENTO[clave],
         icono: clave => ({ clase: 'f-e', texto: EMOJIS_ELEMENTO[clave] }),
+    },
+    // Grupos (los "Fields" de la API): las opciones se suman a medida que llegan los digimons (descubrirOpciones), así que "claves" empieza vacío.
+    // Cada carta trae una lista (puede estar vacía) y alcanza con que tenga uno de los elegidos. Son nombres propios: se ven como los trae la API.
+    // Son muchas opciones: no llevan ícono (icono: null) y todas tienen el mismo color (un tono apagado).
+    campo: {
+        claves: [],
+        nombre: clave => clave,
+        color: () => COLOR_CAMPO,
+        icono: () => null,
+    },
+    // Especies (los "types" de la API): igual que los grupos, las opciones se suman a medida que llegan los digimons, sin ícono y con un solo color (otro tono, para no confundir sus etiquetas con las de grupo).
+    especie: {
+        claves: [],
+        nombre: clave => clave,
+        color: () => COLOR_ESPECIE,
+        icono: () => null,
     },
     // X-Antibody: no tiene panel de opciones; se maneja con un solo botón (.f-xa) que rota entre "indistinto" (nada elegido),
     // "con" y "sin"
@@ -81,7 +103,7 @@ const botonLimpiar = seccionFiltros.querySelector('.f-resumen .f-limpiar');
 const avisoVacio = document.getElementById('f-vacio');
 
 // ---- Qué está elegido ----------------------------------------------------------------------------------------------
-const elegidos = { tipo: new Set(), nivel: new Set(), elemento: new Set(), x: new Set() };
+const elegidos = { atributo: new Set(), nivel: new Set(), elemento: new Set(), campo: new Set(), especie: new Set(), x: new Set() };
 let busqueda = ''; // lo que se escribió, ya normalizado (para comparar)
 let busquedaEscrita = ''; // lo que se escribió, tal cual (para mostrar en la etiqueta)
 
@@ -100,11 +122,15 @@ function datosDeFiltro(carta) {
             compacto: compactar(nombre),
         }));
         carta.datosFiltro = {
-            tipo: carta.dataset.tipo,
+            atributo: carta.dataset.atributo,
             nivel: carta.dataset.nivelApi,
             elemento: carta.dataset.elemento,
+            // los grupos y las especies de la carta: listas (a diferencia de los demás datos, que son un solo valor)
+            campo: carta.datosDorso?.campos ?? [],
+            especie: carta.datosDorso?.especies ?? [],
             x: carta.dataset.xAntibody ? 'con' : 'sin', // si tiene X-Antibody
             marca: carta.dataset.marca ? normalizar(carta.dataset.marca) : null, // 'armor' o 'hybrid'
+            xrosWars: Boolean(carta.dataset.xrosWars), // lleva la marca XW (grupo Xros Wars)
             id: Number(carta.dataset.id),
             nombres,
         };
@@ -120,10 +146,11 @@ function coincideBusqueda(datos, consulta) {
     if (numero && datos.id === Number(numero[1])) return true;
 
     // Cada palabra tiene que estar en el mismo nombre (en cualquier orden): en el original o en el occidental, pero sin mezclarlos,
-    // o bien coincidir con la marca especial de la carta (Armor o Hybrid).
+    // o bien coincidir con una marca especial de la carta (Armor, Hybrid o Xros Wars).
     // Las que no llevan signos también se buscan sin signos: "vmon", "wargreymon"
     const palabras = consulta.split(' ');
     const coincideMarca = palabra => {
+        if (datos.xrosWars && (palabra === 'xros' || palabra === 'wars' || palabra === 'xroswars' || palabra === 'xros-wars')) return true;
         if (!datos.marca) return false;
         if (datos.marca === 'armor')
             return (
@@ -144,25 +171,82 @@ function coincideBusqueda(datos, consulta) {
 }
 
 // ---- Opciones (chips) ----------------------------------------------------------------------------------------------
+function crearChip(grupo, clave) {
+    const definicion = GRUPOS_FILTRO[grupo];
+    const color = definicion.color(clave);
+    const icono = definicion.icono(clave);
+
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'f-chip';
+    chip.dataset.g = grupo;
+    chip.dataset.k = clave;
+    chip.setAttribute('aria-pressed', 'false');
+    chip.style.setProperty('--c', color);
+    chip.style.setProperty('--t', colorDelTexto(color));
+    chip.classList.toggle('sin-icono', !icono);
+    chip.innerHTML = `${icono ? `<span class="${icono.clase}">${icono.texto}</span>` : ''}<span class="f-k"></span><i>0</i>`;
+    return chip;
+}
+
 function crearChips() {
     for (const [grupo, definicion] of Object.entries(GRUPOS_FILTRO)) {
         if (definicion.soloBoton) continue; // sin panel de opciones
         const panel = seccionFiltros.querySelector(`.f-grupo[data-g="${grupo}"] .f-panel`);
         for (const clave of definicion.claves) {
-            const color = definicion.color(clave);
-            const icono = definicion.icono(clave);
-
-            const chip = document.createElement('button');
-            chip.type = 'button';
-            chip.className = 'f-chip';
-            chip.dataset.g = grupo;
-            chip.dataset.k = clave;
-            chip.setAttribute('aria-pressed', 'false');
-            chip.style.setProperty('--c', color);
-            chip.style.setProperty('--t', colorDelTexto(color));
-            chip.innerHTML = `<span class="${icono.clase}">${icono.texto}</span><span class="f-k"></span><i>0</i>`;
-            panel.append(chip);
+            panel.append(crearChip(grupo, clave));
         }
+    }
+}
+
+// Filtros cuyas opciones llegan con los digimons: en qué orden se muestran y cuáles ya se vieron.
+// Grupos: primero los conocidos (en el orden de datos.js) y después los que traiga la API y no estén ahí, por orden alfabético.
+// Especies: por orden alfabético.
+const lugarDelCampo = clave => {
+    const lugar = ORDEN_CAMPOS.indexOf(clave);
+    return lugar === -1 ? ORDEN_CAMPOS.length : lugar;
+};
+const OPCIONES_QUE_LLEGAN = {
+    campo: { orden: (a, b) => lugarDelCampo(a) - lugarDelCampo(b) || a.localeCompare(b, 'en'), vistas: new Set() },
+    especie: { orden: (a, b) => a.localeCompare(b, 'en'), vistas: new Set() },
+};
+
+// Suma al filtro las opciones que traiga una carta y todavía no estén (y deja todas en su orden)
+function descubrirOpciones(grupo, valores) {
+    const { orden, vistas } = OPCIONES_QUE_LLEGAN[grupo];
+    const nuevas = valores.filter(valor => !vistas.has(valor));
+    if (nuevas.length === 0) return;
+
+    const claves = GRUPOS_FILTRO[grupo].claves;
+    nuevas.forEach(valor => vistas.add(valor));
+    claves.push(...nuevas);
+    claves.sort(orden);
+
+    const panel = seccionFiltros.querySelector(`.f-grupo[data-g="${grupo}"] .f-panel`);
+    const existentes = new Map([...panel.querySelectorAll('.f-chip')].map(chip => [chip.dataset.k, chip]));
+    panel.append(...claves.map(clave => existentes.get(clave) ?? crearChip(grupo, clave))); // (al volver a poner uno que ya estaba, solo se lo cambia de lugar)
+    etiquetarChips();
+    buscarEntreLasOpciones(grupo); // si había algo escrito en la cajita de búsqueda, las nuevas también lo cumplen o se esconden
+}
+
+// ---- Búsqueda dentro del panel (las especies) ----------------------------------------------------------------------
+// Muestra solo las opciones que tienen lo escrito en el nombre (sin mayúsculas ni acentos). Las elegidas se ven siempre, así no se pierde de
+// vista qué hay marcado.
+function buscarEntreLasOpciones(grupo) {
+    const caja = seccionFiltros.querySelector(`.f-grupo[data-g="${grupo}"] .f-opciones-buscar input`);
+    if (!caja) return;
+    const consulta = normalizar(caja.value);
+    seccionFiltros.querySelectorAll(`.f-chip[data-g="${grupo}"]`).forEach(chip => {
+        const sirve = !consulta || normalizar(chip.dataset.k).includes(consulta) || elegidos[grupo].has(chip.dataset.k);
+        if (chip.hidden === sirve) chip.hidden = !sirve;
+    });
+}
+
+function borrarBusquedaDeOpciones(grupo) {
+    const caja = seccionFiltros.querySelector(`.f-grupo[data-g="${grupo}"] .f-opciones-buscar input`);
+    if (caja && caja.value !== '') {
+        caja.value = '';
+        buscarEntreLasOpciones(grupo);
     }
 }
 
@@ -187,13 +271,18 @@ function crearEtiqueta(grupo, clave, color, icono, texto, nombreGrupo) {
     etiqueta.style.setProperty('--c', color);
     etiqueta.style.setProperty('--t', colorDelTexto(color));
 
-    const marca = document.createElement('span');
-    marca.className = icono.clase;
-    marca.textContent = icono.texto;
     const nombre = document.createElement('span');
     nombre.className = 'f-k';
     nombre.textContent = texto; // puede ser lo que escribió la persona: siempre como texto, nunca como HTML
-    etiqueta.append(marca, nombre);
+    if (icono) {
+        const marca = document.createElement('span');
+        marca.className = icono.clase;
+        marca.textContent = icono.texto;
+        etiqueta.append(marca);
+    } else {
+        etiqueta.classList.add('sin-icono');
+    }
+    etiqueta.append(nombre);
     return etiqueta;
 }
 
@@ -229,18 +318,22 @@ function cambiarAtributo(elemento, nombre, valor) {
 // ---- Filtrar y contar ----------------------------------------------------------------------------------------------
 // Muestra u oculta cada carta y actualiza cuentas, botones, etiquetas y avisos
 function refrescar() {
-    const conteo = { tipo: {}, nivel: {}, elemento: {}, x: {} };
+    const conteo = Object.fromEntries(GRUPOS.map(grupo => [grupo, {}]));
     let total = 0;
     let visibles = 0;
 
     for (const carta of listaDigimons.children) {
         const datos = datosDeFiltro(carta);
         total++;
+        descubrirOpciones('campo', datos.campo);
+        descubrirOpciones('especie', datos.especie);
 
-        // Qué filtros cumple esta carta (un filtro sin nada elegido lo cumple todo)
+        // Qué filtros cumple esta carta (un filtro sin nada elegido lo cumple todo; el de grupos, si tiene alguno de los elegidos)
         const cumple = {};
         for (const grupo of GRUPOS) {
-            cumple[grupo] = elegidos[grupo].size === 0 || elegidos[grupo].has(datos[grupo]);
+            const valor = datos[grupo];
+            cumple[grupo] =
+                elegidos[grupo].size === 0 || (Array.isArray(valor) ? valor.some(opcion => elegidos[grupo].has(opcion)) : elegidos[grupo].has(valor));
         }
         const cumpleBusqueda = coincideBusqueda(datos, busqueda);
         const cumpleTodo = cumpleBusqueda && GRUPOS.every(grupo => cumple[grupo]);
@@ -252,7 +345,10 @@ function refrescar() {
         if (!cumpleBusqueda) continue;
         for (const grupo of GRUPOS) {
             if (GRUPOS.every(otro => otro === grupo || cumple[otro])) {
-                conteo[grupo][datos[grupo]] = (conteo[grupo][datos[grupo]] || 0) + 1;
+                const valor = datos[grupo];
+                for (const opcion of Array.isArray(valor) ? valor : [valor]) {
+                    conteo[grupo][opcion] = (conteo[grupo][opcion] || 0) + 1;
+                }
             }
         }
     }
@@ -310,6 +406,7 @@ export function limpiarTodo() {
     cajaBusqueda.value = '';
     leerBusqueda();
     refrescar();
+    Object.keys(OPCIONES_QUE_LLEGAN).forEach(buscarEntreLasOpciones);
 }
 
 function leerBusqueda() {
@@ -339,11 +436,20 @@ function activarFiltros() {
         cajaBusqueda.focus();
     });
 
+    // El panel nace alineado con su botón; si así se saliera por la derecha de la pantalla (el último botón de la fila), se corre hacia la izquierda
+    const mantenerPanelEnPantalla = panel => {
+        panel.style.left = '';
+        const sobra = panel.getBoundingClientRect().right - (document.documentElement.clientWidth - 8);
+        if (sobra > 0) panel.style.left = `${-sobra}px`;
+    };
+
     // Panel de opciones de cada filtro: se abre con el botón (uno a la vez)
     const grupos = seccionFiltros.querySelectorAll('.f-grupo');
     const abrir = (grupo, abierto) => {
         grupo.classList.toggle('abierto', abierto);
         grupo.querySelector('.f-btn').setAttribute('aria-expanded', String(abierto));
+        if (!abierto) borrarBusquedaDeOpciones(grupo.dataset.g); // al volver a abrir el panel están todas las opciones
+        if (abierto) mantenerPanelEnPantalla(grupo.querySelector('.f-panel'));
     };
     grupos.forEach(grupo => {
         grupo.querySelector('.f-btn').addEventListener('click', () => abrir(grupo, !grupo.classList.contains('abierto')));
@@ -374,6 +480,13 @@ function activarFiltros() {
             elegidos[grupo].add(clave);
         }
         refrescar();
+        buscarEntreLasOpciones(grupo);
+    });
+
+    // Cajita de búsqueda del panel de las especies
+    seccionFiltros.querySelectorAll('.f-opciones-buscar input').forEach(caja => {
+        const grupo = caja.closest('.f-grupo').dataset.g;
+        caja.addEventListener('input', () => buscarEntreLasOpciones(grupo));
     });
 
     // Sacar un filtro desde su etiqueta
@@ -388,6 +501,7 @@ function activarFiltros() {
             elegidos[grupo].delete(clave);
         }
         refrescar();
+        if (grupo in OPCIONES_QUE_LLEGAN) buscarEntreLasOpciones(grupo);
     });
 
     // Botón de X-Antibody: cada clic pasa al siguiente estado (indistinto → con → sin → indistinto)

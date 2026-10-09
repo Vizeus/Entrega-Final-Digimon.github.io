@@ -38,6 +38,72 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
     font-family: var(--f-titulo), sans-serif;
 }
 
+// ---- La cruz de cerrar, igual en todas las ventanas (información, ataques, línea evolutiva y combate) -------------------------------
+// Botón de vidrio redondo arriba a la derecha (ventanas.js: conCruzDeCierre la pide y prepararLaCruz la acomoda). Cerrarla es lo mismo que
+// tocar afuera o apretar Esc (en el combate, anularlo). Dentro de un "riel" (una columna sin ancho pegada al borde derecho de la ventana, de su
+// alto), la cruz se queda pegada al borde de arriba de la pantalla cuando la ventana es más alta y se desplaza: nunca queda fuera de alcance.
+$cruz-de-ventana-tamano: 38px;
+$cruz-de-ventana-margen: 10px;
+
+.swal2-popup {
+    // Los títulos dejan lugar a la cruz de la derecha, y se mantienen centrados con el mismo lugar a la izquierda
+    &:not(.combate-popup) .swal2-title {
+        padding-inline: $cruz-de-ventana-tamano + $cruz-de-ventana-margen * 2;
+    }
+
+    .ventana-riel {
+        position: absolute;
+        inset: 0 0 0 auto;
+        z-index: 3;
+        width: 0;
+        pointer-events: none;
+    }
+
+    // El mismo vidrio redondo que los botones de la barra (idioma, sonido...) y la ✕ del zoom, con su versión oscura (_tema-oscuro.scss).
+    // (SweetAlert la deja en el flujo de la ventana, con su propio aspecto: acá se le cambia todo. El selector con "button" va para que sus estados
+    // :hover y :focus de SweetAlert no pisen el fondo y la sombra)
+    button.swal2-close {
+        @include boton-de-gel;
+        @include boton-redondo;
+        position: absolute;
+        inset: $cruz-de-ventana-margen $cruz-de-ventana-margen auto auto;
+        z-index: 3;
+        align-items: center;
+        justify-content: center;
+        width: $cruz-de-ventana-tamano;
+        height: $cruz-de-ventana-tamano;
+        overflow: visible;
+        font-size: 1rem;
+
+        // Una zona de toque más grande que el dibujo, para el dedo
+        &::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+        }
+
+        svg {
+            display: block;
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentcolor;
+            stroke-width: 2.4;
+            stroke-linecap: round;
+            filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7));
+        }
+    }
+
+    // En su riel se queda pegada arriba (con el margen de siempre, y por debajo de la muesca de los celulares) mientras la ventana se desplaza
+    .ventana-riel button.swal2-close {
+        position: sticky;
+        inset: max($cruz-de-ventana-margen, env(safe-area-inset-top, 0px)) auto auto;
+        margin: $cruz-de-ventana-margen 0 0 (-($cruz-de-ventana-tamano + $cruz-de-ventana-margen));
+        justify-self: start; // (el "end" de SweetAlert la alinearía al final del riel, que no tiene ancho, y anularía el margen)
+        pointer-events: auto;
+    }
+}
+
 .swal2-popup button,
 .swal2-styled {
     font-family: var(--f-boton), sans-serif;
@@ -55,7 +121,7 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
     }
 }
 
-// Ventanas de información (tipos, elementos y niveles): las tres tienen el mismo formato.
+// Ventanas de información (atributos, elementos y niveles): las tres tienen el mismo formato.
 // El título lleva la fuente pixelada de la barra de arriba (Pixelify Sans)
 .popup-info .swal2-title {
     font-family: var(--f-boton), sans-serif;

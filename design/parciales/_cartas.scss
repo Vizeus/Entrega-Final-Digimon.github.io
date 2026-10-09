@@ -3,11 +3,11 @@
 
 // -----------------------------------------------------------------------------------------------------------------
 // CARTAS
-//   El tipo define el color (--tipo) y el nivel lo aclara o lo oscurece: los bebés son pastel y cada nivel es un poco más
-//   profundo que el anterior (--base es el color del tipo ya ajustado al nivel). El elemento define el color de su etiqueta.
-//   Las etiquetas chicas (tipo, gema, botón Evolución) usan el color puro del tipo para que el texto blanco se lea bien.
+//   El atributo define el color (--atributo) y el nivel lo aclara o lo oscurece: los bebés son pastel y cada nivel es un poco más
+//   profundo que el anterior (--base es el color del atributo ya ajustado al nivel). El elemento define el color de su etiqueta.
+//   Las etiquetas chicas (atributo, gema, botón Evolución) usan el color puro del atributo para que el texto blanco se lea bien.
 //   Los Perfect (nivel 5) tienen marco de cromo helado y los Ultimate (nivel 6) marco dorado; el anillo y el aura
-//   interiores conservan el color del tipo, así se distingue el tipo sin perder que es Perfect o Ultimate.
+//   interiores conservan el color del atributo, así se distingue el atributo sin perder que es Perfect o Ultimate.
 //   Los niveles 7 (Super Ultimate) y 8 (Absolute) son inventados para el simulador y tienen un marco que gira:
 //   arcoíris holográfico con corona el 7, y estrellado en violeta y oro con un sol el 8.
 //
@@ -30,11 +30,11 @@
     overflow-x: clip;
 
     li {
-        --tipo: #59616d; // Desconocido / sin tipo: gris oscuro
+        --atributo: #59616d; // Desconocido / sin atributo: gris oscuro
         --claro: 12%; // cuánto se aclara hacia blanco (bebés); sin nivel conocido: como un Child
         --oscuro: 0%; // cuánto se oscurece hacia negro (niveles altos)
         --fuerza: 64%; // cuánto color lleva el fondo y la placa del nombre (crece con el nivel)
-        --base: color-mix(in srgb, color-mix(in srgb, var(--tipo), white var(--claro)), black var(--oscuro));
+        --base: color-mix(in srgb, color-mix(in srgb, var(--atributo), white var(--claro)), black var(--oscuro));
         --tinte: color-mix(in srgb, var(--base) var(--fuerza), white);
 
         // Marco: un degradé que se pinta detrás del borde transparente. Entre borde y relleno siempre suman 14px,
@@ -71,14 +71,14 @@
             translate 0.3s ease,
             box-shadow 0.3s ease;
 
-        // Un color distinto para cada tipo (los colores están en _variables.scss)
-        @each $tipo, $color in $colores-tipo {
-            &[data-tipo="#{$tipo}"] {
-                --tipo: #{$color};
+        // Un color distinto para cada atributo (los colores están en _variables.scss)
+        @each $atributo, $color in $colores-atributo {
+            &[data-atributo="#{$atributo}"] {
+                --atributo: #{$color};
             }
         }
 
-        // Un tono por nivel: Baby I es pastel, Baby II y Child van subiendo hasta el color del tipo,
+        // Un tono por nivel: Baby I es pastel, Baby II y Child van subiendo hasta el color del atributo,
         // y de Adult en adelante pasan a tonos cada vez más profundos (cada nivel un escalón más oscuro que el anterior,
         // hasta el nivel 8, el más intenso)
         &[data-nivel="1"] {
@@ -260,7 +260,7 @@
             }
         }
 
-        // Cabecera con el nombre: una placa metálica con un toque del color del tipo
+        // Cabecera con el nombre: una placa metálica con un toque del color del atributo
         .c-cab {
             box-sizing: border-box;
             min-height: 40px;
@@ -354,9 +354,9 @@
             border-radius: 50%;
             background: radial-gradient(
                 circle at 30% 25%,
-                color-mix(in srgb, var(--tipo) 45%, white) 0%,
-                var(--tipo) 55%,
-                color-mix(in srgb, var(--tipo) 65%, black) 100%
+                color-mix(in srgb, var(--atributo) 45%, white) 0%,
+                var(--atributo) 55%,
+                color-mix(in srgb, var(--atributo) 65%, black) 100%
             );
             box-shadow:
                 0 0 0 2px #e4e8ed,
@@ -452,6 +452,43 @@
             top: 36px;
         }
 
+        // Marca de los digimons del grupo Xros Wars (naranja, "XW"): mismo lugar y mismo estilo que las otras. Si hay más de una marca,
+        // van una debajo de la otra (X-Antibody, después Armor/Hybrid, después Xros Wars).
+        .c-xw {
+            position: absolute;
+            z-index: 2;
+            top: 6px;
+            left: 6px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font:
+                900 11px/1 var(--f-titulo),
+                sans-serif;
+            letter-spacing: -0.3px;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, #ffe0c2 0%, #ff8a1f 52%, #8a3a00 100%);
+            box-shadow:
+                0 0 0 2px #e4e8ed,
+                0 0 0 3px #7e8791,
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            cursor: help;
+        }
+
+        .c-x ~ .c-xw,
+        .c-marca ~ .c-xw {
+            top: 36px;
+        }
+
+        .c-x ~ .c-marca ~ .c-xw {
+            top: 66px;
+        }
+
         // Nivel (izquierda) e ID (derecha)
         .c-sub {
             display: flex;
@@ -486,14 +523,14 @@
             }
         }
 
-        // Etiquetas de tipo y elemento: píldoras brillantes estilo Frutiger Aero
+        // Etiquetas de atributo y elemento: píldoras brillantes estilo Frutiger Aero
         .c-chips {
             display: flex;
             gap: 5px;
         }
 
         .chip {
-            --c: var(--tipo);
+            --c: var(--atributo);
             flex: 1;
             min-width: 0;
             padding: 3px 4px;
@@ -556,7 +593,7 @@
 
                 b {
                     font-weight: 700;
-                    color: color-mix(in srgb, var(--tipo) 70%, black);
+                    color: color-mix(in srgb, var(--atributo) 70%, black);
                 }
             }
 

@@ -60,6 +60,17 @@ export function emitir(nombre, detalle) {
     document.dispatchEvent(new CustomEvent(nombre, { detail: detalle }));
 }
 
+// ---- Segundo toque de un doble toque -------------------------------------------------------------------------------
+// Un doble toque (o doble clic) sobre un botoncito del frente de una carta amplía la carta (ver gestos.js). El primer toque ya sonó y vibró, así
+// que el segundo no lo hace otra vez: gestos.js anota acá, al apoyar el dedo (o el mouse), si ese toque es el segundo, y quien suena o vibra pregunta.
+let segundoDeUnDoble = false;
+
+export function marcarSegundoDeUnDoble(valor) {
+    segundoDeUnDoble = valor;
+}
+
+export const esElSegundoDeUnDoble = () => segundoDeUnDoble;
+
 // ---- Qué pantalla es ----------------------------------------------------------------------------------------------
 // Una sola definición de cada tipo de pantalla. Se lee con .matches (siempre dice cómo está en ese momento) y se puede
 // escuchar con .addEventListener('change', ...).

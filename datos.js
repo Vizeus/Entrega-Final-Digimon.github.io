@@ -1,16 +1,16 @@
 // -----------------------------------------------------------------------------------------------------------------
 // DATOS DEL SIMULADOR
 //
-// Las tablas con la información que usa la página: tipos, niveles, elementos, cartas propias y colores. Son solo datos (no hay
+// Las tablas con la información que usa la página: atributos, niveles, elementos, cartas propias y colores. Son solo datos (no hay
 // funciones): para cambiar algo de lo que sabe el simulador, se cambia acá. No depende de ningún otro archivo.
 // Las reglas de cómo se usan están en cada parte (por ejemplo, el combate en combate.js y la deducción del elemento en api.js).
 // -----------------------------------------------------------------------------------------------------------------
 
-// ---- Tipos ----------------------------------------------------------------------------------------------------
+// ---- Atributos ----------------------------------------------------------------------------------------------------
 
-// Tipo (atributo) de cada digimon: la API lo trae en inglés y por dentro lo guardamos con estos nombres en español.
-// Lo que se ve en pantalla ("Datos" o "Data") lo decide i18n.js según el idioma, ver nombreTipo().
-export const tipoDeLaApi = {
+// Atributo de cada digimon: la API lo trae en inglés y por dentro lo guardamos con estos nombres en español.
+// Lo que se ve en pantalla ("Datos" o "Data") lo decide i18n.js según el idioma, ver nombreAtributo().
+export const atributoDeLaApi = {
     'Data': 'Datos',
     'Vaccine': 'Vacuna',
     'Virus': 'Virus',
@@ -19,8 +19,8 @@ export const tipoDeLaApi = {
     'Unknown': 'Desconocido',
 };
 
-// Emoji de cada tipo para mostrar en la carta, en los filtros y en los menús
-export const EMOJIS_TIPO = {
+// Emoji de cada atributo para mostrar en la carta, en los filtros y en los menús
+export const EMOJIS_ATRIBUTO = {
     'Datos': '🔢',
     'Vacuna': '💉',
     'Virus': '👾',
@@ -29,8 +29,8 @@ export const EMOJIS_TIPO = {
     'Desconocido': '❓',
 };
 
-// Triángulo de tipos: cada tipo es fuerte contra el que tiene en su lista
-export const TIPO_FUERTE_CONTRA = {
+// Triángulo de atributos: cada atributo es fuerte contra el que tiene en su lista
+export const ATRIBUTO_FUERTE_CONTRA = {
     'Vacuna': ['Virus'],
     'Virus': ['Datos'],
     'Datos': ['Vacuna'],
@@ -234,7 +234,7 @@ export const ORDEN_ELEMENTOS = Object.keys(EMOJIS_ELEMENTO);
 
 // Elementos: cada elemento es fuerte contra los que tiene en su lista.
 // Si dos elementos se tienen ventaja mutuamente (Luz y Oscuridad), se cancelan.
-// Tipo Libre, Variable, Desconocido y elemento Neutro no dan ni quitan nada.
+// Atributo Libre, Variable, Desconocido y elemento Neutro no dan ni quitan nada.
 export const ELEMENTO_FUERTE_CONTRA = {
     'Agua': ['Fuego', 'Tierra'],
     'Fuego': ['Planta', 'Hielo', 'Oscuridad'],
@@ -271,6 +271,35 @@ export const ELEMENTOS_MANUALES = {
     457: 'Oscuridad', // Zeed Millenniumon: la deducción le daba Hielo por la palabra "freeze" de una habilidad, pero por lore es oscuridad y destrucción
 };
 
+// ---- Grupos (los "Fields" de la API) --------------------------------------------------------------------------
+// Familias o temáticas de la franquicia (Deep Savers, Metal Empire...): un digimon puede tener varios o ninguno. Son nombres propios, así que se
+// ven siempre como los trae la API (no se traducen). Este orden es solo el del filtro: si la API trae un grupo que no está acá, el filtro
+// también lo muestra (al final, por orden alfabético). Las opciones de este filtro y las de especies no llevan ícono ni color propios
+// (son demasiadas): todas se ven iguales (ver COLOR_CAMPO).
+export const ORDEN_CAMPOS = [
+    'Nature Spirits',
+    'Deep Savers',
+    'Nightmare Soldiers',
+    'Wind Guardians',
+    'Metal Empire',
+    'Virus Busters',
+    "Dragon's Roar",
+    'Jungle Troopers',
+    'Dark Area',
+    'Xros Wars',
+    'Unknown',
+];
+
+// XROS WARS: es uno de los grupos de la API, pero son pocos digimons (los de la serie Digimon Xros Wars) y se buscan mucho por nombre de serie,
+// así que además de estar en el filtro de grupos la carta lleva un circulito naranja con "XW" (como las marcas de Armor y Hybrid) y el buscador
+// los encuentra al escribir "xros wars".
+export const esXrosWars = campo => /^xros\s*wars$/i.test(String(campo).trim());
+
+// ---- Especies (los "types" de la API) --------------------------------------------------------------------------
+// Alien, Cyborg, Slime, God Beast, Mythical Beast...: son muchísimas y un digimon puede tener varias, así que el filtro de especies arma sus
+// opciones con las que van trayendo los digimons (ordenadas por nombre). Son nombres propios: se ven siempre como los trae la API.
+// Sin ícono ni color propio por opción (ver COLOR_ESPECIE).
+
 // ---- Cartas propias -------------------------------------------------------------------------------------------
 
 // Cartas que no están en la API: las agrega el simulador (después de las de la API). Su ID es alto para no chocar con los de ella.
@@ -280,12 +309,12 @@ export const CARTAS_PROPIAS = [
         etiquetaId: '★',
         nombre: 'Yggdrasil',
         imagen: './img/yggdrasil.webp',
-        tipo: 'Datos',
+        atributo: 'Datos',
         elemento: 'Planta',
         nivelOriginal: 'Absolute',
         datosDorso: {
-            especie: 'Host Computer',
-            campos: '–',
+            especies: ['Host Computer'],
+            campos: [],
             estreno: '–',
             habilidades: [],
             descripcion:
@@ -298,12 +327,12 @@ export const CARTAS_PROPIAS = [
         etiquetaId: '★',
         nombre: 'Homeostasis (Kami)',
         imagen: './img/homeostasis.webp',
-        tipo: 'Vacuna',
+        atributo: 'Vacuna',
         elemento: 'Luz',
         nivelOriginal: 'Absolute',
         datosDorso: {
-            especie: 'Security System',
-            campos: '–',
+            especies: ['Security System'],
+            campos: [],
             estreno: '–',
             habilidades: [],
             descripcion:
@@ -316,7 +345,7 @@ export const CARTAS_PROPIAS = [
 // ---- Colores --------------------------------------------------------------------------------------------------
 
 // Color de cada opción (el mismo que usan las cartas)
-export const COLOR_TIPO = {
+export const COLOR_ATRIBUTO = {
     'Vacuna': '#3a8dde',
     'Virus': '#8a4fc7',
     'Datos': '#3fae5a',
@@ -343,11 +372,15 @@ export const COLOR_ELEMENTO = {
 export const COLOR_NIVEL = { 1: '#f8bfd8', 2: '#a5e6c8', 3: '#1ea59d', 4: '#e5604f', 5: '#a4cde8', 6: '#d9a520', 7: '#d6409a', 8: '#3a2f9e' };
 export const COLOR_NIVEL_DESCONOCIDO = '#59616d';
 export const COLOR_BUSQUEDA = '#2f7fd0';
+// Grupos y especies: un solo color para todas las opciones de cada filtro (son demasiadas para darle uno a cada una). Son dos tonos apagados distintos
+// para poder distinguir en "filtros activos" una etiqueta de grupo de una de especie (hay nombres que están en los dos, como "Unknown").
+export const COLOR_CAMPO = '#5f7287'; // gris azulado
+export const COLOR_ESPECIE = '#7a6b62'; // gris tierra
 export const COLOR_X = '#e0245e'; // el rojo de la gema X de las cartas
 
 // Colores del texto de los enlaces que hay dentro de las ventanas de información. Son más oscuros que los de arriba (los de las
 // cartas y los filtros), que son colores de fondo, para que el texto se lea sobre el fondo claro de la ventana.
-export const COLOR_TIPO_ENLACE = {
+export const COLOR_ATRIBUTO_ENLACE = {
     'Vacuna': '#2563eb',
     'Virus': '#7c3aed',
     'Datos': '#16a34a',

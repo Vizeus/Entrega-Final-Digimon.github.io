@@ -6,7 +6,17 @@
 // ganador, el mouse, la pajita del GIF "Trabajando") y la vibración.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { CON_DEDO, PANTALLA_DE_CELULAR, emitir, guardarJSON, hayMarcaDeSesion, leerJSON, ponerAyuda, ponerMarcaDeSesion } from './util.js';
+import {
+    CON_DEDO,
+    PANTALLA_DE_CELULAR,
+    emitir,
+    esElSegundoDeUnDoble,
+    guardarJSON,
+    hayMarcaDeSesion,
+    leerJSON,
+    ponerAyuda,
+    ponerMarcaDeSesion,
+} from './util.js';
 import { t } from './i18n.js';
 import { llamarLaAtencion, terminarLlamada } from './avisos.js';
 import { nodoVolumenTeclas, sonidoTecla } from './sonidos.js';
@@ -25,7 +35,7 @@ export function vibrar(duracion = 8, forzar = false) {
 }
 
 // ---- Toques con el dedo en los botones de las cartas y de las ventanas ---------------------------------------------------
-// Al desplazar la página con el dedo, muchas veces el dedo cae justo sobre un botoncito de una carta (dar vuelta, nivel, tipo, elemento...).
+// Al desplazar la página con el dedo, muchas veces el dedo cae justo sobre un botoncito de una carta (dar vuelta, nivel, atributo, elemento...).
 // Lo mismo pasa dentro de las ventanas (ataques, evolución, información): están llenas de botones y para recorrerlas se desplaza el dedo.
 // Al apoyarlo todavía no se sabe si es un toque o el comienzo de un desplazamiento, y si en ese momento sonaba y vibraba, lo hacía aunque
 // no se tocara nada. Por eso, en esos botones, con el dedo se espera a que el toque termine: recién al levantar el dedo se avisa con
@@ -35,7 +45,7 @@ export function vibrar(duracion = 8, forzar = false) {
 const TOQUE_DISTANCIA_MAXIMA = 10; // px que se puede mover el dedo y que siga siendo un toque (los mismos que tolera la inclinación)
 const TOQUE_DURACION_MAXIMA = 500; // ms que se puede tener apoyado el dedo (más que eso es una pulsación larga)
 
-// ¿Este toque cayó con el dedo sobre un botón de una carta o de una ventana? (En el frente de la carta son <span role="button">: gema, nivel, tipo
+// ¿Este toque cayó con el dedo sobre un botón de una carta o de una ventana? (En el frente de la carta son <span role="button">: gema, nivel, atributo
 // y elemento. Las ventanas son las de SweetAlert: ataques, evolución, información...)
 export function esToqueEnBotonConEspera(evento) {
     return evento.pointerType === 'touch' && Boolean(evento.target.closest?.('button, [role="button"]')?.closest('#listado-digimons li, .swal2-popup'));
@@ -55,7 +65,8 @@ export function activarToqueEnBotonesConEspera() {
         apoyado = null;
         if (!toque || evento.pointerType !== 'touch') return;
         const sinMoverse = Math.hypot(evento.clientX - toque.x, evento.clientY - toque.y) <= TOQUE_DISTANCIA_MAXIMA;
-        if (sinMoverse && evento.timeStamp - toque.desde <= TOQUE_DURACION_MAXIMA) emitir('toque-en-boton', { boton: toque.boton });
+        // (el segundo toque de un doble toque sobre un botoncito, que amplía la carta, no suena ni vibra otra vez: el primero ya lo hizo)
+        if (sinMoverse && evento.timeStamp - toque.desde <= TOQUE_DURACION_MAXIMA && !esElSegundoDeUnDoble()) emitir('toque-en-boton', { boton: toque.boton });
     });
     for (const nombre of ['pointercancel', 'inclinacion-con-dedo']) {
         document.addEventListener(nombre, () => {
@@ -64,7 +75,7 @@ export function activarToqueEnBotonesConEspera() {
     }
 }
 
-// Los "botones" que son <span role="button"> (gema, nivel, tipo y elemento del frente de la carta) vibran con una mini vibración, como su
+// Los "botones" que son <span role="button"> (gema, nivel, atributo y elemento del frente de la carta) vibran con una mini vibración, como su
 // tecla, que también es más suave
 const vibrarAlTocar = boton => vibrar(boton.matches('[role="button"]') ? 6 : 8);
 

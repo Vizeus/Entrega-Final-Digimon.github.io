@@ -3,9 +3,11 @@
 //
 // Doble toque y pellizco para el zoom, barrido rápido para dar vuelta la carta (y las flechas de ayuda, que se dejan de
 // mostrar cuando ya se aprendió), barrido vertical para salir del zoom y el toque con "hundimiento" de los botones del dorso.
+// (Y la espera del clic de los botoncitos del frente de la carta, para que un doble toque o un doble clic los tome como pedido de zoom: eso vale
+// también con el mouse.)
 // -----------------------------------------------------------------------------------------------------------------
 
-import { emitir, guardarTexto, hayMarcaDeSesion, HAY_PANTALLA_TACTIL, leerTexto, ponerMarcaDeSesion } from './util.js';
+import { emitir, guardarTexto, hayMarcaDeSesion, HAY_PANTALLA_TACTIL, leerTexto, marcarSegundoDeUnDoble, ponerMarcaDeSesion } from './util.js';
 import { listaDigimons } from './pagina.js';
 import { seleccionados } from './combate.js';
 import { voltearCarta } from './cartas.js';
@@ -37,52 +39,119 @@ const DOBLE_TOQUE_DISTANCIA = 30; // px máximos entre los dos toques
 const TOQUE_DURACION = 250; // ms máximos que el dedo puede estar apoyado para que cuente como toque (más es una presión larga)
 const TOQUE_MOVIMIENTO = 12; // px máximos que se puede mover el dedo durante un toque
 
-// Un doble toque sobre un botoncito del frente de la carta (la gema, el nivel, el tipo o el elemento) también quiere ampliar la carta: abrir la
-// ventana de información del botoncito y cerrarla enseguida no tiene sentido. Como el primer toque ya abriría esa ventana, con el dedo el clic del
-// botoncito espera un instante (lo que dura la espera del doble toque, más un pequeño margen) a ver si llega el segundo toque: si llega, se amplía la
-// carta y la ventana no se abre; si no, la ventana se abre como siempre. (Los botones del dorso y los clics de mouse o de teclado no esperan nada.)
-const CHIPS_DEL_FRENTE = '#listado-digimons > li :is(.c-gema, .c-nivel, .c-tipo, .c-elem)';
+// Un doble toque (o doble clic) sobre un botoncito del frente de la carta (la gema, el nivel, el atributo o el elemento) también quiere ampliar la carta:
+// abrir la ventana de información del botoncito y cerrarla enseguida no tiene sentido. Como el primer clic ya abriría esa ventana, el clic del
+// botoncito espera un instante (lo que dura la espera del doble toque, más un pequeño margen) a ver si llega el segundo: si llega, se amplía la
+// carta y la ventana no se abre; si no, la ventana se abre como siempre. Con el dedo el segundo toque se reconoce acá (ver abajo); con el mouse
+// lo reconoce el navegador (es el clic con "detail" 2, y después llega el "dblclick" que amplía la carta, en zoom.js). Los botones del dorso y
+// los clics de teclado no esperan nada.
+// Ese segundo toque tampoco suena ni vibra otra vez (el primero ya lo hizo): se anota con marcarSegundoDeUnDoble() para quien suena o vibra.
+const CHIPS_DEL_FRENTE = '#listado-digimons > li :is(.c-gema, .c-nivel, .c-atributo, .c-elem)';
 const ESPERA_DEL_CHIP = DOBLE_TOQUE_ESPERA + 40; // ms que espera el clic de un botoncito
 const CLIC_DESPUES_DEL_TOQUE = 700; // ms máximos entre que se levanta el dedo y el clic que le sigue para que cuente como "hecho con el dedo"
 
-export function activarZoomConDobleToque() {
-    if (!HAY_PANTALLA_TACTIL) return;
-    let apoyado = null; // { carta, t, x, y, estado, cerrar }: el dedo que está apoyado ahora ("cerrar": la carta ya estaba ampliada)
-    let anterior = null; // { carta, tFin, x, y, estado, cerrar }: el último toque corto
-    let pendiente = null; // { chip, carta, espera }: el clic de un botoncito del frente que espera a ver si es el primero de un doble toque
-    let descartarClicHasta = 0; // hasta cuándo se descarta el clic de un botoncito: es el del segundo toque de un doble toque
-    let ultimoToqueTerminado = -Infinity; // cuándo se levantó el dedo la última vez
-    let reenviando = false;
+let pendiente = null; // { chip, carta, espera }: el clic de un botoncito del frente que espera a ver si es el primero de un doble toque
+let reenviando = false;
+let descartarClicHasta = 0; // hasta cuándo se descarta el clic de un botoncito: es el del segundo toque de un doble toque
+let ultimoToqueTerminado = -Infinity; // cuándo se levantó el dedo la última vez
+let ultimoDobleClicEnBotoncito = -Infinity; // cuándo el mouse hizo el último doble clic sobre un botoncito del frente (ver zoom.js)
 
-    // Le entrega al botoncito su clic, que estaba esperando (si ya se lo entregó o no hay, no hace nada)
-    const soltarPendiente = () => {
-        if (!pendiente) return;
-        const { chip, espera } = pendiente;
-        pendiente = null;
-        clearTimeout(espera);
-        reenviando = true;
-        try {
-            chip.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, view: window, detail: 1 }));
-        } finally {
-            reenviando = false;
-        }
-    };
+// ¿El doble clic que acaba de llegar (el "dblclick") fue sobre un botoncito del frente de una carta? Sus dos clics no eligieron la carta
+export const fueDobleClicEnBotoncito = () => performance.now() - ultimoDobleClicEnBotoncito < 500;
+
+// Le entrega al botoncito su clic, que estaba esperando (si ya se lo entregó o no hay, no hace nada)
+const soltarPendiente = () => {
+    if (!pendiente) return;
+    const { chip, espera } = pendiente;
+    pendiente = null;
+    clearTimeout(espera);
+    reenviando = true;
+    try {
+        chip.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, view: window, detail: 1 }));
+    } finally {
+        reenviando = false;
+    }
+};
+
+// Vale con dedo y con mouse (también en las pantallas sin tacto)
+export function activarEsperaDeBotoncitos() {
+    // ¿El toque que empieza es el segundo de un doble toque sobre un botoncito? Lo es si el anterior fue otro toque corto, hace poco y cerca, sobre
+    // un botoncito de la misma carta (los mismos números que el doble toque de la carta, más abajo)
+    let anterior = null; // { carta, x, y, t, fin }: el último apoyo sobre un botoncito del frente
+    window.addEventListener(
+        'pointerdown',
+        evento => {
+            if (!evento.isPrimary) return;
+            const carta = evento.button === 0 ? evento.target.closest?.(CHIPS_DEL_FRENTE)?.closest('#listado-digimons > li') : null;
+            const previo = anterior;
+            anterior = carta && { carta, x: evento.clientX, y: evento.clientY, t: evento.timeStamp, fin: -Infinity };
+            marcarSegundoDeUnDoble(
+                !!previo &&
+                    previo.carta === carta &&
+                    !cartaEnZoom &&
+                    !zoomOcupado &&
+                    evento.timeStamp - previo.fin <= DOBLE_TOQUE_ESPERA &&
+                    Math.hypot(evento.clientX - previo.x, evento.clientY - previo.y) <= DOBLE_TOQUE_DISTANCIA,
+            );
+            // Con el mouse, tocar otra cosa mientras un botoncito espera su segundo clic es no esperarlo más: la ventana se abre ya
+            // (con el dedo lo hace el principio de cada toque: ver activarZoomConDobleToque)
+            if (pendiente && evento.pointerType === 'mouse' && !pendiente.chip.contains(evento.target)) soltarPendiente();
+        },
+        true,
+    );
+    window.addEventListener(
+        'pointerup',
+        evento => {
+            if (!evento.isPrimary || !anterior) return;
+            const corto =
+                evento.timeStamp - anterior.t <= TOQUE_DURACION && Math.hypot(evento.clientX - anterior.x, evento.clientY - anterior.y) <= TOQUE_MOVIMIENTO;
+            if (corto) anterior.fin = evento.timeStamp;
+            else anterior = null;
+        },
+        true,
+    );
+    window.addEventListener(
+        'pointercancel',
+        () => {
+            anterior = null;
+        },
+        true,
+    );
 
     // (En window y en captura: va antes que el manejador que abre las ventanas de los botoncitos, en cartas.js)
     window.addEventListener(
         'click',
         evento => {
             if (reenviando || evento.detail === 0 || cartaEnZoom || zoomOcupado) return; // (detail 0: clic del teclado o de un lector de pantalla)
+            const conDedo = evento.timeStamp - ultimoToqueTerminado <= CLIC_DESPUES_DEL_TOQUE;
+            if (!conDedo && evento.detail > 1 && pendiente && pendiente.carta === evento.target.closest?.('#listado-digimons > li')) {
+                // Con el mouse, el segundo clic de un doble clic sobre la carta cuyo botoncito esperaba: la ventana no se abre y el "dblclick" que sigue amplía
+                // la carta. (El clic puede llegar a la carta y no al botoncito: la carta se inclina con el puntero y el botoncito se corre entre que se
+                // aprieta y se suelta.)
+                clearTimeout(pendiente.espera);
+                pendiente = null;
+                ultimoDobleClicEnBotoncito = performance.now();
+                evento.stopPropagation();
+                evento.preventDefault();
+                return;
+            }
             const chip = evento.target.closest?.(CHIPS_DEL_FRENTE);
-            if (!chip || evento.timeStamp - ultimoToqueTerminado > CLIC_DESPUES_DEL_TOQUE) return; // no es un botoncito, o el clic no vino de un dedo
+            if (!chip) return;
+            const carta = chip.closest('#listado-digimons > li');
             evento.stopPropagation();
             evento.preventDefault();
-            if (performance.now() < descartarClicHasta) return; // el segundo toque de un doble toque: la carta se amplía y la ventana no se abre
+            if (conDedo && performance.now() < descartarClicHasta) return; // el segundo toque de un doble toque: la carta se amplía y la ventana no se abre
             soltarPendiente();
-            pendiente = { chip, carta: chip.closest('#listado-digimons > li'), espera: setTimeout(soltarPendiente, ESPERA_DEL_CHIP) };
+            pendiente = { chip, carta, espera: setTimeout(soltarPendiente, ESPERA_DEL_CHIP) };
         },
         true,
     );
+}
+
+export function activarZoomConDobleToque() {
+    if (!HAY_PANTALLA_TACTIL) return;
+    let apoyado = null; // { carta, t, x, y, estado, cerrar }: el dedo que está apoyado ahora ("cerrar": la carta ya estaba ampliada)
+    let anterior = null; // { carta, tFin, x, y, estado, cerrar }: el último toque corto
 
     document.addEventListener(
         'touchstart',

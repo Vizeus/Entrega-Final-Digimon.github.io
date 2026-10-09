@@ -5,6 +5,13 @@
 // LÍNEA EVOLUTIVA (evolucion.js): la ventana con el árbol y el destello de la carta al ir a ella.
 // -----------------------------------------------------------------------------------------------------------------
 
+// Medidas del árbol (en píxeles de la ventana, antes del zoom de las pantallas grandes). Nada del árbol se desplaza hacia los costados: el ancho
+// se reparte entre las columnas, y por eso el árbol de tres columnas solo se usa en pantallas más anchas que $corte-arbol; en las más angostas va en una sola columna.
+$evo-ancho-caja: 176px; // una rama (digimon) cuando entra holgada
+$evo-ancho-caja-minimo: 150px; // lo más angosta que puede quedar una rama dentro de una lista desplegada
+$evo-ancho-lista-abierta: 390px; // lo que le gustaría ocupar a una lista desplegada: dos ramas, sus espacios, el borde y la barra de desplazamiento
+$corte-arbol: 767px; // hasta este ancho de pantalla el árbol va en una sola columna
+
 /* Al ir a la carta desde la línea evolutiva: la carta salta hacia adelante (zoom), y el contorno y el resplandor titilan rápido */
 #listado-digimons > li.evo-resaltada {
     z-index: 30;
@@ -115,18 +122,19 @@
     justify-content: center;
     gap: var(--g);
     padding: 30px 6px 46px;
-    overflow-x: auto;
+    overflow-x: clip; // sin barra de desplazamiento hacia los costados: las columnas se achican para entrar (ver .evo-col)
 }
 
 .evo-flecha-v {
     display: none;
 }
 
-/* Columnas: el rótulo y el botón "ver las restantes" quedan fuera del flujo para que la lista quede centrada con el digimon */
+/* Columnas: el rótulo y el botón "ver las restantes" quedan fuera del flujo para que la lista quede centrada con el digimon.
+   Cerrada, la columna mide lo de una rama; desplegada, quiere el ancho de dos y se achica sola si no hay lugar (ver .abierta más abajo). */
 .evo-col {
     position: relative;
-    flex: 0 1 auto;
-    min-width: 0;
+    flex: none;
+    width: $evo-ancho-caja;
 }
 
 .evo-col > h5 {
@@ -184,7 +192,6 @@
 
 .evo-vacio {
     box-sizing: border-box;
-    width: 176px;
     margin: 0;
     padding: 10px;
     font-size: 12px;
@@ -202,7 +209,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 176px;
+    width: 100%;
     padding: 5px 8px 5px 5px;
     text-align: left;
     color: #1f2d3a;
@@ -564,13 +571,25 @@
     border-color: transparent transparent transparent var(--linea);
 }
 
-/* Lista desplegada: se ven todas las ramas en una grilla con scroll y las líneas pasan a ser un solo corchete */
+/* Lista desplegada: se ven todas las ramas en una grilla con scroll hacia abajo (nunca hacia los costados) y las líneas pasan a ser un solo corchete.
+   Las columnas de la grilla se arman según el ancho que quede: dos ramas una al lado de la otra si entran y, si no (por ejemplo con las dos listas
+   desplegadas a la vez), una sola. Las ramas se pegan al corchete, del lado del digimon del medio. */
+.evo-col.abierta {
+    flex: 0 1 $evo-ancho-lista-abierta;
+    min-width: 0;
+}
+
 .evo-col.abierta .evo-lista {
     display: grid;
-    grid-template-columns: repeat(2, 176px);
+    grid-template-columns: repeat(auto-fill, minmax($evo-ancho-caja-minimo, 1fr));
     max-height: min(46vh, 340px);
     padding: 4px;
-    overflow-y: auto;
+    overflow: hidden auto; // hacia los costados nunca se desplaza; hacia abajo, si hace falta
+}
+
+.evo-col.abierta .evo-lista li {
+    width: 100%;
+    max-width: $evo-ancho-caja;
 }
 
 .evo-col.abierta .evo-lista li::before,
@@ -580,10 +599,12 @@
 }
 
 .evo-sig.abierta .evo-lista {
+    justify-items: start;
     border-left: 2px solid var(--linea);
 }
 
 .evo-prev.abierta .evo-lista {
+    justify-items: end;
     border-right: 2px solid var(--linea);
 }
 
@@ -592,11 +613,12 @@
     width: var(--g);
 }
 
-/* En el celular el árbol va en una sola columna (los anteriores, el digimon del medio y los siguientes, uno debajo del otro) y todo se
-   compacta para que, con las ramas que se ven de entrada, la ventana entre en la pantalla sin desplazarla hacia abajo: el digimon del medio
-   es una cajita horizontal (la imagen al costado), las flechas y los espacios son más chicos y los botones "ver las restantes" van a la
-   altura del rótulo. Al desplegar las ramas que faltan sí hace falta desplazarse (ver "abierta" más abajo). */
-@media (max-width: 640px) {
+/* En el celular (y en cualquier pantalla de hasta $corte-arbol de ancho: más angosta, el árbol de tres columnas no entra sin desplazarse hacia los
+   costados) el árbol va en una sola columna (los anteriores, el digimon del medio y los siguientes, uno debajo del otro) y todo se compacta para
+   que, con las ramas que se ven de entrada, la ventana entre en la pantalla sin desplazarla hacia abajo: el digimon del medio es una cajita
+   horizontal (la imagen al costado), las flechas y los espacios son más chicos y los botones "ver las restantes" van a la altura del rótulo.
+   Al desplegar las ramas que faltan sí hace falta desplazarse hacia abajo (ver "abierta" más abajo). */
+@media (max-width: $corte-arbol) {
     .popup-evo {
         padding: 0.7em 0.6em 0.6em;
     }
@@ -634,6 +656,12 @@
         padding: 2px 0;
     }
 
+    .evo-col,
+    .evo-col.abierta {
+        flex: none;
+        width: auto;
+    }
+
     .evo-col > h5 {
         position: static;
         margin: 0 0 5px;
@@ -654,8 +682,11 @@
         max-height: 260px;
     }
 
-    .evo-lista li {
+    .evo-lista li,
+    .evo-col.abierta .evo-lista li {
         flex: 0 1 calc(50% - 2.5px);
+        width: auto;
+        max-width: none;
         min-width: 0;
     }
 
@@ -680,7 +711,7 @@
         align-self: center;
     }
 
-    /* El digimon del medio: la imagen a un lado y, al otro, el nombre, el nivel y el tipo (en vez de uno debajo del otro) */
+    /* El digimon del medio: la imagen a un lado y, al otro, el nombre, el nivel y el atributo (en vez de uno debajo del otro) */
     .evo-actual {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);

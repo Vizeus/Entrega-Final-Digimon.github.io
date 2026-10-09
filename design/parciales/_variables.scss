@@ -6,6 +6,11 @@
 // Cuánto se desenfoca la página de atrás cuando hay un cartel encima: lo usan los carteles del combate y el fondo del zoom de la carta
 $desenfoque-del-fondo: 10px;
 
+// La ✕ de arriba a la derecha del zoom de una carta (_zoom.scss): su distancia a los bordes y su tamaño. Los carteles de ayuda que pasan por encima
+// del zoom (_avisos.scss) se corren a la izquierda lo que ocupa, para no taparla.
+$cruz-del-zoom-margen: 14px;
+$cruz-del-zoom-tamano: 42px;
+
 // ---- Cortes de pantalla (ver los mixins "celular" y "computadora") -----------------------------------------------------
 // Hasta 700px es el diseño de celular (barra finita con el menú ☰, dos cartas por fila...); desde 701px, el de computadora.
 // util.js (PANTALLA_DE_CELULAR) usa el mismo número: si se cambia acá, hay que cambiarlo también allá.
@@ -26,9 +31,9 @@ $arcoiris:
     #5fc8ff 75%,
     #b55fff; // el reflejo de prisma de las cartas de nivel alto
 
-// ---- Colores de tipo y elemento (los mismos que usan los filtros en filtros.js) ------------------------------------------
-// Cada tipo le da el color a la carta (--tipo); cada elemento, a su etiqueta (--c).
-$colores-tipo: (
+// ---- Colores de atributo y elemento (los mismos que usan los filtros en filtros.js) ------------------------------------------
+// Cada atributo le da el color a la carta (--atributo); cada elemento, a su etiqueta (--c).
+$colores-atributo: (
     "Vacuna": #3a8dde,
     "Virus": #8a4fc7,
     "Datos": #3fae5a,

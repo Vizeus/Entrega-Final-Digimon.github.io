@@ -10,7 +10,13 @@ import { t } from './i18n.js';
 import { listaDigimons } from './pagina.js';
 import { seleccionados, verificarSeleccion } from './combate.js';
 import { reducirMovimiento, seleccionAntesDelClic } from './cartas.js';
-import { activarSalirDelZoomConBarrido, activarZoomConDobleToque, activarZoomConPellizco } from './gestos.js';
+import {
+    activarEsperaDeBotoncitos,
+    activarSalirDelZoomConBarrido,
+    activarZoomConDobleToque,
+    activarZoomConPellizco,
+    fueDobleClicEnBotoncito,
+} from './gestos.js';
 import { vibrar } from './audio.js';
 import { sonidoZoom } from './sonidos.js';
 
@@ -443,6 +449,8 @@ function cartaVecina(carta, direccion) {
 // En celulares también se pasa de carta deslizando el dedo hacia un costado, pero empezando AFUERA de la carta (sobre el fondo):
 // hacia la izquierda va a la siguiente y hacia la derecha a la anterior. Si empieza sobre la carta, ese barrido la da vuelta;
 // y un toque simple afuera sigue cerrando el zoom.
+// (El botón de sonido, que flota abajo a la derecha, no es parte del fondo: un barrido que empiece sobre él no lo activa ni cambia de carta, y
+// uno que pase o termine encima tampoco, porque un botón solo se activa si el dedo apoya y se levanta sobre él.)
 const DESLIZAR_DISTANCIA = 45; // px que tiene que recorrer el dedo hacia un costado
 let ultimoDeslizamiento = 0;
 
@@ -758,7 +766,8 @@ export function activarZoom() {
         // (el doble toque del celular ya cerró el zoom: el "dblclick" que algunos navegadores mandan después no lo vuelve a abrir)
         if (evento.timeStamp - cierreIniciado < 500) return;
         // Los dos clics del doble clic eligieron y desearon la carta (y, con 2 elegidas, pudieron sacar a otra): se deshace
-        if (seleccionAntesDelClic.carta === carta) restaurarSeleccion(seleccionAntesDelClic.estado);
+        // (los de un botoncito del frente no: no eligen la carta, y lo anotado es de un clic anterior)
+        if (seleccionAntesDelClic.carta === carta && !fueDobleClicEnBotoncito()) restaurarSeleccion(seleccionAntesDelClic.estado);
         abrirZoom(carta);
     });
 
@@ -785,6 +794,7 @@ export function activarZoom() {
     );
 
     activarZoomConPellizco();
+    activarEsperaDeBotoncitos();
     activarZoomConDobleToque();
     activarSalirDelZoomConBarrido();
 }

@@ -6,7 +6,7 @@
 //   tema.js le pone a <html> data-tema="oscuro" (por elección de la persona o porque su dispositivo está en modo oscuro). Todo lo de este archivo
 //   cuelga de ahí: el tema claro (el de siempre) no se toca. Va al final de styles.scss para que, a igual prioridad, estas reglas ganen.
 //   La idea: de noche, el vidrio claro sobre el degradé celeste pasa a ser vidrio azul noche con brillos cian sobre un fondo casi negro azulado.
-//   Las cartas siguen siendo cartas (cuerpo oscuro teñido con el color del tipo, marco y etiquetas iguales, imagen en su ventanita clara
+//   Las cartas siguen siendo cartas (cuerpo oscuro teñido con el color del atributo, marco y etiquetas iguales, imagen en su ventanita clara
 //   porque los dibujos de la API traen fondo blanco), y lo que ya era de color vivo (botones azules, verdes y rojos, etiquetas) queda como está.
 //   Los textos oscuros del tema claro ($tinta, $tinta-oscura...) son variables de CSS: acá se dan vuelta (clarean) y todo lo que las usa se acomoda.
 // -----------------------------------------------------------------------------------------------------------------
@@ -298,6 +298,26 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
             box-shadow: $sombra-panel;
         }
 
+        // La cajita para buscar opciones (queda fija arriba del panel, así que lleva el color de arriba del panel y no es translúcida)
+        .f-opciones-buscar {
+            background: #1e3365;
+
+            input {
+                border-color: $borde;
+                background: $hundido;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+                color: $texto;
+
+                &::placeholder {
+                    color: #6d8cb2;
+                }
+
+                &:focus {
+                    outline-color: #4aa6f5;
+                }
+            }
+        }
+
         // Las opciones sin elegir: píldoras oscuras (al elegirlas se llenan con su color, que queda igual)
         .f-chip:not([aria-pressed="true"]) {
             background: linear-gradient(#2a4274, #1b2f58);
@@ -336,7 +356,7 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
     }
 
     // ---- Cartas ---------------------------------------------------------------------------------------------------------------
-    // El cuerpo se tiñe con el color del tipo (ya ajustado al nivel) y se apaga hacia un azul noche. El marco, las etiquetas de tipo y de elemento,
+    // El cuerpo se tiñe con el color del atributo (ya ajustado al nivel) y se apaga hacia un azul noche. El marco, las etiquetas de atributo y de elemento,
     // la gema del nivel y la X son los de siempre.
     #listado-digimons li {
         --tinte: color-mix(in srgb, var(--base) calc(var(--fuerza) * 0.58), #101a3a);
@@ -344,7 +364,7 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
     }
 
     #listado-digimons li {
-        // La placa del nombre: metal oscuro con un toque del color del tipo
+        // La placa del nombre: metal oscuro con un toque del color del atributo
         .c-cab {
             border-color: rgba(0, 0, 0, 0.55);
             background: linear-gradient(
@@ -391,7 +411,7 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
             box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
 
             .dato b {
-                color: color-mix(in srgb, var(--tipo) 62%, white);
+                color: color-mix(in srgb, var(--atributo) 62%, white);
             }
 
             .c-idioma {
@@ -412,6 +432,27 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
                 background: linear-gradient(180deg, #172c52 0%, #25416f 100%);
                 box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
             }
+        }
+    }
+
+    // ---- Zoom de la carta (flechas de los costados y ✕ de arriba a la derecha) y cruz de cerrar de las ventanas -------------------------------
+    // El mismo vidrio azul oscuro que los botones redondos de la barra (el degradé blanco y celeste del tema claro encandila sobre fondos oscuros)
+    #zoom-fondo .zoom-cerrar,
+    #zoom-flechas .zoom-flecha,
+    .swal2-popup button.swal2-close {
+        color: $tinta;
+        text-shadow: var(--brillo-de-texto);
+        border-color: rgba(120, 190, 255, 0.38);
+        background:
+            $brillo-del-vidrio,
+            linear-gradient(180deg, color-mix(in srgb, $vidrio-claro 84%, white) 0%, $vidrio-claro 55%, color-mix(in srgb, $vidrio-claro 78%, black) 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(180, 220, 255, 0.4),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+            0 3px 8px rgba(0, 0, 0, 0.5);
+
+        svg {
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
         }
     }
 
@@ -459,14 +500,6 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
 
     .swal2-html-container {
         color: $texto;
-    }
-
-    .swal2-popup .swal2-close {
-        color: $texto-suave;
-
-        &:hover {
-            color: #ffffff;
-        }
     }
 
     .popup-ataques {
@@ -521,7 +554,7 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
             color: $texto-suave;
         }
 
-        // Los enlaces llevan el color del tipo o del elemento (--link-c), pensado para fondo claro: sobre el oscuro se aclara
+        // Los enlaces llevan el color del atributo o del elemento (--link-c), pensado para fondo claro: sobre el oscuro se aclara
         .info-link {
             color: color-mix(in srgb, var(--link-c, #b9d8f8) 55%, white);
 
