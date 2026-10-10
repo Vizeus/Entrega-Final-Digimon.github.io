@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------------------------------------------
 .swal2-container {
     z-index: capa(ventanas);
+    overscroll-behavior: contain; // si la ventana se desplaza, al llegar al final no arrastra a la página de atrás (ventanas.js frena el resto)
 
     &.swal2-backdrop-show {
         backdrop-filter: blur($desenfoque-del-fondo);

@@ -615,7 +615,7 @@ export async function irALaCarta(id) {
     if (zoomActivo) await cerrarZoom({ rapido: true });
     if (!carta) return;
     await esperarQueCierreLaVentana();
-    if (carta.classList.contains('filtrada')) limpiarTodo(); // si los filtros la estaban escondiendo, se sacan
+    if (carta.classList.contains('filtrada')) limpiarTodo({ conAgrupar: false }); // si los filtros la estaban escondiendo, se sacan (lo agrupado no esconde nada: queda)
     await centrarCarta(carta);
     resaltarCarta(carta); // el destello empieza cuando la carta ya está en el centro, así se ve completo
 }

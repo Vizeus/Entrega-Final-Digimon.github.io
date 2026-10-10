@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------------------------------------------
 // VENTANAS (SweetAlert2): información, ataques, línea evolutiva y combate
 //
-//   1. LA PÁGINA QUEDA QUIETA CON UNA VENTANA ABIERTA (celular): ver activarPaginaQuietaConVentanas, más abajo.
+//   1. LA PÁGINA QUEDA QUIETA CON UNA VENTANA ABIERTA (dedo, rueda y teclas): ver activarPaginaQuietaConVentanas, más abajo.
 //   2. TODAS TIENEN SU CRUZ de cerrar arriba a la derecha, del mismo estilo (ver conCruzDeCierre).
 //   3. EL BOTÓN "ATRÁS" (el del sistema en Android, el del navegador o el gesto de volver) CIERRA LA VENTANA: ver activarCierreDeVentanas.
 //   4. LOS DESPLEGABLES NO MUEVEN SU BOTÓN: ver mantenerEnSuLugar. Y al desplazar la ventana vuelve a quedar centrada: ver actualizarElAire.
@@ -12,14 +12,15 @@ import { DICCIONARIO, t } from './i18n.js';
 Object.assign(DICCIONARIO.es, { 'ventana.cerrar': 'Cerrar la ventana' });
 Object.assign(DICCIONARIO.en, { 'ventana.cerrar': 'Close window' });
 
-// ---- 1. La página queda quieta con una ventana abierta (celular) -----------------------------------------------------------
-// Mientras hay una ventana abierta (ataques, línea evolutiva, información o combate) la página de atrás no se desplaza con el dedo: lo
-// único que se mueve es lo que tiene scroll propio dentro de la ventana (la ventana entera, cuando es más alta que la pantalla). Si ese scroll
-// ya llegó al final, el dedo tampoco arrastra a la página (se frena ahí). La página tenía que quedar libre de overflow (ver _base.scss:
-// SweetAlert le pone overflow hidden al body y, sin esa regla, la grilla saltaría al aparecer y desaparecer la barra de scroll), así que
-// el freno se hace acá, en el movimiento del dedo, igual que con el zoom de una carta (zoom.js) y con el combate (combate.js).
-// El combate además lo mantiene entre un cartel y el siguiente, cuando no hay ninguna ventana abierta por un instante.
-// En computadora no cambia nada: el freno es solo del dedo.
+// ---- 1. La página queda quieta con una ventana abierta (dedo, rueda y teclas) ---------------------------------------------
+// Mientras hay una ventana abierta (ataques, línea evolutiva, información o combate) la página de atrás no se desplaza ni con el dedo, ni con la
+// rueda del mouse, ni con las teclas (flechas, RePág, AvPág, Inicio, Fin y espacio): lo único que se mueve es lo que tiene scroll propio dentro de
+// la ventana (la ventana entera, cuando es más alta que la pantalla). Si ese scroll ya llegó al final, el dedo, la rueda o la tecla tampoco arrastran
+// a la página (se frenan ahí). La página tenía que quedar libre de overflow (ver _base.scss: SweetAlert le pone overflow hidden al body y, sin esa
+// regla, la grilla saltaría al aparecer y desaparecer la barra de scroll), así que el freno se hace acá, en el movimiento, igual que con el zoom de una
+// carta (zoom.js) y con el combate (combate.js). El de la rueda y el de las teclas se ponen solo mientras hay una ventana (un escuchador de la rueda
+// que puede frenar hace esperar al navegador cada vez que se desplaza la página). El del dedo es permanente: el combate además lo mantiene entre un
+// cartel y el siguiente, cuando no hay ninguna ventana abierta por un instante.
 const hayVentana = () => document.querySelector('.swal2-container') !== null;
 
 // ¿Algo de adentro de la ventana, de donde está el dedo hasta el borde de la ventana, se puede desplazar hacia donde va el dedo?
@@ -40,6 +41,28 @@ function sePuedeDesplazarAdentro(destino, dx, dy) {
     }
     return false;
 }
+
+// Hacia dónde mueve cada tecla lo que se desplaza: 1 hacia abajo, -1 hacia arriba (el espacio con Mayús va hacia arriba)
+const SENTIDO_DE_LAS_TECLAS = { ArrowDown: 1, PageDown: 1, End: 1, ' ': 1, ArrowUp: -1, PageUp: -1, Home: -1 };
+
+// La rueda: "deltaY" positivo es desplazar hacia abajo, o sea, lo contrario del dedo (con el dedo hacia arriba el contenido baja)
+const frenarRuedaConVentana = evento => {
+    if (evento.ctrlKey || (evento.deltaX === 0 && evento.deltaY === 0)) return; // (con Ctrl la rueda agranda o achica la página: no se toca)
+    if (!sePuedeDesplazarAdentro(evento.target, -evento.deltaX, -evento.deltaY) && evento.cancelable) evento.preventDefault();
+};
+
+const frenarTeclasConVentana = evento => {
+    const sentido = SENTIDO_DE_LAS_TECLAS[evento.key];
+    if (!sentido || evento.ctrlKey || evento.metaKey || evento.altKey) return; // (Ctrl+Inicio y compañía son del navegador)
+    // En un campo de texto, o con el espacio sobre un botón o enlace (que lo aprieta), la tecla no desplaza nada
+    if (evento.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+    if (evento.key === ' ' && evento.target.closest?.('button, a')) return;
+    // Si el foco no está dentro de la ventana, se mira la ventana igual: de ella depende si hay algo que desplazar
+    const contenedor = document.querySelector('.swal2-container');
+    const destino = evento.target.closest?.('.swal2-container') ? evento.target : contenedor;
+    const haciaAbajo = evento.key === ' ' && evento.shiftKey ? -sentido : sentido;
+    if (destino && !sePuedeDesplazarAdentro(destino, 0, -haciaAbajo) && evento.cancelable) evento.preventDefault();
+};
 
 export function activarPaginaQuietaConVentanas() {
     let anterior = null; // { x, y }: dónde estaba el dedo en el movimiento anterior
@@ -71,6 +94,18 @@ export function activarPaginaQuietaConVentanas() {
         },
         { passive: false },
     );
+
+    // La rueda y las teclas: el freno se pone cuando aparece una ventana y se saca cuando se va la última
+    let frenoPuesto = false;
+    const ponerOSacarElFreno = () => {
+        if (hayVentana() === frenoPuesto) return;
+        frenoPuesto = !frenoPuesto;
+        const accion = frenoPuesto ? 'addEventListener' : 'removeEventListener';
+        window[accion]('wheel', frenarRuedaConVentana, { passive: false });
+        window[accion]('keydown', frenarTeclasConVentana, true);
+    };
+    new MutationObserver(ponerOSacarElFreno).observe(document.body, { childList: true });
+    ponerOSacarElFreno();
 }
 
 // ---- 2. La cruz de cerrar -----------------------------------------------------------------------------------------------------
@@ -188,10 +223,9 @@ function correrVentana(ventana, desplazamiento) {
 // Una ventana corrida de su lugar tiene que poder volver a quedar centrada al desplazarla. La ventana corrida (con "translate") ocupa en el layout el mismo
 // lugar de siempre (el que le da SweetAlert: centrada si entra en la pantalla y, si no, pegada arriba con su margen); el corrimiento es solo visual, y el
 // navegador no cuenta el margen de abajo en lo que se puede desplazar. Resultado: al llegar al final la ventana quedaba pegada al borde de abajo, sin margen,
-// y el espacio de arriba (el corrimiento) quedaba sin usar. Para arreglarlo se le pega a la ventana, debajo, un "aire" invisible, del alto del margen que la
-// ventana tiene arriba en el layout (que es el que le da SweetAlert: el margen de siempre, o el de centrarla): igual que sin corrimiento, el margen de abajo
-// es el de arriba. Desplazando hacia abajo la ventana sube y se come el corrimiento hasta quedar centrada (si entra en la pantalla) o con el margen de
-// siempre al final (si no entra).
+// y el espacio de arriba (el corrimiento) quedaba sin usar. Para arreglarlo se le pega a la ventana, debajo, un "aire" invisible: igual que sin corrimiento,
+// el margen de abajo es el de arriba. Si la ventana entra en la pantalla, desplazando hacia abajo sube y se come el corrimiento hasta quedar centrada
+// (el aire es el margen que le da SweetAlert al centrarla). Si no entra, al final queda con el mismo margen que tenía arriba al empezar (ver actualizarElAire).
 function prepararElAire(ventana) {
     const aire = document.createElement('div');
     aire.className = 'ventana-aire';
@@ -210,8 +244,13 @@ function actualizarElAire(ventana) {
     const agrandada = ventana.offsetHeight ? ventana.getBoundingClientRect().height / ventana.offsetHeight : 1;
     const corrimiento = Number(ventana.dataset.corrimiento) * agrandada;
     // Donde estaría la ventana sin el corrimiento y sin desplazar el contenedor, respecto del borde de arriba del contenedor
-    const arriba = ventana.getBoundingClientRect().top - contenedor.getBoundingClientRect().top - corrimiento + contenedor.scrollTop;
-    ventana.style.setProperty('--aire-de-la-ventana', `${Math.max(0, arriba) / agrandada}px`);
+    const arriba = Math.max(0, ventana.getBoundingClientRect().top - contenedor.getBoundingClientRect().top - corrimiento + contenedor.scrollTop);
+    // Si la ventana entra en la pantalla, al final del desplazamiento queda centrada: el aire es el margen de arriba que le da SweetAlert. Si no entra (es más
+    // alta que la pantalla, y SweetAlert la deja pegada arriba con un margen mínimo), ese margen sería de unos pocos píxeles: al final del desplazamiento la
+    // última línea quedaría contra el borde. Ahí el aire es el margen que la ventana tiene arriba al empezar (el de SweetAlert más el corrimiento): abajo
+    // queda el mismo espacio que arriba
+    const entra = ventana.getBoundingClientRect().height + 2 * arriba <= contenedor.clientHeight + 1;
+    ventana.style.setProperty('--aire-de-la-ventana', `${(entra ? arriba : arriba + corrimiento) / agrandada}px`);
 }
 
 export function mantenerEnSuLugar(elemento, cambio) {

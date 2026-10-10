@@ -14,7 +14,7 @@
 //     mientras carga la página: cartas.js avisa con el evento "carta-agregada" y se vuelven a hacer las cuentas.
 //   · "Ordenar por" (no filtra nada): la lista va por número (ID, el de siempre) o en orden alfabético por el nombre que se ve en la carta.
 //   · "Agrupar" (tampoco filtra): junta en bloques los digimons con el mismo atributo, nivel, elemento o grupo, en el orden en que se marcaron
-//     los criterios; dentro de cada bloque rige el orden de arriba.
+//     los criterios; dentro de cada bloque rige el orden de arriba. Aunque no filtra, cuenta para el botón "Limpiar": lo muestra y lo saca.
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -594,8 +594,7 @@ function refrescar() {
     const cuenta = `<span class="f-cuenta-larga">${t('filtros.cuenta', datos)}</span><span class="f-cuenta-corta">${t('filtros.cuenta.corta', datos)}</span>`;
     if (textoCuenta.innerHTML !== cuenta) textoCuenta.innerHTML = cuenta;
 
-    const hayFiltros = busqueda !== '' || desdeAnio !== null || hastaAnio !== null || GRUPOS.some(grupo => elegidos[grupo].size > 0);
-    botonLimpiar.hidden = !hayFiltros;
+    escribirBotonLimpiar();
     avisoVacio.hidden = !(total > 0 && visibles === 0);
 }
 
@@ -708,6 +707,13 @@ function escribirAgrupar() {
         cambiarTexto(opcion.querySelector('.f-orden-punto'), lugar > 0 ? String(lugar) : '');
         cambiarAtributo(opcion, 'title', lugar > 0 ? t('filtros.agrupar.lugar', { n: lugar }) : t('filtros.agrupar.sacada'));
     });
+    escribirBotonLimpiar(); // lo agrupado también se limpia con ese botón
+}
+
+// El botón "Limpiar" aparece cuando hay algo que limpiar: una búsqueda, un filtro o un criterio de Agrupar (que no filtra, pero también se saca con él)
+function escribirBotonLimpiar() {
+    const hayFiltros = busqueda !== '' || desdeAnio !== null || hastaAnio !== null || GRUPOS.some(grupo => elegidos[grupo].size > 0);
+    botonLimpiar.hidden = !(hayFiltros || agrupar.length > 0);
 }
 
 // Las cartas llegan de a poco: si llegan varias juntas, se hacen las cuentas una sola vez por cuadro
@@ -722,14 +728,24 @@ function programarRefresco() {
     }
 }
 
-export function limpiarTodo() {
+// Saca la búsqueda y todos los filtros, y también lo que se agrupa (salvo con conAgrupar: false: agrupar no esconde ninguna carta, así que
+// quien solo quiere que una carta deje de estar filtrada no tiene por qué cambiarle el orden a la lista).
+// Devuelve true si al sacar el agrupado la lista cambió de orden (quien limpia desde un botón la vuelve a mirar desde arriba).
+export function limpiarTodo({ conAgrupar = true } = {}) {
     GRUPOS.forEach(grupo => elegidos[grupo].clear());
     desdeAnio = null;
     hastaAnio = null;
     cajaBusqueda.value = '';
     leerBusqueda();
+    let reordenada = false;
+    if (conAgrupar && agrupar.length > 0) {
+        agrupar = [];
+        escribirAgrupar();
+        reordenada = acomodarLista();
+    }
     refrescar();
     Object.keys(OPCIONES_QUE_LLEGAN).forEach(buscarEntreLasOpciones);
+    return reordenada;
 }
 
 function leerBusqueda() {
@@ -970,8 +986,11 @@ function activarFiltros() {
         });
     });
 
-    botonLimpiar.addEventListener('click', limpiarTodo);
-    avisoVacio.querySelector('.f-limpiar').addEventListener('click', limpiarTodo);
+    const alLimpiar = () => {
+        if (limpiarTodo()) window.scrollTo({ top: 0, behavior: 'instant' }); // si cambió el orden de la lista, se vuelve a mirar desde arriba
+    };
+    botonLimpiar.addEventListener('click', alLimpiar);
+    avisoVacio.querySelector('.f-limpiar').addEventListener('click', alLimpiar);
 
     document.addEventListener('carta-agregada', programarRefresco);
     // Si cambia el idioma o el sistema de niveles, los nombres de las opciones y de las etiquetas activas se escriben de nuevo

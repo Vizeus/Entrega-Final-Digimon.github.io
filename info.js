@@ -50,7 +50,7 @@ function linkAtributo(atributo) {
 function linkElemento(elemento) {
     const texto = conEmojiElemento(elemento);
     const color = COLOR_ELEMENTO_ENLACE[elemento] || 'currentColor';
-    const ayuda = t('info.verInfoDe', { nombre: nombreElemento(elemento) });
+    const ayuda = t('info.verInfoDeElemento', { nombre: nombreElemento(elemento) });
     return `<button type="button" class="info-link info-link-elemento" data-info-elemento="${elemento}" style="--link-c: ${color};" title="${ayuda}" aria-label="${ayuda}">${texto}</button>`;
 }
 
