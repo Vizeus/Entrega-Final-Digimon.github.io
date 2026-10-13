@@ -259,6 +259,40 @@
         box-shadow: inset 0 -1px 2px rgba(0, 40, 100, 0.25);
     }
 
+    // "Más filtros": por defecto solo se ven el buscador, Atributo, Nivel y Elemento. Con la clase "con-todos" (filtros.js) se ven también los .f-extra
+    // (!important: en celular los grupos son "display: contents" y los botones llevan su propio display, con reglas más específicas)
+    &:not(.con-todos) .f-extra {
+        display: none !important;
+    }
+
+    .f-mas {
+        gap: 6px;
+        position: relative;
+
+        // Sin la flechita de los otros botones (abren un panel hacia abajo): este lleva la suya, » o «, y muestra u oculta botones
+        &::after {
+            display: none;
+        }
+    }
+
+    // (la fuente de los botones dibuja mal la ligadura "fi" de "filtros")
+    .f-mas-texto {
+        font-variant-ligatures: none;
+    }
+
+    .f-mas-flecha {
+        font-size: 15px;
+        line-height: 1;
+    }
+
+    // El globito flota sobre la esquina (como en celular): el botón mide lo mismo con o sin él
+    .f-mas .f-n {
+        position: absolute;
+        top: -8px;
+        right: -6px;
+        pointer-events: none;
+    }
+
     // Botones de tres estados: X-Antibody (rojo) y Xros Wars (naranja)
     .f-xa {
         @include boton-de-tres-estados(
@@ -940,6 +974,18 @@
             border: 1px solid rgba(0, 50, 130, 0.45);
             font-size: 10px;
             pointer-events: none;
+        }
+
+        // "Más filtros" en la primera fila, con los otros tres: en pantallas muy angostas queda solo la flecha (su ayuda dice qué hace)
+        @media (max-width: 399px) {
+            .f-mas-texto {
+                display: none;
+            }
+
+            .f-mas {
+                flex: 0 0 auto;
+                padding: 0 12px;
+            }
         }
 
         // X-Antibody y Xros Wars comparten la fila con los otros: se quedan con el ancho de su texto

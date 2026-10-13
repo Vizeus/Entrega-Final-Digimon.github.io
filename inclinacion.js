@@ -18,6 +18,7 @@ import { toqueQueSoloCierraMenus } from './menus.js';
 // el botón de la barra (#inclinacion-invertida, junto al de sonido) y, como el sonido, se guarda en el navegador de cada persona
 // (localStorage) como un JSON {"invertida": true}, así la próxima vez que entre sigue como la dejó.
 // Para volver a empezar (por ejemplo, para probarlo): localStorage.removeItem('digimon-inclinacion')
+const hayVentana = () => document.querySelector('.swal2-container') !== null; // ¿hay una ventana abierta (ataques, atributo, línea evolutiva, combate)?
 const INCLINACION_ALMACEN = 'digimon-inclinacion';
 
 function leerInclinacionInvertida() {
@@ -129,6 +130,7 @@ export function activarInclinacion() {
     // el achicado de las cartas en celular
     function tomar(carta) {
         soltar(cartaActual);
+        if (hayVentana()) return; // las cartas que quedan detrás de una ventana (ataques, atributo...) no se inclinan, aunque el puntero esté sobre ellas
         cartaActual = carta;
         const rect = carta.getBoundingClientRect();
         caja = { x: rect.left + scrollX, y: rect.top + scrollY, ancho: rect.width, alto: rect.height };
@@ -210,6 +212,10 @@ export function activarInclinacion() {
         listaDigimons.addEventListener('pointermove', evento => {
             if (evento.pointerType === 'touch' || zoomOcupado) return;
             puntero = { x: evento.clientX, y: evento.clientY };
+            if (hayVentana()) {
+                soltar(cartaActual);
+                return;
+            }
             ponerShift(evento.shiftKey);
             if (anulada() || zoomExtra || zoomEsperaMovimiento) {
                 // (con el zoom extra de la carta ampliada tampoco se inclina: ver "ZOOM EXTRA"; ni cuando se pasó de carta y el mouse no se movió: ver zoomEsperaMovimiento)
@@ -316,7 +322,7 @@ export function activarInclinacion() {
         // igual que cuando el puntero queda un instante entre dos cartas; al salirse de la zona, se suelta
         document.addEventListener('pointermove', evento => {
             if (evento.pointerType === 'touch' || !cartaActual || evento.target.closest?.('#listado-digimons')) return; // dentro de la lista, lo atiende su pointermove
-            if (zoomOcupado || anulada() || zoomExtra || zoomEsperaMovimiento || !enLaZonaDeLaCarta(evento.clientX, evento.clientY)) {
+            if (hayVentana() || zoomOcupado || anulada() || zoomExtra || zoomEsperaMovimiento || !enLaZonaDeLaCarta(evento.clientX, evento.clientY)) {
                 puntero = null;
                 soltar(cartaActual);
                 return;
@@ -329,6 +335,14 @@ export function activarInclinacion() {
             puntero = null;
             soltar(cartaActual);
         });
+
+        // Al abrirse una ventana, la carta que seguía al puntero (la del botón que se tocó) se suelta enseguida, sin esperar a que el mouse se mueva:
+        // detrás de la cortina no se inclina ni brilla. Si el mouse sigue sobre ella, cuando la ventana se cierra la retoma el primer movimiento.
+        new MutationObserver(() => {
+            if (!hayVentana()) return;
+            puntero = null;
+            soltar(cartaActual);
+        }).observe(document.body, { childList: true });
 
         // El botón de la barra (junto al de sonido) invierte la inclinación. Solo existe en computadora: está escondido (hidden) y recién
         // acá, con mouse y sin "reducir movimiento", se muestra. Queda "hundido" (aria-pressed) cuando está invertida.

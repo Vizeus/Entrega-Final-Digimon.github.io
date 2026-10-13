@@ -64,6 +64,25 @@
     initial-value: 50%;
 }
 
+// La barra de scroll de la página reserva siempre su lugar: así, cuando se la saca (ver más abajo), nada de la página se corre.
+html {
+    scrollbar-gutter: stable;
+}
+
+// Con una ventana abierta (ataques, línea evolutiva, información, combate), una carta ampliada o un combate en curso la página queda quieta: sin barra de
+// scroll, así tampoco se la puede arrastrar con el mouse (la rueda, las teclas y el dedo los frenan ventanas.js, zoom.js y combate.js; la barra no).
+// Las clases "zoom-quieto" y "combate-quieto" las ponen zoom.js y combate.js mientras dura cada uno. El body deja de tener su propio overflow: si no, con el
+// overflow del html apagado se volvería él el que se desplaza y la barra de la página (que es "sticky") se saldría de lugar.
+html:has(.swal2-container),
+html.zoom-quieto,
+html.combate-quieto {
+    overflow: hidden;
+
+    body {
+        overflow: visible !important;
+    }
+}
+
 body {
     margin: 0;
     // (!important: al abrir una ventana, SweetAlert le pone al body overflow hidden y un margen a la derecha; así la página no salta)

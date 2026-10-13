@@ -210,6 +210,7 @@ const alRedimensionarConZoom = () => {
 };
 
 function bloquearDesplazamiento(bloquear) {
+    document.documentElement.classList.toggle('zoom-quieto', bloquear); // sin barra de scroll en la página (ver _base.scss)
     const accion = bloquear ? 'addEventListener' : 'removeEventListener';
     window[accion]('wheel', frenarRueda, { passive: false });
     window[accion]('touchmove', frenarToque, { passive: false });

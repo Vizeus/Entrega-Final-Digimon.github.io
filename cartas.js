@@ -16,6 +16,7 @@ import {
     MARCAS_DE_NIVEL,
     SIN_DATO,
     numeracionNiveles,
+    numeroDeCarta,
 } from './datos.js';
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { claveDeNombre, inicioDeLoAparte, nombreOccidental, nombreParaMostrar } from './nombres.js';
@@ -434,7 +435,7 @@ const esXrosWars = (nombre, especies, estreno) =>
     (ANIOS_XROS_WARS.includes(Number(String(estreno).match(/\d{4}/)?.[0])) && especies.some(especie => ESPECIES_DE_FUSION.includes(especie)));
 
 // Crea una carta, la agrega a la lista y avisa a los filtros. La usan los digimons de la API y las cartas propias.
-export function agregarCarta({ id, etiquetaId, despuesDelId, nombre, imagen, atributo, nivelOriginal, marca, elemento, datosDorso: datosDeLaCarta }) {
+export function agregarCarta({ id, despuesDelId, nombre, imagen, atributo, nivelOriginal, marca, elemento, datosDorso: datosDeLaCarta }) {
     // Sin especie o sin grupo = "Unknown" (ver SIN_DATO en datos.js): así el dorso y los filtros ven siempre al menos uno
     const conDato = lista => (lista?.length ? lista : [SIN_DATO]);
     const datosDorso = { ...datosDeLaCarta, especies: conDato(datosDeLaCarta?.especies), campos: conDato(datosDeLaCarta?.campos) };
@@ -450,6 +451,7 @@ export function agregarCarta({ id, etiquetaId, despuesDelId, nombre, imagen, atr
     // El atributo y el elemento van en español porque el combate y los filtros los usan como identificadores;
     // data-nivel-api es el nivel tal cual lo trae la API (no depende del idioma ni del sistema de clasificación).
     elementoLista.dataset.id = id;
+    elementoLista.dataset.numero = String(numeroDeCarta(id, despuesDelId)); // el que se ve en la carta y con el que se busca (no es el ID de la API: ver datos.js)
     // Dónde va en el orden "por ID": las cartas propias (que no están en la API) van después de un ID de la API; el resto, en su propio lugar
     if (despuesDelId !== undefined) elementoLista.dataset.lugarEnElOrden = String(despuesDelId + 0.5);
     elementoLista.dataset.atributo = atributo;
@@ -486,7 +488,7 @@ export function agregarCarta({ id, etiquetaId, despuesDelId, nombre, imagen, atr
                 ${xrosWars ? '<span class="c-xw" title="XW (DigiXros)" role="button" tabindex="0" aria-label="XW (DigiXros)">XW</span>' : ''}
                 <span class="c-gema" role="button" tabindex="0"><small></small>${nivelNumerico ?? '?'}</span>
             </div>
-            <div class="c-sub"><span class="c-nivel" role="button" tabindex="0"></span><span>#${etiquetaId ?? String(id).padStart(3, '0')}</span></div>
+            <div class="c-sub"><span class="c-nivel" role="button" tabindex="0"></span><span>#${String(elementoLista.dataset.numero).padStart(3, '0')}</span></div>
             <div class="c-chips">
                 <span class="chip c-atributo" role="button" tabindex="0"></span>
                 <span class="chip c-elem" role="button" tabindex="0"></span>

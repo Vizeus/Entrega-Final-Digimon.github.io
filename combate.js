@@ -283,6 +283,7 @@ const frenarTeclasDelCombate = evento => {
 };
 
 function bloquearFondoDelCombate(bloquear) {
+    document.documentElement.classList.toggle('combate-quieto', bloquear); // sin barra de scroll en la página (ver _base.scss)
     const accion = bloquear ? 'addEventListener' : 'removeEventListener';
     window[accion]('wheel', frenarRuedaDelCombate, { passive: false });
     window[accion]('touchmove', frenarToqueDelCombate, { passive: false });

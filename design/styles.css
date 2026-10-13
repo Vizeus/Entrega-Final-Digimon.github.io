@@ -41,6 +41,21 @@
   inherits: true;
   initial-value: 50%;
 }
+html {
+  scrollbar-gutter: stable;
+}
+
+html:has(.swal2-container),
+html.zoom-quieto,
+html.combate-quieto {
+  overflow: hidden;
+}
+html:has(.swal2-container) body,
+html.zoom-quieto body,
+html.combate-quieto body {
+  overflow: visible !important;
+}
+
 body {
   margin: 0;
   overflow: auto !important;
@@ -2422,6 +2437,29 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   text-shadow: none;
   box-shadow: inset 0 -1px 2px rgba(0, 40, 100, 0.25);
 }
+#filtros:not(.con-todos) .f-extra {
+  display: none !important;
+}
+#filtros .f-mas {
+  gap: 6px;
+  position: relative;
+}
+#filtros .f-mas::after {
+  display: none;
+}
+#filtros .f-mas-texto {
+  font-variant-ligatures: none;
+}
+#filtros .f-mas-flecha {
+  font-size: 15px;
+  line-height: 1;
+}
+#filtros .f-mas .f-n {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  pointer-events: none;
+}
 #filtros .f-xa::after {
   content: none;
 }
@@ -2999,6 +3037,17 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
     font-size: 10px;
     pointer-events: none;
   }
+}
+@media (max-width: 700px) and (max-width: 399px) {
+  #navbar #filtros .f-mas-texto {
+    display: none;
+  }
+  #navbar #filtros .f-mas {
+    flex: 0 0 auto;
+    padding: 0 12px;
+  }
+}
+@media (max-width: 700px) {
   #navbar #filtros .f-tres {
     flex: 0 0 auto;
     padding: 0 9px;

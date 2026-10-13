@@ -249,7 +249,14 @@ function actualizarElAire(ventana) {
     // alta que la pantalla, y SweetAlert la deja pegada arriba con un margen mínimo), ese margen sería de unos pocos píxeles: al final del desplazamiento la
     // última línea quedaría contra el borde. Ahí el aire es el margen que la ventana tiene arriba al empezar (el de SweetAlert más el corrimiento): abajo
     // queda el mismo espacio que arriba
-    const entra = ventana.getBoundingClientRect().height + 2 * arriba <= contenedor.clientHeight + 1;
+    const alto = ventana.getBoundingClientRect().height;
+    // Si la ventana, donde está al empezar (con el corrimiento), se ve entera, no hay nada que desplazar: sin aire no aparece una barra de scroll de más. El
+    // desplazamiento solo aparece cuando la ventana se pasa de la pantalla (por ejemplo, al abrirse más ataques)
+    if (arriba + corrimiento + alto + MARGEN_DE_LA_VENTANA <= contenedor.clientHeight) {
+        ventana.style.setProperty('--aire-de-la-ventana', '0px');
+        return;
+    }
+    const entra = alto + 2 * arriba <= contenedor.clientHeight + 1;
     ventana.style.setProperty('--aire-de-la-ventana', `${(entra ? arriba : arriba + corrimiento) / agrandada}px`);
 }
 

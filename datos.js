@@ -393,13 +393,14 @@ export const FAMILIAS_DE_ESPECIES_A_MANO = {
 // ---- Cartas propias -------------------------------------------------------------------------------------------
 
 // Cartas que no están en la API: las agrega el simulador (después de las de la API). Su ID es alto para no chocar con los de ella (los números
-// de las cartas son los ID de la API y se usan para pedir sus datos, enlazar las evoluciones y buscar por número, así que no se corren).
+// de las cartas son los ID de la API y se usan para pedir sus datos y enlazar las evoluciones, así que no se corren). El número que se ve en la carta (y con el
+// que se busca) no es ese ID: es el lugar que ocupa en la lista, así que cada carta propia tiene uno más que la de su izquierda y la de su derecha
+// (ver numeroDeCarta, más abajo).
 // Para el orden "por ID" (que en la API coincide con el orden por fecha de estreno: ningún ID tiene un año menor que el de uno anterior) llevan
 // "despuesDelId": van justo después de ese ID de la API, o sea, al principio de su año. Con solo el año no se puede afinar más.
 export const CARTAS_PROPIAS = [
     {
         id: 9001,
-        etiquetaId: '★',
         despuesDelId: 751, // 2005 (la película Digital Monster X-evolution, enero de 2005): el último de 2004 es el 751 y el primero de 2005, el 752
         nombre: 'Yggdrasil',
         imagen: './img/yggdrasil.webp',
@@ -418,7 +419,6 @@ export const CARTAS_PROPIAS = [
     },
     {
         id: 9002,
-        etiquetaId: '★',
         despuesDelId: 128, // 1999 (el anime Digimon Adventure): el último de 1998 es el 128 y el primero de 1999, el 129
         nombre: 'Homeostasis (Kami)',
         imagen: './img/homeostasis.webp',
@@ -500,3 +500,14 @@ export const COLOR_ELEMENTO_ENLACE = {
     'Veneno': '#9333ea',
     'Neutro': '#64748b',
 };
+
+// El número que se ve en la carta: el lugar que ocupa en el orden "por ID". Las cartas de la API conservan el suyo más una unidad por cada carta propia
+// que va antes (Homeostasis va después del 128: la 129 de la API se ve como 130); las propias toman el número que queda libre (Homeostasis, el 129).
+export function numeroDeCarta(id, despuesDelId) {
+    const lugar = despuesDelId === undefined ? id : despuesDelId + 0.5;
+    const propiaActual = CARTAS_PROPIAS.findIndex(propia => propia.id === id);
+    const propiasAntes = CARTAS_PROPIAS.filter(
+        (propia, i) => propia.despuesDelId + 0.5 < lugar || (propia.despuesDelId + 0.5 === lugar && i < propiaActual),
+    ).length;
+    return Math.ceil(lugar) + propiasAntes;
+}

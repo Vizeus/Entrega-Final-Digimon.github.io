@@ -13,6 +13,8 @@
 //   · Las cartas que no cumplen se esconden con la clase "filtrada" (el CSS las oculta). Las cartas llegan de a poco
 //     mientras carga la página: cartas.js avisa con el evento "carta-agregada" y se vuelven a hacer las cuentas.
 //   · "Ordenar por" (no filtra nada): la lista va por número (ID, el de siempre) o en orden alfabético por el nombre que se ve en la carta.
+//   · Por defecto solo se ven el buscador y los filtros de atributo, nivel y elemento; el botón "Más filtros" muestra el resto (los .f-extra).
+//     Su globito cuenta lo que hay elegido entre los que están escondidos.
 //   · "Agrupar" (tampoco filtra): junta en bloques los digimons con el mismo atributo, nivel, elemento o grupo, en el orden en que se marcaron
 //     los criterios; dentro de cada bloque rige el orden de arriba. Aunque no filtra, cuenta para el botón "Limpiar": lo muestra y lo saca.
 // Los textos vienen de i18n.js y se vuelven a escribir cuando cambia el idioma.
@@ -160,7 +162,7 @@ function datosDeFiltro(carta) {
             x: carta.dataset.xAntibody ? 'con' : 'sin', // si tiene X-Antibody
             xw: carta.dataset.xrosWars ? 'con' : 'sin', // si lleva la marca XW (forma fusionada de Digimon Xros Wars: ver datos.js)
             marca: carta.dataset.marca ? normalizar(carta.dataset.marca) : null, // 'armor' o 'hybrid'
-            id: Number(carta.dataset.id),
+            id: Number(carta.dataset.numero), // el número que se ve en la carta (no el ID de la API)
             anio: Number(String(carta.datosDorso?.estreno ?? '').match(/\d{4}/)?.[0]) || null, // el año de estreno (null si no se sabe)
             nombres,
         };
@@ -595,6 +597,7 @@ function refrescar() {
     if (textoCuenta.innerHTML !== cuenta) textoCuenta.innerHTML = cuenta;
 
     escribirBotonLimpiar();
+    escribirMasFiltros();
     avisoVacio.hidden = !(total > 0 && visibles === 0);
 }
 
@@ -688,6 +691,7 @@ function escribirOrden() {
     cambiarTexto(valor, t(ORDENES[orden]));
     cambiarAtributo(grupo.querySelector('.f-btn'), 'title', t(`filtros.orden.${orden}.ayuda`)); // al dejar el puntero encima: cómo ordena
     grupo.querySelector('.f-btn').classList.toggle('tiene', orden !== 'id'); // con el orden de siempre el botón se ve como los demás sin nada elegido
+    escribirMasFiltros();
     grupo.querySelectorAll('.f-orden-op').forEach(opcion => cambiarAtributo(opcion, 'aria-checked', String(opcion.dataset.orden === orden)));
 }
 
@@ -708,12 +712,36 @@ function escribirAgrupar() {
         cambiarAtributo(opcion, 'title', lugar > 0 ? t('filtros.agrupar.lugar', { n: lugar }) : t('filtros.agrupar.sacada'));
     });
     escribirBotonLimpiar(); // lo agrupado también se limpia con ese botón
+    escribirMasFiltros();
 }
 
 // El botón "Limpiar" aparece cuando hay algo que limpiar: una búsqueda, un filtro o un criterio de Agrupar (que no filtra, pero también se saca con él)
 function escribirBotonLimpiar() {
     const hayFiltros = busqueda !== '' || desdeAnio !== null || hastaAnio !== null || GRUPOS.some(grupo => elegidos[grupo].size > 0);
     botonLimpiar.hidden = !(hayFiltros || agrupar.length > 0);
+}
+
+// "Más filtros": muestra u oculta los filtros que no están a la vista por defecto (los .f-extra). Mientras están escondidos, el botón avisa con un globito
+// cuántos de ellos tienen algo elegido (una especie, un grupo, un período de estreno, X-Antibody o XW, un criterio de Agrupar o un orden distinto del de siempre)
+const botonMas = seccionFiltros.querySelector('.f-mas');
+function escribirMasFiltros() {
+    const abierto = seccionFiltros.classList.contains('con-todos');
+    const conAlgo =
+        ['campo', 'especie', 'x', 'xw'].filter(grupo => elegidos[grupo].size > 0).length +
+        (desdeAnio !== null || hastaAnio !== null ? 1 : 0) +
+        (agrupar.length > 0 ? 1 : 0) +
+        (orden !== 'id' ? 1 : 0);
+    const globito = botonMas.querySelector('.f-n');
+    cambiarTexto(botonMas.querySelector('.f-mas-texto'), t(abierto ? 'filtros.menos' : 'filtros.mas'));
+    cambiarTexto(botonMas.querySelector('.f-mas-flecha'), abierto ? '«' : '»');
+    cambiarTexto(globito, String(conAlgo));
+    const verGlobito = !abierto && conAlgo > 0;
+    if (globito.hidden === verGlobito) globito.hidden = !verGlobito;
+    botonMas.classList.toggle('tiene', verGlobito);
+    botonMas.setAttribute('aria-expanded', String(abierto));
+    const ayuda = abierto ? t('filtros.menos.ayuda') : verGlobito ? t('filtros.mas.ayuda.con', { n: conAlgo }) : t('filtros.mas.ayuda');
+    cambiarAtributo(botonMas, 'title', ayuda);
+    cambiarAtributo(botonMas, 'aria-label', ayuda);
 }
 
 // Las cartas llegan de a poco: si llegan varias juntas, se hacen las cuentas una sola vez por cuadro
@@ -810,6 +838,13 @@ function activarFiltros() {
     };
     grupos.forEach(grupo => {
         grupo.querySelector('.f-btn').addEventListener('click', () => abrir(grupo, !grupo.classList.contains('abierto')));
+    });
+    // Más filtros / Menos filtros: al esconderlos, se cierra el panel que hubiera abierto entre ellos
+    botonMas.addEventListener('click', () => {
+        const mostrar = !seccionFiltros.classList.contains('con-todos');
+        seccionFiltros.classList.toggle('con-todos', mostrar);
+        if (!mostrar) grupos.forEach(grupo => grupo.classList.contains('abierto') && grupo.classList.contains('f-extra') && abrir(grupo, false));
+        escribirMasFiltros();
     });
     document.addEventListener('pointerdown', evento => {
         grupos.forEach(grupo => {
