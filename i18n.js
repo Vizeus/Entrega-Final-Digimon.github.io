@@ -310,6 +310,8 @@ export const DICCIONARIO = {
         'filtros.especies': 'Especies',
         'filtros.familia': 'Familia {nombre}: marca de una vez sus {n} especies',
         'filtros.familia.todas': '{nombre} (todas)',
+        'filtros.familia.abrir': 'Ver las {n} especies de {nombre}',
+        'filtros.sinFamilia': 'Otras especies',
         'filtros.agrupar': 'Agrupar',
         'filtros.agruparPor': 'Agrupar por',
         'filtros.agrupar.nota':
@@ -641,6 +643,8 @@ export const DICCIONARIO = {
         'filtros.especies': 'Species',
         'filtros.familia': '{nombre} family: ticks its {n} species at once',
         'filtros.familia.todas': '{nombre} (all)',
+        'filtros.familia.abrir': 'Show the {n} species of {nombre}',
+        'filtros.sinFamilia': 'Other species',
         'filtros.agrupar': 'Group by', // ("Group" a secas se confundiría con el filtro de grupos)
         'filtros.agruparPor': 'Group the list by',
         'filtros.agrupar.nota':

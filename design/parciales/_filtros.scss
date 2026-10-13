@@ -247,8 +247,8 @@
         display: inline-grid;
         place-items: center;
         min-width: 20px;
-        height: 20px;
-        padding: 0 5px;
+        height: 19px;
+        padding: 0 5px 1px; // (1 px de más abajo: el dibujo de los números de esta fuente queda un poco bajo; así se ve centrado en la burbuja)
         border-radius: 10px;
         background: #fff;
         color: #2a6fc0;
@@ -384,34 +384,40 @@
         }
     }
 
-    // Las dos vistas del panel de las especies (familias / especies sueltas), debajo de la cajita de búsqueda
-    .f-vistas {
-        display: flex;
-        gap: 6px;
-        margin-top: 8px;
-    }
+    // La caja de búsqueda de las opciones lleva su crucecita para borrar a la derecha (se ve solo si hay algo escrito)
+    .f-opciones-caja {
+        position: relative;
+        display: block;
 
-    .f-vista {
-        flex: 1 1 0;
-        height: 28px;
-        border-radius: 999px;
-        border: 1px solid rgba(0, 40, 90, 0.3);
-        background: linear-gradient(#fff, #eaf3fb);
-        color: $tinta;
-        font:
-            600 13px var(--f-etiqueta),
-            sans-serif;
-        cursor: pointer;
-
-        &[aria-pressed="true"] {
-            color: #fff;
-            border-color: #1d5fa8;
-            background: linear-gradient(#7cc4f5, #2a75cf);
-            text-shadow: 0 1px 1px rgba(0, 40, 90, 0.5);
+        input {
+            padding-right: 38px;
         }
     }
 
-    // Las dos listas del panel de las especies: se ve una según la vista elegida; mientras se busca, las dos y con su título
+    .f-opciones-x {
+        position: absolute;
+        top: 50%;
+        right: 7px;
+        display: grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        cursor: pointer;
+        background: rgba(36, 71, 106, 0.18);
+        color: $tinta;
+        font: 700 11px sans-serif;
+        translate: 0 -50%;
+        transition: background 0.15s;
+
+        &:hover {
+            background: rgba(36, 71, 106, 0.32);
+        }
+    }
+
+    // Listas de opciones del panel de las especies. Sin buscar se ve el árbol de familias; buscando, las dos listas de resultados con su título
     .f-lista {
         flex: 1 1 100%;
         display: flex;
@@ -431,10 +437,96 @@
         color: #56606b;
     }
 
-    .f-panel:not(.buscando) .f-subtitulo,
-    .f-panel[data-vista="familias"]:not(.buscando) .f-especies,
-    .f-panel[data-vista="especies"]:not(.buscando) .f-familias {
+    .f-arbol,
+    .f-resultados {
+        flex: 1 1 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .f-panel.buscando .f-arbol,
+    .f-panel:not(.buscando) .f-resultados {
         display: none;
+    }
+
+    // Una familia del árbol: su casilla y, al lado, una barra clicable (con cuántas especies hay marcadas y una flechita) que despliega sus especies
+    .f-fam-grupo {
+        border-radius: 14px;
+        border: 1px solid rgba(0, 60, 120, 0.16);
+        background: rgba(255, 255, 255, 0.5);
+
+        &.con-marcadas {
+            border-color: color-mix(in srgb, #{$tinta} 35%, transparent);
+            background: rgba(120, 190, 255, 0.14);
+        }
+    }
+
+    .f-fam-cabecera {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px;
+    }
+
+    .f-fam-abrir {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        min-width: 0;
+        height: 32px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        background: transparent;
+        color: #56606b;
+        font:
+            700 12px var(--f-descripcion),
+            sans-serif;
+
+        &:hover {
+            background: rgba(0, 80, 140, 0.1);
+        }
+    }
+
+    // Las especies sueltas no tienen casilla: su nombre va en la barra
+    .f-fam-nombre {
+        margin-right: auto;
+        font:
+            700 12px var(--f-etiqueta),
+            sans-serif;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+    }
+
+    .f-fam-sel:not(:empty) {
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: #2a75cf;
+        color: #fff;
+    }
+
+    .f-fam-flecha {
+        font-size: 13px;
+        line-height: 1;
+        transition: rotate 0.15s ease;
+    }
+
+    .f-fam-grupo.abierto .f-fam-flecha {
+        rotate: 180deg;
+    }
+
+    // Las especies de una familia desplegada: más chicas que la familia (sin casilla) y con una sangría, para distinguirlas
+    .f-fam-especies {
+        padding: 2px 8px 10px 14px;
+
+        .f-chip {
+            height: 28px;
+            font-size: 13px;
+        }
     }
 
     // "Ordenar por": el botón lleva al lado lo que está elegido (ID o A–Z); se ve como los demás hasta que se cambia el orden, y ahí se pone azul
@@ -633,7 +725,7 @@
             font-size: 12px;
             min-width: 22px;
             text-align: center;
-            padding: 1px 6px;
+            padding: 0 6px 2px; // (más abajo: el número de esta fuente queda un poco bajo)
             border-radius: 9px;
             background: rgba(0, 50, 110, 0.1);
         }
@@ -720,7 +812,8 @@
         display: inline-grid;
         place-items: center;
         width: 20px;
-        height: 20px;
+        height: 19px;
+        padding-bottom: 1px; // (el número de esta fuente queda un poco bajo)
         border-radius: 50%;
         background: var(--c);
         color: var(--t);
@@ -815,7 +908,7 @@
         white-space: nowrap;
 
         b {
-            font-size: 17px;
+            font-size: 1.1em; // un poquito más grande que las letras (14 px en computadora y 12 px en celular), no mucho más
             font-weight: 700;
             color: #1f66b8;
         }
@@ -971,8 +1064,8 @@
             top: -8px;
             right: -5px;
             min-width: 16px;
-            height: 16px;
-            padding: 0 3px;
+            height: 15px;
+            padding: 0 3px 1px;
             border-radius: 8px;
             border: 1px solid rgba(0, 50, 130, 0.45);
             font-size: 10px;

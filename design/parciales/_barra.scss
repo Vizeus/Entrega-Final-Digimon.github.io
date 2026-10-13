@@ -197,7 +197,7 @@
         padding: 4px 12px;
         text-align: center;
         font-family: var(--f-descripcion), sans-serif; // la fuente de las descripciones de las cartas: los números se leen mejor
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 700;
         color: #2c5a80;
         border-radius: 999px;
@@ -820,6 +820,9 @@
     // llena, la consigna se partía en cuatro renglones). Si la barra no alcanza, los menús de información bajan a su propia fila, como ya pasa en 1600 px
     #navbar .combate {
         min-width: 734px;
+        // Con mucho ancho el panel crece en vez de quedar chico en el medio: ocupa el espacio que sobra hasta un tope (la consigna pasa a un solo renglón).
+        // (no cambia cuándo bajan los menús a otra fila: eso lo decide el ancho mínimo de arriba)
+        max-width: min(1100px, 52vw);
     }
 }
 

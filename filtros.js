@@ -342,6 +342,7 @@ function actualizarFamilias() {
     const lista = seccionFiltros.querySelector('.f-grupo[data-g="especie"] .f-familias');
     const existentes = new Map([...lista.querySelectorAll('.f-chip')].map(chip => [chip.dataset.fam, chip]));
     lista.replaceChildren(...[...familias.keys()].map(nombre => existentes.get(nombre) ?? crearChipFamilia(nombre)));
+    construirArbol();
 }
 
 // Marca todas las especies de la familia, o las saca si ya estaban todas
@@ -358,6 +359,127 @@ function alternarFamilia(nombre) {
     }
 }
 
+// ---- Árbol de familias y especies ----------------------------------------------------------------------------------
+// Lo que se ve en el panel de las especies cuando no se está buscando: cada familia es una fila con su casilla (marca o saca todas sus especies) y una
+// flechita que despliega sus especies, que se marcan de a una. Una especie puede estar en varias familias: se ve en cada una, y se marca desde cualquiera
+// (lo elegido es siempre la lista de especies). Al lado de la flecha, cuántas especies de la familia hay marcadas. Las especies que no están en ninguna
+// familia van juntas al final, en "Otras especies". Las especies de una familia se arman recién al desplegarla (son muchos botones).
+const SIN_FAMILIA = ''; // el "nombre" del grupo de las especies sueltas
+const familiasAbiertas = new Set(); // los grupos desplegados (sobreviven a que lleguen especies nuevas)
+const arbol = seccionFiltros.querySelector('.f-arbol');
+const listaDeEspecies = seccionFiltros.querySelector('.f-especies'); // (la de los resultados de la búsqueda: tiene todas las especies, una vez cada una)
+
+// Las especies de un grupo del árbol, por orden alfabético
+function miembrosDelGrupo(nombre) {
+    const lista = nombre === SIN_FAMILIA ? GRUPOS_FILTRO.especie.claves.filter(especie => !familiasDe.has(especie)) : [...(familias.get(nombre) ?? [])];
+    return lista.sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+function crearGrupoDelArbol(nombre) {
+    const grupo = document.createElement('div');
+    grupo.className = 'f-fam-grupo';
+    grupo.dataset.nombre = nombre;
+
+    const cabecera = document.createElement('div');
+    cabecera.className = 'f-fam-cabecera';
+    if (nombre !== SIN_FAMILIA) cabecera.append(crearChipFamilia(nombre));
+    const abrir = document.createElement('button');
+    abrir.type = 'button';
+    abrir.className = 'f-fam-abrir';
+    abrir.setAttribute('aria-expanded', 'false');
+    abrir.innerHTML = '<span class="f-fam-nombre"></span><span class="f-fam-sel"></span><span class="f-fam-flecha" aria-hidden="true">▾</span>';
+    cabecera.append(abrir);
+
+    const especies = document.createElement('div');
+    especies.className = 'f-lista f-fam-especies';
+    especies.hidden = true;
+    grupo.append(cabecera, especies);
+    return grupo;
+}
+
+// Pone en el grupo las especies que le tocan (reusa los botones que ya estaban). Los nuevos nacen con el estado y la cuenta de su gemelo de la
+// lista de resultados, así no hace falta recontar todas las cartas
+function llenarGrupoDelArbol(grupo) {
+    const lista = grupo.querySelector('.f-fam-especies');
+    const existentes = new Map([...lista.children].map(chip => [chip.dataset.k, chip]));
+    const gemelos = new Map([...listaDeEspecies.children].map(chip => [chip.dataset.k, chip]));
+    const chips = miembrosDelGrupo(grupo.dataset.nombre).map(especie => {
+        let chip = existentes.get(especie);
+        if (!chip) {
+            chip = crearChip('especie', especie);
+            etiquetarChip(chip);
+            const gemelo = gemelos.get(especie);
+            if (gemelo) {
+                chip.setAttribute('aria-pressed', gemelo.getAttribute('aria-pressed'));
+                chip.classList.toggle('vacio', gemelo.classList.contains('vacio'));
+                chip.querySelector('i').textContent = gemelo.querySelector('i').textContent;
+            }
+        }
+        return chip;
+    });
+    lista.replaceChildren(...chips);
+}
+
+function mostrarGrupoDelArbol(grupo) {
+    const abierto = familiasAbiertas.has(grupo.dataset.nombre);
+    grupo.classList.toggle('abierto', abierto);
+    grupo.querySelector('.f-fam-especies').hidden = !abierto;
+    grupo.querySelector('.f-fam-abrir').setAttribute('aria-expanded', String(abierto));
+}
+
+function alternarGrupoDelArbol(grupo) {
+    const nombre = grupo.dataset.nombre;
+    if (familiasAbiertas.has(nombre)) {
+        familiasAbiertas.delete(nombre);
+    } else {
+        familiasAbiertas.add(nombre);
+        llenarGrupoDelArbol(grupo);
+    }
+    mostrarGrupoDelArbol(grupo);
+}
+
+// Se rehace cada vez que llega una especie nueva (las cartas llegan de a poco); los grupos que ya estaban se reusan
+function construirArbol() {
+    const existentes = new Map([...arbol.children].map(grupo => [grupo.dataset.nombre, grupo]));
+    const nombres = [...familias.keys()];
+    if (miembrosDelGrupo(SIN_FAMILIA).length > 0) nombres.push(SIN_FAMILIA);
+    const grupos = nombres.map(nombre => {
+        const grupo = existentes.get(nombre) ?? crearGrupoDelArbol(nombre);
+        if (familiasAbiertas.has(nombre)) {
+            llenarGrupoDelArbol(grupo);
+        } else {
+            grupo.querySelector('.f-fam-especies').replaceChildren();
+        }
+        mostrarGrupoDelArbol(grupo);
+        return grupo;
+    });
+    arbol.replaceChildren(...grupos);
+    etiquetarArbol();
+    actualizarInsigniasDelArbol();
+}
+
+// Escribe en el idioma actual lo que dice cada fila del árbol
+function etiquetarArbol() {
+    for (const grupo of arbol.children) {
+        const nombre = grupo.dataset.nombre;
+        const abrir = grupo.querySelector('.f-fam-abrir');
+        const rotulo = nombre === SIN_FAMILIA ? t('filtros.sinFamilia') : t('filtros.familia.abrir', { nombre, n: familias.get(nombre)?.size ?? 0 });
+        cambiarAtributo(abrir, 'title', rotulo);
+        cambiarAtributo(abrir, 'aria-label', rotulo);
+        cambiarTexto(grupo.querySelector('.f-fam-nombre'), nombre === SIN_FAMILIA ? t('filtros.sinFamilia') : '');
+    }
+}
+
+// Cuántas especies de cada grupo hay marcadas ("3/12"): así se ve qué hay elegido aunque el grupo esté cerrado
+function actualizarInsigniasDelArbol() {
+    for (const grupo of arbol.children) {
+        const miembros = miembrosDelGrupo(grupo.dataset.nombre);
+        const marcadas = miembros.filter(especie => elegidos.especie.has(especie)).length;
+        cambiarTexto(grupo.querySelector('.f-fam-sel'), marcadas > 0 ? `${marcadas}/${miembros.length}` : '');
+        grupo.classList.toggle('con-marcadas', marcadas > 0);
+    }
+}
+
 // ---- Búsqueda dentro del panel (las especies) ----------------------------------------------------------------------
 // Muestra solo las opciones que tienen lo escrito en el nombre (sin mayúsculas ni acentos). Las elegidas se ven siempre, así no se pierde de
 // vista qué hay marcado.
@@ -366,8 +488,11 @@ function buscarEntreLasOpciones(grupo) {
     if (!caja) return;
     const consulta = normalizar(caja.value);
     const panel = caja.closest('.f-panel');
-    panel.classList.toggle('buscando', consulta !== ''); // mientras se busca se ven las dos listas (familias y especies) con sus títulos
-    seccionFiltros.querySelectorAll(`.f-chip[data-g="${grupo}"]`).forEach(chip => {
+    const veniaBuscando = panel.classList.contains('buscando');
+    panel.classList.toggle('buscando', consulta !== ''); // mientras se busca se esconde el árbol y se ven las dos listas (familias y especies) con sus títulos
+    caja.closest('.f-opciones-caja').querySelector('.f-opciones-x').hidden = caja.value === '';
+    if (veniaBuscando !== (consulta !== '')) panel.scrollTop = 0; // al pasar del árbol a los resultados (o al revés) se mira desde arriba
+    panel.querySelectorAll('.f-resultados .f-chip').forEach(chip => {
         const { k: clave, fam } = chip.dataset;
         const elegida = fam ? estadoDeFamilia(fam) !== 'false' : elegidos[grupo].has(clave);
         const sirve = !consulta || normalizar(fam ?? clave).includes(consulta) || elegida;
@@ -389,18 +514,21 @@ function borrarBusquedaDeOpciones(grupo) {
 }
 
 // Escribe en el idioma actual el nombre de cada opción
+function etiquetarChip(chip) {
+    const { g: grupo, k: clave, fam } = chip.dataset;
+    if (fam) {
+        chip.querySelector('.f-k').textContent = fam; // las familias son nombres propios de la API: no se traducen
+        chip.title = t('filtros.familia', { nombre: fam, n: familias.get(fam)?.size ?? 0 });
+        return;
+    }
+    const nombre = GRUPOS_FILTRO[grupo].nombre(clave);
+    chip.querySelector('.f-k').textContent = nombre;
+    chip.title = `${t(`filtros.${grupo}`)}: ${nombre}`;
+}
+
 function etiquetarChips() {
-    seccionFiltros.querySelectorAll('.f-chip').forEach(chip => {
-        const { g: grupo, k: clave, fam } = chip.dataset;
-        if (fam) {
-            chip.querySelector('.f-k').textContent = fam; // las familias son nombres propios de la API: no se traducen
-            chip.title = t('filtros.familia', { nombre: fam, n: familias.get(fam)?.size ?? 0 });
-            return;
-        }
-        const nombre = GRUPOS_FILTRO[grupo].nombre(clave);
-        chip.querySelector('.f-k').textContent = nombre;
-        chip.title = `${t(`filtros.${grupo}`)}: ${nombre}`;
-    });
+    seccionFiltros.querySelectorAll('.f-chip').forEach(etiquetarChip);
+    etiquetarArbol();
 }
 
 // Una etiqueta de "filtros activos": al tocarla se saca ese filtro
@@ -567,6 +695,7 @@ function refrescar() {
         cambiarTexto(chip.querySelector('i'), String(cantidad));
         chip.classList.toggle('vacio', total > 0 && cantidad === 0 && estado === 'false'); // sin cartas: se ve apagada
     });
+    actualizarInsigniasDelArbol();
 
     // Botones de X-Antibody y Xros Wars: su estado (indistinto, con o sin) y su texto en el idioma actual
     for (const boton of botonesDeTresEstados) {
@@ -932,19 +1061,22 @@ function activarFiltros() {
         buscarEntreLasOpciones(grupo);
     });
 
-    // Las dos vistas del panel de las especies: familias o especies sueltas
-    seccionFiltros.querySelectorAll('.f-vista').forEach(boton => {
-        boton.addEventListener('click', () => {
-            const panel = boton.closest('.f-panel');
-            panel.dataset.vista = boton.dataset.v;
-            panel.querySelectorAll('.f-vista').forEach(otro => otro.setAttribute('aria-pressed', String(otro === boton)));
-        });
+    // Desplegar o cerrar una familia del árbol de las especies
+    arbol.addEventListener('click', evento => {
+        const abrir = evento.target.closest('.f-fam-abrir');
+        if (abrir) alternarGrupoDelArbol(abrir.closest('.f-fam-grupo'));
     });
 
-    // Cajita de búsqueda del panel de las especies
+    // Cajita de búsqueda del panel de las especies (con su crucecita para borrar lo escrito)
     seccionFiltros.querySelectorAll('.f-opciones-buscar input').forEach(caja => {
         const grupo = caja.closest('.f-grupo').dataset.g;
         caja.addEventListener('input', () => buscarEntreLasOpciones(grupo));
+        caja.closest('.f-opciones-caja')
+            .querySelector('.f-opciones-x')
+            .addEventListener('click', () => {
+                borrarBusquedaDeOpciones(grupo);
+                caja.focus();
+            });
     });
 
     // Sacar un filtro desde su etiqueta

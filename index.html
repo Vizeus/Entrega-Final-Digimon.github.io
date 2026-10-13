@@ -49,33 +49,33 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261013-1750",
-                    "./datos.js": "./datos.js?v=20261013-1750",
-                    "./i18n.js": "./i18n.js?v=20261013-1750",
-                    "./nombres.js": "./nombres.js?v=20261013-1750",
-                    "./pagina.js": "./pagina.js?v=20261013-1750",
-                    "./api.js": "./api.js?v=20261013-1750",
-                    "./combate.js": "./combate.js?v=20261013-1750",
-                    "./avisos.js": "./avisos.js?v=20261013-1750",
-                    "./descartar.js": "./descartar.js?v=20261013-1750",
-                    "./cartas.js": "./cartas.js?v=20261013-1750",
-                    "./zoom.js": "./zoom.js?v=20261013-1750",
-                    "./gestos.js": "./gestos.js?v=20261013-1750",
-                    "./inclinacion.js": "./inclinacion.js?v=20261013-1750",
-                    "./audio.js": "./audio.js?v=20261013-1750",
-                    "./sonidos.js": "./sonidos.js?v=20261013-1750",
-                    "./filtros.js": "./filtros.js?v=20261013-1750",
-                    "./info.js": "./info.js?v=20261013-1750",
-                    "./barra.js": "./barra.js?v=20261013-1750",
-                    "./evolucion.js": "./evolucion.js?v=20261013-1750",
-                    "./ventanas.js": "./ventanas.js?v=20261013-1750",
-                    "./baile.js": "./baile.js?v=20261013-1750",
-                    "./tema.js": "./tema.js?v=20261013-1750",
-                    "./menus.js": "./menus.js?v=20261013-1750"
+                    "./util.js": "./util.js?v=20261013-1815",
+                    "./datos.js": "./datos.js?v=20261013-1815",
+                    "./i18n.js": "./i18n.js?v=20261013-1815",
+                    "./nombres.js": "./nombres.js?v=20261013-1815",
+                    "./pagina.js": "./pagina.js?v=20261013-1815",
+                    "./api.js": "./api.js?v=20261013-1815",
+                    "./combate.js": "./combate.js?v=20261013-1815",
+                    "./avisos.js": "./avisos.js?v=20261013-1815",
+                    "./descartar.js": "./descartar.js?v=20261013-1815",
+                    "./cartas.js": "./cartas.js?v=20261013-1815",
+                    "./zoom.js": "./zoom.js?v=20261013-1815",
+                    "./gestos.js": "./gestos.js?v=20261013-1815",
+                    "./inclinacion.js": "./inclinacion.js?v=20261013-1815",
+                    "./audio.js": "./audio.js?v=20261013-1815",
+                    "./sonidos.js": "./sonidos.js?v=20261013-1815",
+                    "./filtros.js": "./filtros.js?v=20261013-1815",
+                    "./info.js": "./info.js?v=20261013-1815",
+                    "./barra.js": "./barra.js?v=20261013-1815",
+                    "./evolucion.js": "./evolucion.js?v=20261013-1815",
+                    "./ventanas.js": "./ventanas.js?v=20261013-1815",
+                    "./baile.js": "./baile.js?v=20261013-1815",
+                    "./tema.js": "./tema.js?v=20261013-1815",
+                    "./menus.js": "./menus.js?v=20261013-1815"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261013-1750"></script>
+        <script type="module" src="./main.js?v=20261013-1815"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,7 +86,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261013-1750" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261013-1815" />
     </head>
 
     <body>
@@ -466,9 +466,9 @@
                     <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
                         <span data-i18n="filtros.especie">Especie</span><b class="f-n" hidden>0</b>
                     </button>
-                    <div class="f-panel" role="group" aria-label="Filtrar por especie" data-i18n-attr="aria-label:filtros.porEspecie" data-vista="familias">
+                    <div class="f-panel" role="group" aria-label="Filtrar por especie" data-i18n-attr="aria-label:filtros.porEspecie">
                         <div class="f-opciones-buscar">
-                            <label>
+                            <label class="f-opciones-caja">
                                 <input
                                     type="text"
                                     autocomplete="off"
@@ -479,17 +479,27 @@
                                     aria-label="Buscar especie…"
                                     data-i18n-attr="placeholder:filtros.buscarEspecie;aria-label:filtros.buscarEspecie"
                                 />
+                                <button
+                                    type="button"
+                                    class="f-opciones-x"
+                                    hidden
+                                    title="Borrar búsqueda"
+                                    aria-label="Borrar búsqueda"
+                                    data-i18n-attr="title:filtros.borrarBusqueda;aria-label:filtros.borrarBusqueda"
+                                >
+                                    ✕
+                                </button>
                             </label>
-                            <!-- Dos vistas de lo mismo: las familias (marcan varias especies juntas) y las especies sueltas. Al escribir en la cajita se ven las dos -->
-                            <div class="f-vistas">
-                                <button type="button" class="f-vista" data-v="familias" aria-pressed="true" data-i18n="filtros.familias">Familias</button>
-                                <button type="button" class="f-vista" data-v="especies" aria-pressed="false" data-i18n="filtros.especies">Especies</button>
-                            </div>
                         </div>
-                        <p class="f-subtitulo" data-i18n="filtros.familias">Familias</p>
-                        <div class="f-lista f-familias"></div>
-                        <p class="f-subtitulo" data-i18n="filtros.especies">Especies</p>
-                        <div class="f-lista f-especies"></div>
+                        <!-- Sin buscar: un árbol con las familias (marcan varias especies juntas) y, adentro de cada una, sus especies. Una especie puede estar en
+         varias familias y marcarse desde cualquiera. Al escribir en la cajita el árbol se esconde y se ven los resultados en dos listas: familias y especies -->
+                        <div class="f-arbol"></div>
+                        <div class="f-resultados">
+                            <p class="f-subtitulo" data-i18n="filtros.familias">Familias</p>
+                            <div class="f-lista f-familias"></div>
+                            <p class="f-subtitulo" data-i18n="filtros.especies">Especies</p>
+                            <div class="f-lista f-especies"></div>
+                        </div>
                     </div>
                 </div>
 

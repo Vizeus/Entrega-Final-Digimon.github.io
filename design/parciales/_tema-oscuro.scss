@@ -304,10 +304,22 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
             box-shadow: $sombra-panel;
         }
 
-        .f-vista:not([aria-pressed="true"]) {
-            color: $texto;
+        .f-fam-grupo {
             border-color: $borde;
-            background: linear-gradient(#2a4274, #1b2f58);
+            background: rgba(255, 255, 255, 0.04);
+
+            &.con-marcadas {
+                background: rgba(90, 160, 240, 0.14);
+            }
+        }
+
+        .f-fam-abrir,
+        .f-opciones-x {
+            color: #8fb0d8;
+        }
+
+        .f-opciones-x {
+            background: rgba(143, 176, 216, 0.2);
         }
 
         .f-subtitulo,
