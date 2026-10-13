@@ -388,11 +388,22 @@ export function activarCartelesDeInfoEnCartas() {
                 if (!carta || (dato && !carta.dataset[dato])) continue;
                 evento.stopPropagation();
                 const valor = valorDe ? valorDe(apretado) : dato ? carta.dataset[dato] : null;
-                if (valor) {
-                    emitir('click-chip-carta', { [aviso]: valor });
-                    abrir(valor);
+                const abrirVentana = () => {
+                    if (valor) {
+                        emitir('click-chip-carta', { [aviso]: valor });
+                        abrir(valor);
+                    } else {
+                        abrir(carta);
+                    }
+                };
+                if (carta === cartaEnZoom && zoomExtra) {
+                    // Con la carta agrandada de más (zoom extra), el botoncito primero le quita ese zoom extra y después abre su ventana, sin salir del zoom
+                    // (si mientras tanto se cerró el zoom o se pasó a otra carta, la ventana ya no corresponde)
+                    volverAlZoomNormal(carta).then(() => {
+                        if (carta === cartaEnZoom) abrirVentana();
+                    });
                 } else {
-                    abrir(carta);
+                    abrirVentana();
                 }
                 return;
             }

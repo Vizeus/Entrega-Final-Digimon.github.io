@@ -49,33 +49,33 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261013-1701",
-                    "./datos.js": "./datos.js?v=20261013-1701",
-                    "./i18n.js": "./i18n.js?v=20261013-1701",
-                    "./nombres.js": "./nombres.js?v=20261013-1701",
-                    "./pagina.js": "./pagina.js?v=20261013-1701",
-                    "./api.js": "./api.js?v=20261013-1701",
-                    "./combate.js": "./combate.js?v=20261013-1701",
-                    "./avisos.js": "./avisos.js?v=20261013-1701",
-                    "./descartar.js": "./descartar.js?v=20261013-1701",
-                    "./cartas.js": "./cartas.js?v=20261013-1701",
-                    "./zoom.js": "./zoom.js?v=20261013-1701",
-                    "./gestos.js": "./gestos.js?v=20261013-1701",
-                    "./inclinacion.js": "./inclinacion.js?v=20261013-1701",
-                    "./audio.js": "./audio.js?v=20261013-1701",
-                    "./sonidos.js": "./sonidos.js?v=20261013-1701",
-                    "./filtros.js": "./filtros.js?v=20261013-1701",
-                    "./info.js": "./info.js?v=20261013-1701",
-                    "./barra.js": "./barra.js?v=20261013-1701",
-                    "./evolucion.js": "./evolucion.js?v=20261013-1701",
-                    "./ventanas.js": "./ventanas.js?v=20261013-1701",
-                    "./baile.js": "./baile.js?v=20261013-1701",
-                    "./tema.js": "./tema.js?v=20261013-1701",
-                    "./menus.js": "./menus.js?v=20261013-1701"
+                    "./util.js": "./util.js?v=20261013-1740",
+                    "./datos.js": "./datos.js?v=20261013-1740",
+                    "./i18n.js": "./i18n.js?v=20261013-1740",
+                    "./nombres.js": "./nombres.js?v=20261013-1740",
+                    "./pagina.js": "./pagina.js?v=20261013-1740",
+                    "./api.js": "./api.js?v=20261013-1740",
+                    "./combate.js": "./combate.js?v=20261013-1740",
+                    "./avisos.js": "./avisos.js?v=20261013-1740",
+                    "./descartar.js": "./descartar.js?v=20261013-1740",
+                    "./cartas.js": "./cartas.js?v=20261013-1740",
+                    "./zoom.js": "./zoom.js?v=20261013-1740",
+                    "./gestos.js": "./gestos.js?v=20261013-1740",
+                    "./inclinacion.js": "./inclinacion.js?v=20261013-1740",
+                    "./audio.js": "./audio.js?v=20261013-1740",
+                    "./sonidos.js": "./sonidos.js?v=20261013-1740",
+                    "./filtros.js": "./filtros.js?v=20261013-1740",
+                    "./info.js": "./info.js?v=20261013-1740",
+                    "./barra.js": "./barra.js?v=20261013-1740",
+                    "./evolucion.js": "./evolucion.js?v=20261013-1740",
+                    "./ventanas.js": "./ventanas.js?v=20261013-1740",
+                    "./baile.js": "./baile.js?v=20261013-1740",
+                    "./tema.js": "./tema.js?v=20261013-1740",
+                    "./menus.js": "./menus.js?v=20261013-1740"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261013-1701"></script>
+        <script type="module" src="./main.js?v=20261013-1740"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,7 +86,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261013-1701" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261013-1740" />
     </head>
 
     <body>
@@ -113,22 +113,25 @@
                 <button type="button" id="contador-seleccion" class="contador" disabled title="Digimons elegidos" aria-label="0/2 · Digimons elegidos">
                     0/2
                 </button>
-                <!-- Las cartas elegidas en miniatura (las dibuja combate.js): dos lugares, vacíos hasta que se elige -->
-                <ul id="elegidos-miniatura" class="elegidos" aria-hidden="true">
-                    <li class="mini-carta"></li>
-                    <li class="mini-carta"></li>
-                </ul>
-                <!-- Empieza deshabilitado: se activa al elegir 2 digimons -->
-                <button
-                    id="iniciar-combate"
-                    class="botones"
-                    disabled
-                    title="Elige 2 digimons para poder iniciar el combate"
-                    data-i18n="combate.iniciar"
-                    data-i18n-attr="title:combate.iniciar.ayuda"
-                >
-                    Iniciar Combate
-                </button>
+                <!-- A la derecha del contador: las cartas elegidas en miniatura (centradas en el hueco que queda) y el botón principal -->
+                <div class="combate-final">
+                    <!-- Las cartas elegidas en miniatura (las dibuja combate.js): dos lugares, vacíos hasta que se elige -->
+                    <ul id="elegidos-miniatura" class="elegidos" aria-hidden="true">
+                        <li class="mini-carta"></li>
+                        <li class="mini-carta"></li>
+                    </ul>
+                    <!-- Empieza deshabilitado: se activa al elegir 2 digimons -->
+                    <button
+                        id="iniciar-combate"
+                        class="botones"
+                        disabled
+                        title="Elige 2 digimons para poder iniciar el combate"
+                        data-i18n="combate.iniciar"
+                        data-i18n-attr="title:combate.iniciar.ayuda"
+                    >
+                        Iniciar Combate
+                    </button>
+                </div>
             </div>
 
             <!-- En celular: botón ☰ que abre el menú con la consigna, los ajustes y los menús de información -->

@@ -47,7 +47,8 @@ const TOQUE_MOVIMIENTO = 12; // px máximos que se puede mover el dedo durante u
 // los clics de teclado no esperan nada.
 // Ese segundo toque tampoco suena ni vibra otra vez (el primero ya lo hizo): se anota con marcarSegundoDeUnDoble() para quien suena o vibra.
 const CHIPS_DEL_FRENTE = '#listado-digimons > li :is(.c-gema, .c-nivel, .c-atributo, .c-elem)';
-const ESPERA_DEL_CHIP = DOBLE_TOQUE_ESPERA + 40; // ms que espera el clic de un botoncito
+const ESPERA_DEL_CHIP = DOBLE_TOQUE_ESPERA + 40; // ms que espera el clic de un botoncito con el dedo (un doble toque puede ser lento)
+const ESPERA_DEL_CHIP_CON_MOUSE = 200; // ms con el mouse: los dos clics de un doble clic llegan más pegados, y así la ventana se abre con menos demora
 const CLIC_DESPUES_DEL_TOQUE = 700; // ms máximos entre que se levanta el dedo y el clic que le sigue para que cuente como "hecho con el dedo"
 
 let pendiente = null; // { chip, carta, espera }: el clic de un botoncito del frente que espera a ver si es el primero de un doble toque
@@ -142,7 +143,7 @@ export function activarEsperaDeBotoncitos() {
             evento.preventDefault();
             if (conDedo && performance.now() < descartarClicHasta) return; // el segundo toque de un doble toque: la carta se amplía y la ventana no se abre
             soltarPendiente();
-            pendiente = { chip, carta, espera: setTimeout(soltarPendiente, ESPERA_DEL_CHIP) };
+            pendiente = { chip, carta, espera: setTimeout(soltarPendiente, conDedo ? ESPERA_DEL_CHIP : ESPERA_DEL_CHIP_CON_MOUSE) };
         },
         true,
     );

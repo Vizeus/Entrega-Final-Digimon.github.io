@@ -42,6 +42,10 @@ function resolverNivelDeLaApi(nombre, nivelApi) {
     return { nivel: nivelApi };
 }
 
+// La API a veces trae como "ataque" la marca de una nota al pie de la wiki de donde sale ("[N 1]", "[N 2]"...): no es un ataque ni tiene nombre. No se muestra
+// ni se usa en el combate (su descripción sí cuenta para deducir el elemento: es texto real sobre lo que hace el digimon)
+const NOTA_AL_PIE = /^\[N\s*\d+\]$/i;
+
 // Deduce el elemento de un digimon a partir de los detalles que devuelve la API
 function deducirElemento(id, detalles) {
     if (ELEMENTOS_MANUALES[id]) {
@@ -303,7 +307,7 @@ export async function crearListaDeDigimons() {
                     estreno: detalles.releaseDate || '–',
                     // Todos los ataques con su descripción (en inglés): para el botón "⚔️ Ataques" del dorso y para la pelea
                     habilidades: (detalles.skills || [])
-                        .filter(habilidad => habilidad.skill)
+                        .filter(habilidad => habilidad.skill && !NOTA_AL_PIE.test(habilidad.skill))
                         .map(habilidad => ({ nombre: habilidad.skill, traduccion: habilidad.translation || '', descripcion: habilidad.description || '' })),
                     descripcion: (detalles.descriptions || []).find(texto => texto.language === 'en_us')?.description || '',
                     evo: {

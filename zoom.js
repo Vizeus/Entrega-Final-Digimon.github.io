@@ -50,6 +50,11 @@ function pedirMovimientoDelPuntero(carta) {
     carta.classList.add('reflejo-quieto');
 }
 
+const punteroSobre = (carta, { x, y }) => {
+    const r = carta.getBoundingClientRect();
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+};
+
 function soltarReflejoQuieto() {
     zoomEsperaMovimiento = false;
     listaDigimons.querySelectorAll(':scope > li.reflejo-quieto').forEach(carta => carta.classList.remove('reflejo-quieto'));
@@ -369,7 +374,7 @@ export function activarArrastreDeZoomExtra() {
     listaDigimons.addEventListener('pointerdown', evento => {
         if (evento.pointerType === 'touch' || evento.button !== 0) return;
         if (!zoomExtra || !zoomExtraDisponible() || !cartaEnZoom.contains(evento.target)) return;
-        if (evento.target.closest('button, a, .c-evo, .c-ataques')) return;
+        if (evento.target.closest(CON_FUNCION_PROPIA)) return; // (los botoncitos no agarran la carta: si no, el clic llegaría a la carta y no al botoncito)
         terminar();
         arrastre = { carta: cartaEnZoom, id: evento.pointerId, x: evento.clientX, y: evento.clientY, movio: false };
         cartaEnZoom.setPointerCapture(evento.pointerId); // así sigue agarrada aunque el mouse se pase de la carta (o de la ventana)
@@ -644,6 +649,9 @@ export async function abrirZoom(carta) {
     cierrePendiente = false; // un pedido de cierre viejo no tiene que cerrar este zoom nuevo apenas llegue
     document.activeElement?.blur?.();
     soltarReflejoQuieto();
+    // La carta que se amplía con el puntero encima (el caso de un doble clic) todavía está con el "hover": sin esto brillaba, quieta, mientras volaba
+    // al centro. Va sin reflejo ni inclinación hasta que llega; ahí se decide (ver más abajo)
+    pedirMovimientoDelPuntero(carta);
     emitir('zoom-cambio'); // la inclinación suelta la carta
 
     const fondo = crearFondoZoom(carta);
@@ -681,7 +689,10 @@ export async function abrirZoom(carta) {
     crearFlechasZoom();
     zoomOcupado = false;
     fondo.querySelector('.zoom-cerrar').focus({ preventScroll: true });
-    emitir('zoom-cambio'); // ahora la inclinación mide la carta ya grande
+    // Si el puntero quedó sobre la carta ya ampliada, se inclina y brilla ahí mismo, hacia donde apunta, sin esperar a que se mueva el mouse.
+    // Si quedó afuera, sigue sin reflejo hasta que el mouse se mueva (como al pasar de carta)
+    if (cartaEnZoom === carta && ultimoPuntero && punteroSobre(carta, ultimoPuntero)) soltarReflejoQuieto();
+    emitir('zoom-cambio'); // ahora la inclinación mide la carta ya grande (y, si el puntero está encima, la retoma)
     if (cierrePendiente) cerrarZoom();
 }
 
@@ -759,8 +770,12 @@ export function activarZoom() {
         if (evento.target.closest('button')) return;
         const carta = evento.target.closest('#listado-digimons > li');
         if (cartaEnZoom) {
-            // Un doble clic sobre la carta ampliada la devuelve a su lugar (no cuenta soltar después de arrastrarla con el zoom extra)
-            if (carta === cartaEnZoom && puedeCerrarseConDobleToque(evento.target) && performance.now() - ultimoDeslizamiento > 500) cerrarZoom();
+            // Un doble clic sobre la carta ampliada la devuelve a su lugar (no cuenta soltar después de arrastrarla con el zoom extra).
+            // Si está agrandada de más (zoom extra), el doble clic solo le quita ese zoom extra: sigue ampliada, en el zoom de siempre
+            if (carta === cartaEnZoom && puedeCerrarseConDobleToque(evento.target) && performance.now() - ultimoDeslizamiento > 500) {
+                if (zoomExtra) volverAlZoomNormal(carta);
+                else cerrarZoom();
+            }
             return;
         }
         if (!carta) return;

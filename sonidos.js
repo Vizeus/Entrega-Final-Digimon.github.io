@@ -152,7 +152,7 @@ export function sonidoTecla(bajada = true, tecla = TECLA_NORMAL) {
     }
 }
 
-// El toquecito de una carta que se apoya (al terminar de girar y al volver a su lugar desde el zoom): un roce seco de papel,
+// El toquecito de una carta que se apoya (al terminar de girar): un roce seco de papel,
 // muy bajito y casi sin cuerpo grave. Una carta casi no pesa: no es un golpe sobre la mesa.
 // ("volumen" lo multiplica: 1 es el de siempre; el giro de la carta lo usa más bajito)
 function toqueDeCarta(contexto, llegada, volumen = 1) {
@@ -183,7 +183,7 @@ export function sonidoSeleccion(elegida) {
         const destino = destinoDeAudio(contexto);
         // [frecuencia del roce, volumen del roce, tono del cuerpo al empezar y al terminar, volumen del cuerpo, duración del roce]
         const [frecuencia, volumenRoce, desde, hasta, volumenCuerpo, duracion] = elegida
-            ? [2000, 0.07, 210, 130, 0.028, 0.035]
+            ? [2000, 0.028, 210, 130, 0.011, 0.035] // (al elegirla suena bien bajito: era 0,07 y 0,028)
             : [3200, 0.04, 330, 240, 0.015, 0.025];
 
         rafagaDeRuido(contexto, destino, { inicio, frecuencia, q: 1, pico: volumenRoce, duracion, cola: 0.02 });
@@ -256,8 +256,8 @@ function sonidoVueltaAhora(volumenDelGiro) {
 }
 
 // Zoom de la carta: el "fwip" de una carta de cartulina movida en el aire (aire filtrado con un aleteo rápido, como el de
-// una carta que se agita). Al abrir sube de tono y suena solo eso; al cerrar baja de tono y, cuando la carta vuelve a su
-// lugar, se apoya con el toquecito de siempre. Es sutil.
+// una carta que se agita). Al abrir sube de tono y al cerrar baja de tono. Suena solo eso, sin ningún golpecito al final (ni al abrir
+// ni al cerrar). Es sutil.
 export function sonidoZoom(abrir) {
     try {
         const contexto = obtenerContextoAudio();
@@ -305,10 +305,6 @@ export function sonidoZoom(abrir) {
         oscilador.start(ahora);
         ruido.stop(ahora + duracion + 0.02);
         oscilador.stop(ahora + duracion + 0.02);
-
-        // Al abrir la carta queda "en la mano": no hay ningún golpe. Solo al cerrar, cuando vuelve a su lugar, se apoya
-        // con el mismo toquecito que al terminar de dar vuelta la carta
-        if (!abrir) toqueDeCarta(contexto, ahora + 0.44);
     } catch (error) {
         // Si el navegador no permite audio, simplemente no suena
     }

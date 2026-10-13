@@ -592,7 +592,7 @@ function refrescar() {
     escribirEtiquetas();
     // Dos versiones del mismo dato: la larga ("Mostrando 12 de 860 digimons") y una cortita ("12 de 860") para la barra finita del celular
     // (el CSS muestra una u otra; la que no se ve no se lee ni en pantalla ni con lector)
-    const datos = { v: `<b>${visibles}</b>`, n: total };
+    const datos = { v: `<b>${visibles}</b>`, n: `<span class="f-num">${total}</span>` };
     const cuenta = `<span class="f-cuenta-larga">${t('filtros.cuenta', datos)}</span><span class="f-cuenta-corta">${t('filtros.cuenta.corta', datos)}</span>`;
     if (textoCuenta.innerHTML !== cuenta) textoCuenta.innerHTML = cuenta;
 

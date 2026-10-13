@@ -40,6 +40,11 @@
             display: none;
         }
 
+        // El contenedor de las cartas en miniatura y el botón tampoco cuenta para el diseño: el botón queda suelto en la barra
+        .combate .combate-final {
+            display: contents;
+        }
+
         // Las cartas elegidas en miniatura (ver _barra.scss) no entran en la fila finita: ahí queda solo el contador
         .combate .elegidos {
             display: none;

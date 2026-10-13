@@ -159,6 +159,8 @@ export function activarInclinacion() {
         arrancar();
     }
 
+    let retomarTrasElZoom = () => {}; // (con mouse: retoma la inclinación bajo el puntero cuando la carta ampliada llega al centro)
+
     if (conMouse) {
         let puntero = null; // última posición del mouse sobre las cartas (para retomar la inclinación al terminar un giro)
         // Última posición conocida del mouse en toda la página: a diferencia de "puntero", no se borra cuando el mouse sale de la lista. En el medio
@@ -292,6 +294,14 @@ export function activarInclinacion() {
             seguir(puntero.x, puntero.y);
         });
 
+        // Cuando la carta ampliada llega al centro (zoom.js ya sacó la espera si el puntero quedó encima), se inclina hacia el puntero sin que
+        // haga falta moverlo
+        retomarTrasElZoom = () => {
+            if (!ultimoMouse) return;
+            puntero = ultimoMouse;
+            retomar();
+        };
+
         // Al devolver la carta ampliada a su tamaño normal (ver "ZOOM EXTRA"), la inclinación se retoma si el mouse sigue encima
         document.addEventListener('zoom-extra', acomodar);
 
@@ -370,7 +380,10 @@ export function activarInclinacion() {
     if (conDedo) activarInclinacionConDedo({ tomar, seguir, soltar: () => soltar(cartaActual) });
 
     // Cuando la carta pasa al centro (o vuelve), la caja que se midió ya no vale: se suelta y se mide de nuevo
-    document.addEventListener('zoom-cambio', () => soltar(cartaActual));
+    document.addEventListener('zoom-cambio', () => {
+        soltar(cartaActual);
+        retomarTrasElZoom();
+    });
     // Con el zoom extra de la carta ampliada (ver "ZOOM EXTRA") la inclinación se cancela
     document.addEventListener('zoom-extra', () => {
         if (zoomExtra) soltar(cartaActual);

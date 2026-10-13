@@ -85,10 +85,17 @@ function dibujarElegidosEnMiniatura() {
         const carta = seleccionados[i];
         lugar.replaceChildren();
         lugar.classList.toggle('con-carta', Boolean(carta));
+        // Niveles 7 y 8: marco que gira (ver .c-marco en _cartas.scss), también en miniatura
+        const conMarco = Number(carta?.dataset.nivel) >= 7;
+        lugar.classList.toggle('con-marco', conMarco);
+        lugar.dataset.nivel = conMarco ? carta.dataset.nivel : '';
         lugar.removeAttribute('title');
         if (!carta) return;
         const estilo = getComputedStyle(carta);
-        for (const variable of ['--base', '--aro', '--fondo']) lugar.style.setProperty(variable, estilo.getPropertyValue(variable));
+        // (el --aro de una carta con marco que gira es transparente mientras gira: la miniatura arma el suyo con los mismos colores)
+        for (const variable of conMarco ? ['--base', '--fondo', '--colores-marco', '--vuelta-marco'] : ['--base', '--aro', '--fondo']) {
+            lugar.style.setProperty(variable, estilo.getPropertyValue(variable));
+        }
         const origen = carta.querySelector('.c-arte img');
         const imagen = document.createElement('img');
         imagen.src = origen?.currentSrc || origen?.src || '';
@@ -96,6 +103,12 @@ function dibujarElegidosEnMiniatura() {
         imagen.draggable = false;
         lugar.title = nombreCompleto(carta);
         lugar.append(imagen);
+        if (conMarco) {
+            const marco = document.createElement('span');
+            marco.className = 'mini-marco';
+            marco.setAttribute('aria-hidden', 'true');
+            lugar.append(marco);
+        }
     });
 }
 

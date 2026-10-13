@@ -157,12 +157,12 @@
     // Panel de combate: la consigna, el contador y el botón principal van juntos, en una "pantallita" hundida en el vidrio
     .combate {
         display: grid;
-        grid-template-columns: 1fr auto auto auto;
+        grid-template-columns: 1fr auto 1fr; // consigna | contador (en el centro del panel) | cartas elegidas y botón
         align-items: center;
         gap: 12px;
         flex: 1 1 420px;
         min-width: 0;
-        max-width: 680px;
+        max-width: 740px;
         padding: 7px;
         border: 1px solid rgba(0, 80, 140, 0.25);
         border-radius: 999px;
@@ -196,8 +196,8 @@
         min-width: 54px;
         padding: 4px 12px;
         text-align: center;
-        font-family: var(--f-etiqueta), sans-serif;
-        font-size: 15px;
+        font-family: var(--f-descripcion), sans-serif; // la fuente de las descripciones de las cartas: los números se leen mejor
+        font-size: 16px;
         font-weight: 700;
         color: #2c5a80;
         border-radius: 999px;
@@ -262,9 +262,18 @@
 
     // Las cartas elegidas en miniatura, entre el contador y el botón de combate (las dibuja combate.js). Dos lugares siempre: el vacío es una guía
     // punteada. Cada carta lleva los colores de la suya (--base, --fondo y --aro se copian de la carta) en chiquito
-    .elegidos {
+    // La parte derecha del panel: las cartas en miniatura ocupan el hueco que queda entre el contador y el botón, y se centran ahí
+    .combate-final {
         grid-column: 3;
-        justify-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .elegidos {
+        flex: 1 1 auto;
+        justify-content: center;
         display: flex;
         gap: 5px;
         margin: 0;
@@ -274,6 +283,7 @@
 
     .mini-carta {
         --borde: 2px;
+        position: relative;
         box-sizing: border-box;
         width: 30px;
         height: 43px;
@@ -298,6 +308,63 @@
             object-fit: contain;
             border-radius: 3px;
             background: #fff;
+        }
+
+        // Niveles 7 y 8: el marco de colores que gira, en miniatura. Es lo mismo que el .c-marco de las cartas (ver _cartas.scss): una capa cuadrada con el
+        // degradé que solo se rota, recortada con forma de marco. Con "reducir movimiento" queda el mismo marco, quieto.
+        &.con-marco {
+            --borde: 3px;
+            --aro: conic-gradient(from 0deg, var(--colores-marco));
+            padding: 1px;
+
+            &[data-nivel="7"] {
+                box-shadow: 0 0 6px 1px rgba(190, 110, 255, 0.75);
+            }
+
+            &[data-nivel="8"] {
+                box-shadow: 0 0 6px 1px rgba(255, 218, 110, 0.9);
+            }
+        }
+
+        .mini-marco {
+            display: none;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            &.con-marco {
+                --aro: linear-gradient(transparent, transparent); // el marco lo dibuja la capa que gira
+
+                .mini-marco {
+                    display: block;
+                    position: absolute;
+                    inset: calc(var(--borde) * -1);
+                    box-sizing: border-box;
+                    padding: var(--borde);
+                    border-radius: 5px;
+                    overflow: hidden;
+                    pointer-events: none;
+                    -webkit-mask:
+                        linear-gradient(#000 0 0) content-box,
+                        linear-gradient(#000 0 0);
+                    -webkit-mask-composite: xor;
+                    mask:
+                        linear-gradient(#000 0 0) content-box exclude,
+                        linear-gradient(#000 0 0);
+
+                    &::before {
+                        content: "";
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        width: 64px; // más que la diagonal de la miniatura (unos 52px)
+                        height: 64px;
+                        margin: -32px 0 0 -32px;
+                        background: conic-gradient(from 0deg, var(--colores-marco));
+                        will-change: transform;
+                        animation: girar-marco var(--vuelta-marco) linear infinite;
+                    }
+                }
+            }
         }
     }
 
@@ -333,8 +400,6 @@
     // Botón principal: es el más grande y el único con color fuerte. Verde y con brillo cuando se puede pelear, gris apagado mientras no
     #iniciar-combate {
         --c: #34b35a;
-        grid-column: 4;
-        justify-self: end;
         flex: none;
         height: 48px;
         min-width: 204px;
@@ -672,6 +737,13 @@
     }
 }
 
+// En las pantallas angostas que no son celular (701 a 819 px) el panel no tiene lugar para las cartas en miniatura sin descentrar el contador
+@media (min-width: 701px) and (max-width: 819px) {
+    #navbar .elegidos {
+        display: none;
+    }
+}
+
 // La carta en miniatura "cae" en su lugar al elegirla (sin movimiento reducido)
 @keyframes mini-carta-entra {
     from {
@@ -732,6 +804,12 @@
     #navbar .combate,
     #navbar .ajustes {
         margin-left: auto;
+    }
+
+    // El panel no se achica por debajo de lo que necesita para que entren la consigna, el contador, las cartas en miniatura y el botón (si no, con la barra
+    // llena, la consigna se partía en cuatro renglones). Si la barra no alcanza, los menús de información bajan a su propia fila, como ya pasa en 1600 px
+    #navbar .combate {
+        min-width: 734px;
     }
 }
 
