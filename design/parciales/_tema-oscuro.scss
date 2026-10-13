@@ -103,6 +103,12 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
                 0 1px 0 rgba(140, 200, 255, 0.14);
         }
 
+        // Los lugares vacíos de las cartas elegidas en miniatura
+        .mini-carta:not(.con-carta) {
+            border-color: rgba(140, 200, 255, 0.35);
+            background: rgba(0, 0, 0, 0.25);
+        }
+
         // La bolita "0/2"
         .contador {
             color: #a9cdf2;

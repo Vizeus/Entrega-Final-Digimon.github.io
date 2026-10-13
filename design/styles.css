@@ -209,7 +209,7 @@ body::before {
 }
 #navbar .combate {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 12px;
   flex: 1 1 420px;
@@ -283,6 +283,39 @@ body::before {
 #navbar .contador:focus-visible {
   outline: 3px solid #1f7fd6;
   outline-offset: 2px;
+}
+#navbar .elegidos {
+  grid-column: 3;
+  justify-self: center;
+  display: flex;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#navbar .mini-carta {
+  --borde: 2px;
+  box-sizing: border-box;
+  width: 30px;
+  height: 43px;
+  padding: 2px;
+  border: var(--borde) dashed rgba(0, 80, 140, 0.3);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.25);
+}
+#navbar .mini-carta.con-carta {
+  border: var(--borde) solid transparent;
+  background: var(--fondo, #fff) padding-box, var(--aro, linear-gradient(#59616d, #59616d)) border-box;
+  box-shadow: 0 2px 3px rgba(0, 30, 80, 0.3);
+  animation: mini-carta-entra 0.2s ease-out;
+}
+#navbar .mini-carta img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 3px;
+  background: #fff;
 }
 #navbar #abrir-menu,
 #navbar .menu-consigna {
@@ -361,7 +394,7 @@ body::before {
 }
 #navbar #iniciar-combate {
   --c: #34b35a;
-  grid-column: 3;
+  grid-column: 4;
   justify-self: end;
   flex: none;
   height: 48px;
@@ -800,6 +833,21 @@ body::before {
   background: linear-gradient(180deg, #7ff0ff, #22c0e8 50%, #0a9ad0);
 }
 
+@keyframes mini-carta-entra {
+  from {
+    opacity: 0;
+    scale: 1.35;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #navbar .mini-carta.con-carta {
+    animation: none;
+  }
+}
 @keyframes combate-pulso {
   0%, 50%, 100% {
     scale: 1;
@@ -1247,6 +1295,9 @@ body::before {
     display: contents;
   }
   #navbar .combate .consigna {
+    display: none;
+  }
+  #navbar .combate .elegidos {
     display: none;
   }
   #navbar .contador {
@@ -5404,6 +5455,10 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   border-color: rgba(115, 185, 255, 0.24);
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(70, 120, 200, 0.14));
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(140, 200, 255, 0.14);
+}
+:root[data-tema=oscuro] #navbar .mini-carta:not(.con-carta) {
+  border-color: rgba(140, 200, 255, 0.35);
+  background: rgba(0, 0, 0, 0.25);
 }
 :root[data-tema=oscuro] #navbar .contador {
   color: #a9cdf2;

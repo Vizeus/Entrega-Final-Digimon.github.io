@@ -71,9 +71,32 @@ export function verificarSeleccion() {
     contadorSeleccion.textContent = `${seleccionados.length}/2`;
     contadorSeleccion.classList.toggle('completo', seleccionados.length === 2);
     mostrarAyudaDelContador();
+    dibujarElegidosEnMiniatura();
     botonIniciarCombate.disabled = seleccionados.length !== 2;
     // El color del botón (verde si se puede pelear, gris si no) y su latido cada 2 s (solo mientras se puede pelear) los pone el CSS según :disabled
     emitir('seleccion-cambio'); // el aviso de ayuda del inicio se va cuando ya eligió las 2
+}
+
+// Las cartas elegidas, en miniatura entre el contador y el botón de combate: la imagen del digimon con los colores de su carta (el color del atributo,
+// el tono del nivel y el marco de los niveles altos, que se copian de la carta tal cual están). Los dos lugares están siempre; el que no tiene carta queda vacío
+function dibujarElegidosEnMiniatura() {
+    const lugares = document.querySelectorAll('#elegidos-miniatura .mini-carta');
+    lugares.forEach((lugar, i) => {
+        const carta = seleccionados[i];
+        lugar.replaceChildren();
+        lugar.classList.toggle('con-carta', Boolean(carta));
+        lugar.removeAttribute('title');
+        if (!carta) return;
+        const estilo = getComputedStyle(carta);
+        for (const variable of ['--base', '--aro', '--fondo']) lugar.style.setProperty(variable, estilo.getPropertyValue(variable));
+        const origen = carta.querySelector('.c-arte img');
+        const imagen = document.createElement('img');
+        imagen.src = origen?.currentSrc || origen?.src || '';
+        imagen.alt = '';
+        imagen.draggable = false;
+        lugar.title = nombreCompleto(carta);
+        lugar.append(imagen);
+    });
 }
 
 // El contador de elegidos también es un botón: sin ninguno elegido está apagado; con 1 o 2 se puede tocar para quitar la selección
@@ -98,7 +121,11 @@ export function limpiarSeleccionDeCombate() {
 }
 
 contadorSeleccion.addEventListener('click', limpiarSeleccionDeCombate);
-document.addEventListener('idioma-cambiado', mostrarAyudaDelContador);
+document.addEventListener('tema-cambiado', dibujarElegidosEnMiniatura); // (los colores de las cartas cambian con el tema)
+document.addEventListener('idioma-cambiado', () => {
+    mostrarAyudaDelContador();
+    dibujarElegidosEnMiniatura(); // (el nombre que se ve al pasar el mouse cambia con el idioma)
+});
 mostrarAyudaDelContador();
 
 // -----------------------------------------------------------------------------------------------------------------

@@ -196,19 +196,21 @@ const MARGEN_DE_LA_VENTANA = 8; // px que como mínimo queda libre arriba cuando
 
 const conDesplazamientoVertical = elemento => /auto|scroll/.test(getComputedStyle(elemento).overflowY) && elemento.scrollHeight > elemento.clientHeight + 1;
 
+function escribirCorrimiento(ventana, corrimiento) {
+    ventana.dataset.corrimiento = String(corrimiento);
+    ventana.style.translate = `0 ${corrimiento}px`;
+    // La cruz de cerrar se queda pegada arriba de la pantalla mientras la ventana se desplaza (_ventanas.scss), pero el pegado se calcula sin contar este
+    // corrimiento, que después corre todo lo de la ventana, cruz incluida: se lo descuenta ahí. Si no, la cruz flotaría más abajo, hacia el centro
+    ventana.style.setProperty('--corrimiento-de-la-ventana', `${corrimiento}px`);
+    actualizarElAire(ventana);
+}
+
 // Corre la ventana "desplazamiento" píxeles de la pantalla hacia abajo (negativo: hacia arriba), sin dejarla subir por encima del borde de arriba.
 // Algunas ventanas están agrandadas con "zoom" (la línea evolutiva en pantallas grandes): lo que se le escribe a la ventana se agranda con ella,
 // y lo que se mide en la pantalla no
 function correrVentana(ventana, desplazamiento) {
     const agrandada = ventana.offsetHeight ? ventana.getBoundingClientRect().height / ventana.offsetHeight : 1;
-    const escribir = corrimiento => {
-        ventana.dataset.corrimiento = String(corrimiento);
-        ventana.style.translate = `0 ${corrimiento}px`;
-        // La cruz de cerrar se queda pegada arriba de la pantalla mientras la ventana se desplaza (_ventanas.scss), pero el pegado se calcula sin contar este
-        // corrimiento, que después corre todo lo de la ventana, cruz incluida: se lo descuenta ahí. Si no, la cruz flotaría más abajo, hacia el centro
-        ventana.style.setProperty('--corrimiento-de-la-ventana', `${corrimiento}px`);
-        actualizarElAire(ventana);
-    };
+    const escribir = corrimiento => escribirCorrimiento(ventana, corrimiento);
     // Nunca queda más arriba de donde la dejó SweetAlert (centrada, o con su margen de arriba): un corrimiento hacia arriba no se podría volver a desplazar,
     // y la ventana quedaría pegada arriba y torcida. Así, al cerrar los desplegables que se abrieron vuelve a quedar centrada
     const corrimiento = Math.max(0, Number(ventana.dataset.corrimiento || 0) + desplazamiento / agrandada);
@@ -225,7 +227,8 @@ function correrVentana(ventana, desplazamiento) {
 // navegador no cuenta el margen de abajo en lo que se puede desplazar. Resultado: al llegar al final la ventana quedaba pegada al borde de abajo, sin margen,
 // y el espacio de arriba (el corrimiento) quedaba sin usar. Para arreglarlo se le pega a la ventana, debajo, un "aire" invisible: igual que sin corrimiento,
 // el margen de abajo es el de arriba. Si la ventana entra en la pantalla, desplazando hacia abajo sube y se come el corrimiento hasta quedar centrada
-// (el aire es el margen que le da SweetAlert al centrarla). Si no entra, al final queda con el mismo margen que tenía arriba al empezar (ver actualizarElAire).
+// (el aire es el margen que le da SweetAlert al centrarla). Si no entra, al final queda con un margen normal (MARGEN_AL_DESPLAZAR) y, al
+// desplazar, el corrimiento sobrante se va gastando (ver gastarElCorrimiento).
 function prepararElAire(ventana) {
     const aire = document.createElement('div');
     aire.className = 'ventana-aire';
@@ -235,6 +238,38 @@ function prepararElAire(ventana) {
     new ResizeObserver(() => {
         if (ventana.dataset.corrimiento !== undefined) actualizarElAire(ventana);
     }).observe(ventana);
+    // Cuando la persona deja de desplazar, el corrimiento de más se cambia por desplazamiento (sin que se note)
+    const contenedor = ventana.closest('.swal2-container');
+    let espera;
+    contenedor?.addEventListener(
+        'scroll',
+        () => {
+            clearTimeout(espera);
+            espera = setTimeout(() => gastarElCorrimiento(ventana), 150);
+        },
+        { passive: true },
+    );
+}
+
+// Margen que queda arriba y abajo de una ventana más alta que la pantalla una vez que se desplazó (el corrimiento extra del principio no se repite abajo)
+const margenAlDesplazar = contenedor => Math.min(100, Math.round(contenedor.clientHeight * 0.12));
+
+// Dónde estaría la ventana sin el corrimiento y sin desplazar el contenedor, respecto del borde de arriba del contenedor
+const margenDeArriba = (ventana, contenedor, corrimiento) =>
+    Math.max(0, ventana.getBoundingClientRect().top - contenedor.getBoundingClientRect().top - corrimiento + contenedor.scrollTop);
+
+// El corrimiento extra del principio (el que evita que se mueva la ventana al desplegar) solo hace falta sin desplazar. Una ventana más alta que la pantalla,
+// ya desplazada, lo cambia por desplazamiento: se resta lo mismo del corrimiento y del scroll, así que no se mueve nada, pero al volver arriba queda un
+// margen normal y no todo el corrimiento
+function gastarElCorrimiento(ventana) {
+    const contenedor = ventana.closest('.swal2-container');
+    if (!contenedor || ventana.dataset.corrimiento === undefined || ventana.dataset.alta === undefined) return;
+    const agrandada = ventana.offsetHeight ? ventana.getBoundingClientRect().height / ventana.offsetHeight : 1;
+    const corrimiento = Number(ventana.dataset.corrimiento) * agrandada;
+    const sobra = Math.min(contenedor.scrollTop, margenDeArriba(ventana, contenedor, corrimiento) + corrimiento - margenAlDesplazar(contenedor));
+    if (sobra < 1) return;
+    contenedor.scrollTop -= sobra;
+    escribirCorrimiento(ventana, (corrimiento - sobra) / agrandada);
 }
 
 function actualizarElAire(ventana) {
@@ -243,21 +278,22 @@ function actualizarElAire(ventana) {
     // Los píxeles de la pantalla (getBoundingClientRect) y los de la ventana (lo que se le escribe al CSS) son distintos si la ventana está agrandada con "zoom"
     const agrandada = ventana.offsetHeight ? ventana.getBoundingClientRect().height / ventana.offsetHeight : 1;
     const corrimiento = Number(ventana.dataset.corrimiento) * agrandada;
-    // Donde estaría la ventana sin el corrimiento y sin desplazar el contenedor, respecto del borde de arriba del contenedor
-    const arriba = Math.max(0, ventana.getBoundingClientRect().top - contenedor.getBoundingClientRect().top - corrimiento + contenedor.scrollTop);
+    const arriba = margenDeArriba(ventana, contenedor, corrimiento);
     // Si la ventana entra en la pantalla, al final del desplazamiento queda centrada: el aire es el margen de arriba que le da SweetAlert. Si no entra (es más
     // alta que la pantalla, y SweetAlert la deja pegada arriba con un margen mínimo), ese margen sería de unos pocos píxeles: al final del desplazamiento la
-    // última línea quedaría contra el borde. Ahí el aire es el margen que la ventana tiene arriba al empezar (el de SweetAlert más el corrimiento): abajo
-    // queda el mismo espacio que arriba
+    // última línea quedaría contra el borde. Ahí el aire es un margen normal (el corrimiento del principio no se copia abajo)
     const alto = ventana.getBoundingClientRect().height;
     // Si la ventana, donde está al empezar (con el corrimiento), se ve entera, no hay nada que desplazar: sin aire no aparece una barra de scroll de más. El
     // desplazamiento solo aparece cuando la ventana se pasa de la pantalla (por ejemplo, al abrirse más ataques)
     if (arriba + corrimiento + alto + MARGEN_DE_LA_VENTANA <= contenedor.clientHeight) {
+        delete ventana.dataset.alta;
         ventana.style.setProperty('--aire-de-la-ventana', '0px');
         return;
     }
     const entra = alto + 2 * arriba <= contenedor.clientHeight + 1;
-    ventana.style.setProperty('--aire-de-la-ventana', `${(entra ? arriba : arriba + corrimiento) / agrandada}px`);
+    if (entra) delete ventana.dataset.alta;
+    else ventana.dataset.alta = '';
+    ventana.style.setProperty('--aire-de-la-ventana', `${(entra ? arriba : Math.max(arriba, margenAlDesplazar(contenedor))) / agrandada}px`);
 }
 
 export function mantenerEnSuLugar(elemento, cambio) {
@@ -291,6 +327,7 @@ export function mantenerEnSuLugar(elemento, cambio) {
 export function centrarVentana(ventana = document.querySelector('.swal2-popup')) {
     if (!ventana) return;
     delete ventana.dataset.corrimiento;
+    delete ventana.dataset.alta;
     ventana.style.translate = '';
     ventana.style.removeProperty('--corrimiento-de-la-ventana');
     ventana.style.removeProperty('--aire-de-la-ventana');

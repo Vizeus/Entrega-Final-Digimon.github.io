@@ -40,6 +40,11 @@
             display: none;
         }
 
+        // Las cartas elegidas en miniatura (ver _barra.scss) no entran en la fila finita: ahí queda solo el contador
+        .combate .elegidos {
+            display: none;
+        }
+
         .contador {
             order: 2;
             min-width: 40px;
