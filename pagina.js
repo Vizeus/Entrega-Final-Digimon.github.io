@@ -29,8 +29,21 @@ export const botonIniciarCombate = document.getElementById('iniciar-combate');
 // Seleccionar el contador de digimons elegidos (junto a la consigna, arriba)
 export const contadorSeleccion = document.getElementById('contador-seleccion');
 
-// Qué sistema de clasificación de niveles se está mostrando (lo guarda el botón de la banderita)
-export let clasificacionAlternativa = leerTexto('clasificacionAlternativa', 'sesion') === 'true';
+// ¿El navegador es de Japón? Se mira el idioma (ja, ja-JP) o la región de cualquiera de los idiomas preferidos, y como último recurso la zona horaria.
+function esDeJapon() {
+    const preferidos = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+    if (preferidos.some(idioma => /^ja\b|[-_]JP\b/i.test(String(idioma)))) return true;
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Tokyo';
+    } catch {
+        return false;
+    }
+}
+
+// Qué sistema de clasificación de niveles se está mostrando (lo guarda el botón de la banderita).
+// Si todavía no se eligió nada: en Japón, los nombres japoneses; en el resto del mundo, los de EE.UU.
+const sistemaGuardado = leerTexto('clasificacionAlternativa', 'sesion');
+export let clasificacionAlternativa = sistemaGuardado === null ? !esDeJapon() : sistemaGuardado === 'true';
 
 // Pasa al otro sistema de clasificación (si no se puede guardar, igual cambia mientras la página esté abierta)
 export function cambiarClasificacion() {

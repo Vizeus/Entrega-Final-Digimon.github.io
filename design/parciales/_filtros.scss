@@ -626,10 +626,11 @@
             line-height: 1;
         }
 
-        // Cuántos digimons tiene esa opción
+        // Cuántos digimons tiene esa opción (en la fuente de las descripciones de las cartas: los números se leen mejor)
         i {
+            font-family: var(--f-descripcion), sans-serif;
             font-style: normal;
-            font-size: 11px;
+            font-size: 12px;
             min-width: 22px;
             text-align: center;
             padding: 1px 6px;
@@ -806,17 +807,12 @@
         gap: 10px;
     }
 
+    // Todo el cartel de "Mostrando n de n digimons" (texto y números) va en la fuente de las descripciones de las cartas
     .f-cuenta {
         font:
-            400 14px var(--f-boton),
+            400 14px var(--f-descripcion),
             sans-serif;
         white-space: nowrap;
-
-        // Los números (los que se ven y el total) van en la fuente de las descripciones de las cartas
-        b,
-        .f-num {
-            font-family: var(--f-descripcion), sans-serif;
-        }
 
         b {
             font-size: 17px;

@@ -299,6 +299,16 @@
                 var(--aro, linear-gradient(#59616d, #59616d)) border-box;
             box-shadow: 0 2px 3px rgba(0, 30, 80, 0.3);
             animation: mini-carta-entra 0.2s ease-out;
+            cursor: pointer; // un clic la saca de la selección
+            transition: filter 0.12s ease;
+
+            &:hover {
+                filter: brightness(0.85) saturate(0.8);
+            }
+
+            &:active {
+                filter: brightness(0.7) saturate(0.7);
+            }
         }
 
         img {

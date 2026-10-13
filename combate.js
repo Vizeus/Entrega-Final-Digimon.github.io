@@ -12,6 +12,7 @@ import { conCruzDeCierre } from './ventanas.js';
 import { botonIniciarCombate, contadorSeleccion } from './pagina.js';
 import { AVISO_CONTADOR_ESPERA, mostrarAvisoDelContador, quitarAvisoDelContador, revisarLlamadas } from './avisos.js';
 import { nombreCompleto, reducirMovimiento } from './cartas.js';
+import { sonidoSeleccion } from './sonidos.js';
 import { TECLAS_DE_DESPLAZAMIENTO, zonaConScroll } from './zoom.js';
 import {
     arrancarGifConSorbo,
@@ -101,7 +102,7 @@ function dibujarElegidosEnMiniatura() {
         imagen.src = origen?.currentSrc || origen?.src || '';
         imagen.alt = '';
         imagen.draggable = false;
-        lugar.title = nombreCompleto(carta);
+        lugar.title = `${nombreCompleto(carta)} · ${t('combate.mini.quitar')}`;
         lugar.append(imagen);
         if (conMarco) {
             const marco = document.createElement('span');
@@ -134,6 +135,18 @@ export function limpiarSeleccionDeCombate() {
 }
 
 contadorSeleccion.addEventListener('click', limpiarSeleccionDeCombate);
+
+// Otra forma de sacar un digimon de la selección: un clic en su carta en miniatura (la lista es aria-hidden; con el teclado está el contador)
+document.getElementById('elegidos-miniatura').addEventListener('click', evento => {
+    const lugar = evento.target.closest('.mini-carta.con-carta');
+    if (!lugar) return;
+    const carta = seleccionados[[...lugar.parentElement.children].indexOf(lugar)];
+    if (!carta) return;
+    carta.classList.remove('seleccionado');
+    seleccionados.splice(seleccionados.indexOf(carta), 1);
+    sonidoSeleccion(false);
+    verificarSeleccion();
+});
 document.addEventListener('tema-cambiado', dibujarElegidosEnMiniatura); // (los colores de las cartas cambian con el tema)
 document.addEventListener('idioma-cambiado', () => {
     mostrarAyudaDelContador();

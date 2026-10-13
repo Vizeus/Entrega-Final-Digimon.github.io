@@ -316,6 +316,14 @@ body::before {
   background: var(--fondo, #fff) padding-box, var(--aro, linear-gradient(#59616d, #59616d)) border-box;
   box-shadow: 0 2px 3px rgba(0, 30, 80, 0.3);
   animation: mini-carta-entra 0.2s ease-out;
+  cursor: pointer;
+  transition: filter 0.12s ease;
+}
+#navbar .mini-carta.con-carta:hover {
+  filter: brightness(0.85) saturate(0.8);
+}
+#navbar .mini-carta.con-carta:active {
+  filter: brightness(0.7) saturate(0.7);
 }
 #navbar .mini-carta img {
   display: block;
@@ -2889,8 +2897,9 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   line-height: 1;
 }
 #filtros .f-chip i {
+  font-family: var(--f-descripcion), sans-serif;
   font-style: normal;
-  font-size: 11px;
+  font-size: 12px;
   min-width: 22px;
   text-align: center;
   padding: 1px 6px;
@@ -3023,12 +3032,8 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   gap: 10px;
 }
 #filtros .f-cuenta {
-  font: 400 14px var(--f-boton), sans-serif;
+  font: 400 14px var(--f-descripcion), sans-serif;
   white-space: nowrap;
-}
-#filtros .f-cuenta b,
-#filtros .f-cuenta .f-num {
-  font-family: var(--f-descripcion), sans-serif;
 }
 #filtros .f-cuenta b {
   font-size: 17px;
