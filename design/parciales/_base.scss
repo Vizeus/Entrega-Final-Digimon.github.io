@@ -6,6 +6,8 @@
 //   DotGothic16    → descripción del dorso de las cartas
 // Los tamaños viven en variables porque cartas.js también los lee para ajustar el largo de los nombres.
 // -----------------------------------------------------------------------------------------------------------------
+$fuentes-japonesas: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", "Noto Sans JP";
+
 :root {
     // La página tiene dos aspectos, el claro y el oscuro (tema.js pone data-tema="claro" u "oscuro" en <html>; ver _tema-oscuro.scss).
     // "color-scheme" le avisa al navegador cuál es, y con eso no la oscurece por su cuenta (el "modo noche" de algunos celulares, que invierte
@@ -21,10 +23,15 @@
     --brillo-de-texto: 0 1px 0 rgba(255, 255, 255, 0.85);
     --sombra-hundida: inset 0 3px 6px rgba(0, 40, 90, 0.3), 0 1px 0 rgba(255, 255, 255, 0.6);
 
-    --f-titulo: "Orbitron";
-    --f-etiqueta: "Pixelify Sans";
-    --f-cuerpo: "Exo 2";
-    --f-boton: "Pixelify Sans";
+    // Kanji y kana: Orbitron, Pixelify Sans y Exo 2 no los tienen. Después de "sans-serif" va una lista de fuentes japonesas que ya trae el
+    // dispositivo (Hiragino en Mac y iPhone, Yu Gothic o Meiryo en Windows, Noto en Android y Linux): cada letra se busca por orden, así que las
+    // latinas siguen saliendo con la fuente de siempre y solo los caracteres japoneses llegan a esa lista. Con eso salen con forma japonesa
+    // sin depender del lang="ja" del <html> (i18n.js no lo cambia al cambiar de idioma, porque eso congelaba la página: ver marcarIdioma()).
+    // (DotGothic16, la de las descripciones, ya trae los caracteres japoneses.)
+    --f-titulo: "Orbitron", sans-serif, #{$fuentes-japonesas};
+    --f-etiqueta: "Pixelify Sans", sans-serif, #{$fuentes-japonesas};
+    --f-cuerpo: "Exo 2", sans-serif, #{$fuentes-japonesas};
+    --f-boton: "Pixelify Sans", sans-serif, #{$fuentes-japonesas};
     --f-descripcion: "DotGothic16";
 
     --t-nombre: 11.5px; // tamaño base del nombre (los cortos se agrandan, ver ajustarNombre() en cartas.js)

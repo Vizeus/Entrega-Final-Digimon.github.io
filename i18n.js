@@ -1087,9 +1087,30 @@ export function t(clave, variables = {}) {
     return texto;
 }
 
+// El idioma vigente va en el atributo data-idioma del <html> (el CSS lo usa en lugar de :lang()) y en el lang de la barra.
+// El lang del <html> en sí se escribe una sola vez, al abrir la página: cambiarlo obliga al navegador a recalcular el estilo de todos los
+// elementos de la página, y con la lista completa de cartas (más de 1400, ~25.000 elementos) eso congelaba la página casi un cuarto de
+// segundo en cada cambio (medido: 240 ms de 430, más del doble en un equipo lento). En cambio data-idioma en el <html> no cuesta nada, y el
+// lang de la barra, que es chica, tampoco. (Los kanji no dependen del lang: ver las tipografías de _base.scss.)
+function marcarIdioma(codigo, primeraVez = false) {
+    const html = document.documentElement;
+    html.dataset.idioma = codigo;
+    if (primeraVez) html.lang = codigo;
+    const barra = document.getElementById('navbar');
+    if (barra) barra.lang = codigo;
+    marcarBoton(codigo);
+}
+
+// Botón de idioma: marca cuál está activo
+function marcarBoton(codigo) {
+    document.querySelectorAll('#cambiar-idioma [data-idioma]').forEach(marca => {
+        marca.classList.toggle('activo', marca.dataset.idioma === codigo);
+    });
+}
+
 // Escribe en el idioma actual todos los textos fijos del HTML marcados con data-i18n
-function aplicarTextos(raiz = document) {
-    document.documentElement.lang = idioma;
+function aplicarTextos(raiz = document, primeraVez = false) {
+    marcarIdioma(idioma, primeraVez);
 
     raiz.querySelectorAll('[data-i18n]').forEach(elemento => {
         elemento.textContent = t(elemento.dataset.i18n);
@@ -1103,17 +1124,32 @@ function aplicarTextos(raiz = document) {
             if (atributo && clave) elemento.setAttribute(atributo, t(clave));
         }
     });
+}
 
-    // Botón de idioma: marca cuál está activo
-    document.querySelectorAll('#cambiar-idioma [data-idioma]').forEach(marca => {
-        marca.classList.toggle('activo', marca.dataset.idioma === idioma);
+// Cambiar de idioma reescribe los textos de toda la página (y de las más de 1400 cartas), y eso lleva un rato. Para que el botón no se sienta
+// trabado, el cambio se hace en dos tiempos: el botón se marca en el acto (y un nuevo toque sigue desde lo que se ve marcado) y los textos se
+// reescriben en cuanto el navegador dibujó esa marca. Si se toca varias veces mientras tanto, se reescribe una sola vez, en el último idioma
+// elegido, en lugar de una vez por cada toque.
+let idiomaElegido = idioma; // el que está marcado en el botón (va por delante de "idioma" mientras los textos se reescriben)
+let cuadroPendiente = 0;
+let temporizadorPendiente = 0;
+
+function cambiarIdioma(nuevo) {
+    if (!IDIOMAS.includes(nuevo) || nuevo === idiomaElegido) return;
+    idiomaElegido = nuevo;
+    guardarTexto('idioma', nuevo); // si no se puede guardar, igual cambia mientras la página esté abierta
+    marcarBoton(nuevo);
+
+    cancelAnimationFrame(cuadroPendiente);
+    clearTimeout(temporizadorPendiente);
+    cuadroPendiente = requestAnimationFrame(() => {
+        temporizadorPendiente = setTimeout(escribirIdiomaElegido, 0); // (después de que se dibuje el botón)
     });
 }
 
-function cambiarIdioma(nuevo) {
-    if (!IDIOMAS.includes(nuevo) || nuevo === idioma) return;
-    idioma = nuevo;
-    guardarTexto('idioma', idioma); // si no se puede guardar, igual cambia mientras la página esté abierta
+function escribirIdiomaElegido() {
+    if (idiomaElegido === idioma) return;
+    idioma = idiomaElegido;
     aplicarTextos();
     emitir('idioma-cambiado', { idioma });
 }
@@ -1122,10 +1158,10 @@ function cambiarIdioma(nuevo) {
 export const nombreAtributo = atributo => t(`atributo.${atributo}`);
 export const nombreElemento = elemento => t(`elemento.${elemento}`);
 
-aplicarTextos();
+aplicarTextos(document, true);
 
 // Un clic en una de las siglas (ES, EN, JA) elige ese idioma; un clic en el resto del botón pasa al siguiente (es → en → ja → es)
 document.getElementById('cambiar-idioma')?.addEventListener('click', evento => {
     const elegido = evento.target.closest?.('[data-idioma]')?.dataset.idioma;
-    cambiarIdioma(IDIOMAS.includes(elegido) ? elegido : IDIOMAS[(IDIOMAS.indexOf(idioma) + 1) % IDIOMAS.length]);
+    cambiarIdioma(IDIOMAS.includes(elegido) ? elegido : IDIOMAS[(IDIOMAS.indexOf(idiomaElegido) + 1) % IDIOMAS.length]);
 });

@@ -480,7 +480,7 @@
     }
 
     // En japonés no se muestra el selector: allá no existe la doble nomenclatura (Japón / EE.UU.), solo se usan los nombres japoneses (ver pagina.js)
-    @at-root :root:lang(ja) #navbar #cambiar-niveles {
+    @at-root :root[data-idioma="ja"] #navbar #cambiar-niveles {
         display: none;
     }
 
@@ -879,7 +879,7 @@ $barra-de-sobra: 20px; // la barra de desplazamiento de la página (hasta 17 px,
 @mixin barra-si-no-entran($bloques...) {
     @each $idioma in ("es", "en") {
         @media #{$consulta-computadora} and (max-width: barra-ancho-para($idioma, $bloques...) - 1) {
-            :root:lang(#{$idioma}) {
+            :root[data-idioma="#{$idioma}"] {
                 @content;
             }
         }
@@ -895,7 +895,7 @@ $barra-de-sobra: 20px; // la barra de desplazamiento de la página (hasta 17 px,
 
     @each $idioma in ("es", "en") {
         @media #{$consulta-computadora} and (min-width: 1440px) and (max-width: barra-ancho-para($idioma, "logo", "panel", "ajustes", "menus") - 1) {
-            :root:lang(#{$idioma}) {
+            :root[data-idioma="#{$idioma}"] {
                 @content;
             }
         }
