@@ -130,6 +130,8 @@ const avisoVacio = document.getElementById('f-vacio');
 const elegidos = { atributo: new Set(), nivel: new Set(), elemento: new Set(), campo: new Set(), especie: new Set(), x: new Set(), xw: new Set() };
 let desdeAnio = null; // estreno: primer año del período (null: sin límite)
 let hastaAnio = null; // estreno: último año del período (null: sin límite)
+// Algunas temporadas tienen reglas propias además de los años (ver REGLAS_DE_TEMPORADA): cuál está elegida ahora (null: ninguna, solo cuentan los años)
+let reglaDeTemporada = null;
 const aniosVistos = new Set(); // los años de estreno de los digimons que ya llegaron (son los que se pueden elegir)
 let busqueda = ''; // lo que se escribió, ya normalizado (para comparar)
 let busquedaEscrita = ''; // lo que se escribió, tal cual (para mostrar en la etiqueta)
@@ -146,6 +148,19 @@ function campoPrincipal(campos) {
     const prioridad = campo => PRIORIDAD_DE_CAMPOS.indexOf(campo);
     return campos.reduce((elegido, campo) => (prioridad(campo) < prioridad(elegido) ? campo : elegido));
 }
+
+// Reglas propias de algunas temporadas (la clave es el data-regla de su botón en index.html), además del período de años del botón:
+//  - "sinAtributo": los digimons de ese atributo quedan afuera aunque estén en los años.
+//  - "tambien": estos digimons entran aunque no estén en los años o tengan ese atributo (por el nombre, sin importar mayúsculas ni signos).
+//  - "sinVacios": quedan afuera los de atributo Desconocido que además no tienen descripción (fichas casi vacías de la API).
+// Digimon Adventure: los de 1997 a 1999 salvo los de atributo Desconocido, más los que son de la serie igual. Adventure 02 y Tamers: sin las fichas vacías.
+const REGLAS_DE_TEMPORADA = {
+    adventure: {
+        sinAtributo: 'Desconocido',
+        tambien: new Set(['Apocalymon', 'Diaboromon', 'Chrysalimon', 'Infermon', 'Keramon', 'Kuramon'].map(nombre => normalizar(nombre))),
+    },
+    'sin-vacios': { sinVacios: true },
+};
 
 // Lo que se necesita saber de cada carta para filtrarla (se calcula una sola vez)
 function datosDeFiltro(carta) {
@@ -169,6 +184,7 @@ function datosDeFiltro(carta) {
             xw: carta.dataset.xrosWars ? 'con' : 'sin', // si lleva la marca XW (forma fusionada de Digimon Xros Wars: ver datos.js)
             marca: carta.dataset.marca ? normalizar(carta.dataset.marca) : null, // 'armor' o 'hybrid'
             id: Number(carta.dataset.numero), // el número que se ve en la carta (no el ID de la API)
+            descripcion: carta.datosDorso?.descripcion ?? '', // lo que cuenta la API del digimon (vacío si no tiene)
             anio: Number(String(carta.datosDorso?.estreno ?? '').match(/\d{4}/)?.[0]) || null, // el año de estreno (null si no se sabe)
             nombres,
         };
@@ -176,10 +192,16 @@ function datosDeFiltro(carta) {
     return carta.datosFiltro;
 }
 
-// ¿Su año de estreno cae dentro del período elegido? Sin ningún límite elegido entran todas; con alguno, las que no tienen año quedan afuera
-function coincideEstreno(anio) {
+// ¿Su año de estreno cae dentro del período elegido? Sin ningún límite elegido entran todas; con alguno, las que no tienen año quedan afuera.
+// Si la temporada elegida tiene reglas propias, se aplican (ver REGLAS_DE_TEMPORADA)
+function coincideEstreno(datos) {
     if (desdeAnio === null && hastaAnio === null) return true;
-    return anio !== null && (desdeAnio === null || anio >= desdeAnio) && (hastaAnio === null || anio <= hastaAnio);
+    const regla = REGLAS_DE_TEMPORADA[reglaDeTemporada];
+    if (regla?.tambien && datos.x === 'sin' && datos.nombres.some(({ nombre }) => regla.tambien.has(nombre))) return true;
+    const { anio } = datos;
+    if (anio === null || (desdeAnio !== null && anio < desdeAnio) || (hastaAnio !== null && anio > hastaAnio)) return false;
+    if (regla?.sinAtributo && datos.atributo === regla.sinAtributo) return false;
+    return !(regla?.sinVacios && datos.atributo === 'Desconocido' && !datos.descripcion);
 }
 
 function coincideBusqueda(datos, consulta) {
@@ -735,7 +757,13 @@ function escribirEstreno() {
     grupo.querySelector('.f-btn').classList.toggle('tiene', desdeAnio !== null || hastaAnio !== null);
     // La temporada cuyo período es justo el elegido queda marcada
     grupo.querySelectorAll('.f-temporada').forEach(boton => {
-        cambiarAtributo(boton, 'aria-pressed', String(Number(boton.dataset.desde) === desdeAnio && Number(boton.dataset.hasta) === hastaAnio));
+        cambiarAtributo(
+            boton,
+            'aria-pressed',
+            String(
+                Number(boton.dataset.desde) === desdeAnio && Number(boton.dataset.hasta) === hastaAnio && (boton.dataset.regla ?? null) === reglaDeTemporada,
+            ),
+        );
     });
 }
 
@@ -762,7 +790,7 @@ function refrescar() {
         }
         // La búsqueda y el período de estreno valen para todo: también para la cuenta de cada opción de los otros filtros
         if (datos.anio !== null) aniosVistos.add(datos.anio);
-        const cumpleBusqueda = coincideBusqueda(datos, busqueda) && coincideEstreno(datos.anio);
+        const cumpleBusqueda = coincideBusqueda(datos, busqueda) && coincideEstreno(datos);
         const cumpleTodo = cumpleBusqueda && GRUPOS.every(grupo => cumple[grupo]);
 
         if (cumpleTodo) visibles++;
@@ -994,6 +1022,7 @@ export function limpiarTodo({ conAgrupar = true } = {}) {
     GRUPOS.forEach(grupo => elegidos[grupo].clear());
     desdeAnio = null;
     hastaAnio = null;
+    reglaDeTemporada = null;
     cajaBusqueda.value = '';
     leerBusqueda();
     let reordenada = false;
@@ -1199,6 +1228,7 @@ function activarFiltros() {
         } else if (grupo === 'estreno') {
             desdeAnio = null;
             hastaAnio = null;
+            reglaDeTemporada = null;
         } else if (clave.startsWith(PREFIJO_FAMILIA)) {
             familias.get(clave.slice(PREFIJO_FAMILIA.length))?.forEach(especie => elegidos.especie.delete(especie)); // se sacan todas las especies de la familia
         } else {
@@ -1213,6 +1243,7 @@ function activarFiltros() {
     // Estreno: al elegir un año inicial mayor que el final (o al revés) el otro límite se corre hasta ese año, así el período nunca queda al revés
     seccionFiltros.querySelectorAll('.f-grupo[data-g="estreno"] select').forEach(selector => {
         selector.addEventListener('change', () => {
+            reglaDeTemporada = null; // (cambiar un año a mano deja el período solo con sus años)
             const anio = selector.value === '' ? null : Number(selector.value);
             if (selector.dataset.lado === 'desde') {
                 desdeAnio = anio;
@@ -1230,9 +1261,11 @@ function activarFiltros() {
         boton.addEventListener('click', () => {
             const desde = Number(boton.dataset.desde);
             const hasta = Number(boton.dataset.hasta);
-            const yaElegida = desdeAnio === desde && hastaAnio === hasta;
+            const regla = boton.dataset.regla ?? null;
+            const yaElegida = desdeAnio === desde && hastaAnio === hasta && reglaDeTemporada === regla;
             desdeAnio = yaElegida ? null : desde;
             hastaAnio = yaElegida ? null : hasta;
+            reglaDeTemporada = yaElegida ? null : regla;
             refrescar();
         });
     });

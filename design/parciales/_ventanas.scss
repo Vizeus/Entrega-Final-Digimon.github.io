@@ -15,6 +15,21 @@
     }
 }
 
+// Al pasar de la ventana de una carta a la de la vecina (paso.js) la cortina de fondo no se anima: ni se desvanece al cerrarse la de ahora ni vuelve a
+// aparecer con la nueva (titilaba y había un retraso). La clase la pone paso.js un momento. Sin animación de cierre, SweetAlert cierra en el acto.
+body.paso-en-curso {
+    .swal2-container,
+    .swal2-popup {
+        transition: none !important;
+    }
+
+    .swal2-hide,
+    .swal2-backdrop-hide,
+    .swal2-backdrop-show {
+        animation: none !important;
+    }
+}
+
 body:has(.swal2-container) #zoom-flechas,
 body:has(.swal2-container) #zoom-fondo .zoom-cerrar,
 body:has(.swal2-container) #zoom-fondo .zoom-ayuda {

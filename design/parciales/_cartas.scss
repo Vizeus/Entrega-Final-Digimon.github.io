@@ -1165,6 +1165,15 @@
     }
 }
 
+// Y en computadora, un respiro al final de la lista para el giro de las cartas: al darse vuelta (y con el levante del hover) la carta se agranda unos píxeles
+// (hasta unos 25px de más abajo) y, si es de la última fila, el borde de la página no tenía lugar para eso: el alto de la página subía y bajaba
+// mientras giraba y la página se sacudía. Con este lugar de sobra, el giro entra adentro del alto que ya tiene.
+@include computadora {
+    #listado-digimons {
+        padding-bottom: 40px;
+    }
+}
+
 // Y cuanto más angosta la pantalla, más chicas (ver $zoom-de-cartas-en-celular en _variables.scss)
 @each $ancho, $zoom in $zoom-de-cartas-en-celular {
     @media (max-width: $ancho) {

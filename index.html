@@ -49,34 +49,34 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261014-0004",
-                    "./datos.js": "./datos.js?v=20261014-0004",
-                    "./i18n.js": "./i18n.js?v=20261014-0004",
-                    "./nombres.js": "./nombres.js?v=20261014-0004",
-                    "./pagina.js": "./pagina.js?v=20261014-0004",
-                    "./api.js": "./api.js?v=20261014-0004",
-                    "./combate.js": "./combate.js?v=20261014-0004",
-                    "./avisos.js": "./avisos.js?v=20261014-0004",
-                    "./descartar.js": "./descartar.js?v=20261014-0004",
-                    "./cartas.js": "./cartas.js?v=20261014-0004",
-                    "./zoom.js": "./zoom.js?v=20261014-0004",
-                    "./gestos.js": "./gestos.js?v=20261014-0004",
-                    "./inclinacion.js": "./inclinacion.js?v=20261014-0004",
-                    "./audio.js": "./audio.js?v=20261014-0004",
-                    "./sonidos.js": "./sonidos.js?v=20261014-0004",
-                    "./filtros.js": "./filtros.js?v=20261014-0004",
-                    "./info.js": "./info.js?v=20261014-0004",
-                    "./barra.js": "./barra.js?v=20261014-0004",
-                    "./evolucion.js": "./evolucion.js?v=20261014-0004",
-                    "./ventanas.js": "./ventanas.js?v=20261014-0004",
-                    "./paso.js": "./paso.js?v=20261014-0004",
-                    "./baile.js": "./baile.js?v=20261014-0004",
-                    "./tema.js": "./tema.js?v=20261014-0004",
-                    "./menus.js": "./menus.js?v=20261014-0004"
+                    "./util.js": "./util.js?v=20261014-0029",
+                    "./datos.js": "./datos.js?v=20261014-0029",
+                    "./i18n.js": "./i18n.js?v=20261014-0029",
+                    "./nombres.js": "./nombres.js?v=20261014-0029",
+                    "./pagina.js": "./pagina.js?v=20261014-0029",
+                    "./api.js": "./api.js?v=20261014-0029",
+                    "./combate.js": "./combate.js?v=20261014-0029",
+                    "./avisos.js": "./avisos.js?v=20261014-0029",
+                    "./descartar.js": "./descartar.js?v=20261014-0029",
+                    "./cartas.js": "./cartas.js?v=20261014-0029",
+                    "./zoom.js": "./zoom.js?v=20261014-0029",
+                    "./gestos.js": "./gestos.js?v=20261014-0029",
+                    "./inclinacion.js": "./inclinacion.js?v=20261014-0029",
+                    "./audio.js": "./audio.js?v=20261014-0029",
+                    "./sonidos.js": "./sonidos.js?v=20261014-0029",
+                    "./filtros.js": "./filtros.js?v=20261014-0029",
+                    "./info.js": "./info.js?v=20261014-0029",
+                    "./barra.js": "./barra.js?v=20261014-0029",
+                    "./evolucion.js": "./evolucion.js?v=20261014-0029",
+                    "./ventanas.js": "./ventanas.js?v=20261014-0029",
+                    "./paso.js": "./paso.js?v=20261014-0029",
+                    "./baile.js": "./baile.js?v=20261014-0029",
+                    "./tema.js": "./tema.js?v=20261014-0029",
+                    "./menus.js": "./menus.js?v=20261014-0029"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261014-0004"></script>
+        <script type="module" src="./main.js?v=20261014-0029"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -87,7 +87,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261014-0004" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261014-0029" />
     </head>
 
     <body>
@@ -443,25 +443,27 @@
                     <div class="f-panel f-panel-estreno" role="group" aria-label="Filtrar por fecha de estreno" data-i18n-attr="aria-label:filtros.porEstreno">
                         <p class="f-panel-titulo" data-i18n="filtros.estreno.titulo">Año de estreno</p>
                         <!-- Atajos: cada temporada de la serie (con su logo) elige de una vez el período de años en que salió. Tocar la que ya está elegida lo saca.
-         Los años de cada una (de estreno en Japón) y sus nombres son los mismos en los dos idiomas -->
+         Los años de cada una (de estreno en Japón) y sus nombres son los mismos en los dos idiomas. "data-regla": reglas propias de la temporada (ver REGLAS_DE_TEMPORADA, en filtros.js) -->
                         <div class="f-temporadas" role="group" aria-label="Temporadas de la serie" data-i18n-attr="aria-label:filtros.estreno.temporadas">
                             <button
                                 type="button"
                                 class="f-temporada"
-                                data-desde="1999"
-                                data-hasta="2000"
+                                data-desde="1997"
+                                data-hasta="1999"
+                                data-regla="adventure"
                                 aria-pressed="false"
-                                title="Digimon Adventure · 1999–2000"
-                                aria-label="Digimon Adventure, 1999–2000"
+                                title="Digimon Adventure · 1997–1999"
+                                aria-label="Digimon Adventure, 1997–1999"
                             >
                                 <img src="./img/temporadas/adventure.png" alt="" loading="lazy" decoding="async" />
-                                <small>1999–2000</small>
+                                <small>1997–1999</small>
                             </button>
                             <button
                                 type="button"
                                 class="f-temporada"
                                 data-desde="2000"
                                 data-hasta="2001"
+                                data-regla="sin-vacios"
                                 aria-pressed="false"
                                 title="Digimon Adventure 02 · 2000–2001"
                                 aria-label="Digimon Adventure 02, 2000–2001"
@@ -474,6 +476,7 @@
                                 class="f-temporada"
                                 data-desde="2001"
                                 data-hasta="2002"
+                                data-regla="sin-vacios"
                                 aria-pressed="false"
                                 title="Digimon Tamers · 2001–2002"
                                 aria-label="Digimon Tamers, 2001–2002"

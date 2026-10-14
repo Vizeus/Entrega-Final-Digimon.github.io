@@ -1699,6 +1699,16 @@ body::before {
   -webkit-backdrop-filter: blur(10px);
 }
 
+body.paso-en-curso .swal2-container,
+body.paso-en-curso .swal2-popup {
+  transition: none !important;
+}
+body.paso-en-curso .swal2-hide,
+body.paso-en-curso .swal2-backdrop-hide,
+body.paso-en-curso .swal2-backdrop-show {
+  animation: none !important;
+}
+
 body:has(.swal2-container) #zoom-flechas,
 body:has(.swal2-container) #zoom-fondo .zoom-cerrar,
 body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
@@ -4549,6 +4559,11 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 @media (max-width: 700px), (max-height: 500px) {
   #listado-digimons {
     padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (min-width: 701px) and (min-height: 501px) {
+  #listado-digimons {
+    padding-bottom: 40px;
   }
 }
 @media (max-width: 419px) {

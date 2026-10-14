@@ -30,8 +30,9 @@ function vecina(carta, direccion, sirve) {
 
 // El movimiento y el sonido son los mismos que al pasar de carta con el zoom (zoom.js, cambiarZoom): la ventana de ahora se va hacia el costado
 // contrario al que se va, achicándose y desvaneciéndose, y la de la otra carta entra por el opuesto, con el mismo "chiss" de cartulina.
+// (La entrada no espera los 50 ms del zoom: la ventana nueva recién se arma cuando la anterior ya terminó de irse, así que no hay nada que evitar.)
 const SALIDA = { duration: 170, easing: 'cubic-bezier(0.5, 0, 0.9, 0.6)', fill: 'forwards' };
-const ENTRADA = { duration: 270, delay: 50, easing: 'cubic-bezier(0.2, 0.9, 0.25, 1)', fill: 'both' };
+const ENTRADA = { duration: 270, delay: 0, easing: 'cubic-bezier(0.2, 0.9, 0.25, 1)', fill: 'both' };
 const ESCALA_FUERA = 0.92; // cuánto se achica la ventana mientras entra o sale
 let entradaLateral = 0; // 1 o -1: la ventana que se abre ahora es la de la carta vecina y entra por ese lado (0: una ventana común, con su animación de siempre)
 let pasando = false; // la ventana de ahora todavía se está yendo
@@ -49,16 +50,18 @@ async function pasar(direccion) {
     vibrar(8);
     sonidoZoom(true);
     const popup = Swal.getPopup();
+    let salida = null;
     if (popup && !reducirMovimiento) {
         pasando = true;
         try {
-            await popup.animate(
+            salida = popup.animate(
                 [
                     { translate: '0 0', scale: 1, opacity: 1 },
                     { translate: `${-saltoLateral(popup, direccion)}px 0`, scale: ESCALA_FUERA, opacity: 0 },
                 ],
                 SALIDA,
-            ).finished;
+            );
+            await salida.finished;
         } catch (error) {
             // Si alguien cancela la animación, seguimos igual
         }
@@ -66,9 +69,15 @@ async function pasar(direccion) {
         if (!paso || paso.carta !== carta) return; // (mientras tanto se cerró la ventana)
         entradaLateral = direccion;
     }
-    desactivarPasoEntreCartas(); // (al cerrar la ventana de ahora, su willClose también lo hace: da igual)
+    desactivarPasoEntreCartas();
+    // Mientras se cambia de ventana, la cortina de fondo no se anima (clase "paso-en-curso", ver _ventanas.scss): la ventana de ahora ya se fue con su
+    // propio movimiento, y con la animación de cierre y la de apertura de la cortina esta titilaba (quedaba un instante sin oscurecer) y había un retraso.
+    // La salida se cancela justo antes de cerrar: es el mismo cuadro, no se ve.
+    document.body.classList.add('paso-en-curso');
+    salida?.cancel();
     Swal.close();
     abrir(otra); // abre la ventana de la otra carta, que vuelve a activar el paso
+    setTimeout(() => document.body.classList.remove('paso-en-curso'), 700); // (ya entró: la cortina vuelve a animarse como siempre)
 }
 
 // Pone las flechas a los costados de la ventana (si no hay lugar al lado, quedan un poco encima) y apaga la que no tiene a dónde ir.
@@ -152,7 +161,7 @@ export function activarPasoEntreCartas(carta, { sirve = () => true, abrir }) {
     entradaLateral = 0;
     if (direccionDeEntrada && popupNuevo && !reducirMovimiento) {
         // Entra por un costado en vez de con la animación de apertura de siempre. Las flechas se ubican con la ventana ya en su lugar (antes de moverla).
-        popupNuevo.style.animation = 'none';
+        popupNuevo.classList.remove('swal2-show'); // (la animación de apertura de siempre se corta: entra con la suya)
         ubicarFlechas();
         const marco = paso;
         marco.entrando = true;
