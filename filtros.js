@@ -41,7 +41,7 @@ import {
     SIN_DATO,
     numeracionNiveles,
 } from './datos.js';
-import { nombreElemento, nombreAtributo, t } from './i18n.js';
+import { idioma, nombreElemento, nombreAtributo, t } from './i18n.js';
 import { PANTALLA_DE_CELULAR } from './util.js';
 import { listaDigimons, nombreNivel } from './pagina.js';
 import { nombreApiCompleto, nombreCompleto, nombreOccidentalCompleto, separarXAntibody } from './cartas.js';
@@ -576,6 +576,16 @@ function etiquetarChip(chip) {
 function etiquetarChips() {
     seccionFiltros.querySelectorAll('.f-chip').forEach(etiquetarChip);
     etiquetarArbol();
+}
+
+// Nombre de cada temporada de la serie (el que se ve al apoyar el mouse y el que leen los lectores de pantalla): en japonés, el título original
+function escribirNombresDeTemporadas() {
+    seccionFiltros.querySelectorAll('.f-temporada').forEach(boton => {
+        const nombre = (idioma === 'ja' && boton.dataset.nombreJa) || boton.dataset.nombre;
+        const anios = boton.querySelector('small').textContent;
+        boton.title = `${nombre} · ${anios}`;
+        boton.setAttribute('aria-label', `${nombre}, ${anios}`);
+    });
 }
 
 // Una etiqueta de "filtros activos": al tocarla se saca ese filtro
@@ -1344,6 +1354,7 @@ function activarFiltros() {
             refrescar();
         });
     }
+    document.addEventListener('idioma-cambiado', escribirNombresDeTemporadas);
     // Los nombres de las cartas cambian con el idioma: con el orden alfabético se vuelve a ordenar (cuando ya se escribieron los nuevos nombres)
     document.addEventListener('idioma-cambiado', () => {
         requestAnimationFrame(() => {
@@ -1358,6 +1369,7 @@ function activarFiltros() {
 export function prepararFiltros() {
     crearChips();
     etiquetarChips();
+    escribirNombresDeTemporadas();
     activarFiltros();
     escribirOrden();
     escribirAgrupar();

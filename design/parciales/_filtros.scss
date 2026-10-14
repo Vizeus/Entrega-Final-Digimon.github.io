@@ -651,6 +651,22 @@
             -webkit-user-drag: none;
         }
 
+        // Cada botón tiene dos logos: el de siempre y el original japonés. En japonés se ve este último y el otro se saca (y, como las imágenes
+        // son "lazy", el navegador solo baja los logos japoneses cuando se los muestra)
+        .logo-japones {
+            display: none;
+        }
+
+        @at-root :root[data-idioma="ja"] #{&} {
+            .logo-occidental {
+                display: none;
+            }
+
+            .logo-japones {
+                display: block;
+            }
+        }
+
         small {
             font:
                 700 10px/1 var(--f-etiqueta),

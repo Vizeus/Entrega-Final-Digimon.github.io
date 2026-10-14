@@ -3143,6 +3143,16 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   pointer-events: none;
   -webkit-user-drag: none;
 }
+#filtros .f-temporada .logo-japones {
+  display: none;
+}
+:root[data-idioma=ja] #filtros .f-temporada .logo-occidental {
+  display: none;
+}
+:root[data-idioma=ja] #filtros .f-temporada .logo-japones {
+  display: block;
+}
+
 #filtros .f-temporada small {
   font: 700 10px/1 var(--f-etiqueta), sans-serif;
   letter-spacing: 0.3px;
