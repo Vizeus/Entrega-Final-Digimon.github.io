@@ -165,7 +165,8 @@
         flex: 1 1 420px;
         min-width: 0;
         max-width: 740px;
-        padding: 7px;
+        // 2px más de aire arriba que abajo: la sombra interior oscura del borde de arriba y el filo blanco de abajo hacen que, centrado a la medida, el contenido parezca pegado al techo
+        padding: 9px 7px 5px;
         border: 1px solid rgba(0, 80, 140, 0.25);
         border-radius: 999px;
         background: linear-gradient(180deg, rgba(0, 80, 140, 0.13), rgba(255, 255, 255, 0.4));
@@ -476,6 +477,11 @@
                 0 1px 0 rgba(255, 255, 255, 0.6),
                 0 2px 4px rgba(0, 30, 80, 0.25);
         }
+    }
+
+    // En japonés no se muestra el selector: allá no existe la doble nomenclatura (Japón / EE.UU.), solo se usan los nombres japoneses (ver pagina.js)
+    @at-root :root:lang(ja) #navbar #cambiar-niveles {
+        display: none;
     }
 
     // Cambio de sistema de niveles (herramienta secundaria): selector de dos posiciones, igual que el de idioma.

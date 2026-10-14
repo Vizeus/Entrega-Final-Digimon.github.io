@@ -20,12 +20,11 @@ import {
     ORDEN_NIVELES,
     ATRIBUTO_FUERTE_CONTRA,
     SIN_DATO,
-    nivelesAlternativos,
     numeracionNiveles,
 } from './datos.js';
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { conCruzDeCierre, mantenerEnSuLugar } from './ventanas.js';
-import { clasificacionAlternativa, listaDigimons, nombreNivel } from './pagina.js';
+import { clasificacionAlternativa, listaDigimons, nombreNivel, nombreNivelEnSistema } from './pagina.js';
 import { nombreParaMostrar } from './nombres.js';
 import { PESO_ELEMENTO, PESO_NIVEL, PESO_ATRIBUTO, PODER_EN_COMBATE } from './combate.js';
 import { nombreCompleto } from './cartas.js';
@@ -165,7 +164,7 @@ export function infoNivel(nivelApi) {
 
     // Cómo se llama en el otro sistema. Si se llama igual (el nivel desconocido y el 8, Absolute), no hay nada que aclarar: no se muestran ni
     // "Clasificación actual" ni "En la otra clasificación", que dirían lo mismo para los dos sistemas
-    const otroNombre = poder === undefined ? nombre : clasificacionAlternativa ? nivelApi : nivelesAlternativos[nivelApi] || nivelApi;
+    const otroNombre = poder === undefined ? nombre : nombreNivelEnSistema(nivelApi, !clasificacionAlternativa);
     const seLlamaIgual = otroNombre === nombre;
 
     const datos = [[t('info.poder'), poder ?? t('info.sinDato')]];
@@ -481,7 +480,7 @@ export function abrirAtaques(carta) {
     cuerpo.append(ayuda, crearListaDeAtaques(habilidades, carta));
     const pie = document.createElement('p');
     pie.className = 'info-pie ataques-pie';
-    pie.textContent = t('carta.idiomaOriginal'); // las descripciones de la API vienen en inglés (en inglés no hace falta avisar)
+    pie.textContent = t('ataques.idiomaOriginal'); // las descripciones de la API vienen en inglés (en inglés no hace falta avisar)
     pie.hidden = !pie.textContent;
     cuerpo.append(pie);
 
@@ -510,7 +509,7 @@ const traducirVentanaDeAtaques = () => {
     document.querySelectorAll('.popup-ataques .ataque-alias').forEach(alias => (alias.title = t('ataques.traduccion')));
     const pie = document.querySelector('.popup-ataques .ataques-pie');
     if (pie) {
-        pie.textContent = t('carta.idiomaOriginal');
+        pie.textContent = t('ataques.idiomaOriginal');
         pie.hidden = !pie.textContent;
     }
 };

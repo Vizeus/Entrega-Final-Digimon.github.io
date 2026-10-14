@@ -11,6 +11,7 @@ import { DICCIONARIO, t } from './i18n.js';
 
 Object.assign(DICCIONARIO.es, { 'ventana.cerrar': 'Cerrar la ventana' });
 Object.assign(DICCIONARIO.en, { 'ventana.cerrar': 'Close window' });
+Object.assign(DICCIONARIO.ja, { 'ventana.cerrar': 'ウィンドウを閉じる' });
 
 // ---- 1. La página queda quieta con una ventana abierta (dedo, rueda y teclas) ---------------------------------------------
 // Mientras hay una ventana abierta (ataques, línea evolutiva, información o combate) la página de atrás no se desplaza ni con el dedo, ni con la

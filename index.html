@@ -49,34 +49,34 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261014-0029",
-                    "./datos.js": "./datos.js?v=20261014-0029",
-                    "./i18n.js": "./i18n.js?v=20261014-0029",
-                    "./nombres.js": "./nombres.js?v=20261014-0029",
-                    "./pagina.js": "./pagina.js?v=20261014-0029",
-                    "./api.js": "./api.js?v=20261014-0029",
-                    "./combate.js": "./combate.js?v=20261014-0029",
-                    "./avisos.js": "./avisos.js?v=20261014-0029",
-                    "./descartar.js": "./descartar.js?v=20261014-0029",
-                    "./cartas.js": "./cartas.js?v=20261014-0029",
-                    "./zoom.js": "./zoom.js?v=20261014-0029",
-                    "./gestos.js": "./gestos.js?v=20261014-0029",
-                    "./inclinacion.js": "./inclinacion.js?v=20261014-0029",
-                    "./audio.js": "./audio.js?v=20261014-0029",
-                    "./sonidos.js": "./sonidos.js?v=20261014-0029",
-                    "./filtros.js": "./filtros.js?v=20261014-0029",
-                    "./info.js": "./info.js?v=20261014-0029",
-                    "./barra.js": "./barra.js?v=20261014-0029",
-                    "./evolucion.js": "./evolucion.js?v=20261014-0029",
-                    "./ventanas.js": "./ventanas.js?v=20261014-0029",
-                    "./paso.js": "./paso.js?v=20261014-0029",
-                    "./baile.js": "./baile.js?v=20261014-0029",
-                    "./tema.js": "./tema.js?v=20261014-0029",
-                    "./menus.js": "./menus.js?v=20261014-0029"
+                    "./util.js": "./util.js?v=20261014-0109",
+                    "./datos.js": "./datos.js?v=20261014-0109",
+                    "./i18n.js": "./i18n.js?v=20261014-0109",
+                    "./nombres.js": "./nombres.js?v=20261014-0109",
+                    "./pagina.js": "./pagina.js?v=20261014-0109",
+                    "./api.js": "./api.js?v=20261014-0109",
+                    "./combate.js": "./combate.js?v=20261014-0109",
+                    "./avisos.js": "./avisos.js?v=20261014-0109",
+                    "./descartar.js": "./descartar.js?v=20261014-0109",
+                    "./cartas.js": "./cartas.js?v=20261014-0109",
+                    "./zoom.js": "./zoom.js?v=20261014-0109",
+                    "./gestos.js": "./gestos.js?v=20261014-0109",
+                    "./inclinacion.js": "./inclinacion.js?v=20261014-0109",
+                    "./audio.js": "./audio.js?v=20261014-0109",
+                    "./sonidos.js": "./sonidos.js?v=20261014-0109",
+                    "./filtros.js": "./filtros.js?v=20261014-0109",
+                    "./info.js": "./info.js?v=20261014-0109",
+                    "./barra.js": "./barra.js?v=20261014-0109",
+                    "./evolucion.js": "./evolucion.js?v=20261014-0109",
+                    "./ventanas.js": "./ventanas.js?v=20261014-0109",
+                    "./paso.js": "./paso.js?v=20261014-0109",
+                    "./baile.js": "./baile.js?v=20261014-0109",
+                    "./tema.js": "./tema.js?v=20261014-0109",
+                    "./menus.js": "./menus.js?v=20261014-0109"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261014-0029"></script>
+        <script type="module" src="./main.js?v=20261014-0109"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -87,7 +87,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261014-0029" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261014-0109" />
     </head>
 
     <body>
@@ -165,14 +165,14 @@
                         <span class="sn-opcion" data-sistema="eeuu"><img src="./img/EEUU.png" alt="" width="27" height="14" /><small>Champion</small></span>
                     </button>
 
-                    <!-- Idioma: muestra los dos y resalta el que está activo. Al inicio se elige solo, según el idioma del navegador.
+                    <!-- Idioma: muestra los tres y resalta el que está activo. Al inicio se elige solo, según el idioma del navegador.
              El ícono de dos globos de diálogo (una "A" y un "文") es el símbolo universal de "idioma / traducir": se entiende
              sin leer. Es decorativo (aria-hidden): el botón ya tiene su nombre en el aria-label -->
                     <button
                         type="button"
                         id="cambiar-idioma"
-                        title="Cambiar idioma (Español / English)"
-                        aria-label="Cambiar idioma (Español / English)"
+                        title="Cambiar idioma (Español / English / 日本語)"
+                        aria-label="Cambiar idioma (Español / English / 日本語)"
                         data-i18n-attr="title:idioma.cambiar;aria-label:idioma.cambiar"
                     >
                         <svg
@@ -191,7 +191,7 @@
                             <path d="M13.5 11.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-2 2.83V23l-3.7-2.5H13.5a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3z" />
                             <path d="M16.5 12.9v.9M13.6 14.4h5.8M15.9 14.5c-.3 1.9-1.1 3.4-2.4 4.4M15.2 16.1c.8 1.5 2 2.6 3.7 3.1" />
                         </svg>
-                        <span data-idioma="es" class="activo">ES</span><span data-idioma="en">EN</span>
+                        <span data-idioma="es" class="activo">ES</span><span data-idioma="en">EN</span><span data-idioma="ja">JA</span>
                     </button>
 
                     <!-- Sonido: botón chiquito y redondo que apaga (o vuelve a prender) el sonido de la página. En computadora queda en la barra,
@@ -463,7 +463,7 @@
                                 class="f-temporada"
                                 data-desde="2000"
                                 data-hasta="2001"
-                                data-regla="sin-vacios"
+                                data-regla="adventure-02"
                                 aria-pressed="false"
                                 title="Digimon Adventure 02 · 2000–2001"
                                 aria-label="Digimon Adventure 02, 2000–2001"
@@ -476,7 +476,7 @@
                                 class="f-temporada"
                                 data-desde="2001"
                                 data-hasta="2002"
-                                data-regla="sin-vacios"
+                                data-regla="tamers"
                                 aria-pressed="false"
                                 title="Digimon Tamers · 2001–2002"
                                 aria-label="Digimon Tamers, 2001–2002"

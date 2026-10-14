@@ -67,6 +67,18 @@ export const nivelesAlternativos = {
     'Absolute': 'Absolute', // nivel 8 (inventado para este simulador): lo más alto, y el único que se llama igual en los dos sistemas
 };
 
+// Cómo se llaman los niveles del sistema de Japón cuando la página está en japonés: en Japón se leen con kanji (成長期, 成熟期...). Los niveles que no
+// están acá se muestran con el nombre de la API: 'Absolute' (nivel inventado para este simulador, sin lectura japonesa).
+export const nivelesEnJapones = {
+    'Baby I': '幼年期I',
+    'Baby II': '幼年期II',
+    'Child': '成長期',
+    'Adult': '成熟期',
+    'Perfect': '完全体',
+    'Ultimate': '究極体',
+    'Super Ultimate': '超究極体',
+};
+
 // Digimons que la API lista con dos niveles (el Perfect y el Ultimate): el simulador toma siempre el primero, que acá es el más
 // bajo, y por su lore les corresponde el más alto. Se corrigen a mano. La clave es el ID de la API.
 export const NIVELES_CORREGIDOS = {
@@ -414,6 +426,8 @@ export const CARTAS_PROPIAS = [
             habilidades: [],
             descripcion:
                 'The host computer that rules over the Digital World, treated in many adaptations as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
+            descripcionJa:
+                'デジタルワールドを支配するホストコンピューター。多くの作品で「デジタルワールドの神」として描かれている。このカードはシミュレーターが追加したもので、APIにはない。',
             evo: { previas: [], siguientes: [] },
         },
     },
@@ -432,6 +446,8 @@ export const CARTAS_PROPIAS = [
             habilidades: [],
             descripcion:
                 'The security system of the Digital World, which keeps the balance between good and evil. In some stories it takes the place of Yggdrasil as the God of the Digital World. This card was added by the simulator: it is not part of the API.',
+            descripcionJa:
+                'デジタルワールドを守るセキュリティシステムで、善と悪のバランスを保っている。作品によってはイグドラシルに代わって「デジタルワールドの神」の座につく。このカードはシミュレーターが追加したもので、APIにはない。',
             evo: { previas: [], siguientes: [] },
         },
     },

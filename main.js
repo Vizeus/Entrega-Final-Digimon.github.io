@@ -59,8 +59,8 @@ activarSonidoDeDesplegables();
 activarBotonDeAudio();
 activarVibracion();
 
-// Si cambia el idioma, cada carta vuelve a escribir su nombre si le toca uno distinto. Hoy el español y el inglés muestran
-// los mismos nombres, así que no se toca ninguna; es lo que hará falta con el japonés (ver nombres.js).
+// Si cambia el idioma, cada carta vuelve a escribir su nombre si le toca uno distinto. El español y el inglés muestran
+// los mismos nombres, así que al pasar de uno a otro no se toca ninguna; el japonés muestra los originales (ver nombres.js).
 document.addEventListener('idioma-cambiado', () => {
     const cartas = [...listaDigimons.querySelectorAll(':scope > li'), ...cartasEnEspera.map(({ carta }) => carta)];
     for (const carta of cartas) {

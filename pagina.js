@@ -6,8 +6,8 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 import { guardarTexto, leerTexto, ponerAyuda } from './util.js';
-import { nivelesAlternativos } from './datos.js';
-import { t } from './i18n.js';
+import { nivelesAlternativos, nivelesEnJapones } from './datos.js';
+import { idioma, t } from './i18n.js';
 
 // Seleccionar el elemento <ul> (unordered list) donde agregaremos los digimons
 export const listaDigimons = document.getElementById('listado-digimons');
@@ -42,13 +42,23 @@ function esDeJapon() {
 
 // Qué sistema de clasificación de niveles se está mostrando (lo guarda el botón de la banderita).
 // Si todavía no se eligió nada: en Japón, los nombres japoneses; en el resto del mundo, los de EE.UU.
+// En japonés no hay elección: en Japón no se usa la doble nomenclatura (la de EE.UU. es cosa de Occidente), así que se muestra siempre la japonesa
+// y el botón se esconde (ver _barra.scss). Lo que la persona había elegido se recuerda para cuando vuelva al español o al inglés.
 const sistemaGuardado = leerTexto('clasificacionAlternativa', 'sesion');
-export let clasificacionAlternativa = sistemaGuardado === null ? !esDeJapon() : sistemaGuardado === 'true';
+let sistemaElegido = sistemaGuardado === null ? !esDeJapon() : sistemaGuardado === 'true';
+export let clasificacionAlternativa = idioma === 'ja' ? false : sistemaElegido;
+
+// Al cambiar de idioma (este aviso se escucha antes que el de las cartas, los filtros y los menús: ver el orden en que cargan los archivos)
+document.addEventListener('idioma-cambiado', () => {
+    clasificacionAlternativa = idioma === 'ja' ? false : sistemaElegido;
+});
 
 // Pasa al otro sistema de clasificación (si no se puede guardar, igual cambia mientras la página esté abierta)
 export function cambiarClasificacion() {
-    clasificacionAlternativa = !clasificacionAlternativa;
-    guardarTexto('clasificacionAlternativa', String(clasificacionAlternativa), 'sesion');
+    if (idioma === 'ja') return; // (el botón está escondido, pero por las dudas)
+    sistemaElegido = !sistemaElegido;
+    clasificacionAlternativa = sistemaElegido;
+    guardarTexto('clasificacionAlternativa', String(sistemaElegido), 'sesion');
 }
 
 // Nombre de un nivel para mostrar, según el sistema de clasificación vigente.
@@ -57,7 +67,14 @@ export function nombreNivel(nivelApi) {
     if (nivelApi === 'Desconocido') {
         return t('nivel.Desconocido');
     }
-    return clasificacionAlternativa ? nivelesAlternativos[nivelApi] || nivelApi : nivelApi;
+    return nombreNivelEnSistema(nivelApi, clasificacionAlternativa);
+}
+
+// Nombre de un nivel en uno de los dos sistemas (alternativa: true es el de EE.UU.). El de Japón usa los nombres de la API ('Child', 'Adult'...), y en
+// japonés, los kanji que se usan en Japón (成長期, 成熟期...). El de EE.UU. va siempre en inglés (Rookie, Champion...).
+export function nombreNivelEnSistema(nivelApi, alternativa) {
+    if (alternativa) return nivelesAlternativos[nivelApi] || nivelApi;
+    return (idioma === 'ja' && nivelesEnJapones[nivelApi]) || nivelApi;
 }
 
 // Selector de niveles: resalta el sistema vigente (Japón o EE.UU.) y escribe su ayuda (título y aria-label) en el idioma actual.

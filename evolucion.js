@@ -99,6 +99,42 @@ Object.assign(DICCIONARIO.en, {
     'evo.lore.puntero': 'Rest the pointer on a digimon or on a tag like “Level jump” to see a bit more information.',
 });
 
+Object.assign(DICCIONARIO.ja, {
+    'evo.boton': '🧬 進化',
+    'evo.boton.ayuda': '進化の流れを見る',
+    'evo.titulo': '🧬 進化の流れ',
+    'evo.viene': '進化元',
+    'evo.va': '進化先',
+    'evo.vacio': '記録なし',
+    'evo.huevo': 'デジタマ',
+    'evo.huevo.tipo': 'タマゴ',
+    'evo.huevo.ayuda': 'デジタマ(タマゴ)',
+    'evo.masN': '残りの{n}件を見る',
+    'evo.menos': '少なく表示',
+    'evo.volver': '← 戻る',
+    'evo.irCarta': '📍 カードへ移動',
+    'evo.condicion': '条件(英語): {c}',
+    'evo.pie': 'タップすると、そのデジモンの進化の流れが見られます。',
+    // 通常の「はしご」に沿わない進化の分岐につくラベル(とマウスを乗せたときの説明)
+    'evo.et.armor': '🛡️ アーマー体',
+    'evo.et.armor.ayuda': 'アーマー進化: デジメンタルを使う進化で、通常のレベルの順序とは関係ありません。',
+    'evo.et.hybrid': '🌀 ハイブリッド体',
+    'evo.et.hybrid.ayuda': 'ハイブリッド体: スピリットで得る姿で、通常の進化ではありません。',
+    'evo.et.fusion': '🧬 合体',
+    'evo.et.fusion.ayuda': '2体以上のデジモンの合体(DNA/ジョグレス)。',
+    'evo.et.salto': '⏩ レベル飛び越し',
+    'evo.et.salto.ayuda': '1つ以上のレベルを飛ばして進化します。',
+    'evo.et.lateral': '↔️ 同じレベル',
+    'evo.et.lateral.ayuda': '同じレベルへの進化: 別の姿です。',
+    // ウィンドウ下部の開閉できる説明
+    'evo.lore.titulo': 'ℹ️ 変わった進化があるのはなぜ?',
+    'evo.lore.1':
+        'デジモンの物語はひとつではありません。アニメ、各ゲーム、カード、マンガがそれぞれ「誰が誰に進化するか」の設定を持っています。このリストはそれらをすべて集めたので、きれいなはしごにはなりません。',
+    'evo.lore.2':
+        'そのため、レベルの飛び越しや同じレベルの姿、特別な進化(合体=DNAやジョグレスで2体が一つに、アーマー体、ハイブリッド体)が出てきます。ラベルを見ればどのケースかわかります。',
+    'evo.lore.puntero': 'デジモンや「レベル飛び越し」のようなラベルにポインターを置いたままにすると、もう少し詳しい情報が見られます。',
+});
+
 const TOPE_RAMAS = 5; // cuántas ramas se ven de cada lado, como mucho, antes de tocar "ver las restantes"
 // Al abrir, de cada lado solo se ven las ramas que están a esta cantidad de niveles o menos del digimon (0 = mismo nivel). El resto
 // (saltos grandes, fusiones lejanas...) queda detrás de "ver las restantes". Si ninguna entra en el rango, se ven las más cercanas.

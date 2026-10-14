@@ -153,13 +153,30 @@ function campoPrincipal(campos) {
 //  - "sinAtributo": los digimons de ese atributo quedan afuera aunque estén en los años.
 //  - "tambien": estos digimons entran aunque no estén en los años o tengan ese atributo (por el nombre, sin importar mayúsculas ni signos).
 //  - "sinVacios": quedan afuera los de atributo Desconocido que además no tienen descripción (fichas casi vacías de la API).
-// Digimon Adventure: los de 1997 a 1999 salvo los de atributo Desconocido, más los que son de la serie igual. Adventure 02 y Tamers: sin las fichas vacías.
+//  - "excluir": estos digimons quedan afuera aunque estén en los años (por el nombre, igual que "tambien"; si el nombre lleva algo entre paréntesis,
+//    como 'Arkadimon (Adult)', cuenta lo de antes, así sale toda la línea evolutiva). Le gana a todo lo demás.
+//  - "excluirContiene": lo mismo, pero salen todos los que tengan esto en el nombre (escrito sin espacios ni signos: 'vdramon').
+// Digimon Adventure: los de 1997 a 1999 salvo los de atributo Desconocido, más los que son de la serie igual (menos Chrysalimon, que no va).
+// Adventure 02: sin las fichas vacías, sin Kuramon, Keramon e Infermon (son de la primera serie), sin Parallelmon, sin los V-dramon, sin ChaosGreymon, ChaosLord, ChaosPiemon y ChaosSeadramon y sin Chaos Dukemon (ChaosGallantmon), que pasa a Tamers. Tamers: sin las fichas vacías y sin la línea de Arkadimon, y con Chaos Dukemon.
+const nombresNormalizados = nombres => new Set(nombres.map(nombre => normalizar(nombre)));
 const REGLAS_DE_TEMPORADA = {
     adventure: {
         sinAtributo: 'Desconocido',
-        tambien: new Set(['Apocalymon', 'Diaboromon', 'Chrysalimon', 'Infermon', 'Keramon', 'Kuramon'].map(nombre => normalizar(nombre))),
+        tambien: nombresNormalizados(['Apocalymon', 'Diaboromon', 'Infermon', 'Keramon', 'Kuramon']),
+        excluir: nombresNormalizados(['Chrysalimon']),
     },
-    'sin-vacios': { sinVacios: true },
+    'adventure-02': {
+        sinVacios: true,
+        excluir: nombresNormalizados(['Kuramon', 'Keramon', 'Infermon', 'Parallelmon', 'Chaos Dukemon', 'ChaosGallantmon']),
+        // toda la familia V-dramon (V-dramon, Aero V-dramon, Ulforce V-dramon...) y los Chaos (ChaosGreymon, ChaosLord, ChaosPiemon/ChaosPiedmon y ChaosSeadramon),
+        // con el nombre original o el occidental
+        excluirContiene: ['vdramon', 'veedramon', 'chaosgreymon', 'chaoslord', 'chaospiemon', 'chaospiedmon', 'chaosseadramon'],
+    },
+    tamers: {
+        sinVacios: true,
+        tambien: nombresNormalizados(['Chaos Dukemon', 'ChaosGallantmon']), // (el original de la API y el occidental)
+        excluir: nombresNormalizados(['Arkadimon']),
+    },
 };
 
 // Lo que se necesita saber de cada carta para filtrarla (se calcula una sola vez)
@@ -197,6 +214,8 @@ function datosDeFiltro(carta) {
 function coincideEstreno(datos) {
     if (desdeAnio === null && hastaAnio === null) return true;
     const regla = REGLAS_DE_TEMPORADA[reglaDeTemporada];
+    if (regla?.excluirContiene && datos.nombres.some(({ compacto }) => regla.excluirContiene.some(trozo => compacto.includes(trozo)))) return false;
+    if (regla?.excluir && datos.nombres.some(({ nombre }) => regla.excluir.has(nombre) || regla.excluir.has(nombre.replace(/\s*\(.*$/, '')))) return false;
     if (regla?.tambien && datos.x === 'sin' && datos.nombres.some(({ nombre }) => regla.tambien.has(nombre))) return true;
     const { anio } = datos;
     if (anio === null || (desdeAnio !== null && anio < desdeAnio) || (hastaAnio !== null && anio > hastaAnio)) return false;

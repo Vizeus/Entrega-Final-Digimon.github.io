@@ -18,7 +18,7 @@ import {
     numeracionNiveles,
     numeroDeCarta,
 } from './datos.js';
-import { nombreElemento, nombreAtributo, t } from './i18n.js';
+import { idioma, nombreElemento, nombreAtributo, t } from './i18n.js';
 import { claveDeNombre, inicioDeLoAparte, nombreOccidental, nombreParaMostrar } from './nombres.js';
 import { cartasPorId, listaDigimons, nombreNivel } from './pagina.js';
 import { actualizarBarraProgreso, contadorDigimons } from './api.js';
@@ -220,13 +220,15 @@ function construirDorso(carta) {
         cuerpo.append(linea);
     }
 
+    // En japonés se muestra la descripción japonesa de la API; si el digimon no la tiene, queda la inglesa con el aviso. En español la descripción
+    // siempre es la inglesa (con su aviso); en inglés, sin aviso.
+    const enJapones = idioma === 'ja' && Boolean(datos.descripcionJa);
     const descripcion = document.createElement('p');
     descripcion.className = 'c-desc';
-    descripcion.textContent = datos.descripcion || t('carta.sinDescripcion');
+    descripcion.textContent = (enJapones ? datos.descripcionJa : datos.descripcion) || t('carta.sinDescripcion');
     cuerpo.append(descripcion);
 
-    // La descripción de la API siempre viene en inglés: para quien lee en español se avisa; en inglés no hace falta
-    const aviso = t('carta.idiomaOriginal');
+    const aviso = enJapones || !datos.descripcion ? '' : t('carta.idiomaOriginal');
     if (aviso) {
         const nota = document.createElement('p');
         nota.className = 'c-idioma';

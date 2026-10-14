@@ -155,6 +155,18 @@ async function obtenerPagina(numeroPagina, reintentos = 3) {
     return [];
 }
 
+// La API trae las descripciones de cada digimon en una lista, una por idioma: { language: 'en_us', description: '...' } y { language: 'jap', ... }.
+// Devuelve la del idioma pedido ('en_us' o 'jap'), o '' si no la tiene. Para el japonés se aceptan también los otros códigos que podría usar
+// ('ja', 'jp', 'ja_jp'...) y se ignoran los textos vacíos.
+const CODIGOS_DE_IDIOMA = { en_us: /^en/i, jap: /^(jap|ja|jp)/i };
+
+function descripcionEnIdioma(detalles, codigo) {
+    const descripciones = Array.isArray(detalles.descriptions) ? detalles.descriptions : [];
+    const buscada = descripciones.find(texto => texto.language === codigo && texto.description?.trim());
+    const parecida = buscada ?? descripciones.find(texto => CODIGOS_DE_IDIOMA[codigo].test(String(texto.language)) && texto.description?.trim());
+    return parecida?.description.trim() ?? '';
+}
+
 // Función para obtener los detalles de un digimon específico con caché y reintentos
 async function obtenerDetallesDigimon(url, reintentos = 3) {
     // 1. Intentar desde caché local IndexedDB
@@ -309,7 +321,8 @@ export async function crearListaDeDigimons() {
                     habilidades: (detalles.skills || [])
                         .filter(habilidad => habilidad.skill && !NOTA_AL_PIE.test(habilidad.skill))
                         .map(habilidad => ({ nombre: habilidad.skill, traduccion: habilidad.translation || '', descripcion: habilidad.description || '' })),
-                    descripcion: (detalles.descriptions || []).find(texto => texto.language === 'en_us')?.description || '',
+                    descripcion: descripcionEnIdioma(detalles, 'en_us'),
+                    descripcionJa: descripcionEnIdioma(detalles, 'jap'), // la API trae también la descripción en japonés (la mayoría de los digimon la tienen)
                     evo: {
                         previas: (detalles.priorEvolutions || []).map(item => ({ id: item.id, condicion: item.condition || '' })),
                         siguientes: (detalles.nextEvolutions || []).map(item => ({ id: item.id, condicion: item.condition || '' })),

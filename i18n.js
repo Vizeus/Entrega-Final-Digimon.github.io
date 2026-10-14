@@ -1,9 +1,10 @@
 // -----------------------------------------------------------------------------------------------------------------
-// IDIOMAS (español / inglés)
+// IDIOMAS (español / inglés / japonés)
 //
 // Cómo funciona:
-//   1. Al abrir la página se elige el idioma: primero el que la persona eligió con el botón ES | EN (se guarda en el
-//      navegador); si nunca eligió, el primer idioma de su navegador que sea español o inglés; si no hay ninguno, inglés.
+//   1. Al abrir la página se elige el idioma: primero el que la persona eligió con el botón ES | EN | JA (se guarda en el
+//      navegador); si nunca eligió, el primer idioma de su navegador que sea español, inglés o japonés; si no hay ninguno, inglés.
+//      (Desde Japón la página arranca en japonés: ver detectarIdioma.)
 //   2. Los textos fijos del HTML llevan data-i18n="clave" (texto), data-i18n-html="clave" (texto con <br>)
 //      o data-i18n-attr="atributo:clave;otro:clave" (title, aria-label, placeholder, alt...).
 //   3. Los textos que arma el JS se piden con t('clave', { variable: valor }).
@@ -16,7 +17,7 @@
 
 import { emitir, guardarTexto, leerTexto } from './util.js';
 
-const IDIOMAS = ['es', 'en'];
+const IDIOMAS = ['es', 'en', 'ja'];
 
 export const DICCIONARIO = {
     es: {
@@ -40,7 +41,7 @@ export const DICCIONARIO = {
         'menu.grupos': 'Info. grupos',
         'menu.misc': 'Info. misceláneos',
         'menu.abrir': 'Más opciones',
-        'idioma.cambiar': 'Cambiar idioma (Español / English)',
+        'idioma.cambiar': 'Cambiar idioma (Español / English / 日本語)',
         'carga.rotulo': 'Progreso de la carga de <br>digimons:',
 
         // Nombres que se muestran
@@ -122,6 +123,7 @@ export const DICCIONARIO = {
         'tema.actual.oscuro': 'oscuro',
         'carta.sinDescripcion': 'Sin descripción disponible.',
         'carta.idiomaOriginal': 'Descripción original en inglés',
+        'ataques.idiomaOriginal': 'Descripción original en inglés',
 
         // Combate
         'combate.preparando': 'Preparando combate...',
@@ -382,7 +384,7 @@ export const DICCIONARIO = {
         'menu.grupos': 'Groups info',
         'menu.misc': 'Misc. info',
         'menu.abrir': 'More options',
-        'idioma.cambiar': 'Change language (Español / English)',
+        'idioma.cambiar': 'Change language (Español / English / 日本語)',
         'carga.rotulo': 'Loading progress of <br>Digimon:',
 
         // Displayed names
@@ -464,6 +466,7 @@ export const DICCIONARIO = {
         'tema.actual.oscuro': 'dark',
         'carta.sinDescripcion': 'No description available.',
         'carta.idiomaOriginal': '',
+        'ataques.idiomaOriginal': '',
 
         // Battle
         'combate.preparando': 'Getting the battle ready...',
@@ -700,6 +703,346 @@ export const DICCIONARIO = {
         'filtros.limpiarTodo': 'Clear filters',
         'filtros.vacio': '😕 No Digimon match that combination.',
     },
+
+    // Japonés. Los nombres de los digimon, de los ataques y de los grupos ("Fields") son los de la API y no se traducen. Términos usados: 属性 = atributo
+    // (データ種, ウイルス種, ワクチン種...), エレメント = elemento (火, 水...), 種族 = especie, フィールド = grupo (los "Fields" de la API).
+    ja: {
+        // 上のバー
+        'logo.alt': 'デジモンのロゴ',
+        'logo.ayuda': 'トップへ戻る',
+        'combate.consigna': 'バトルさせたいデジモンを2体選んでね',
+        'combate.contador': '選んだデジモン',
+        'combate.contador.limpiar': '選んだデジモンをすべて解除',
+        'combate.mini.quitar': 'クリックで選択を解除',
+        'combate.musica.encender': 'バトルの音楽をオンにする',
+        'combate.musica.apagar': 'バトルの音楽をオフにする',
+        'combate.iniciar': 'バトル開始',
+        'combate.iniciar.ayuda': 'バトルを始めるにはデジモンを2体選んでください',
+        'niveles.rotulo': 'レベル',
+        'niveles.ayuda.japon': 'レベルの呼び名: 日本版（成長期・成熟期・完全体…）。タップでアメリカ版(Rookie, Champion, Ultimate…)に切り替え',
+        'niveles.ayuda.eeuu': 'レベルの呼び名: アメリカ版(Rookie, Champion, Ultimate…)。タップで日本版（成長期・成熟期・完全体…）に切り替え',
+        'menu.atributos': '属性情報',
+        'menu.elementos': 'エレメント情報',
+        'menu.niveles': 'レベル情報',
+        'menu.grupos': 'フィールド情報',
+        'menu.misc': 'その他の情報',
+        'menu.abrir': 'その他のメニュー',
+        'idioma.cambiar': '言語を変更 （Español / English / 日本語）',
+        'carga.rotulo': 'デジモンの<br>読み込み状況:',
+
+        // 表示される名前
+        'atributo.Datos': 'データ種',
+        'atributo.Virus': 'ウイルス種',
+        'atributo.Vacuna': 'ワクチン種',
+        'atributo.Libre': 'フリー種',
+        'atributo.Variable': 'バリアブル種',
+        'atributo.Desconocido': '不明',
+        'elemento.Fuego': '火',
+        'elemento.Agua': '水',
+        'elemento.Planta': '草',
+        'elemento.Hielo': '氷',
+        'elemento.Rayo': '雷',
+        'elemento.Viento': '風',
+        'elemento.Tierra': '地',
+        'elemento.Luz': '光',
+        'elemento.Oscuridad': '闇',
+        'elemento.Metal': '鋼',
+        'elemento.Veneno': '毒',
+        'elemento.Neutro': '無',
+        'nivel.Desconocido': '不明',
+
+        // カード
+        'carta.nv': 'LV',
+        'carta.voltear': 'カードを裏返す',
+        'carta.infoNivel': 'レベル「{nivel}」の情報',
+        'carta.infoAtributo': '属性「{atributo}」の情報',
+        'carta.infoElemento': 'エレメント「{elemento}」の情報（シミュレーターによる推定）',
+        'zoom.cerrar': '閉じる （Esc）',
+        'zoom.ayuda': 'Escキーか外側のクリックで閉じる · ← → でカードを切り替え',
+        'zoom.anterior': '前のカード （←）',
+        'zoom.siguiente': '次のカード （→）',
+        'aviso.zoom.mouse': 'カードをダブルクリックすると拡大できます',
+        'aviso.zoom.dedos': 'カードをダブルタップかピンチすると拡大できます',
+        'aviso.inclinar.dedo': 'カードを押したまま指を動かすと、光って傾きます',
+        'aviso.voltear.dedo': '指で横にすばやくスワイプすると、カードが裏返ります',
+        'aviso.zoom.cerrar': 'カードの外側をタップすると閉じます',
+        'aviso.zoom.deslizar': 'カードの外側から横にスワイプすると、ほかのカードに移れます',
+        'aviso.contador.mouse': 'ここをクリックすると全カードの選択を解除、各カードをクリックすると1枚ずつ解除できます',
+        'aviso.contador.dedos': 'ここをタップすると全カードの選択を解除、各カードをタップすると1枚ずつ解除できます',
+        'aviso.inclinacion.normal': 'Shiftキーを押している間はカードが傾きません。このボタンで切り替えできます',
+        'aviso.inclinacion.normal.boton': 'このボタンでカードの傾き方を反転できます',
+        'aviso.inclinacion.invertida': 'Shiftキーを押しながらカードにマウスを乗せると傾きます。このボタンで切り替えできます',
+        'aviso.inclinacion.invertida.boton': 'このボタンでカードの傾き方を変えられます',
+        'aviso.audio': 'このボタンでページの音を消せます',
+        'aviso.combate.musica': '音楽のオン/オフ',
+        'aviso.tema': 'ここをタップでテーマを変更',
+        'aviso.audio.vibracion': 'このボタンでページの音とバイブを切れます',
+        'aviso.zoomExtra': 'カードの上でマウスのホイールを上に回すとさらに拡大、下に回すと元に戻ります。拡大中はカードをつかんでドラッグできます',
+        'carta.especie': '種族',
+        'carta.campos': 'フィールド',
+        'carta.estreno': '初登場',
+        'carta.nombreOriginal': '元の名前（日本）',
+        'carta.nombreOccidental': '海外での名前',
+        'ataques.boton': '⚔️ 必殺技',
+        'ataques.boton.ayuda': '使える技をすべて見る',
+        'ataques.titulo': '⚔️ {nombre}の技',
+        'ataques.ayuda': '技をタップすると、効果と使い手が見られます',
+        'ataques.quienesUsan': 'この技を使うほかのデジモン（{n}体）:',
+        'ataques.quienesUsan.uno': 'この技を使うほかのデジモン:',
+        'ataques.soloEste': 'この技を使うのは、このデジモンだけです。',
+        'ataques.sinDescripcion': 'この技には詳しい説明がありません。',
+        'ataques.irACarta': 'カードへ移動',
+        'ataques.traduccion': '名前の訳',
+        'combate.usa': 'の技',
+        'audio.silenciar': '音を消す',
+        'audio.activar': '音をオンにする',
+        'audio.todo': '音とバイブがオンです。タップで音だけ消します',
+        'audio.vibracion': 'バイブのみ（音なし）です。タップでバイブも消します',
+        'audio.nada': '音もバイブもオフです。タップですべてオンにします',
+        'inclinacion.normal': 'マウスを乗せるとカードが傾きます（Shiftを押している間は傾きません）。クリックで反転します',
+        'inclinacion.invertida': 'Shiftを押している間だけカードが傾きます。クリックで、マウスを乗せると傾く設定に戻します',
+        'tema.auto': '自動テーマ: 端末の設定に合わせます（今は{actual}）。タップでライトテーマにします',
+        'tema.claro': 'ライトテーマです。タップでダークテーマにします',
+        'tema.oscuro': 'ダークテーマです。タップで自動（端末の設定）に戻します',
+        'tema.actual.claro': 'ライト',
+        'tema.actual.oscuro': 'ダーク',
+        'carta.sinDescripcion': '説明はありません。',
+        'carta.idiomaOriginal': '日本語の説明がないため、英語の原文を表示しています',
+        'ataques.idiomaOriginal': '技の説明は英語の原文です',
+
+        // バトル
+        'combate.preparando': 'バトルを準備中...',
+        'combate.peleando': 'デジモンが対戦中!',
+        'combate.ganador': '勝者は{nombre}です!',
+        'aceptar': 'OK',
+
+        // 情報ウィンドウ（属性・エレメント・レベル）
+        'info.fuerte': '有利な相手',
+        'info.debil': '不利な相手',
+        'info.mutua': '互いに有利',
+        'info.seCancelan': '（打ち消し合う）',
+        'info.ninguno': 'なし',
+        'info.poder': 'パワーレベル',
+        'info.poderCombate': 'バトルでの強さ',
+        'info.sinDato': 'データなし',
+        'info.evolucionaDe': '進化元',
+        'info.evolucionaA': '進化先',
+        'info.verInfoDe': '{nombre}の情報を見る',
+        'info.verInfoDeElemento': '{nombre}の情報を見る（推定エレメント）',
+        'info.clasificacion': '現在の分類',
+        'info.japon': '日本版 🇯🇵',
+        'info.eeuu': 'アメリカ版 🇺🇸',
+        'info.otraClasificacion': 'もうひとつの分類では',
+        'info.nivelTitulo': '{nombre} · レベル{n}',
+        'info.nivelItem': '{nombre} · Lv{n}',
+        'atributo.pie': '属性で有利になるたびに、勝つ確率が{p}%上がります。',
+        'atributo.pieSin': '有利・不利のない属性は、バトルの勝率に影響しません。',
+        'elemento.pie': 'エレメントで有利になるたびに、勝つ確率が{p}%上がります。',
+        'elemento.pieNeutro': 'エレメント「無」は、バトルの勝率に影響しません。',
+        'nivel.pie': '相手とのレベル差が1つあるごとに、勝つ確率が{p}%上下します。',
+        'nivel.pieAlto':
+            '通常の段階を超えた強さで、バトルではレベル{n}として扱われます。相手とのレベル差が1つあるごとに勝つ確率が{p}%上下し、はるかに格下の相手には属性やエレメントはほとんど影響しません。',
+        'nivel.pieSin': 'レベルがない場合、バトルの勝率は上下しません。',
+        'atributo.desc.Datos': 'データ種は、バランスのとれた能力を持つデジモンです。',
+        'atributo.desc.Virus': 'ウイルス種は、攻撃的な能力を持つデジモンです。',
+        'atributo.desc.Vacuna': 'ワクチン種は、防御的な能力が得意なデジモンです。',
+        'atributo.desc.Libre': 'フリー種は決まった属性を持たないため、バトルではバランス型です。',
+        'atributo.desc.Variable': 'バリアブル種は適応力が高く、能力が変化するため、行動が読みにくいデジモンです。',
+        'atributo.desc.Desconocido': '不明な属性のデジモンは分類されていないため、バトルでは予測がつきません。',
+        'elemento.desc.Fuego': '炎や熱、爆発で攻撃するデジモン。',
+        'elemento.desc.Agua': '海や波、泡のデジモン。',
+        'elemento.desc.Planta': '葉やトゲ、花、森のデジモン。',
+        'elemento.desc.Hielo': '雪や霜、極寒のデジモン。',
+        'elemento.desc.Rayo': '電気や稲妻を放つデジモン。',
+        'elemento.desc.Viento': '嵐や竜巻、突風のデジモン。',
+        'elemento.desc.Tierra': '岩や砂、地震のデジモン。',
+        'elemento.desc.Luz': '光のエネルギーを持つ、神聖なデジモン。',
+        'elemento.desc.Oscuridad': '影や呪い、悪夢のデジモン。',
+        'elemento.desc.Metal': '鋼や大砲、レーザーのデジモン。',
+        'elemento.desc.Veneno': '毒や酸のデジモン。',
+        'elemento.desc.Neutro': '決まったエレメントを持たないデジモン。',
+        'nivel.desc.Baby I': '生まれたばかりの、いちばん弱い段階。',
+        'nivel.desc.Baby II': '少しずつ動き回り、身を守れるようになった赤ちゃん。',
+        'nivel.desc.Child': '最初の「戦える」姿。すばしこいけれど、パワーはまだ小さめ。',
+        'nivel.desc.Adult':
+            '独自の技を持つ成熟した姿で、作品中にもっとも多い段階。アーマー体（カードの赤い丸の「A」）や、ハイブリッド体の人間型（緑の丸の「H」）もここに入ります。',
+        'nivel.desc.Perfect':
+            '大きな力と破壊的な技を持つ段階で、{nivel:Adult}をはるかに上回ります。ハイブリッド体の獣型（カードの緑の丸の「H」）もここに入ります。',
+        'nivel.desc.Ultimate':
+            'ウォーグレイモンやメタルガルルモンのような、通常の進化でいちばん強い段階。ハイブリッド体の融合型や究極の姿（カードの緑の丸の「H」）もここに入ります。',
+        'nivel.desc.Super Ultimate':
+            'このシミュレーターのために作ったレベルで、{nivel:Ultimate}の上です。ロイヤルナイツや四聖獣、魔王など、通常の段階を超える力の持ち主です。',
+        'nivel.desc.Absolute': 'このシミュレーターのために作ったレベルで、最高位です。デジタルワールド全体を滅ぼしたり、支配したりできる存在です。',
+        'nivel.desc.Desconocido': 'APIにレベルの情報がありません。',
+
+        // カードのマーク（X抗体・アーマー体・ハイブリッド体・クロスウォーズ）のウィンドウ。カードのマークをタップするか「その他の情報」から開きます
+        'misc.enCarta': 'カード上では',
+        'misc.buscar': '探し方',
+        'misc.nivel': 'シミュレーターでのレベル',
+        'misc.xantibody.titulo': '🧬 X抗体 (X-Antibody)',
+        'misc.xantibody.desc':
+            'X抗体は、一部のデジモンが獲得する因子で、「X」の姿をもたらします。すでに知られているデジモンの新しいバージョンで、より強そうな見た目になることが多いです。レベルや属性、エレメントではなく、それとは別のマークです。',
+        'misc.xantibody.enCarta': '左上にピンクの宝石の「X」、名前に「(X-Antibody)」',
+        'misc.xantibody.buscar': 'フィルターの「X抗体」ボタン（あり/なし）で',
+        'misc.xantibody.pie': 'バトルの勝率には影響しません。大事なのはレベルと属性、エレメントです。',
+        'misc.armor.titulo': '🛡️ アーマー体 （Armor）',
+        'misc.armor.desc':
+            'アーマー進化（デジモンアドベンチャー02）は、デジモンがデジメンタルと合体し、通常の進化の段階とは関係なく新しい姿になる進化です。数はとても少なく、このシミュレーターでは独立したレベルではなく、それぞれ通常のレベルに入っています。',
+        'misc.armor.enCarta': '左上に赤い丸の「A」',
+        'misc.armor.nivel': 'すべて{nivel:Adult}',
+        'misc.armor.buscar': '検索ボックスに「Armor」と入力',
+        'misc.armor.pie': 'バトルでは同じレベルのデジモンとして扱われ、アーマー体であることによる増減はありません。',
+        'misc.hybrid.titulo': '🌀 ハイブリッド体 （Hybrid）',
+        'misc.hybrid.desc':
+            'ハイブリッド体（デジモンフロンティア）は、主人公たちがスピリットを使って変身する姿で、通常の進化ではありません。人間型、獣型、融合型があり、強さはまちまちです。これも独立したレベルではなく、それぞれ通常のレベルに入っています。',
+        'misc.hybrid.enCarta': '左上に緑の丸の「H」',
+        'misc.hybrid.nivel': '人間型: {nivel:Adult}。獣型: {nivel:Perfect}。融合型と究極の姿: {nivel:Ultimate}',
+        'misc.hybrid.buscar': '検索ボックスに「Hybrid」と入力',
+        'misc.hybrid.pie': 'バトルでは同じレベルのデジモンとして扱われ、ハイブリッド体であることによる増減はありません。',
+        'misc.xroswars.titulo': '🔶 クロスウォーズ（XW合体）',
+        'misc.xroswars.desc':
+            'XWは「クロスウォーズのシーズンのデジモン」という意味では<b>ありません</b>。このマークは、そのシリーズ（と続編のヤングハンターズ）の<b>一時的な合体</b>だけにつきます。デジクロスで複数のデジモンがしばらく合体して新しい強い姿になり、その合体した姿がマークを持ちます（シャウトモンX2〜X7など）。',
+        'misc.xroswars.enCarta': '左上にオレンジの丸の「XW」',
+        'misc.xroswars.si.etiqueta': 'マークあり',
+        'misc.xroswars.si': 'シャウトモンX2〜X7のような一時的な合体、「Xros Up…」、「Gattai…」、一部の「… Mode」',
+        'misc.xroswars.no.etiqueta': 'マークなし',
+        'misc.xroswars.no': 'シャウトモン、ガネモン、ガムドラモンなど、合体ではないそのシーズンのデジモン',
+        'misc.xroswars.buscar': 'フィルターの「XW合体」ボタン（あり/なし）で',
+        'misc.xroswars.pie':
+            'APIにはこのデータがないため、名前（「Xros Up」「Gattai」、シャウトモンX2…X7）、種族(Enhancement か Composite)、既知の合体のリストで見分けています。漏れがあるかもしれません。バトルの勝率には影響しません。',
+
+        // フィールド（APIの「Fields」）のウィンドウ。「フィールド情報」か、カード裏面のフィールドをタップして開きます。フィールド名は翻訳しません。
+        'campo.donde': '生息地',
+        'campo.quienes': 'どんなデジモン?',
+        'campo.ejemplos': '例',
+        'campo.enElSimulador': 'シミュレーター内',
+        'campo.cuantos': '{total}体中{n}体',
+        'campo.pie':
+            'フィールドはシリーズ内のラベル（生息地やテーマ別）にすぎず、バトルの勝率には影響しません。1体のデジモンが複数のフィールドに入ることもあるため、各フィールドの数を足すと全体より多くなります。',
+        'campo.naturespirits.desc':
+            '自然にもっとも近いデジモンたち。動物のような姿の生き物、昆虫、恐竜などの原始的な存在で、緑の大地や砂漠に暮らします。厳しい環境のわりに、おだやかな性格が多いです。',
+        'campo.naturespirits.donde': '草原・森・砂漠',
+        'campo.naturespirits.quienes': '動物・昆虫・恐竜',
+        'campo.deepsavers.desc':
+            'デジタルの海や氷の地域に暮らすデジモンたちで、ほとんどが水棲の姿をしています。性格は環境で変わり、荒れた海に暮らすものほど気性が激しい傾向があります。',
+        'campo.deepsavers.donde': '大洋・海・氷の地域',
+        'campo.deepsavers.quienes': '水棲・極地のデジモン',
+        'campo.nightmaresoldiers.desc':
+            '超自然的なデジモンたち。幽霊、悪魔、アンデッド、民間伝承の生き物など。暗く不気味な森や、呪われた場所、悪の軍団と結びついています。',
+        'campo.nightmaresoldiers.donde': '暗い森・呪われた場所',
+        'campo.nightmaresoldiers.quienes': '悪魔・幽霊・アンデッド',
+        'campo.windguardians.desc': '空や森、高地のデジモンたち。おもに鳥や飛ぶ生き物、植物です。凶暴だったり毒を持っていたりする種が多く、縄張りは危険です。',
+        'campo.windguardians.donde': '空・草原・森・高地',
+        'campo.windguardians.quienes': '鳥・飛行型・植物',
+        'campo.metalempire.desc':
+            '機械や金属のデジモンたち。完全な機械からサイボーグまでいて、産業や都市と結びついています。帝国のように組織的で、勢力を広げています。',
+        'campo.metalempire.donde': '都市・工業地帯',
+        'campo.metalempire.quienes': '機械・サイボーグ・ミュータント',
+        'campo.virusbusters.desc':
+            '他のフィールドと違い、場所ではなく使命で決まるグループで、ウイルス種のデジモンに立ち向かう者たちです。理由は神聖な力、正義、遺跡の守護などさまざまです。ウイルスを追うデジモンがみなここに入るわけではありません。',
+        'campo.virusbusters.donde': '聖地・遺跡',
+        'campo.virusbusters.quienes': '天使・聖騎士・ウイルスハンター',
+        'campo.dragonsroar.desc': 'デジタルコアにドラゴンのデータを持つデジモンたち。ドラゴン、恐竜、爬虫類で、強力で獰猛です。',
+        'campo.dragonsroar.donde': '火山地帯',
+        'campo.dragonsroar.quienes': 'ドラゴン・恐竜・爬虫類',
+        'campo.jungletroopers.desc':
+            'ジャングルや森のデジモンたち。おもに昆虫と植物で、体は環境に適応し、その変化に敏感です。ネイチャースピリッツとは違い、デジタルワールドの環境を守る役目を持っています。',
+        'campo.jungletroopers.donde': 'ジャングル・熱帯地域',
+        'campo.jungletroopers.quienes': '昆虫・植物',
+        'campo.darkarea.desc': 'デジタルワールドのダークエリアのグループ。邪悪で悪魔的な恐ろしいデジモンが暮らす暗い場所で、複数の魔王もここにいます。',
+        'campo.darkarea.donde': 'ダークエリア',
+        'campo.darkarea.quienes': '邪悪で悪魔的なデジモン',
+        'campo.unknown.desc':
+            'フィールドの「その他」にあたるグループ。出自がはっきりしない、またはどれにも当てはまらないデジモンが集まり、ミュータントや奇妙な生き物が多いです。このシミュレーターでは、APIにフィールドの情報がないデジモンもここに入ります。',
+        'campo.unknown.donde': '決まった場所なし',
+        'campo.unknown.quienes': 'ミュータント・奇妙な生き物',
+
+        // フィルターと検索
+        'filtros.titulo': 'フィルター',
+        'filtros.region': 'デジモンのフィルターと検索',
+        'filtros.buscar': 'デジモンを名前か番号で検索',
+        'filtros.borrarBusqueda': '検索をクリア',
+        'filtros.atributo': '属性',
+        'filtros.campo': 'フィールド',
+        'filtros.especie': '種族',
+        'filtros.nivel': 'レベル',
+        'filtros.elemento': 'エレメント',
+        'filtros.x': 'X抗体',
+        'filtros.x.con': 'X抗体あり',
+        'filtros.x.sin': 'X抗体なし',
+        'filtros.x.boton.indistinto': 'X抗体',
+        'filtros.x.boton.con': 'Xあり',
+        'filtros.x.boton.sin': 'Xなし',
+        'filtros.x.ayuda.indistinto': 'X抗体: 指定なし。クリックでX抗体を持つものだけを表示',
+        'filtros.x.ayuda.con': 'X抗体を持つものだけを表示中。クリックで持たないものだけを表示',
+        'filtros.x.ayuda.sin': 'X抗体を持たないものだけを表示中。クリックですべて表示に戻す',
+        // （「クロスウォーズ」ではなく「XW合体」: このボタンはそのシリーズのデジモンではなく、一時的なデジクロスの合体だけを絞り込みます）
+        'filtros.xw': 'XW合体',
+        'filtros.xw.con': 'XW合体あり',
+        'filtros.xw.sin': 'XW合体なし',
+        'filtros.xw.boton.indistinto': 'XW合体',
+        'filtros.xw.boton.con': 'XWあり',
+        'filtros.xw.boton.sin': 'XWなし',
+        'filtros.xw.ayuda.indistinto': 'XW合体: 指定なし。クリックで、シャウトモンX2〜X7のようなクロスウォーズの一時的な合体（デジクロス）だけを表示',
+        'filtros.xw.ayuda.con': 'クロスウォーズの一時的な合体だけを表示中。クリックでそれ以外をすべて表示（合体ではないそのシリーズのデジモンも含む）',
+        'filtros.xw.ayuda.sin':
+            'クロスウォーズの一時的な合体以外をすべて表示中（合体ではないそのシリーズのデジモンは表示されます）。クリックですべて表示に戻す',
+        'filtros.busqueda': '検索',
+        'filtros.porAtributo': '属性で絞り込み',
+        'filtros.porCampo': 'フィールドで絞り込み',
+        'filtros.porEspecie': '種族で絞り込み',
+        'filtros.buscarEspecie': '種族を検索…',
+        'filtros.familias': 'ファミリー',
+        'filtros.especies': '種族',
+        'filtros.familia': '{nombre}ファミリー: {n}種族をまとめて選択',
+        'filtros.familia.todas': '{nombre}（すべて）',
+        'filtros.familia.abrir': '{nombre}の{n}種族を表示',
+        'filtros.sinFamilia': 'その他の種族',
+        'filtros.limpiarEspecies': '選んだ種族とファミリーをすべて解除',
+        'filtros.agrupar': 'グループ分け', // （「グループ」だけだと、フィールドのフィルターと紛らわしい）
+        'filtros.agruparPor': 'グループ分けの基準',
+        'filtros.agrupar.nota':
+            '選んだ順番にグループ分けします。各ブロックの中では、選んだ並び順が使われます。複数のフィールドを持つデジモンは、いちばん小さいフィールドに入ります。',
+        'filtros.agrupar.ayuda.sin': 'デジモンをブロックに分けます。たとえば、レベル1をすべて、次にレベル2をすべて、のように',
+        'filtros.agrupar.ayuda.con': 'グループ分け: {criterios}',
+        'filtros.agrupar.lugar': '{n}番目でグループ分け中。クリックで外す',
+        'filtros.agrupar.sacada': 'クリックでこの項目でグループ分け',
+        'filtros.orden': '並び順',
+        'filtros.ordenarPor': '並べ替え',
+        'filtros.orden.id': '番号（ID）',
+        'filtros.orden.az': '名前順（A–Z）',
+        'filtros.orden.id.ayuda': 'ID番号順に並べます。IDは初登場の時期と一致します。古いものから新しいものへ（昇順）',
+        'filtros.orden.az.ayuda': '名前をA〜Zの順に並べます（昇順）',
+        'filtros.orden.id.corto': 'ID',
+        'filtros.orden.az.corto': 'A–Z',
+        'filtros.porNivel': 'レベルで絞り込み',
+        'filtros.porElemento': 'エレメントで絞り込み',
+        'filtros.estreno': '初登場',
+        'filtros.porEstreno': '初登場の時期で絞り込み',
+        'filtros.estreno.titulo': '初登場の年',
+        'filtros.estreno.temporadas': 'シリーズ別',
+        'filtros.estreno.desde': 'から',
+        'filtros.estreno.hasta': 'まで',
+        'filtros.estreno.libre': '指定なし',
+        'filtros.estreno.rango': '{desde}–{hasta}',
+        'filtros.estreno.uno': '{desde}',
+        'filtros.estreno.desdeSolo': '{desde}年以降',
+        'filtros.estreno.hastaSolo': '{hasta}年まで',
+        'filtros.activos': '適用中のフィルター',
+        'filtros.todasPanel': 'ほかの適用中フィルター',
+        'filtros.todasVer': 'ほかの適用中フィルターを表示（あと{n}件）',
+        'filtros.quitar': '{grupo}: {valor}を解除',
+        'filtros.cuenta': '{n}体中{v}体を表示',
+        'filtros.cuenta.corta': '{v}/{n}体',
+        'filtros.limpiar': 'クリア ✕',
+        'filtros.mas': 'フィルターを増やす',
+        'filtros.menos': 'フィルターを減らす',
+        'filtros.mas.ayuda': 'すべてのフィルターを表示',
+        'filtros.mas.ayuda.con': 'すべてのフィルターを表示（{n}件が選択中）',
+        'filtros.menos.ayuda': '主なフィルターだけを表示',
+        'filtros.limpiarTodo': 'フィルターをクリア',
+        'filtros.vacio': '😕 その組み合わせに当てはまるデジモンはいません。',
+    },
 };
 
 // ---- Elección del idioma -------------------------------------------------------------------------------------------
@@ -708,16 +1051,28 @@ function idiomaGuardado() {
     return IDIOMAS.includes(guardado) ? guardado : null;
 }
 
+// Sin una elección guardada, se recorren los idiomas del navegador en orden y gana el primero que se pueda usar (es, en o ja). Un idioma con región
+// de Japón (por ejemplo en-JP, inglés de Japón) cuenta como japonés. Quien entra desde Japón (zona horaria de Tokio) con el navegador en inglés o
+// en un idioma que la página no tiene también ve la página en japonés. En español no: ese caso es más probable que sea alguien de viaje.
+function estaEnJapon() {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Tokyo';
+    } catch {
+        return false; // sin zona horaria no se puede saber
+    }
+}
+
 function detectarIdioma() {
     const elegido = idiomaGuardado();
     if (elegido) return elegido;
 
     const preferidos = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
     for (const preferido of preferidos) {
+        if (/[-_]jp\b/i.test(String(preferido))) return 'ja';
         const codigo = String(preferido).toLowerCase().slice(0, 2);
-        if (IDIOMAS.includes(codigo)) return codigo;
+        if (IDIOMAS.includes(codigo)) return codigo === 'en' && estaEnJapon() ? 'ja' : codigo;
     }
-    return 'en'; // ni español ni inglés: inglés, que es lo que más gente entiende
+    return estaEnJapon() ? 'ja' : 'en'; // ni español, ni inglés ni japonés: inglés, que es lo que más gente entiende
 }
 
 export let idioma = detectarIdioma();
@@ -725,7 +1080,7 @@ export let idioma = detectarIdioma();
 // ---- Textos --------------------------------------------------------------------------------------------------------
 // t('clave') devuelve el texto en el idioma actual. Las variables van entre llaves: t('combate.ganador', { nombre: 'Agumon' })
 export function t(clave, variables = {}) {
-    let texto = DICCIONARIO[idioma]?.[clave] ?? DICCIONARIO.es[clave] ?? clave;
+    let texto = DICCIONARIO[idioma]?.[clave] ?? DICCIONARIO.en[clave] ?? DICCIONARIO.es[clave] ?? clave; // (lo que falte en un idioma se ve en inglés)
     for (const [nombre, valor] of Object.entries(variables)) {
         texto = texto.split(`{${nombre}}`).join(valor);
     }
@@ -769,4 +1124,8 @@ export const nombreElemento = elemento => t(`elemento.${elemento}`);
 
 aplicarTextos();
 
-document.getElementById('cambiar-idioma')?.addEventListener('click', () => cambiarIdioma(idioma === 'es' ? 'en' : 'es'));
+// Un clic en una de las siglas (ES, EN, JA) elige ese idioma; un clic en el resto del botón pasa al siguiente (es → en → ja → es)
+document.getElementById('cambiar-idioma')?.addEventListener('click', evento => {
+    const elegido = evento.target.closest?.('[data-idioma]')?.dataset.idioma;
+    cambiarIdioma(IDIOMAS.includes(elegido) ? elegido : IDIOMAS[(IDIOMAS.indexOf(idioma) + 1) % IDIOMAS.length]);
+});

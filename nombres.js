@@ -8,8 +8,8 @@ import { idioma } from './i18n.js';
 // (los del doblaje al inglés, los juegos y el juego de cartas): Omnimon, HerculesKabuterimon, Myotismon...
 // El buscador encuentra a cada digimon por cualquiera de los dos nombres (ver filtros.js).
 //
-// Para la versión japonesa (todavía no existe): alcanza con quitar 'ja' de IDIOMAS_CON_NOMBRES_OCCIDENTALES, y las cartas
-// pasan a mostrar el nombre original tal cual viene de la API.
+// En japonés ('ja' no está en IDIOMAS_CON_NOMBRES_OCCIDENTALES) las cartas muestran el nombre original tal cual viene de la API, y el
+// occidental queda como nombre alternativo en el dorso.
 
 const IDIOMAS_CON_NOMBRES_OCCIDENTALES = ['es', 'en'];
 

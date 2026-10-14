@@ -496,6 +496,10 @@ body::before {
   filter: saturate(0.55);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -2px 3px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0, 30, 80, 0.25);
 }
+:root:lang(ja) #navbar #cambiar-niveles {
+  display: none;
+}
+
 #navbar #cambiar-niveles {
   --c: var(--vidrio-claro);
   display: inline-flex;
