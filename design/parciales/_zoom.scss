@@ -195,6 +195,66 @@
     }
 }
 
+// Flechas para pasar de carta con una ventana de ataques o de línea evolutiva abierta (paso.js): a los costados de la ventana, por encima de ella.
+// Son las mismas del zoom (más arriba), pero con la ventana entre medio y sin la cortina propia del zoom.
+#paso-flechas {
+    position: fixed;
+    inset: 0;
+    z-index: capa(flechas-de-ventana);
+    pointer-events: none;
+
+    .paso-flecha {
+        position: absolute;
+        top: 50%;
+        translate: 0 -50%;
+        display: grid;
+        place-items: center;
+        width: var(--flecha, 44px);
+        height: var(--flecha, 44px);
+        padding: 0;
+        color: #0b3a66;
+        cursor: pointer;
+        pointer-events: auto;
+        border: 1px solid #fff;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff 0%, #d9efff 50%, #9fd3f6 100%);
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 #fff;
+        transition:
+            scale 0.15s ease,
+            filter 0.15s ease,
+            opacity 0.15s ease;
+
+        svg {
+            width: 55%;
+            height: 55%;
+        }
+
+        &:hover:not(:disabled) {
+            scale: 1.08;
+            filter: brightness(1.06);
+        }
+
+        &:active:not(:disabled) {
+            scale: 0.95;
+        }
+
+        &:disabled {
+            opacity: 0.28;
+            cursor: default;
+        }
+    }
+
+    .paso-anterior {
+        left: var(--fl-izq, 8px);
+    }
+
+    .paso-siguiente {
+        right: var(--fl-der, 8px);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     #zoom-fondo,
     #zoom-flechas {

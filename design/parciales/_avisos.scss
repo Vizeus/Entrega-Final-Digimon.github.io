@@ -224,6 +224,12 @@
     }
 }
 
+// El globito del botón de música del combate sale de un botón que está dentro del cartel: tiene que verse por encima de la cortina (2000) también en
+// el celular, donde los demás globitos no pasan por encima de los carteles
+.aviso-globo[data-boton="musica-combate"] {
+    z-index: capa(globo-sobre-las-ventanas);
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 // Cerrar a mano (descartar.js): un clic o toque en cualquier parte del cartel lo quita, y con el dedo también se arrastran hacia un costado.
 // Mientras están a la vista dejan de ser "invisibles" para el mouse y los toques (pointer-events: auto): solo ellos, no el contenedor.

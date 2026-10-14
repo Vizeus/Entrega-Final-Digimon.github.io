@@ -63,6 +63,10 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
         stroke: #ff6a5a;
     }
 
+    .swal2-popup button.combate-musica[data-modo="apagada"] .musica-cruz {
+        stroke: #ff6a5a;
+    }
+
     // El sol y la luna del botón de tema, más claros para que se luzcan sobre el vidrio oscuro
     #navbar #tema .tema-sol,
     body > #tema .tema-sol {
@@ -385,6 +389,20 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
             }
         }
 
+        // Las temporadas sin elegir: botón oscuro (los logos tienen fondo transparente y se ven igual de bien)
+        .f-temporada:not([aria-pressed="true"]) {
+            color: #8fb0d8;
+            background: linear-gradient(#2a4274, #1b2f58);
+            box-shadow:
+                0 1px 2px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(165, 213, 255, 0.18);
+        }
+
+        // Un logo oscuro (el rojo de Ghost Game) se pierde contra el azul del botón: se aclara y se le da un reflejo suave alrededor
+        .f-temporada[data-logo-oscuro]:not([aria-pressed="true"]) img {
+            filter: brightness(1.5) saturate(1.15) drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+        }
+
         .f-chip .f-lv,
         .f-tag .f-lv {
             box-shadow:
@@ -494,7 +512,8 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
     // El mismo vidrio azul oscuro que los botones redondos de la barra (el degradé blanco y celeste del tema claro encandila sobre fondos oscuros)
     #zoom-fondo .zoom-cerrar,
     #zoom-flechas .zoom-flecha,
-    .swal2-popup button.swal2-close {
+    .swal2-popup button.swal2-close,
+    .swal2-popup button.combate-musica {
         color: $tinta;
         text-shadow: var(--brillo-de-texto);
         border-color: rgba(120, 190, 255, 0.38);

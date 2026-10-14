@@ -605,13 +605,77 @@
         color: #56606b;
     }
 
-    // "Estreno": dos listas de años (desde / hasta), una al lado de la otra
+    // "Estreno": las temporadas de la serie (con su logo) y, debajo, dos listas de años (desde / hasta), una al lado de la otra
     .f-panel-estreno {
         gap: 8px 12px;
         min-width: 280px;
+        width: min(460px, calc(100vw - 32px)); // (con las temporadas, cuatro por fila)
 
         .f-panel-titulo {
             flex: 1 1 100%;
+        }
+    }
+
+    .f-temporadas {
+        flex: 1 1 100%;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    // Una temporada: su logo (con fondo transparente, ya viene chico y a doble densidad) y, debajo, los años. Elegida, se rodea de azul como las demás opciones
+    .f-temporada {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        gap: 3px;
+        height: 68px;
+        padding: 5px 4px 4px;
+        cursor: pointer;
+        color: #56606b;
+        border: 1px solid rgba(0, 40, 90, 0.25);
+        border-radius: 10px;
+        background: linear-gradient(#fff, #eaf3fb);
+        box-shadow: 0 1px 2px rgba(0, 30, 80, 0.22);
+        transition:
+            filter 0.15s,
+            transform 0.1s;
+
+        img {
+            flex: 1 1 0;
+            min-height: 0;
+            width: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            -webkit-user-drag: none;
+        }
+
+        small {
+            font:
+                700 10px/1 var(--f-etiqueta),
+                sans-serif;
+            letter-spacing: 0.3px;
+        }
+
+        &:hover {
+            filter: brightness(0.97);
+            transform: translateY(-1px);
+        }
+
+        &:focus-visible {
+            outline: 2px solid #3a8dde;
+            outline-offset: 1px;
+        }
+
+        &[aria-pressed="true"] {
+            color: #fff;
+            border-color: #1d5fa8;
+            background: linear-gradient(#7cc4f5, #2a75cf);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                0 0 0 2px rgba(42, 117, 207, 0.35);
+            text-shadow: 0 1px 1px rgba(0, 40, 90, 0.5);
         }
     }
 
@@ -789,18 +853,47 @@
             0 0 0 1px rgba(255, 255, 255, 0.7);
     }
 
-    .f-activos {
+    // La última parte de la fila de filtros: las etiquetas de los filtros activos, el botón "+N »" y, a la derecha, el conteo con el botón de limpiar.
+    // Es UN solo bloque: o entra entero en el renglón de los botones de los filtros, o baja entero a uno propio. (Nunca el conteo solo en un renglón
+    // nuevo: filtros.js, etiquetasQueEntran, elige cuántas etiquetas se ven para que todo entre en una línea, y el resto queda detrás del "+N »".)
+    // En el celular no es un bloque: sus partes son filas sueltas de la barra (display: contents, más abajo).
+    .f-final {
         display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        flex: 0 1 auto; // (lo que sobra de la fila va a la izquierda del conteo, que se arrima a la derecha solo; así el botón "+N »" queda pegado a las etiquetas)
+        align-items: center;
+        flex: 1 1 auto; // (ocupa lo que sobra del renglón: así el conteo se arrima solo a la derecha)
+        gap: 10px;
         min-width: 0;
     }
 
-    // Sin etiquetas no hay nada que mostrar ahí: que no reserve lugar y deje el conteo en la primera fila si entra (con cuatro filtros la
-    // fila va más llena, y si no, el conteo bajaba solo a una fila nueva y la barra crecía sin motivo)
+    .f-activos {
+        display: flex;
+        flex-wrap: wrap; // (filtros.js mide para que entren en una línea; si un redondeo se pasara, se parte en dos antes que pisar al conteo)
+        gap: 6px;
+        flex: 0 1 auto; // (el botón "+N »" queda pegado a las etiquetas)
+        min-width: 0;
+    }
+
+    // Sin etiquetas no hay nada que mostrar ahí: que no reserve lugar (ni el hueco de su lado) y deje el conteo donde esté
     .f-activos:empty {
-        flex-basis: 0;
+        display: none;
+    }
+
+    // Donde filtros.js mide las etiquetas y el botón "+N »" con sus estilos de verdad: fuera de la vista, sin tocar ni mover nada
+    .f-medidor {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        overflow: hidden; // recorta la fila de adentro: si no, al ser más ancha que la pantalla agrandaría la página
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .f-medidor-fila {
+        display: flex;
+        gap: 6px;
+        width: max-content;
     }
 
     // Filtro activo: píldora de color con una ✕; al tocarla se saca
@@ -886,6 +979,7 @@
     }
 
     .f-resumen {
+        flex: none;
         margin-left: auto;
         display: flex;
         align-items: center;
@@ -1019,6 +1113,12 @@
             height: 30px; // (+ 2px de borde)
             border-radius: 11px;
 
+            // Con el celular acostado (más de 560px de ancho) el buscador comparte renglón con los botones: así los filtros ocupan uno solo y la barra,
+            // que ya es baja en esa posición, le deja más lugar a las cartas
+            @media (min-width: 560px) {
+                flex: 1 1 220px;
+            }
+
             input {
                 font-size: 16px; // con menos, iPhone agranda la pantalla al tocar la caja
             }
@@ -1137,6 +1237,15 @@
             overflow-y: auto;
             overscroll-behavior: contain;
             --relleno: 10px;
+        }
+
+        // El bloque final no existe para el diseño: sus partes (etiquetas, "+N »" y conteo) son filas sueltas de la barra, como siempre
+        .f-final {
+            display: contents;
+        }
+
+        .f-medidor {
+            display: none;
         }
 
         // Salto de fila forzado: la fila de etiquetas va siempre debajo de los botones (aunque sobre lugar al lado de ellos)

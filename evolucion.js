@@ -23,6 +23,7 @@ import { nombreCompleto, reducirMovimiento } from './cartas.js';
 import { inicioDeLoAparte } from './nombres.js';
 import { cartaEnZoom, cerrarZoom } from './zoom.js';
 import { activarBotonDelDorso } from './gestos.js';
+import { activarPasoEntreCartas, desactivarPasoEntreCartas } from './paso.js';
 import { limpiarTodo } from './filtros.js';
 import { FICHERO_DE_ATAQUES, sonidoFichero } from './sonidos.js';
 
@@ -657,8 +658,10 @@ export function abrirEvolucion(carta) {
         didOpen: () => {
             contenedorEvo().addEventListener('click', alTocarEnEvolucion);
             pintarEvolucion();
+            activarPasoEntreCartas(carta, { abrir: abrirEvolucion });
         },
         willClose: () => {
+            desactivarPasoEntreCartas();
             estadoEvo = null;
             observadorDelArbol.disconnect();
             observadorDeLaVentana.disconnect();

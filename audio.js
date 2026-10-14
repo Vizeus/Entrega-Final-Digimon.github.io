@@ -154,8 +154,11 @@ let contextoAudio;
 //   1) sonido + vibración (por defecto)  →  2) solo vibración (sin sonido)  →  3) nada de nada  →  vuelve a 1)
 // Donde no hay vibración (computadora, iPhone) son solo dos: suena / silenciado.
 // Apagar el sonido apaga los sonidos sintetizados (teclas, giro, zoom, sorbo) y los archivos de audio del combate.
-// La elección se guarda en el navegador de cada persona (localStorage), como un JSON {"sonido": true, "vibracion": true},
+// La elección se guarda en el navegador de cada persona (localStorage), como un JSON {"sonido": true, "vibracion": true, "musica": false},
 // así la próxima vez que entre sigue como la dejó. (Antes se guardaba {"silenciado": true}: se sigue entendiendo.)
+// "musica" es la música del combate (la de la pelea y la del ganador), que tiene su propio botón en los carteles del combate y por defecto
+// está apagada: va aparte del sonido general, que sigue sonando (el sorbo, la fanfarria, los clics...). Si el sonido general está apagado, la
+// música tampoco suena, esté como esté su botón.
 // Para volver a empezar (por ejemplo, para probarlo): localStorage.removeItem('digimon-audio')
 const AUDIO_ALMACEN = 'digimon-audio';
 
@@ -169,11 +172,12 @@ function leerAudioGuardado() {
     const guardado = leerJSON(AUDIO_ALMACEN); // sin memoria (o con un dato roto) queda todo activado
     const sinSonido = guardado?.sonido === false || guardado?.silenciado === true;
     // "Sin vibración" solo tiene sentido con el sonido apagado (es el paso 3); con sonido, todo está activado
-    return { sinSonido, sinVibracion: sinSonido && guardado?.vibracion === false };
+    // (la música del combate es al revés: sin memoria queda apagada, y solo suena si la persona la encendió)
+    return { sinSonido, sinVibracion: sinSonido && guardado?.vibracion === false, conMusica: guardado?.musica === true };
 }
 
 function guardarAudio() {
-    guardarJSON(AUDIO_ALMACEN, { sonido: !silenciado, vibracion: !vibracionApagada });
+    guardarJSON(AUDIO_ALMACEN, { sonido: !silenciado, vibracion: !vibracionApagada, musica: musicaDelCombateEncendida });
 }
 
 // =================================================================================================================
@@ -216,6 +220,7 @@ function obtenerVolumenGeneral() {
 const audioGuardado = leerAudioGuardado();
 let silenciado = audioGuardado.sinSonido;
 let vibracionApagada = audioGuardado.sinVibracion;
+let musicaDelCombateEncendida = audioGuardado.conMusica; // el botón de música de los carteles del combate (por defecto, apagada)
 let salidaGeneral = null; // el "volumen maestro" de Web Audio: todos los sonidos sintetizados pasan por acá antes de salir
 
 // A dónde se conecta cada sonido sintetizado (en vez de directo a los parlantes): así un solo control los silencia a todos
@@ -237,8 +242,13 @@ export function aplicarSilencio() {
         salidaGeneral.gain.setTargetAtTime(silenciado ? 0 : vol, salidaGeneral.context.currentTime, 0.01);
     }
     actualizarVolumenAudios();
-    [audioMouse, musicaDelGanador, musicaDelCombate, fanfarriaDeVictoria, gritoDeVictoria, audioPajita].forEach(audio => {
+    [audioMouse, fanfarriaDeVictoria, gritoDeVictoria, audioPajita].forEach(audio => {
         if (audio) audio.muted = silenciado;
+    });
+    // La música del combate sigue "sonando" (en silencio) aunque esté apagada, como con el silencio general: si se la enciende en plena pelea, entra
+    // justo por donde iba. (Encenderla es un toque de la persona: el navegador deja que el audio que ya está corriendo se oiga.)
+    [musicaDelGanador, musicaDelCombate].forEach(audio => {
+        if (audio) audio.muted = silenciado || !musicaDelCombateEncendida;
     });
     if (vibracionApagada) {
         try {
@@ -258,6 +268,16 @@ function actualizarVolumenesSegunDispositivo() {
         nodoVolumenTeclas.gain.value = perfil.volumenTeclas;
     }
     actualizarVolumenAudios();
+}
+
+// La música del combate (la de la pelea y la del ganador): la enciende y la apaga el botón de los carteles del combate (combate.js). Queda guardada
+export const musicaDelCombateSuena = () => musicaDelCombateEncendida;
+
+export function alternarMusicaDelCombate() {
+    musicaDelCombateEncendida = !musicaDelCombateEncendida;
+    guardarAudio();
+    aplicarSilencio();
+    return musicaDelCombateEncendida;
 }
 
 // En qué paso está el botón: "todo" (sonido y vibración), "vibracion" (solo vibración) o "nada"
@@ -535,12 +555,15 @@ export const gritoDeVictoria = audioConVolumen('audio/Digimon World - PSX Battle
 const audioPajita = audioConVolumen('audio/Pajita.mp3');
 let intervaloSonido;
 
-// play() devuelve una promesa: si el navegador no deja sonar (por ejemplo, sin un toque previo), se ignora en vez de dejar un error en la consola
+// play() devuelve una promesa: si el navegador no deja sonar (por ejemplo, sin un toque previo), se ignora en vez de dejar un error en la consola.
+// Con la página oculta (otra pestaña, el navegador minimizado o la pantalla apagada) no suena nada nuevo: ver pausarAlOcultarse.
 export function reproducirSonido(audio) {
+    if (document.hidden) return;
     audio.play()?.catch(() => {});
 }
 
 export function detenerSonido(audio) {
+    pausadosAlOcultarse.delete(audio); // (si se lo corta con la página oculta, al volver no se lo reanuda)
     audio.pause();
     audio.currentTime = 0;
 }
@@ -733,3 +756,37 @@ export function cancelarGritoDeVictoria() {
     temporizadorGritoDeVictoria = 0;
     detenerSonido(gritoDeVictoria);
 }
+
+// ---- Nada suena con la página oculta ------------------------------------------------------------------------------
+// En el celular (y también en la computadora, con otra pestaña a la vista) el navegador deja sonando los audios de una página aunque no se vea:
+// la música del combate seguía de fondo al cambiar de pestaña o minimizar el navegador. Al ocultarse la página se pausan los archivos que estaban
+// sonando y se suspende el audio de los efectos (Web Audio); al volver se reanudan los que sonaban (la música del combate sigue de donde quedó).
+const pausadosAlOcultarse = new Set();
+let contextoSuspendidoPorMi = false;
+
+function pausarAlOcultarse() {
+    if (!document.hidden) return;
+    for (const { audio } of LISTA_AUDIOS) {
+        if (audio && !audio.paused && !audio.ended) {
+            pausadosAlOcultarse.add(audio);
+            audio.pause();
+        }
+    }
+    if (contextoAudio?.state === 'running') {
+        contextoSuspendidoPorMi = true;
+        contextoAudio.suspend().catch(() => {});
+    }
+}
+
+function reanudarAlVolver() {
+    if (document.hidden) return;
+    if (contextoSuspendidoPorMi) {
+        contextoSuspendidoPorMi = false;
+        contextoAudio?.resume().catch(() => {});
+    }
+    for (const audio of pausadosAlOcultarse) reproducirSonido(audio);
+    pausadosAlOcultarse.clear();
+}
+
+document.addEventListener('visibilitychange', () => (document.hidden ? pausarAlOcultarse() : reanudarAlVolver()));
+window.addEventListener('pagehide', pausarAlOcultarse);

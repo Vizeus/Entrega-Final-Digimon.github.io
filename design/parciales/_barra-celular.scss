@@ -96,17 +96,19 @@
             }
         }
 
-        // Panel del menú: vidrio claro que cae debajo de la barra, sin mover la página
+        // Panel del menú: vidrio claro que cae debajo de la fila de arriba de la barra (logo, contador, combate y ☰), sin mover la página. Los filtros no
+        // se necesitan mientras se usa el menú: se desvanecen (más abajo) y el panel se despliega encima del lugar que ocupan (--menu-arriba lo mide barra.js)
         .menu-movil {
             position: absolute;
-            top: calc(100% + 6px);
+            z-index: 5;
+            top: calc(var(--menu-arriba, 56px) + 6px);
             left: 8px;
             right: 8px;
             display: flex;
             flex-direction: column;
             gap: 12px;
-            // Nunca más alto que lo que queda de pantalla debajo de la barra (--barra-alto lo mide barra.js): si el contenido no entra, se desplaza
-            max-height: calc(100dvh - var(--barra-alto, 74px) - 20px);
+            // Nunca más alto que lo que queda de pantalla debajo de la fila de arriba (--menu-arriba lo mide barra.js): si el contenido no entra, se desplaza
+            max-height: calc(100dvh - var(--menu-arriba, 56px) - 20px);
             box-sizing: border-box; // (el alto máximo cuenta el relleno y el borde del panel)
             overflow-y: auto;
             overscroll-behavior: contain;
@@ -131,6 +133,20 @@
             opacity: 1;
             translate: 0 0;
             transition-delay: 0s;
+        }
+
+        // Con el menú abierto los filtros se desvanecen (siguen ocupando su lugar, así la página no salta) y no se pueden tocar
+        #filtros {
+            transition:
+                opacity 0.18s ease,
+                visibility 0s;
+        }
+
+        &.menu-abierto #filtros {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition-delay: 0s, 0.18s;
         }
 
         .menu-consigna {
@@ -221,6 +237,37 @@
 
         .menu-info.abierto #lista-elementos {
             display: grid;
+        }
+
+        // Con el celular acostado (más de 560px de ancho y poco alto) el panel no se apila en una sola columna, que no entraría en la pantalla: la
+        // consigna, los ajustes y los cinco menús de información se reparten en renglones, con los menús de a tres. El que se despliega ocupa el renglón entero.
+        @media (min-width: 560px) {
+            .menu-movil {
+                gap: 8px;
+                padding: 10px 12px;
+            }
+
+            #cambiar-niveles {
+                flex: 1 1 320px;
+                height: 40px;
+            }
+
+            .herramientas {
+                flex-flow: row wrap;
+                align-items: flex-start;
+            }
+
+            .menu-info {
+                flex: 1 1 calc(33.333% - 8px);
+            }
+
+            .menu-info.abierto {
+                flex-basis: 100%;
+            }
+
+            .menu-desplegable {
+                height: 36px;
+            }
         }
 
         // Carga: solo una línea finita en el borde de abajo de la barra (el rótulo queda para los lectores de pantalla)

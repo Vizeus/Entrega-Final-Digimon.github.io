@@ -5,7 +5,7 @@
 // tandas) y las ventanas que se abren desde sus chips y botones (atributo, elemento, nivel, ataques y evolución).
 // -----------------------------------------------------------------------------------------------------------------
 
-import { emitir, ponerAyuda } from './util.js';
+import { PANTALLA_DE_CELULAR, emitir, ponerAyuda } from './util.js';
 import {
     ANIOS_XROS_WARS,
     EMOJIS_ELEMENTO,
@@ -370,7 +370,8 @@ const VENTANAS_DE_LA_CARTA = [
     { boton: '.c-x', dato: 'xAntibody', aviso: 'misc', abrir: () => infoMisc('xantibody') },
     { boton: '.c-marca', dato: 'marca', aviso: 'misc', abrir: marca => infoMisc(marca.toLowerCase()) },
     { boton: '.c-xw', dato: 'xrosWars', aviso: 'misc', abrir: () => infoMisc('xroswars') },
-    { boton: '.c-campo', valorDe: boton => boton.dataset.campo, aviso: 'campo', abrir: infoCampo },
+    // (En celular los grupos solo se pueden tocar con la carta agrandada: sin el zoom, un toque en la descripción del dorso, donde están, abría la ventana por error)
+    { boton: '.c-campo', valorDe: boton => boton.dataset.campo, aviso: 'campo', abrir: infoCampo, soloConZoomEnCelular: true },
     { boton: '.c-ataques', abrir: abrirAtaques },
     { boton: '.c-evo', abrir: abrirEvolucion },
 ];
@@ -382,10 +383,11 @@ export function activarCartelesDeInfoEnCartas() {
     document.addEventListener(
         'click',
         evento => {
-            for (const { boton, dato, valorDe, aviso, abrir } of VENTANAS_DE_LA_CARTA) {
+            for (const { boton, dato, valorDe, aviso, abrir, soloConZoomEnCelular } of VENTANAS_DE_LA_CARTA) {
                 const apretado = evento.target.closest?.(dentroDeUnaCarta(boton));
                 const carta = apretado?.closest('#listado-digimons li');
                 if (!carta || (dato && !carta.dataset[dato])) continue;
+                if (soloConZoomEnCelular && PANTALLA_DE_CELULAR.matches && carta !== cartaEnZoom) continue; // el toque sigue su camino, como en el resto del dorso
                 evento.stopPropagation();
                 const valor = valorDe ? valorDe(apretado) : dato ? carta.dataset[dato] : null;
                 const abrirVentana = () => {

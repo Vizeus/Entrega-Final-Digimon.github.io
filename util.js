@@ -75,14 +75,14 @@ export const esElSegundoDeUnDoble = () => segundoDeUnDoble;
 // Una sola definición de cada tipo de pantalla. Se lee con .matches (siempre dice cómo está en ese momento) y se puede
 // escuchar con .addEventListener('change', ...).
 // El corte de 700 px es el mismo que $corte-celular en design/parciales/_variables.scss: si se cambia uno, se cambia el otro.
-export const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
+export const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px), (max-height: 500px)'); // (también el celular acostado: ver $consulta-celular en _variables.scss)
 
 // Los botones "suaves": las etiquetas de los filtros elegidos (se tocan para quitarlos), el Aceptar de las ventanas y su cruz de cerrar.
 // Aparecen todo el tiempo, así que no suenan como una tecla sino con un "tic" bajito, y vibran menos (ver sonidos.js y audio.js).
-// Las opciones de los desplegables de los filtros (Vacuna, Virus, Adult, Planta...; y la barrita que despliega las especies de una familia) no se ven como un
+// Las opciones de los desplegables de los filtros (Vacuna, Virus, Adult, Planta...; las de Agrupar y Orden; las temporadas de Estreno; y la barrita que despliega las especies de una familia) no se ven como un
 // botón que se aprieta y se suelta: suenan con un solo "tic" instantáneo y todavía más bajito, y vibran igual de suave que los botones suaves.
-export const OPCIONES_DE_FILTRO = '.f-chip, .f-fam-abrir';
-export const BOTONES_SUAVES = `.f-tag, .swal2-confirm, .swal2-close, ${OPCIONES_DE_FILTRO}`;
+export const OPCIONES_DE_FILTRO = '.f-chip, .f-orden-op, .f-temporada, .f-fam-abrir';
+export const BOTONES_SUAVES = `.f-tag, .swal2-confirm, .swal2-close, .combate-musica, ${OPCIONES_DE_FILTRO}`;
 export const HAY_PANTALLA_TACTIL = navigator.maxTouchPoints > 0 || 'ontouchstart' in window; // aunque también tenga mouse
 
 // ---- Dedo o mouse ----------------------------------------------------------------------------------------------------

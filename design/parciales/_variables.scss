@@ -12,9 +12,14 @@ $cruz-del-zoom-margen: 14px;
 $cruz-del-zoom-tamano: 42px;
 
 // ---- Cortes de pantalla (ver los mixins "celular" y "computadora") -----------------------------------------------------
-// Hasta 700px es el diseño de celular (barra finita con el menú ☰, dos cartas por fila...); desde 701px, el de computadora.
-// util.js (PANTALLA_DE_CELULAR) usa el mismo número: si se cambia acá, hay que cambiarlo también allá.
+// El diseño de celular (barra finita con el menú ☰, dos cartas por fila...) vale hasta 700px de ancho Y también con la pantalla baja (hasta 500px de
+// alto): el celular acostado mide más de 700px de ancho, pero la barra de computadora (tres renglones) le ocuparía toda la pantalla. El de computadora es
+// lo contrario: desde 701px de ancho y 501px de alto. (Una ventana de escritorio muy baja, por ejemplo con las herramientas del navegador abiertas abajo,
+// también usa el de celular.) util.js (PANTALLA_DE_CELULAR) usa las mismas medidas: si se cambian acá, hay que cambiarlas también allá.
 $corte-celular: 700px;
+$corte-celular-alto: 500px;
+$consulta-celular: "(max-width: #{$corte-celular}), (max-height: #{$corte-celular-alto})";
+$consulta-computadora: "(min-width: #{$corte-celular + 1}) and (min-height: #{$corte-celular-alto + 1})";
 
 // ---- Colores que se repiten ---------------------------------------------------------------------------------------------
 // Los que cambian con el tema (claro / oscuro) no son colores de Sass sino variables de CSS: acá solo se les da un nombre corto para usarlos
@@ -74,6 +79,8 @@ $capas: (
     avisos-de-ayuda: 800,
     filtros: 900,
     menus-de-informacion: 950,
+    vuelo-de-la-carta: 990,
+    // (va dentro de la barra: pasa por encima de sus desplegables, botones y miniaturas)
     barra: 1000,
     aviso-del-contador: 1100,
     fondo-del-zoom: 1500,
@@ -83,6 +90,8 @@ $capas: (
     botones-flotantes: 1800,
     globo-de-boton: 1850,
     ventanas: 2000,
+    flechas-de-ventana: 2050,
+    // las flechas para pasar de carta con una ventana de ataques o de línea evolutiva abierta (paso.js)
     botones-sobre-las-ventanas: 2100,
     globo-sobre-las-ventanas: 2150,
 );

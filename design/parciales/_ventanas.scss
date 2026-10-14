@@ -1,3 +1,4 @@
+@use "sass:math";
 @use "variables" as *;
 @use "mixins" as *;
 
@@ -45,6 +46,8 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 // alto), la cruz se queda pegada al borde de arriba de la pantalla cuando la ventana es más alta y se desplaza: nunca queda fuera de alcance.
 $cruz-de-ventana-tamano: 38px;
 $cruz-de-ventana-margen: 10px;
+$musica-de-ventana-tamano: 34px; // el botón de música de los carteles del combate (más chico que la cruz)
+$musica-de-ventana-aire: math.div($cruz-de-ventana-tamano - $musica-de-ventana-tamano, 2); // lo que baja para quedar a la altura del centro de la cruz
 
 .swal2-popup {
     // Los títulos dejan lugar a la cruz de la derecha, y se mantienen centrados con el mismo lugar a la izquierda
@@ -92,6 +95,51 @@ $cruz-de-ventana-margen: 10px;
             stroke-width: 2.4;
             stroke-linecap: round;
             filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7));
+        }
+    }
+
+    // El riel del lado izquierdo: lleva el botón de música de los carteles del combate (combate.js, ponerBotonDeMusica), del lado contrario a la cruz
+    .ventana-riel.izquierda {
+        inset: 0 auto 0 0;
+    }
+
+    // El botón de música del combate: el mismo vidrio redondo que la cruz, un poco más chico, con su misma altura de centro y el mismo margen
+    // del borde (pero a la izquierda). Con la música apagada queda "hundido" y con la nota tachada, como el botón de sonido de la barra.
+    // (Cuando aparece el globito que lo explica salta y lanza ondas, como el de sonido: ver boton-que-llama.)
+    .ventana-riel button.combate-musica {
+        @include boton-de-gel;
+        @include boton-redondo;
+        @include boton-que-llama;
+        position: sticky;
+        top: calc(max(#{$cruz-de-ventana-margen}, env(safe-area-inset-top, 0px)) - var(--corrimiento-de-la-ventana, 0px) + #{$musica-de-ventana-aire});
+        margin: ($cruz-de-ventana-margen + $musica-de-ventana-aire) 0 0 $cruz-de-ventana-margen;
+        pointer-events: auto;
+
+        // Una zona de toque más grande que el dibujo, para el dedo
+        &::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+        }
+
+        .musica-icono {
+            display: block;
+            width: 20px;
+            height: 20px;
+            filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+        }
+
+        .musica-cruz {
+            display: none;
+        }
+
+        &[data-modo="apagada"] {
+            box-shadow: $sombra-hundida;
+
+            .musica-cruz {
+                display: inline;
+                stroke: #c2362b;
+            }
         }
     }
 

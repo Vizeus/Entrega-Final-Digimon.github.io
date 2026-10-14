@@ -4,15 +4,15 @@
 @use "variables" as *;
 
 // ---- Cortes de pantalla --------------------------------------------------------------------------------------------------
-// @include celular { ... } → solo en el diseño de celular (hasta 700px). @include computadora { ... } → desde 701px.
+// @include celular { ... } → solo en el diseño de celular (hasta 700px de ancho o 500px de alto). @include computadora { ... } → el resto (ver _variables.scss).
 @mixin celular {
-    @media (max-width: $corte-celular) {
+    @media #{$consulta-celular} {
         @content;
     }
 }
 
 @mixin computadora {
-    @media (min-width: $corte-celular + 1) {
+    @media #{$consulta-computadora} {
         @content;
     }
 }

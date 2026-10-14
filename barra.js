@@ -19,10 +19,10 @@ export function activarMenuMovil() {
     const boton = document.getElementById('abrir-menu');
     const panel = document.getElementById('menu-movil');
     const estaAbierto = () => barra.classList.contains('menu-abierto');
-    // El panel no puede pasarse del borde de abajo de la pantalla: su alto máximo es lo que queda debajo de la barra (que cambia de alto cuando se
-    // suman o se quitan etiquetas de filtros, por eso se mide). Si lo que tiene adentro no entra (por ejemplo, con una lista de información
-    // abierta), el panel se desplaza por su cuenta (lo dibuja el CSS: --barra-alto).
-    const medirBarra = () => barra.style.setProperty('--barra-alto', `${barra.offsetHeight}px`);
+    // El panel se despliega debajo de la fila de arriba de la barra (logo, contador, combate y ☰), encima de los filtros, que se desvanecen mientras el
+    // menú está abierto. Su alto máximo es lo que queda de pantalla debajo de esa fila (se mide porque cambia con el tamaño de la pantalla). Si lo
+    // que tiene adentro no entra (por ejemplo, con una lista de información abierta), el panel se desplaza por su cuenta (lo dibuja el CSS: --menu-arriba).
+    const medirBarra = () => barra.style.setProperty('--menu-arriba', `${boton.offsetTop + boton.offsetHeight + 7}px`); // (7 px: el relleno de abajo de la barra)
     medirBarra();
     if ('ResizeObserver' in window) new ResizeObserver(medirBarra).observe(barra);
     const abrir = abierto => {

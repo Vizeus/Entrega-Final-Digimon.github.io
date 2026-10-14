@@ -49,33 +49,34 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261013-2143",
-                    "./datos.js": "./datos.js?v=20261013-2143",
-                    "./i18n.js": "./i18n.js?v=20261013-2143",
-                    "./nombres.js": "./nombres.js?v=20261013-2143",
-                    "./pagina.js": "./pagina.js?v=20261013-2143",
-                    "./api.js": "./api.js?v=20261013-2143",
-                    "./combate.js": "./combate.js?v=20261013-2143",
-                    "./avisos.js": "./avisos.js?v=20261013-2143",
-                    "./descartar.js": "./descartar.js?v=20261013-2143",
-                    "./cartas.js": "./cartas.js?v=20261013-2143",
-                    "./zoom.js": "./zoom.js?v=20261013-2143",
-                    "./gestos.js": "./gestos.js?v=20261013-2143",
-                    "./inclinacion.js": "./inclinacion.js?v=20261013-2143",
-                    "./audio.js": "./audio.js?v=20261013-2143",
-                    "./sonidos.js": "./sonidos.js?v=20261013-2143",
-                    "./filtros.js": "./filtros.js?v=20261013-2143",
-                    "./info.js": "./info.js?v=20261013-2143",
-                    "./barra.js": "./barra.js?v=20261013-2143",
-                    "./evolucion.js": "./evolucion.js?v=20261013-2143",
-                    "./ventanas.js": "./ventanas.js?v=20261013-2143",
-                    "./baile.js": "./baile.js?v=20261013-2143",
-                    "./tema.js": "./tema.js?v=20261013-2143",
-                    "./menus.js": "./menus.js?v=20261013-2143"
+                    "./util.js": "./util.js?v=20261013-2339",
+                    "./datos.js": "./datos.js?v=20261013-2339",
+                    "./i18n.js": "./i18n.js?v=20261013-2339",
+                    "./nombres.js": "./nombres.js?v=20261013-2339",
+                    "./pagina.js": "./pagina.js?v=20261013-2339",
+                    "./api.js": "./api.js?v=20261013-2339",
+                    "./combate.js": "./combate.js?v=20261013-2339",
+                    "./avisos.js": "./avisos.js?v=20261013-2339",
+                    "./descartar.js": "./descartar.js?v=20261013-2339",
+                    "./cartas.js": "./cartas.js?v=20261013-2339",
+                    "./zoom.js": "./zoom.js?v=20261013-2339",
+                    "./gestos.js": "./gestos.js?v=20261013-2339",
+                    "./inclinacion.js": "./inclinacion.js?v=20261013-2339",
+                    "./audio.js": "./audio.js?v=20261013-2339",
+                    "./sonidos.js": "./sonidos.js?v=20261013-2339",
+                    "./filtros.js": "./filtros.js?v=20261013-2339",
+                    "./info.js": "./info.js?v=20261013-2339",
+                    "./barra.js": "./barra.js?v=20261013-2339",
+                    "./evolucion.js": "./evolucion.js?v=20261013-2339",
+                    "./ventanas.js": "./ventanas.js?v=20261013-2339",
+                    "./paso.js": "./paso.js?v=20261013-2339",
+                    "./baile.js": "./baile.js?v=20261013-2339",
+                    "./tema.js": "./tema.js?v=20261013-2339",
+                    "./menus.js": "./menus.js?v=20261013-2339"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261013-2143"></script>
+        <script type="module" src="./main.js?v=20261013-2339"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,7 +87,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261013-2143" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261013-2339" />
     </head>
 
     <body>
@@ -441,6 +442,107 @@
                     </button>
                     <div class="f-panel f-panel-estreno" role="group" aria-label="Filtrar por fecha de estreno" data-i18n-attr="aria-label:filtros.porEstreno">
                         <p class="f-panel-titulo" data-i18n="filtros.estreno.titulo">Año de estreno</p>
+                        <!-- Atajos: cada temporada de la serie (con su logo) elige de una vez el período de años en que salió. Tocar la que ya está elegida lo saca.
+         Los años de cada una (de estreno en Japón) y sus nombres son los mismos en los dos idiomas -->
+                        <div class="f-temporadas" role="group" aria-label="Temporadas de la serie" data-i18n-attr="aria-label:filtros.estreno.temporadas">
+                            <button
+                                type="button"
+                                class="f-temporada"
+                                data-desde="1999"
+                                data-hasta="2000"
+                                aria-pressed="false"
+                                title="Digimon Adventure · 1999–2000"
+                                aria-label="Digimon Adventure, 1999–2000"
+                            >
+                                <img src="./img/temporadas/adventure.png" alt="" loading="lazy" decoding="async" />
+                                <small>1999–2000</small>
+                            </button>
+                            <button
+                                type="button"
+                                class="f-temporada"
+                                data-desde="2000"
+                                data-hasta="2001"
+                                aria-pressed="false"
+                                title="Digimon Adventure 02 · 2000–2001"
+                                aria-label="Digimon Adventure 02, 2000–2001"
+                            >
+                                <img src="./img/temporadas/adventure-02.png" alt="" loading="lazy" decoding="async" />
+                                <small>2000–2001</small>
+                            </button>
+                            <button
+                                type="button"
+                                class="f-temporada"
+                                data-desde="2001"
+                                data-hasta="2002"
+                                aria-pressed="false"
+                                title="Digimon Tamers · 2001–2002"
+                                aria-label="Digimon Tamers, 2001–2002"
+                            >
+                                <img src="./img/temporadas/tamers.png" alt="" loading="lazy" decoding="async" />
+                                <small>2001–2002</small>
+                            </button>
+                            <button
+                                type="button"
+                                class="f-temporada"
+                                data-desde="2002"
+                                data-hasta="2003"
+                                aria-pressed="false"
+                                title="Digimon Frontier · 2002–2003"
+                                aria-label="Digimon Frontier, 2002–2003"
+                            >
+                                <img src="./img/temporadas/frontier.png" alt="" loading="lazy" decoding="async" />
+                                <small>2002–2003</small>
+                            </button>
+                            <button
+                                type="button"
+                                class="f-temporada"
+                                data-desde="2006"
+                                data-hasta="2007"
+                                aria-pressed="false"
+                                title="Digimon Data Squad · 2006–2007"
+                                aria-label="Digimon Data Squad, 2006–2007"
+                            >
+                                <img src="./img/temporadas/data-squad.png" alt="" loading="lazy" decoding="async" />
+                                <small>2006–2007</small>
+                            </button>
+                            <button
+                                type="button"
+                                class="f-temporada"
+                                data-desde="2010"
+                                data-hasta="2012"
+                                aria-pressed="false"
+                                title="Digimon Fusion · 2010–2012"
+                                aria-label="Digimon Fusion, 2010–2012"
+                            >
+                                <img src="./img/temporadas/fusion.png" alt="" loading="lazy" decoding="async" />
+                                <small>2010–2012</small>
+                            </button>
+                            <button
+                                type="button"
+                                class="f-temporada"
+                                data-desde="2015"
+                                data-hasta="2018"
+                                aria-pressed="false"
+                                title="Digimon Adventure tri. · 2015–2018"
+                                aria-label="Digimon Adventure tri., 2015–2018"
+                            >
+                                <img src="./img/temporadas/tri.png" alt="" loading="lazy" decoding="async" />
+                                <small>2015–2018</small>
+                            </button>
+                            <button
+                                type="button"
+                                class="f-temporada"
+                                data-desde="2021"
+                                data-hasta="2023"
+                                data-logo-oscuro
+                                aria-pressed="false"
+                                title="Digimon Ghost Game · 2021–2023"
+                                aria-label="Digimon Ghost Game, 2021–2023"
+                            >
+                                <img src="./img/temporadas/ghost-game.png" alt="" loading="lazy" decoding="async" />
+                                <small>2021–2023</small>
+                            </button>
+                        </div>
                         <label class="f-anio">
                             <span data-i18n="filtros.estreno.desde">Desde</span>
                             <select data-lado="desde"></select>
@@ -586,21 +688,26 @@
                     </div>
                 </div>
 
-                <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
-                <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
+                <!-- La última parte de la fila de filtros, siempre junta (nunca se separa en renglones distintos): las etiquetas de los filtros activos, el
+         botón "+N »" y, a la derecha, cuántos digimons quedan y el botón de limpiar. Cuántas etiquetas se ven lo decide filtros.js según el lugar que
+         queda en el renglón (escribirEtiquetas), para que todo entre en una sola línea y la barra no crezca de más -->
+                <div class="f-final">
+                    <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
+                    <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
 
-                <!-- Si hay más filtros activos de los que entran a la vista (2, 3 o 4 según el ancho de la pantalla), el resto queda detrás de este botón,
-         que despliega todos. Aparece solo cuando sobran (los arma filtros.js, escribirEtiquetas) -->
-                <div class="f-grupo f-todos" data-g="etiquetas" hidden>
-                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
-                        <span class="f-todos-n">+0</span><span class="f-todos-flecha" aria-hidden="true">»</span>
-                    </button>
-                    <div class="f-panel" role="group" aria-label="Todos los filtros activos" data-i18n-attr="aria-label:filtros.todasPanel"></div>
-                </div>
+                    <!-- Si hay más filtros activos de los que entran a la vista, el resto queda detrás de este botón, que despliega todos.
+         Aparece solo cuando sobran (los arma filtros.js, escribirEtiquetas) -->
+                    <div class="f-grupo f-todos" data-g="etiquetas" hidden>
+                        <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                            <span class="f-todos-n">+0</span><span class="f-todos-flecha" aria-hidden="true">»</span>
+                        </button>
+                        <div class="f-panel" role="group" aria-label="Todos los filtros activos" data-i18n-attr="aria-label:filtros.todasPanel"></div>
+                    </div>
 
-                <div class="f-resumen">
-                    <span class="f-cuenta" aria-live="polite"></span>
-                    <button type="button" class="f-limpiar" hidden data-i18n="filtros.limpiar">Limpiar ✕</button>
+                    <div class="f-resumen">
+                        <span class="f-cuenta" aria-live="polite"></span>
+                        <button type="button" class="f-limpiar" hidden data-i18n="filtros.limpiar">Limpiar ✕</button>
+                    </div>
                 </div>
             </section>
 

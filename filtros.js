@@ -42,6 +42,7 @@ import {
     numeracionNiveles,
 } from './datos.js';
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
+import { PANTALLA_DE_CELULAR } from './util.js';
 import { listaDigimons, nombreNivel } from './pagina.js';
 import { nombreApiCompleto, nombreCompleto, nombreOccidentalCompleto, separarXAntibody } from './cartas.js';
 
@@ -116,6 +117,8 @@ const cajaBusqueda = seccionFiltros.querySelector('.f-buscar input');
 const botonBorrarBusqueda = seccionFiltros.querySelector('.f-x');
 const botonesDeTresEstados = seccionFiltros.querySelectorAll('.f-tres'); // X-Antibody y Xros Wars (su data-g dice de qué filtro es cada uno)
 const zonaActivos = seccionFiltros.querySelector('.f-activos');
+const parteFinal = seccionFiltros.querySelector('.f-final'); // las etiquetas, el "+N »" y el conteo con el botón de limpiar, siempre juntos
+const zonaResumen = seccionFiltros.querySelector('.f-resumen');
 const grupoTodasLasEtiquetas = seccionFiltros.querySelector('.f-todos'); // el botón "+N »" con el panel que tiene todas las etiquetas
 const panelTodasLasEtiquetas = grupoTodasLasEtiquetas.querySelector('.f-panel');
 const botonLimpiarEspecies = seccionFiltros.querySelector('.f-opciones-limpiar'); // arriba a la derecha del panel de las especies
@@ -603,8 +606,8 @@ function escribirEtiquetas() {
         const texto = textoDelPeriodo();
         etiquetas.push(crearEtiqueta('estreno', 'periodo', COLOR_ESTRENO, { clase: 'f-e', texto: '📅' }, texto, t('filtros.estreno')));
     }
-    // Cuántas entran a la vista depende del ancho de la pantalla; si hay más, el resto queda detrás del botón "+N »", que las despliega todas
-    const entran = etiquetasQueEntran();
+    // Cuántas entran a la vista depende del lugar que haya en el renglón; si hay más, el resto queda detrás del botón "+N »", que las despliega todas
+    const entran = etiquetasQueEntran(etiquetas);
     const sobran = Math.max(0, etiquetas.length - entran);
     const boton = grupoTodasLasEtiquetas.querySelector('.f-btn');
     cambiarTexto(grupoTodasLasEtiquetas.querySelector('.f-todos-n'), `+${sobran}`);
@@ -623,14 +626,81 @@ function escribirEtiquetas() {
     zonaActivos.replaceChildren(...etiquetas.slice(0, entran));
 }
 
-// Cuántas etiquetas de filtros activos se ven sin desplegar: pocas en el celular y más a medida que crece la pantalla (así la barra no se vuelve enorme)
-const ETIQUETAS_QUE_ENTRAN = [
-    [window.matchMedia('(max-width: 700px)'), 2],
-    [window.matchMedia('(max-width: 1199px)'), 3],
-];
-const ETIQUETAS_EN_PANTALLA_GRANDE = 4;
-const etiquetasQueEntran = () => ETIQUETAS_QUE_ENTRAN.find(([consulta]) => consulta.matches)?.[1] ?? ETIQUETAS_EN_PANTALLA_GRANDE;
-ETIQUETAS_QUE_ENTRAN.forEach(([consulta]) => consulta.addEventListener('change', () => escribirEtiquetas()));
+// Cuántas etiquetas de filtros activos se ven sin desplegar. En el celular son siempre 2 (van en su propia tira, que se desliza de costado). En
+// computadora se mide el lugar que hay: las etiquetas, el botón "+N »" y el conteo con su botón de limpiar (todo junto, en .f-final) tienen que entrar
+// en UN solo renglón, así la barra no crece de más. Primero se mira el lugar que queda en el renglón del último botón de los filtros: si ahí entran
+// el "+N »" y el conteo, el bloque se queda ahí y se ven tantas etiquetas como entren (aunque sea ninguna: queda el "+N »" que las despliega todas).
+// Solo si ni eso entra baja a su propio renglón, que es todo el ancho, y se ven las que entren en ese. Lo que no entra queda detrás del "+N »".
+// (Nunca más de MAXIMO_DE_ETIQUETAS: más sería ruido.)
+const ETIQUETAS_EN_CELULAR = 2;
+const MAXIMO_DE_ETIQUETAS = 6;
+const HUECO_ENTRE_ETIQUETAS = 6; // px (el gap de .f-activos)
+const HUECO_ENTRE_PARTES = 10; // px (el gap de .f-final y el de #filtros)
+const RESGUARDO = 4; // px de margen para que un redondeo no mande el bloque entero al renglón de abajo
+
+// Un lugar fuera de la vista donde se miden las etiquetas y el botón "+N »" con sus estilos de verdad (sin que se vean ni cambien la barra).
+// El contenedor (.f-medidor) es un punto que recorta todo lo que tiene adentro: así la fila de medir, que puede ser más ancha que la pantalla,
+// no agranda el ancho de la página (y no aparece una barra de desplazamiento horizontal)
+const medidor = document.createElement('div');
+medidor.className = 'f-medidor';
+medidor.setAttribute('aria-hidden', 'true');
+medidor.inert = true;
+const filaDelMedidor = document.createElement('div');
+filaDelMedidor.className = 'f-medidor-fila';
+medidor.append(filaDelMedidor);
+const medidorDeTodos = document.createElement('div'); // (sin la clase "f-grupo": no es un desplegable de verdad)
+medidorDeTodos.className = 'f-todos';
+medidorDeTodos.innerHTML = grupoTodasLasEtiquetas.querySelector('.f-btn').outerHTML;
+filaDelMedidor.append(medidorDeTodos);
+seccionFiltros.append(medidor);
+
+function etiquetasQueEntran(etiquetas) {
+    const total = etiquetas.length;
+    if (PANTALLA_DE_CELULAR.matches) return Math.min(total, ETIQUETAS_EN_CELULAR);
+    if (total === 0) return 0;
+
+    // Cuánto mide cada etiqueta (con su ✕ y su ícono) y el botón "+N »" (con el número más grande que puede llevar)
+    filaDelMedidor.replaceChildren(...etiquetas.map(etiqueta => etiqueta.cloneNode(true)), medidorDeTodos);
+    medidorDeTodos.querySelector('.f-todos-n').textContent = `+${total}`;
+    const anchos = [...filaDelMedidor.querySelectorAll('.f-tag')].map(etiqueta => etiqueta.getBoundingClientRect().width);
+    const anchoDeTodos = medidorDeTodos.getBoundingClientRect().width;
+    const anchoDelResumen = zonaResumen.getBoundingClientRect().width;
+
+    // Lo que ocupa el bloque con "n" etiquetas a la vista: las etiquetas, el "+N »" (si sobra alguna) y el resumen, con el hueco entre las partes
+    const ocupa = n => {
+        const partes = [anchoDelResumen];
+        if (n > 0) partes.push(anchos.slice(0, n).reduce((suma, ancho) => suma + ancho, 0) + HUECO_ENTRE_ETIQUETAS * (n - 1));
+        if (n < total) partes.push(anchoDeTodos);
+        return partes.reduce((suma, ancho) => suma + ancho, 0) + HUECO_ENTRE_PARTES * (partes.length - 1);
+    };
+    // Cuántas etiquetas entran en ese lugar (0: solo el "+N »" y el conteo), o -1 si ni el "+N »" y el conteo entran
+    const queEntranEn = lugar => {
+        for (let n = Math.min(total, MAXIMO_DE_ETIQUETAS); n >= 0; n--) if (ocupa(n) <= lugar - RESGUARDO) return n;
+        return -1;
+    };
+
+    // El lugar que queda en el renglón del último botón de los filtros (los que están ocultos, como los extra de "Más filtros", no cuentan)
+    const caja = seccionFiltros.getBoundingClientRect();
+    let ultimo = parteFinal.previousElementSibling;
+    while (ultimo && ultimo.getClientRects().length === 0) ultimo = ultimo.previousElementSibling;
+    const dondeTermina = ultimo ? ultimo.getBoundingClientRect().right - caja.left + HUECO_ENTRE_PARTES : 0;
+    const enElMismoRenglon = queEntranEn(seccionFiltros.clientWidth - dondeTermina);
+    return enElMismoRenglon >= 0 ? enElMismoRenglon : Math.max(0, queEntranEn(seccionFiltros.clientWidth));
+}
+
+// Cuando cambia el ancho de la pantalla (o lo que ocupan los botones de los filtros) se vuelven a contar. Se espera al próximo cuadro para no medir
+// varias veces seguidas (por ejemplo, mientras se arrastra el borde de la ventana)
+let pedidoDeEtiquetas = 0;
+function programarEtiquetas() {
+    if (pedidoDeEtiquetas) return;
+    pedidoDeEtiquetas = requestAnimationFrame(() => {
+        pedidoDeEtiquetas = 0;
+        escribirEtiquetas();
+    });
+}
+PANTALLA_DE_CELULAR.addEventListener('change', programarEtiquetas);
+new ResizeObserver(programarEtiquetas).observe(seccionFiltros);
+document.fonts?.ready.then(programarEtiquetas); // (con la fuente de verdad los botones miden distinto)
 
 // Cambian un texto o un atributo solo si de verdad es distinto
 function cambiarTexto(elemento, texto) {
@@ -646,7 +716,8 @@ let firmaAnios = '';
 function escribirEstreno() {
     const grupo = seccionFiltros.querySelector('.f-grupo[data-g="estreno"]');
     const selectores = grupo.querySelectorAll('select');
-    const anios = [...aniosVistos].sort((a, b) => a - b);
+    // Los años de los digimons que ya llegaron y, además, los del período elegido (una temporada puede empezar en un año que ninguno de ellos tenga)
+    const anios = [...new Set([...aniosVistos, desdeAnio, hastaAnio].filter(anio => anio !== null))].sort((a, b) => a - b);
     const libre = t('filtros.estreno.libre');
     const firma = `${libre}|${anios.join(',')}`;
     if (firma !== firmaAnios) {
@@ -661,6 +732,10 @@ function escribirEstreno() {
         if (selector.value !== valor) selector.value = valor;
     });
     grupo.querySelector('.f-btn').classList.toggle('tiene', desdeAnio !== null || hastaAnio !== null);
+    // La temporada cuyo período es justo el elegido queda marcada
+    grupo.querySelectorAll('.f-temporada').forEach(boton => {
+        cambiarAtributo(boton, 'aria-pressed', String(Number(boton.dataset.desde) === desdeAnio && Number(boton.dataset.hasta) === hastaAnio));
+    });
 }
 
 // ---- Filtrar y contar ----------------------------------------------------------------------------------------------
@@ -744,7 +819,6 @@ function refrescar() {
         if (contador.hidden !== (cuantos === 0)) contador.hidden = cuantos === 0;
     });
 
-    escribirEtiquetas();
     // Dos versiones del mismo dato: la larga ("Mostrando 12 de 860 digimons") y una cortita ("12 de 860") para la barra finita del celular
     // (el CSS muestra una u otra; la que no se ve no se lee ni en pantalla ni con lector)
     const datos = { v: `<b>${visibles}</b>`, n: `<span class="f-num">${total}</span>` };
@@ -753,6 +827,7 @@ function refrescar() {
 
     escribirBotonLimpiar();
     escribirMasFiltros();
+    escribirEtiquetas(); // (al final: cuántas entran depende de lo que ocupan los botones, el conteo y el botón de limpiar, ya escritos)
     avisoVacio.hidden = !(total > 0 && visibles === 0);
 }
 
@@ -1145,6 +1220,18 @@ function activarFiltros() {
                 hastaAnio = anio;
                 if (anio !== null && desdeAnio !== null && anio < desdeAnio) desdeAnio = anio;
             }
+            refrescar();
+        });
+    });
+
+    // Temporadas de la serie: eligen de una vez el período de años en que salieron (y tocar la que ya está elegida lo saca)
+    seccionFiltros.querySelectorAll('.f-temporada').forEach(boton => {
+        boton.addEventListener('click', () => {
+            const desde = Number(boton.dataset.desde);
+            const hasta = Number(boton.dataset.hasta);
+            const yaElegida = desdeAnio === desde && hastaAnio === hasta;
+            desdeAnio = yaElegida ? null : desde;
+            hastaAnio = yaElegida ? null : hasta;
             refrescar();
         });
     });

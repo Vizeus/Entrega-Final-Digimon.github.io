@@ -1,3 +1,5 @@
+@use "sass:list";
+@use "sass:map";
 @use "variables" as *;
 @use "mixins" as *;
 
@@ -386,7 +388,7 @@
         // se toca. Mientras vuela su marco de niveles 7 y 8 es fijo (el que gira es solo el de la miniatura ya puesta en su lugar)
         &.vuelo {
             position: absolute;
-            z-index: 20;
+            z-index: capa(vuelo-de-la-carta); // por encima de los menús desplegables (filtros e información) y de todos los botones de la barra
             margin: 0;
             pointer-events: none;
             animation: none;
@@ -772,7 +774,7 @@
 }
 
 // En las pantallas angostas que no son celular (701 a 819 px) el panel no tiene lugar para las cartas en miniatura sin descentrar el contador
-@media (min-width: 701px) and (max-width: 819px) {
+@media #{$consulta-computadora} and (max-width: 819px) {
     #navbar .elegidos {
         display: none;
     }
@@ -829,12 +831,108 @@
     }
 }
 
+// ---- Dónde queda cada bloque de la barra según el ancho (computadora) ---------------------------------------------------
+// Los menús de información (.herramientas) son lo más ancho de la barra y, cuando no entran en la fila de arriba, bajan a una fila propia. Antes
+// quedaban pegados a la izquierda con todo el lado derecho vacío (se veían "descentrados" respecto de los ajustes y del panel de combate): ahora,
+// cuando bajan, ocupan la fila entera y quedan centrados. Para saber cuándo bajan hacen falta los anchos de cada bloque, que dependen del idioma
+// (los rótulos del inglés son más cortos). Son los anchos con la página ya cargada: si se cambia un rótulo o se agrega un botón, hay que
+// actualizarlos (se miden en la consola con $0.getBoundingClientRect().width sobre .ajustes y .herramientas).
+$barra-bloques: (
+    logo: (
+        es: 121px,
+        en: 121px,
+    ),
+    // el mínimo del panel de combate (ver "min-width" más abajo)
+    panel: (
+            es: 734px,
+            en: 734px,
+        ),
+    ajustes: (
+        es: 396px,
+        en: 391px,
+    ),
+    menus: (
+        es: 709px,
+        en: 627px,
+    ),
+);
+$barra-lados: 52px; // relleno de la izquierda y de la derecha (2 × 26 px)
+$barra-hueco: 16px; // espacio entre bloques de una misma fila
+$barra-de-sobra: 20px; // la barra de desplazamiento de la página (hasta 17 px, según el navegador) y un poco más por si una tipografía mide distinto
+
+// Pantalla mínima para que entren juntos, en una misma fila, los bloques que se pidan ("logo", "panel", "ajustes" y "menus")
+@function barra-ancho-para($idioma, $bloques...) {
+    $ancho: $barra-lados + $barra-de-sobra + $barra-hueco * (list.length($bloques) - 1);
+    @each $bloque in $bloques {
+        $ancho: $ancho + map.get($barra-bloques, $bloque, $idioma);
+    }
+    @return $ancho;
+}
+
+// Lo que va adentro vale solo en las pantallas de computadora donde "no entran" esos bloques en una fila (según el idioma de la página)
+@mixin barra-si-no-entran($bloques...) {
+    @each $idioma in ("es", "en") {
+        @media #{$consulta-computadora} and (max-width: barra-ancho-para($idioma, $bloques...) - 1) {
+            :root:lang(#{$idioma}) {
+                @content;
+            }
+        }
+    }
+}
+
+// Con la barra de 1440 o más pasa lo mismo, pero con el panel de combate en la fila de arriba: logo, panel y ajustes (que siempre entran) y los
+// menús abajo si no entran los cuatro juntos. Abajo de 1440 el panel va en su propia fila y los que comparten la de arriba son logo, ajustes y menús.
+@mixin barra-con-los-menus-aparte {
+    @include barra-si-no-entran("logo", "ajustes", "menus") {
+        @content;
+    }
+
+    @each $idioma in ("es", "en") {
+        @media #{$consulta-computadora} and (min-width: 1440px) and (max-width: barra-ancho-para($idioma, "logo", "panel", "ajustes", "menus") - 1) {
+            :root:lang(#{$idioma}) {
+                @content;
+            }
+        }
+    }
+}
+
+#navbar .herramientas {
+    // Si los menús no entran ni en una fila propia (pantallas de 701 a ~730 px) se parten en dos renglones, centrados, en vez de desbordar la pantalla
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+// Con margen automático a los dos lados los menús quedan en el medio de la fila que les toca (mientras carga, el bloque de carga se queda en el borde
+// derecho de esa misma fila y ellos en el medio de lo que sobra; al terminar la carga ese bloque se retira y quedan centrados en toda la fila)
+@include barra-con-los-menus-aparte {
+    #navbar .herramientas {
+        margin-inline: auto;
+    }
+}
+
+// En las pantallas más angostas que no son de celular los cinco menús, a su tamaño de siempre, no entran ni siquiera solos en una fila: se los achica
+// un poco (menos relleno y letra de 12 px) y así entran en una sola, en vez de partirse en dos renglones con un menú suelto abajo
+@include barra-si-no-entran("menus") {
+    #navbar .herramientas {
+        gap: 6px;
+    }
+
+    #navbar .menu-desplegable {
+        padding: 0 8px;
+        font-size: 12px;
+
+        &::after {
+            margin-left: 4px;
+        }
+    }
+}
+
 // En pantallas anchas (1440 o más) la barra va en una sola fila y "space-between" reparte el espacio que sobra entre TODOS los huecos,
 // también el que hay entre los ajustes y los menús de información. Ese hueco crecía cuando el bloque de carga se retiraba, y el botón
 // de sonido (que está al borde derecho de los ajustes) dejaba de quedar centrado entre el idioma y "Info. atributos". Con margen automático
 // a la izquierda del panel de combate y de los ajustes, lo que sobra se reparte solo ahí (el panel sigue en el medio) y los ajustes
 // quedan siempre a 16 px de los menús, igual que en las pantallas más angostas: el botón de sonido queda centrado con y sin la carga.
-@media (min-width: 1440px) {
+@media #{$consulta-computadora} and (min-width: 1440px) {
     #navbar .combate,
     #navbar .ajustes {
         margin-left: auto;
@@ -942,7 +1040,7 @@
 }
 
 // En pantallas angostas (pero todavía no de celular) la barra de carga ocupa su propia fila
-@media (min-width: 701px) and (max-width: 800px) {
+@media #{$consulta-computadora} and (max-width: 800px) {
     #navbar .carga {
         order: 11;
         width: 100%;

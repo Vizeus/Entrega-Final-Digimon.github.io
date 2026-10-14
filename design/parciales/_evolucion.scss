@@ -19,8 +19,9 @@ $evo-ancho-ventana-con-una-lista: 1100px;
 $evo-ancho-ventana-con-dos-listas: 1480px;
 $evo-aumento: 1.3; // cuánto se agranda la ventana en las pantallas grandes (ver más abajo)
 
-/* Al ir a la carta desde la línea evolutiva: la carta salta hacia adelante (zoom), y el contorno y el resplandor titilan rápido */
-#listado-digimons > li.evo-resaltada {
+/* Al ir a la carta desde la línea evolutiva (si en medio del destello se la amplía con el zoom, el destello se corta: su z-index de 30 dejaba la carta
+   ampliada por debajo de la cortina del zoom y se veía solo la cortina hasta que terminaba): la carta salta hacia adelante (zoom), y el contorno y el resplandor titilan rápido */
+#listado-digimons > li.evo-resaltada:not(.zoom-activa) {
     z-index: 30;
     outline: 7px solid rgba(255, 240, 90, 0);
     outline-offset: 5px;
@@ -820,7 +821,7 @@ $evo-aumento: 1.3; // cuánto se agranda la ventana en las pantallas grandes (ve
         transition: none;
     }
 
-    #listado-digimons > li.evo-resaltada {
+    #listado-digimons > li.evo-resaltada:not(.zoom-activa) {
         animation: none;
         outline-color: #fff04d;
         box-shadow:

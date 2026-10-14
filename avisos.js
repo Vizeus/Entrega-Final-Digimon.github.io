@@ -208,9 +208,9 @@ if ('ResizeObserver' in window) new ResizeObserver(ubicarAvisoDelContador).obser
 // los avisos pasan por encima del zoom, para que se lean.
 // MEMORIA DE LOS AVISOS: se guarda en el navegador de cada persona (localStorage), como un JSON, así los avisos no se repiten
 // cada vez que vuelve a entrar:
-//   { "visitas": 3, "hecho": { "combate": true, "zoom": true, "inclinar": false, "gestos": true }, "veces": { "tema": 2 } }
-//   - "hecho": lo que la persona ya hizo (eligió las 2 cartas, amplió una, inclinó una con el dedo) o ya vio ("gestos", que se
-//     muestra una sola vez). Un aviso que ya no hace falta no vuelve a salir.
+//   { "visitas": 3, "hecho": { "combate": true, "zoom": true, "inclinar": false, "gestos": true, "musica": true }, "veces": { "tema": 2 } }
+//   - "hecho": lo que la persona ya hizo (eligió las 2 cartas, amplió una, inclinó una con el dedo, tocó el botón de música del combate) o ya vio
+//     ("gestos", que se muestra una sola vez). Un aviso que ya no hace falta no vuelve a salir.
 //   - "veces": cuántas veces salió un cartel que tiene tope de apariciones (hoy, el del botón de tema), para no mostrarlo más allá del tope.
 //   - "visitas": cuántas veces entró. Entrar una séptima vez todavía los muestra; desde la octava no sale ninguno (ya los conoce).
 //     Cuenta una por sesión del navegador: recargar la página con la pestaña abierta no suma.
@@ -995,11 +995,16 @@ export function revisarLlamadas() {
     const tapada = !cartelesEnPausa && hayCortinaSobreLaBarra();
     for (const [boton, llamada] of llamadasActivas) {
         if (!boton.isConnected) {
-            terminarLlamada(boton);
+            // El botón de la música del combate se va de la pantalla con cada cartel y vuelve en el siguiente: su globito espera escondido mientras
+            // dure el combate (también en el hueco entre un cartel y otro); si el combate terminó, se va
+            if (llamada.persistente && (combateEnCurso || document.querySelector('.swal2-container'))) llamada.globo.classList.remove('visible');
+            else terminarLlamada(boton);
             continue;
         }
-        // Algo tapa la barra (o apareció justo ahora): el botón sube por encima. Solo si está en la barra: en celular, el de sonido ya flota
-        if (!llamada.devolver && boton.parentElement !== document.body && tapada) {
+        if (llamada.persistente && !cartelesEnPausa) llamada.globo.classList.add('visible');
+        // Algo tapa la barra (o apareció justo ahora): el botón sube por encima. Solo si está en la barra: en celular, el de sonido ya flota, y
+        // el de la música del combate vive dentro del cartel, que ya está por encima de todo
+        if (!llamada.devolver && boton.parentElement !== document.body && !boton.closest('.swal2-container') && tapada) {
             llamada.devolver = subirBotonSobreLaCortina(boton);
         } else if (llamada.devolver && !tapada) {
             // Se cerró la cortina (el zoom o el cartel): el botón vuelve inmediatamente a su lugar en la barra
@@ -1012,7 +1017,7 @@ export function revisarLlamadas() {
     const llamadas = [...llamadasActivas];
     if (llamadas.length > 1) llamadas.sort(([a], [b]) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
     llamadas.forEach(([boton, llamada], i) => {
-        ubicarGloboDelBoton(boton, llamada.globo, llamadas.length < 2 ? 'centro' : i === 0 ? 'izquierda' : 'derecha');
+        if (boton.isConnected) ubicarGloboDelBoton(boton, llamada.globo, llamadas.length < 2 ? 'centro' : i === 0 ? 'izquierda' : 'derecha');
     });
 }
 
@@ -1062,8 +1067,9 @@ function animarLlamada(boton, alTerminar) {
 }
 
 // El botón salta y lanza ondas (animación "llamando", 2,6 s) y sale el globito: "icono" va antes del texto y "texto" es una función que
-// devuelve la explicación en el idioma de ahora. El globito (y el botón arriba de la cortina, si hace falta) dura "duracion" ms.
-export function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOTON_DURACION }) {
+// devuelve la explicación en el idioma de ahora. El globito (y el botón arriba de la cortina, si hace falta) dura "duracion" ms. Con "persistente"
+// no se va solo: queda hasta que la persona lo cierra a mano o se llama a terminarLlamada (el del botón de música del combate).
+export function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOTON_DURACION, persistente = false }) {
     terminarLlamada(boton);
 
     const globo = document.createElement('div');
@@ -1075,13 +1081,13 @@ export function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOT
     hacerDescartable(globo, () => terminarLlamada(boton)); // si la persona lo cierra a mano, termina también la animación del botón
     document.body.appendChild(globo);
 
-    const llamada = { globo, texto, devolver: null, temporizador: null, animacion: null, alFrenar: null };
+    const llamada = { globo, texto, persistente, devolver: null, temporizador: null, animacion: null, alFrenar: null };
     llamadasActivas.set(boton, llamada);
     escribirGloboDelBoton(llamada);
     revisarLlamadas(); // (si ya hay una cortina, el botón sube ahora mismo, antes de que se dibuje el siguiente cuadro)
 
     llamada.animacion = animarLlamada(boton);
-    llamada.temporizador = esperar(() => terminarLlamada(boton), Math.max(duracion, AUDIO_AVISO_DURACION), true);
+    if (!persistente) llamada.temporizador = esperar(() => terminarLlamada(boton), Math.max(duracion, AUDIO_AVISO_DURACION), true);
     // Con una carta en zoom extra el globito se esconde y el botón vuelve a la barra (revisarLlamadas); al alejar el zoom, vuelven los dos
     llamada.alFrenar = {
         frenar: () => {
@@ -1099,6 +1105,7 @@ export function llamarLaAtencion(boton, { icono, texto, duracion = GLOBO_DEL_BOT
     // disparando a la vez el aviso de silenciar y el de tilt/shift), dejamos ambos carteles más tiempo para darle al usuario tiempo de leer ambos
     if (llamadasActivas.size > 1) {
         for (const [b, l] of llamadasActivas) {
+            if (l.persistente) continue; // (el de la música del combate no tiene reloj)
             l.temporizador.cancelar();
             l.temporizador = esperar(() => terminarLlamada(b), GLOBO_DEL_BOTON_DURACION_DOBLE, true);
         }
@@ -1126,3 +1133,25 @@ export function terminarLlamada(boton, { deGolpe = false } = {}) {
 }
 
 document.addEventListener('idioma-cambiado', () => llamadasActivas.forEach(escribirGloboDelBoton));
+
+// -----------------------------------------------------------------------------------------------------------------
+// AVISO DE LA MÚSICA DEL COMBATE: el botoncito de música que está en los carteles del combate (combate.js). La primera vez de cada visita que se
+// abre un cartel del combate sale de él un globito que cuenta que ahí se enciende y se apaga la música (por defecto está apagada). Solo en las
+// primeras visitas (AVISO_MUSICA_VISITAS) y no se va solo: queda a la vista mientras dure el combate (pasa de un cartel al siguiente) hasta que la
+// persona toca el globito o toca el botón. Si toca el botón, ya sabe para qué sirve: no vuelve a salir en ninguna visita ("hecho.musica").
+// -----------------------------------------------------------------------------------------------------------------
+const AVISO_MUSICA_VISITAS = 3;
+const MUSICA_AVISO_SESION = 'digimon-aviso-musica'; // sessionStorage: en esta visita ya salió
+
+export function avisarDeLaMusicaDelCombate(boton) {
+    if (!boton?.isConnected || avisoHecho('musica') || memoriaAvisos.visitas > AVISO_MUSICA_VISITAS) return;
+    if (hayMarcaDeSesion(MUSICA_AVISO_SESION) || llamadasActivas.has(boton)) return;
+    ponerMarcaDeSesion(MUSICA_AVISO_SESION);
+    llamarLaAtencion(boton, { icono: '🎵', texto: () => t('aviso.combate.musica'), persistente: true });
+}
+
+// La persona tocó el botón de música: el globito se va y no vuelve a salir
+export function musicaDelCombateYaConocida(boton) {
+    marcarAvisoHecho('musica');
+    terminarLlamada(boton);
+}

@@ -10,11 +10,19 @@ import { ELEMENTO_FUERTE_CONTRA, ATRIBUTO_FUERTE_CONTRA } from './datos.js';
 import { t } from './i18n.js';
 import { conCruzDeCierre } from './ventanas.js';
 import { botonIniciarCombate, contadorSeleccion } from './pagina.js';
-import { AVISO_CONTADOR_ESPERA, mostrarAvisoDelContador, quitarAvisoDelContador, revisarLlamadas } from './avisos.js';
+import {
+    AVISO_CONTADOR_ESPERA,
+    avisarDeLaMusicaDelCombate,
+    mostrarAvisoDelContador,
+    musicaDelCombateYaConocida,
+    quitarAvisoDelContador,
+    revisarLlamadas,
+} from './avisos.js';
 import { nombreCompleto, reducirMovimiento } from './cartas.js';
 import { sonidoSeleccion } from './sonidos.js';
 import { TECLAS_DE_DESPLAZAMIENTO, zonaConScroll } from './zoom.js';
 import {
+    alternarMusicaDelCombate,
     arrancarGifConSorbo,
     audioMouse,
     musicaDelCombate,
@@ -26,6 +34,7 @@ import {
     reproducirConDelay,
     reproducirPajita,
     reproducirSonido,
+    musicaDelCombateSuena,
     musicaDelGanador,
     fanfarriaDeVictoria,
     cancelarGritoDeVictoria,
@@ -134,20 +143,37 @@ const hayMiniaturasAlaVista = () => {
     return Boolean(lugar) && lugar.getClientRects().length > 0;
 };
 
-// Se llama al elegir una carta, antes de dibujar las miniaturas: si va a volar, su lugar queda vacío hasta que llegue
+// ¿Hay una ventana abierta o una carta ampliada (o ampliándose)? Con eso en pantalla, un vuelo recién arrancado quedaría fuera de lugar
+const hayAlgoPorEncima = () =>
+    document.querySelector('.swal2-container, #zoom-fondo, #listado-digimons .zoom-activa, #listado-digimons .zoom-midiendo') !== null;
+
+// Se llama al elegir una carta, antes de dibujar las miniaturas: si va a volar, su lugar queda vacío hasta que llegue.
+// Mientras espera, si se abre una ventana, se amplía una carta o se hace scroll, el vuelo se cancela: la miniatura aparece directamente en su lugar
 export function prepararVueloAlStage(carta) {
     if (reducirMovimiento || !hayMiniaturasAlaVista()) return;
     esperandoLaMiniatura.add(carta);
-    setTimeout(() => {
-        const sigueElegida = seleccionados.includes(carta) && !carta.classList.contains('zoom-activa') && hayMiniaturasAlaVista();
-        if (!sigueElegida) {
-            // el doble clic la amplió y deshizo la elección (o ya no se puede volar): sin vuelo; si todavía está elegida, la miniatura aparece sin más
-            esperandoLaMiniatura.delete(carta);
-            dibujarElegidosEnMiniatura();
+
+    let temporizador = 0;
+    const vigiaDeVentanas = new MutationObserver(() => hayAlgoPorEncima() && terminarLaEspera(false));
+    const alHacerScroll = () => terminarLaEspera(false);
+    const terminarLaEspera = puedeVolar => {
+        clearTimeout(temporizador);
+        vigiaDeVentanas.disconnect();
+        window.removeEventListener('scroll', alHacerScroll);
+        const sigueElegida = seleccionados.includes(carta) && hayMiniaturasAlaVista();
+        if (puedeVolar && sigueElegida && !hayAlgoPorEncima()) {
+            volarAlStage(carta);
             return;
         }
-        volarAlStage(carta);
-    }, ESPERA_DEL_VUELO);
+        // cancelado (o el doble clic la amplió y deshizo la elección): sin vuelo; si todavía está elegida, la miniatura aparece sin más
+        esperandoLaMiniatura.delete(carta);
+        dibujarElegidosEnMiniatura();
+    };
+
+    vigiaDeVentanas.observe(document.body, { childList: true }); // (ventanas y fondo del zoom se agregan al <body>)
+    vigiaDeVentanas.observe(document.getElementById('listado-digimons'), { attributes: true, attributeFilter: ['class'], subtree: true }); // (la carta que se amplía)
+    window.addEventListener('scroll', alHacerScroll, { passive: true });
+    temporizador = setTimeout(() => terminarLaEspera(true), ESPERA_DEL_VUELO);
 }
 
 // Un punto de la curva de Bézier de tres puntos (a, control, b) en t
@@ -455,9 +481,75 @@ function bloquearFondoDelCombate(bloquear) {
     window[accion]('keydown', frenarTeclasDelCombate, true);
 }
 
+// ---- El botón de la música del combate -----------------------------------------------------------------------------------------------
+// Un botoncito redondo arriba a la izquierda de cada cartel del combate (del lado contrario a la cruz de cerrar) que enciende y apaga la música
+// del combate: la de la pelea y la del ganador. Los efectos (el sorbo, la fanfarria, el grito) siguen sonando: eso lo maneja el botón de sonido
+// de la barra. Por defecto la música está apagada, y lo que la persona elige queda guardado en el navegador (audio.js). Es un solo botón que se
+// pasa de un cartel al siguiente, así su globito de aviso (avisos.js) lo acompaña a lo largo del combate.
+const ICONO_DE_MUSICA = `<svg class="musica-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 18V5l11-2v13" />
+    <circle cx="6" cy="18" r="3" />
+    <circle cx="17" cy="16" r="3" />
+    <path class="musica-cruz" d="M3.5 3.5l17 17" />
+</svg>`;
+
+let botonDeMusica = null;
+
+function mostrarEstadoDeLaMusica() {
+    const suena = musicaDelCombateSuena();
+    botonDeMusica.dataset.modo = suena ? 'encendida' : 'apagada'; // el ícono: nota musical, o nota tachada
+    botonDeMusica.setAttribute('aria-pressed', String(suena));
+    ponerAyuda(botonDeMusica, t(suena ? 'combate.musica.apagar' : 'combate.musica.encender'));
+}
+
+function crearBotonDeMusica() {
+    botonDeMusica = document.createElement('button');
+    botonDeMusica.type = 'button';
+    botonDeMusica.id = 'musica-combate';
+    botonDeMusica.className = 'combate-musica';
+    botonDeMusica.innerHTML = ICONO_DE_MUSICA;
+    mostrarEstadoDeLaMusica();
+    botonDeMusica.addEventListener('click', () => {
+        alternarMusicaDelCombate();
+        mostrarEstadoDeLaMusica();
+        musicaDelCombateYaConocida(botonDeMusica); // ya sabe para qué sirve: el globito se va y no vuelve a salir
+    });
+    document.addEventListener('idioma-cambiado', mostrarEstadoDeLaMusica);
+}
+
+// Lo pone en el cartel que se acaba de abrir (en un "riel" propio pegado al borde izquierdo, igual al de la cruz: ver _ventanas.scss) y, cuando el
+// cartel terminó de aparecer, le pide a avisos.js el globito (que sale solo la primera vez de cada visita, y solo en las primeras)
+function ponerBotonDeMusica(ventana) {
+    if (!botonDeMusica) crearBotonDeMusica();
+    mostrarEstadoDeLaMusica();
+    const riel = document.createElement('div');
+    riel.className = 'ventana-riel izquierda';
+    riel.append(botonDeMusica);
+    ventana.append(riel);
+    cuandoAparece(ventana, () => avisarDeLaMusicaDelCombate(botonDeMusica));
+}
+
 // Abre uno de los carteles del combate. Devuelve true si tocaron "Aceptar" (se sigue con el próximo cartel) y false si lo anularon:
 // con la cruz de arriba a la derecha (la de todas las ventanas: ver ventanas.js), tocando afuera, con Esc o con el "atrás" del celular (ahí el
 // combate se corta y no se muestran los que faltan)
+// Que el cartel entre entero en la pantalla, sin barra de desplazamiento: si es más alto que lo que hay (pantallas bajas: celulares chicos, notebooks,
+// el celular acostado), se lo achica con "zoom" lo justo para que entre (hasta un mínimo, para que los botones se sigan pudiendo tocar). Se vuelve a
+// medir al girar el celular o cambiar el tamaño de la ventana, y cuando terminan de cargar las tipografías (cambian el alto de los textos).
+const MARGEN_DEL_CARTEL = 24; // px que quedan entre el cartel y el borde de la pantalla (el relleno del contenedor, arriba y abajo)
+const ZOOM_MINIMO_DEL_CARTEL = 0.6;
+
+function ajustarCartelALaPantalla(ventana) {
+    const ajustar = () => {
+        if (!ventana.isConnected) return window.removeEventListener('resize', ajustar);
+        ventana.style.zoom = ''; // (se mide a tamaño natural)
+        const factor = (window.innerHeight - MARGEN_DEL_CARTEL) / ventana.offsetHeight;
+        if (factor < 1) ventana.style.zoom = String(Math.max(ZOOM_MINIMO_DEL_CARTEL, factor));
+    };
+    ajustar();
+    window.addEventListener('resize', ajustar);
+    document.fonts?.ready.then(ajustar);
+}
+
 async function abrirCartelDeCombate({ didOpen, ...opciones }) {
     const respuesta = await Swal.fire({
         ...CARTEL_COMBATE,
@@ -466,6 +558,8 @@ async function abrirCartelDeCombate({ didOpen, ...opciones }) {
         ...opciones,
         didOpen: ventana => {
             bloquearFondoDelCombate(true); // queda activo hasta que termina todo el combate (así no hay hueco entre un cartel y el siguiente)
+            ponerBotonDeMusica(ventana);
+            ajustarCartelALaPantalla(ventana);
             didOpen?.(ventana);
         },
     });

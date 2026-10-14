@@ -32,6 +32,7 @@ import { nombreCompleto } from './cartas.js';
 import { activarBotonDelDorso } from './gestos.js';
 import { FICHERO_DE_ATAQUES, sonidoFichero } from './sonidos.js';
 import { irALaCarta } from './evolucion.js';
+import { activarPasoEntreCartas, desactivarPasoEntreCartas } from './paso.js';
 
 const ORDEN_ATRIBUTOS_MENU = ['Datos', 'Virus', 'Vacuna', 'Libre', 'Variable', 'Desconocido'];
 
@@ -491,8 +492,10 @@ export function abrirAtaques(carta) {
         showConfirmButton: false, // se cierra con la cruz, tocando afuera o con Esc: sin "Aceptar"
         width: 'min(94vw, 680px)',
         customClass: { popup: 'popup-info popup-ataques' }, // el título con la fuente pixelada, como las otras ventanas de información
+        didOpen: () => activarPasoEntreCartas(carta, { sirve: otra => Boolean(otra.datosDorso?.habilidades?.length), abrir: abrirAtaques }),
         willClose: () => {
             cartaDeAtaques = null;
+            desactivarPasoEntreCartas();
         },
     });
 }
