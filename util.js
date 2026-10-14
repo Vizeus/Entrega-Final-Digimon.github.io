@@ -79,7 +79,10 @@ export const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px)');
 
 // Los botones "suaves": las etiquetas de los filtros elegidos (se tocan para quitarlos), el Aceptar de las ventanas y su cruz de cerrar.
 // Aparecen todo el tiempo, así que no suenan como una tecla sino con un "tic" bajito, y vibran menos (ver sonidos.js y audio.js).
-export const BOTONES_SUAVES = '.f-tag, .swal2-confirm, .swal2-close';
+// Las opciones de los desplegables de los filtros (Vacuna, Virus, Adult, Planta...; y la barrita que despliega las especies de una familia) no se ven como un
+// botón que se aprieta y se suelta: suenan con un solo "tic" instantáneo y todavía más bajito, y vibran igual de suave que los botones suaves.
+export const OPCIONES_DE_FILTRO = '.f-chip, .f-fam-abrir';
+export const BOTONES_SUAVES = `.f-tag, .swal2-confirm, .swal2-close, ${OPCIONES_DE_FILTRO}`;
 export const HAY_PANTALLA_TACTIL = navigator.maxTouchPoints > 0 || 'ontouchstart' in window; // aunque también tenga mouse
 
 // ---- Dedo o mouse ----------------------------------------------------------------------------------------------------

@@ -22,7 +22,7 @@ import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { claveDeNombre, inicioDeLoAparte, nombreOccidental, nombreParaMostrar } from './nombres.js';
 import { cartasPorId, listaDigimons, nombreNivel } from './pagina.js';
 import { actualizarBarraProgreso, contadorDigimons } from './api.js';
-import { seleccionados, verificarSeleccion } from './combate.js';
+import { prepararVueloAlStage, seleccionados, verificarSeleccion } from './combate.js';
 import { cartaEnZoom, volverAlZoomNormal, zoomExtra, zoomOcupado } from './zoom.js';
 import { vibrar } from './audio.js';
 import { sonidoSeleccion, sonidoVuelta } from './sonidos.js';
@@ -557,6 +557,8 @@ export function agregarCarta({ id, despuesDelId, nombre, imagen, atributo, nivel
                 seleccionados.splice(index, 1);
             }
         }
+        // Una carta recién elegida vuela hasta su miniatura en el panel de combate (con una pequeña espera, por si es el primer clic de un doble clic)
+        if (sonar && elementoLista.classList.contains('seleccionado')) prepararVueloAlStage(elementoLista);
         // Llamar a la función para verificar y actualizar el botón
         verificarSeleccion();
     });

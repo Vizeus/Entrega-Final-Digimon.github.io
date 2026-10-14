@@ -312,6 +312,7 @@ export const DICCIONARIO = {
         'filtros.familia.todas': '{nombre} (todas)',
         'filtros.familia.abrir': 'Ver las {n} especies de {nombre}',
         'filtros.sinFamilia': 'Otras especies',
+        'filtros.limpiarEspecies': 'Quitar todas las especies y familias elegidas',
         'filtros.agrupar': 'Agrupar',
         'filtros.agruparPor': 'Agrupar por',
         'filtros.agrupar.nota':
@@ -341,6 +342,8 @@ export const DICCIONARIO = {
         'filtros.estreno.desdeSolo': 'desde {desde}',
         'filtros.estreno.hastaSolo': 'hasta {hasta}',
         'filtros.activos': 'Filtros activos',
+        'filtros.todasPanel': 'Todos los filtros activos',
+        'filtros.todasVer': 'Ver todos los filtros activos ({n} más)',
         'filtros.quitar': 'Quitar {grupo}: {valor}',
         'filtros.cuenta': 'Mostrando {v} de {n} digimons',
         'filtros.cuenta.corta': '{v} de {n}',
@@ -645,6 +648,7 @@ export const DICCIONARIO = {
         'filtros.familia.todas': '{nombre} (all)',
         'filtros.familia.abrir': 'Show the {n} species of {nombre}',
         'filtros.sinFamilia': 'Other species',
+        'filtros.limpiarEspecies': 'Clear all the picked species and families',
         'filtros.agrupar': 'Group by', // ("Group" a secas se confundiría con el filtro de grupos)
         'filtros.agruparPor': 'Group the list by',
         'filtros.agrupar.nota':
@@ -674,6 +678,8 @@ export const DICCIONARIO = {
         'filtros.estreno.desdeSolo': 'from {desde}',
         'filtros.estreno.hastaSolo': 'up to {hasta}',
         'filtros.activos': 'Active filters',
+        'filtros.todasPanel': 'All active filters',
+        'filtros.todasVer': 'Show all active filters ({n} more)',
         'filtros.quitar': 'Remove {grupo}: {valor}',
         'filtros.cuenta': 'Showing {v} of {n} Digimon',
         'filtros.cuenta.corta': '{v} of {n}',

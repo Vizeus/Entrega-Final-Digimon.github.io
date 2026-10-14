@@ -309,6 +309,11 @@
             &:active {
                 filter: brightness(0.7) saturate(0.7);
             }
+
+            // La que llegó volando (ver combate.js) ya "cayó" en su lugar con el vuelo: no repite la animación de entrada
+            &.sin-entrada {
+                animation: none;
+            }
         }
 
         img {
@@ -373,6 +378,25 @@
                         will-change: transform;
                         animation: girar-marco var(--vuelta-marco) linear infinite;
                     }
+                }
+            }
+        }
+
+        // La carta que vuela al panel de combate (la crea y la anima combate.js, con la animación web): una miniatura más, suelta en la barra, que no
+        // se toca. Mientras vuela su marco de niveles 7 y 8 es fijo (el que gira es solo el de la miniatura ya puesta en su lugar)
+        &.vuelo {
+            position: absolute;
+            z-index: 20;
+            margin: 0;
+            pointer-events: none;
+            animation: none;
+            box-shadow: 0 8px 18px rgba(0, 30, 80, 0.45);
+
+            &.con-marco {
+                --aro: conic-gradient(from 0deg, var(--colores-marco));
+
+                .mini-marco {
+                    display: none;
                 }
             }
         }

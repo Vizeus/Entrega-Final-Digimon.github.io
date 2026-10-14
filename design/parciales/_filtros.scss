@@ -97,8 +97,9 @@
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
-    // Caja del buscador: hundida, como la pantallita del panel de combate
-    .f-buscar {
+    // Caja del buscador: hundida, como la pantallita del panel de combate. La caja de búsqueda de las especies (.f-opciones-caja) es exactamente la misma
+    .f-buscar,
+    .f-opciones-caja {
         position: relative;
         display: flex;
         align-items: center;
@@ -359,62 +360,24 @@
         top: calc(var(--relleno) * -1);
         z-index: 1;
         flex: 1 1 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         margin: calc(var(--relleno) * -1) calc(var(--relleno) * -1) 0;
         padding: var(--relleno) var(--relleno) 6px;
         background: #f1f8fe;
-
-        input {
-            box-sizing: border-box;
-            width: 100%;
-            height: 32px;
-            padding: 0 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(0, 40, 90, 0.35);
-            background: linear-gradient(rgba(0, 80, 140, 0.1), rgba(255, 255, 255, 0.85));
-            box-shadow: inset 0 2px 4px rgba(0, 60, 110, 0.25);
-            color: $tinta;
-            font:
-                500 14px var(--f-etiqueta),
-                sans-serif;
-
-            &:focus {
-                outline: 2px solid #3a8dde;
-                outline-offset: 1px;
-            }
-        }
     }
 
-    // La caja de búsqueda de las opciones lleva su crucecita para borrar a la derecha (se ve solo si hay algo escrito)
+    // La caja de búsqueda de las especies: lo de arriba (.f-buscar, .f-opciones-caja) le da el mismo estilo que el buscador de digimons; acá, el tamaño
     .f-opciones-caja {
-        position: relative;
-        display: block;
-
-        input {
-            padding-right: 38px;
-        }
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 34px;
     }
 
-    .f-opciones-x {
-        position: absolute;
-        top: 50%;
-        right: 7px;
-        display: grid;
-        place-items: center;
-        width: 22px;
-        height: 22px;
-        padding: 0;
-        border: 0;
-        border-radius: 50%;
-        cursor: pointer;
-        background: rgba(36, 71, 106, 0.18);
-        color: $tinta;
-        font: 700 11px sans-serif;
-        translate: 0 -50%;
-        transition: background 0.15s;
-
-        &:hover {
-            background: rgba(36, 71, 106, 0.32);
-        }
+    // Sacar todas las especies y familias elegidas: el mismo botón rojo de "Limpiar", arriba a la derecha del panel
+    .f-opciones-limpiar {
+        flex: none;
     }
 
     // Listas de opciones del panel de las especies. Sin buscar se ve el árbol de familias; buscando, las dos listas de resultados con su título
@@ -521,7 +484,7 @@
 
     // Las especies de una familia desplegada: más chicas que la familia (sin casilla) y con una sangría, para distinguirlas
     .f-fam-especies {
-        padding: 2px 8px 10px 14px;
+        padding: 4px 8px 8px 14px; // (el aire de arriba cuenta también el de abajo de la barra de la familia: queda parejo con el de abajo)
 
         .f-chip {
             height: 28px;
@@ -830,7 +793,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        flex: 1 1 160px;
+        flex: 0 1 auto; // (lo que sobra de la fila va a la izquierda del conteo, que se arrima a la derecha solo; así el botón "+N »" queda pegado a las etiquetas)
         min-width: 0;
     }
 
@@ -890,6 +853,35 @@
 
         &.sin-icono {
             padding-left: 11px;
+        }
+    }
+
+    // Botón "+N »" (con las etiquetas que no entran): chiquito, pegado a las etiquetas, con el mismo alto que ellas. Despliega todas las etiquetas
+    .f-todos {
+        align-self: center;
+
+        &[hidden] {
+            display: none !important;
+        }
+
+        .f-btn {
+            height: 28px;
+            padding: 0 11px;
+            gap: 5px;
+            font-size: 13px;
+
+            &::after {
+                display: none;
+            }
+        }
+
+        .f-todos-n {
+            font-family: var(--f-descripcion), sans-serif;
+        }
+
+        .f-todos-flecha {
+            font-size: 15px;
+            line-height: 1;
         }
     }
 
@@ -1030,6 +1022,10 @@
             input {
                 font-size: 16px; // con menos, iPhone agranda la pantalla al tocar la caja
             }
+        }
+
+        .f-opciones-caja input {
+            font-size: 16px; // (lo mismo en la caja de las especies)
         }
 
         .f-grupo {
@@ -1173,6 +1169,15 @@
             max-width: 150px;
             height: 24px;
             padding: 0 8px 0 6px;
+            font-size: 12px;
+        }
+
+        // El botón "+N »" va pegado a las etiquetas, antes del conteo. Su panel (con todas las etiquetas) se abre como los demás: debajo de la barra y a lo ancho
+        .f-grupo.f-todos .f-btn {
+            order: 3;
+            flex: none;
+            height: 24px;
+            padding: 0 9px;
             font-size: 12px;
         }
 

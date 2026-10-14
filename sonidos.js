@@ -6,7 +6,7 @@
 
 import { destinoDeAudio, esToqueEnBoton, obtenerContextoAudio, perfilAudioActual, sonarCuandoElAudioEsteListo, sonarSinAvisarAlBotonDeAudio } from './audio.js';
 import { toqueQueSoloCierraMenus } from './menus.js';
-import { BOTONES_SUAVES, esElSegundoDeUnDoble } from './util.js';
+import { BOTONES_SUAVES, OPCIONES_DE_FILTRO, esElSegundoDeUnDoble } from './util.js';
 
 // ---- Tecla de teclado mecánico ------------------------------------------------------------------------------------
 // Una tecla real suena a tres cosas juntas: un "clic" agudo (el mecanismo), un golpe seco (la tecla llegando al fondo)
@@ -94,6 +94,7 @@ function crearSalidaTeclas(contexto) {
 const TECLA_NORMAL = { fuerza: 1, tono: 1 };
 const TECLA_DE_CARTA = { fuerza: 0.65, tono: 1.25 };
 const TECLA_TIC = { fuerza: 0.3, tono: 1, tic: true };
+const TECLA_OPCION = { fuerza: 0.15, tono: 1.1, tic: true }; // las opciones de los filtros: el mismo "tic", más bajito todavía
 
 // Arma una pulsación (bajada = true) o el soltar la tecla (bajada = false) en el instante t
 function armarTecla(contexto, destino, t, bajada, tecla = TECLA_NORMAL) {
@@ -457,6 +458,7 @@ export function activarSonidoBotones() {
         if (!boton || boton.disabled) return null;
         if (boton.id === 'silenciar') return null; // el botón de sonido tiene su propio criterio (ver activarBotonDeAudio)
         if (boton.id === 'inclinacion-invertida' || boton.id === 'tema') return TECLA_SIN_AVISO; // (los de ajustes no le avisan al de sonido)
+        if (boton.matches(OPCIONES_DE_FILTRO)) return TECLA_OPCION; // opciones de los filtros: un solo "tic" instantáneo y más bajo que el de las etiquetas
         if (boton.matches(BOTONES_SUAVES)) return TECLA_TIC; // etiquetas de filtros, Aceptar y cruz de cerrar: un "tic" bajito
         // El botón de hacer flip de la carta no debe hacer sonido
         if (boton.closest('.c-flip')) return null;

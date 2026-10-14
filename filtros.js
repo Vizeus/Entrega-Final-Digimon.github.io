@@ -116,6 +116,9 @@ const cajaBusqueda = seccionFiltros.querySelector('.f-buscar input');
 const botonBorrarBusqueda = seccionFiltros.querySelector('.f-x');
 const botonesDeTresEstados = seccionFiltros.querySelectorAll('.f-tres'); // X-Antibody y Xros Wars (su data-g dice de qué filtro es cada uno)
 const zonaActivos = seccionFiltros.querySelector('.f-activos');
+const grupoTodasLasEtiquetas = seccionFiltros.querySelector('.f-todos'); // el botón "+N »" con el panel que tiene todas las etiquetas
+const panelTodasLasEtiquetas = grupoTodasLasEtiquetas.querySelector('.f-panel');
+const botonLimpiarEspecies = seccionFiltros.querySelector('.f-opciones-limpiar'); // arriba a la derecha del panel de las especies
 const textoCuenta = seccionFiltros.querySelector('.f-cuenta');
 const botonLimpiar = seccionFiltros.querySelector('.f-resumen .f-limpiar');
 const avisoVacio = document.getElementById('f-vacio');
@@ -600,12 +603,34 @@ function escribirEtiquetas() {
         const texto = textoDelPeriodo();
         etiquetas.push(crearEtiqueta('estreno', 'periodo', COLOR_ESTRENO, { clase: 'f-e', texto: '📅' }, texto, t('filtros.estreno')));
     }
+    // Cuántas entran a la vista depende del ancho de la pantalla; si hay más, el resto queda detrás del botón "+N »", que las despliega todas
+    const entran = etiquetasQueEntran();
+    const sobran = Math.max(0, etiquetas.length - entran);
+    const boton = grupoTodasLasEtiquetas.querySelector('.f-btn');
+    cambiarTexto(grupoTodasLasEtiquetas.querySelector('.f-todos-n'), `+${sobran}`);
+    cambiarAtributo(boton, 'title', t('filtros.todasVer', { n: sobran }));
+    cambiarAtributo(boton, 'aria-label', t('filtros.todasVer', { n: sobran }));
+    if (grupoTodasLasEtiquetas.hidden !== (sobran === 0)) grupoTodasLasEtiquetas.hidden = sobran === 0;
+    if (sobran === 0 && grupoTodasLasEtiquetas.classList.contains('abierto')) {
+        grupoTodasLasEtiquetas.classList.remove('abierto');
+        boton.setAttribute('aria-expanded', 'false');
+    }
     // Si las etiquetas son las mismas que ya están, no se rehacen (si no, un toque sobre una podía perderse)
-    const firma = etiquetas.map(etiqueta => etiqueta.outerHTML).join('');
+    const firma = `${entran}|${etiquetas.map(etiqueta => etiqueta.outerHTML).join('')}`;
     if (firma === firmaEtiquetas) return;
     firmaEtiquetas = firma;
-    zonaActivos.replaceChildren(...etiquetas);
+    panelTodasLasEtiquetas.replaceChildren(...(sobran > 0 ? etiquetas.map(etiqueta => etiqueta.cloneNode(true)) : []));
+    zonaActivos.replaceChildren(...etiquetas.slice(0, entran));
 }
+
+// Cuántas etiquetas de filtros activos se ven sin desplegar: pocas en el celular y más a medida que crece la pantalla (así la barra no se vuelve enorme)
+const ETIQUETAS_QUE_ENTRAN = [
+    [window.matchMedia('(max-width: 700px)'), 2],
+    [window.matchMedia('(max-width: 1199px)'), 3],
+];
+const ETIQUETAS_EN_PANTALLA_GRANDE = 4;
+const etiquetasQueEntran = () => ETIQUETAS_QUE_ENTRAN.find(([consulta]) => consulta.matches)?.[1] ?? ETIQUETAS_EN_PANTALLA_GRANDE;
+ETIQUETAS_QUE_ENTRAN.forEach(([consulta]) => consulta.addEventListener('change', () => escribirEtiquetas()));
 
 // Cambian un texto o un atributo solo si de verdad es distinto
 function cambiarTexto(elemento, texto) {
@@ -696,6 +721,7 @@ function refrescar() {
         chip.classList.toggle('vacio', total > 0 && cantidad === 0 && estado === 'false'); // sin cartas: se ve apagada
     });
     actualizarInsigniasDelArbol();
+    botonLimpiarEspecies.hidden = elegidos.especie.size === 0; // "Limpiar" del panel de las especies: solo si hay alguna especie o familia elegida
 
     // Botones de X-Antibody y Xros Wars: su estado (indistinto, con o sin) y su texto en el idioma actual
     for (const boton of botonesDeTresEstados) {
@@ -1061,6 +1087,13 @@ function activarFiltros() {
         buscarEntreLasOpciones(grupo);
     });
 
+    // "Limpiar" del panel de las especies: saca todas las especies y familias elegidas (el panel queda abierto)
+    botonLimpiarEspecies.addEventListener('click', () => {
+        elegidos.especie.clear();
+        refrescar();
+        buscarEntreLasOpciones('especie');
+    });
+
     // Desplegar o cerrar una familia del árbol de las especies
     arbol.addEventListener('click', evento => {
         const abrir = evento.target.closest('.f-fam-abrir');
@@ -1080,7 +1113,7 @@ function activarFiltros() {
     });
 
     // Sacar un filtro desde su etiqueta
-    zonaActivos.addEventListener('click', evento => {
+    const quitarEtiqueta = evento => {
         const etiqueta = evento.target.closest('.f-tag');
         if (!etiqueta) return;
         const { g: grupo, k: clave } = etiqueta.dataset;
@@ -1097,7 +1130,9 @@ function activarFiltros() {
         }
         refrescar();
         if (grupo in OPCIONES_QUE_LLEGAN) buscarEntreLasOpciones(grupo);
-    });
+    };
+    zonaActivos.addEventListener('click', quitarEtiqueta);
+    panelTodasLasEtiquetas.addEventListener('click', quitarEtiqueta); // (el panel de "+N »" tiene todas, y también se sacan con un toque)
 
     // Estreno: al elegir un año inicial mayor que el final (o al revés) el otro límite se corre hasta ese año, así el período nunca queda al revés
     seccionFiltros.querySelectorAll('.f-grupo[data-g="estreno"] select').forEach(selector => {

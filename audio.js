@@ -8,6 +8,7 @@
 
 import {
     BOTONES_SUAVES,
+    OPCIONES_DE_FILTRO,
     CON_DEDO,
     ES_IOS,
     PANTALLA_DE_CELULAR,
@@ -58,7 +59,7 @@ export function vibrar(duracion = 8, forzar = false) {
 const TOQUE_DISTANCIA_MAXIMA = 10; // px que se puede mover el dedo y que siga siendo un toque (los mismos que tolera la inclinación)
 const TOQUE_DURACION_MAXIMA = 500; // ms que se puede tener apoyado el dedo en los botones que esperan (más que eso es una pulsación larga)
 const APRETADO_DESDE = 120; // ms con el dedo quieto para que cuente como "apretado" (menos que eso es un toque rápido)
-const BOTONES_QUE_ESPERAN = '.f-tag, #listado-digimons.tilt-on li .c-frente';
+const BOTONES_QUE_ESPERAN = `.f-tag, ${OPCIONES_DE_FILTRO}, #listado-digimons.tilt-on li .c-frente`;
 
 // ¿Este toque cayó con el dedo sobre un botón? (Con el dedo, todos los botones suenan y vibran desde activarToqueEnBotonesConEspera y no al apoyar.)
 export function esToqueEnBoton(evento) {

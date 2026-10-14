@@ -49,33 +49,33 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261013-1815",
-                    "./datos.js": "./datos.js?v=20261013-1815",
-                    "./i18n.js": "./i18n.js?v=20261013-1815",
-                    "./nombres.js": "./nombres.js?v=20261013-1815",
-                    "./pagina.js": "./pagina.js?v=20261013-1815",
-                    "./api.js": "./api.js?v=20261013-1815",
-                    "./combate.js": "./combate.js?v=20261013-1815",
-                    "./avisos.js": "./avisos.js?v=20261013-1815",
-                    "./descartar.js": "./descartar.js?v=20261013-1815",
-                    "./cartas.js": "./cartas.js?v=20261013-1815",
-                    "./zoom.js": "./zoom.js?v=20261013-1815",
-                    "./gestos.js": "./gestos.js?v=20261013-1815",
-                    "./inclinacion.js": "./inclinacion.js?v=20261013-1815",
-                    "./audio.js": "./audio.js?v=20261013-1815",
-                    "./sonidos.js": "./sonidos.js?v=20261013-1815",
-                    "./filtros.js": "./filtros.js?v=20261013-1815",
-                    "./info.js": "./info.js?v=20261013-1815",
-                    "./barra.js": "./barra.js?v=20261013-1815",
-                    "./evolucion.js": "./evolucion.js?v=20261013-1815",
-                    "./ventanas.js": "./ventanas.js?v=20261013-1815",
-                    "./baile.js": "./baile.js?v=20261013-1815",
-                    "./tema.js": "./tema.js?v=20261013-1815",
-                    "./menus.js": "./menus.js?v=20261013-1815"
+                    "./util.js": "./util.js?v=20261013-2143",
+                    "./datos.js": "./datos.js?v=20261013-2143",
+                    "./i18n.js": "./i18n.js?v=20261013-2143",
+                    "./nombres.js": "./nombres.js?v=20261013-2143",
+                    "./pagina.js": "./pagina.js?v=20261013-2143",
+                    "./api.js": "./api.js?v=20261013-2143",
+                    "./combate.js": "./combate.js?v=20261013-2143",
+                    "./avisos.js": "./avisos.js?v=20261013-2143",
+                    "./descartar.js": "./descartar.js?v=20261013-2143",
+                    "./cartas.js": "./cartas.js?v=20261013-2143",
+                    "./zoom.js": "./zoom.js?v=20261013-2143",
+                    "./gestos.js": "./gestos.js?v=20261013-2143",
+                    "./inclinacion.js": "./inclinacion.js?v=20261013-2143",
+                    "./audio.js": "./audio.js?v=20261013-2143",
+                    "./sonidos.js": "./sonidos.js?v=20261013-2143",
+                    "./filtros.js": "./filtros.js?v=20261013-2143",
+                    "./info.js": "./info.js?v=20261013-2143",
+                    "./barra.js": "./barra.js?v=20261013-2143",
+                    "./evolucion.js": "./evolucion.js?v=20261013-2143",
+                    "./ventanas.js": "./ventanas.js?v=20261013-2143",
+                    "./baile.js": "./baile.js?v=20261013-2143",
+                    "./tema.js": "./tema.js?v=20261013-2143",
+                    "./menus.js": "./menus.js?v=20261013-2143"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261013-1815"></script>
+        <script type="module" src="./main.js?v=20261013-2143"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,7 +86,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261013-1815" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261013-2143" />
     </head>
 
     <body>
@@ -468,7 +468,9 @@
                     </button>
                     <div class="f-panel" role="group" aria-label="Filtrar por especie" data-i18n-attr="aria-label:filtros.porEspecie">
                         <div class="f-opciones-buscar">
+                            <!-- La misma caja que el buscador de digimons (lupa, texto y crucecita para borrar) -->
                             <label class="f-opciones-caja">
+                                <span class="f-lupa" aria-hidden="true">🔍</span>
                                 <input
                                     type="text"
                                     autocomplete="off"
@@ -481,7 +483,7 @@
                                 />
                                 <button
                                     type="button"
-                                    class="f-opciones-x"
+                                    class="f-x f-opciones-x"
                                     hidden
                                     title="Borrar búsqueda"
                                     aria-label="Borrar búsqueda"
@@ -490,6 +492,17 @@
                                     ✕
                                 </button>
                             </label>
+                            <!-- Saca todas las especies y familias elegidas (aparece cuando hay alguna) -->
+                            <button
+                                type="button"
+                                class="f-limpiar f-opciones-limpiar"
+                                hidden
+                                title="Quitar todas las especies y familias elegidas"
+                                data-i18n="filtros.limpiar"
+                                data-i18n-attr="title:filtros.limpiarEspecies"
+                            >
+                                Limpiar ✕
+                            </button>
                         </div>
                         <!-- Sin buscar: un árbol con las familias (marcan varias especies juntas) y, adentro de cada una, sus especies. Una especie puede estar en
          varias familias y marcarse desde cualquiera. Al escribir en la cajita el árbol se esconde y se ven los resultados en dos listas: familias y especies -->
@@ -575,6 +588,15 @@
 
                 <!-- Filtros activos: uno por cada opción elegida (se sacan con un clic) -->
                 <div class="f-activos" aria-label="Filtros activos" data-i18n-attr="aria-label:filtros.activos"></div>
+
+                <!-- Si hay más filtros activos de los que entran a la vista (2, 3 o 4 según el ancho de la pantalla), el resto queda detrás de este botón,
+         que despliega todos. Aparece solo cuando sobran (los arma filtros.js, escribirEtiquetas) -->
+                <div class="f-grupo f-todos" data-g="etiquetas" hidden>
+                    <button type="button" class="f-btn" aria-haspopup="true" aria-expanded="false">
+                        <span class="f-todos-n">+0</span><span class="f-todos-flecha" aria-hidden="true">»</span>
+                    </button>
+                    <div class="f-panel" role="group" aria-label="Todos los filtros activos" data-i18n-attr="aria-label:filtros.todasPanel"></div>
+                </div>
 
                 <div class="f-resumen">
                     <span class="f-cuenta" aria-live="polite"></span>

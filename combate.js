@@ -83,7 +83,8 @@ export function verificarSeleccion() {
 function dibujarElegidosEnMiniatura() {
     const lugares = document.querySelectorAll('#elegidos-miniatura .mini-carta');
     lugares.forEach((lugar, i) => {
-        const carta = seleccionados[i];
+        // (una carta recién elegida deja su lugar vacío hasta que llega volando: ver prepararVueloAlStage)
+        const carta = esperandoLaMiniatura.has(seleccionados[i]) ? undefined : seleccionados[i];
         lugar.replaceChildren();
         lugar.classList.toggle('con-carta', Boolean(carta));
         // Niveles 7 y 8: marco que gira (ver .c-marco en _cartas.scss), también en miniatura
@@ -91,12 +92,9 @@ function dibujarElegidosEnMiniatura() {
         lugar.classList.toggle('con-marco', conMarco);
         lugar.dataset.nivel = conMarco ? carta.dataset.nivel : '';
         lugar.removeAttribute('title');
+        lugar.classList.toggle('sin-entrada', Boolean(carta) && llegaronVolando.has(carta)); // (la que llegó volando no "cae" otra vez en su lugar)
         if (!carta) return;
-        const estilo = getComputedStyle(carta);
-        // (el --aro de una carta con marco que gira es transparente mientras gira: la miniatura arma el suyo con los mismos colores)
-        for (const variable of conMarco ? ['--base', '--fondo', '--colores-marco', '--vuelta-marco'] : ['--base', '--aro', '--fondo']) {
-            lugar.style.setProperty(variable, estilo.getPropertyValue(variable));
-        }
+        copiarColoresDeLaCarta(lugar, carta, conMarco);
         const origen = carta.querySelector('.c-arte img');
         const imagen = document.createElement('img');
         imagen.src = origen?.currentSrc || origen?.src || '';
@@ -111,6 +109,120 @@ function dibujarElegidosEnMiniatura() {
             lugar.append(marco);
         }
     });
+}
+
+// Copia a la miniatura los colores de la carta tal cual están
+// (el --aro de una carta con marco que gira es transparente mientras gira: la miniatura arma el suyo con los mismos colores)
+function copiarColoresDeLaCarta(miniatura, carta, conMarco) {
+    const estilo = getComputedStyle(carta);
+    for (const variable of conMarco ? ['--base', '--fondo', '--colores-marco', '--vuelta-marco'] : ['--base', '--aro', '--fondo']) {
+        miniatura.style.setProperty(variable, estilo.getPropertyValue(variable));
+    }
+}
+
+// ---- La carta que vuela al panel de combate ------------------------------------------------------------------------------
+// Al elegir una carta, la imagen de su carta se achica y vuela en arco hasta su lugar en el panel de combate de la barra, donde queda como miniatura.
+// El vuelo no sale al instante: espera lo que dura un doble clic (ESPERA_DEL_VUELO). Si el segundo clic llega, la carta se amplía (zoom) y ese
+// doble clic deshace la elección, y el vuelo se cancela sin haberse visto. Solo vuela donde se ven las miniaturas (no en el celular) y sin "reducir movimiento".
+const ESPERA_DEL_VUELO = 300; // ms: lo que se tarda en hacer doble clic y que la carta empiece a ampliarse
+const DURACION_DEL_VUELO = 640; // ms
+const esperandoLaMiniatura = new Set(); // cartas elegidas cuya miniatura todavía no llegó (esperan el doble clic o están volando)
+const llegaronVolando = new WeakSet(); // las cartas cuya miniatura llegó volando (para que no hagan además la animación de "caer")
+
+const hayMiniaturasAlaVista = () => {
+    const lugar = document.querySelector('#elegidos-miniatura .mini-carta');
+    return Boolean(lugar) && lugar.getClientRects().length > 0;
+};
+
+// Se llama al elegir una carta, antes de dibujar las miniaturas: si va a volar, su lugar queda vacío hasta que llegue
+export function prepararVueloAlStage(carta) {
+    if (reducirMovimiento || !hayMiniaturasAlaVista()) return;
+    esperandoLaMiniatura.add(carta);
+    setTimeout(() => {
+        const sigueElegida = seleccionados.includes(carta) && !carta.classList.contains('zoom-activa') && hayMiniaturasAlaVista();
+        if (!sigueElegida) {
+            // el doble clic la amplió y deshizo la elección (o ya no se puede volar): sin vuelo; si todavía está elegida, la miniatura aparece sin más
+            esperandoLaMiniatura.delete(carta);
+            dibujarElegidosEnMiniatura();
+            return;
+        }
+        volarAlStage(carta);
+    }, ESPERA_DEL_VUELO);
+}
+
+// Un punto de la curva de Bézier de tres puntos (a, control, b) en t
+const sobreLaCurva = (a, control, b, t) => (1 - t) ** 2 * a + 2 * (1 - t) * t * control + t ** 2 * b;
+const suavizar = t => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2); // (empieza y termina despacio)
+
+function volarAlStage(carta) {
+    const lugares = document.querySelectorAll('#elegidos-miniatura .mini-carta');
+    const lugar = lugares[seleccionados.indexOf(carta)];
+    const barra = document.getElementById('navbar');
+    const arte = carta.querySelector('.c-arte');
+    const origen = arte?.getBoundingClientRect();
+    if (!lugar || !origen || origen.width === 0) {
+        aterrizarEnElStage(carta);
+        return;
+    }
+    const destino = lugar.getBoundingClientRect();
+    const marcoDeLaBarra = barra.getBoundingClientRect();
+    const conMarco = Number(carta.dataset.nivel) >= 7;
+
+    // La carta que vuela: una miniatura más (con los mismos colores), puesta en la barra para que pase por encima de todo, que parte del tamaño del arte
+    const vuelo = document.createElement('div');
+    vuelo.className = `mini-carta con-carta vuelo${conMarco ? ' con-marco' : ''}`;
+    vuelo.dataset.nivel = conMarco ? carta.dataset.nivel : '';
+    vuelo.setAttribute('aria-hidden', 'true');
+    copiarColoresDeLaCarta(vuelo, carta, conMarco);
+    const origenImg = carta.querySelector('.c-arte img');
+    const imagen = document.createElement('img');
+    imagen.src = origenImg?.currentSrc || origenImg?.src || '';
+    imagen.alt = '';
+    imagen.draggable = false;
+    vuelo.append(imagen);
+    barra.append(vuelo);
+
+    // Desde el centro del arte hasta el centro de su lugar, en arco: primero sube y después se corre hacia el costado
+    const centro = rect => [rect.left + rect.width / 2, rect.top + rect.height / 2];
+    const [x0, y0] = centro(origen);
+    const [x1, y1] = centro(destino);
+    const control = [x0 + (x1 - x0) * 0.15, y1 + (y0 - y1) * 0.35];
+    const giro = x1 >= x0 ? -1 : 1; // (se inclina hacia el lado de donde viene y se endereza al llegar)
+    const PASOS = 18;
+    const cuadros = [];
+    for (let i = 0; i <= PASOS; i++) {
+        const avance = i / PASOS;
+        const e = suavizar(avance);
+        // Al final "rebota": se agranda un poquito justo antes de asentarse en su lugar
+        const rebote = 1 + 0.16 * Math.sin(Math.PI * Math.min(1, Math.max(0, (avance - 0.78) / 0.22)));
+        const ancho = (origen.width + (destino.width - origen.width) * e) * rebote;
+        const alto = (origen.height + (destino.height - origen.height) * e) * rebote;
+        const cx = sobreLaCurva(x0, control[0], x1, e);
+        const cy = sobreLaCurva(y0, control[1], y1, e);
+        cuadros.push({
+            left: `${cx - ancho / 2 - marcoDeLaBarra.left - barra.clientLeft}px`,
+            top: `${cy - alto / 2 - marcoDeLaBarra.top - barra.clientTop}px`,
+            width: `${ancho}px`,
+            height: `${alto}px`,
+            borderWidth: `${6 + (2 - 6) * e}px`,
+            borderRadius: `${14 + (5 - 14) * e}px`,
+            rotate: `${giro * 14 * Math.sin(Math.PI * avance)}deg`,
+            offset: avance,
+        });
+    }
+    const animacion = vuelo.animate(cuadros, { duration: DURACION_DEL_VUELO, easing: 'linear', fill: 'forwards' });
+    const llegar = () => {
+        vuelo.remove();
+        aterrizarEnElStage(carta, true);
+    };
+    animacion.finished.then(llegar, llegar);
+}
+
+// La miniatura aparece en su lugar (si la carta sigue elegida)
+function aterrizarEnElStage(carta, volando = false) {
+    esperandoLaMiniatura.delete(carta);
+    if (volando) llegaronVolando.add(carta);
+    dibujarElegidosEnMiniatura();
 }
 
 // El contador de elegidos también es un botón: sin ninguno elegido está apagado; con 1 o 2 se puede tocar para quitar la selección
