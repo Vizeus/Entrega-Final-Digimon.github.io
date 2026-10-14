@@ -77,6 +77,12 @@ export const esElSegundoDeUnDoble = () => segundoDeUnDoble;
 // El corte de 700 px es el mismo que $corte-celular en design/parciales/_variables.scss: si se cambia uno, se cambia el otro.
 export const PANTALLA_DE_CELULAR = window.matchMedia('(max-width: 700px), (max-height: 500px)'); // (también el celular acostado: ver $consulta-celular en _variables.scss)
 
+// El ancho de pantalla con el que acomodar cosas sobre la página (centrar, repartir lados...). La página reserva el hueco de la barra de scroll
+// (scrollbar-gutter: stable, en _base.scss) y, con una ventana o el zoom de una carta abiertos, el navegador esconde la barra pero
+// document.documentElement.clientWidth pasa a contar ese hueco (unos 15px de más, en las computadoras con barra clásica): lo que se centraba con ese
+// número quedaba corrido hacia un lado. El ancho de <html> es el de las capas de pantalla completa (la de las ventanas, la del zoom y la de las flechas).
+export const anchoVisible = () => document.documentElement.getBoundingClientRect().width || document.documentElement.clientWidth;
+
 // Los botones "suaves": las etiquetas de los filtros elegidos (se tocan para quitarlos), el Aceptar de las ventanas y su cruz de cerrar.
 // Aparecen todo el tiempo, así que no suenan como una tecla sino con un "tic" bajito, y vibran menos (ver sonidos.js y audio.js).
 // Las opciones de los desplegables de los filtros (Vacuna, Virus, Adult, Planta...; las de Agrupar y Orden; las temporadas de Estreno; y la barrita que despliega las especies de una familia) no se ven como un

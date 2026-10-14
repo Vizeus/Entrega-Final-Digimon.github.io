@@ -119,7 +119,7 @@ const botonesDeTresEstados = seccionFiltros.querySelectorAll('.f-tres'); // X-An
 const zonaActivos = seccionFiltros.querySelector('.f-activos');
 const parteFinal = seccionFiltros.querySelector('.f-final'); // las etiquetas, el "+N »" y el conteo con el botón de limpiar, siempre juntos
 const zonaResumen = seccionFiltros.querySelector('.f-resumen');
-const grupoTodasLasEtiquetas = seccionFiltros.querySelector('.f-todos'); // el botón "+N »" con el panel que tiene todas las etiquetas
+const grupoTodasLasEtiquetas = seccionFiltros.querySelector('.f-todos'); // el botón "+N »" con el panel de las etiquetas que no entran a la vista
 const panelTodasLasEtiquetas = grupoTodasLasEtiquetas.querySelector('.f-panel');
 const botonLimpiarEspecies = seccionFiltros.querySelector('.f-opciones-limpiar'); // arriba a la derecha del panel de las especies
 const textoCuenta = seccionFiltros.querySelector('.f-cuenta');
@@ -606,7 +606,7 @@ function escribirEtiquetas() {
         const texto = textoDelPeriodo();
         etiquetas.push(crearEtiqueta('estreno', 'periodo', COLOR_ESTRENO, { clase: 'f-e', texto: '📅' }, texto, t('filtros.estreno')));
     }
-    // Cuántas entran a la vista depende del lugar que haya en el renglón; si hay más, el resto queda detrás del botón "+N »", que las despliega todas
+    // Cuántas entran a la vista depende del lugar que haya en el renglón; si hay más, el resto queda detrás del botón "+N »", que despliega solo esas (las que no se ven)
     const entran = etiquetasQueEntran(etiquetas);
     const sobran = Math.max(0, etiquetas.length - entran);
     const boton = grupoTodasLasEtiquetas.querySelector('.f-btn');
@@ -622,14 +622,15 @@ function escribirEtiquetas() {
     const firma = `${entran}|${etiquetas.map(etiqueta => etiqueta.outerHTML).join('')}`;
     if (firma === firmaEtiquetas) return;
     firmaEtiquetas = firma;
-    panelTodasLasEtiquetas.replaceChildren(...(sobran > 0 ? etiquetas.map(etiqueta => etiqueta.cloneNode(true)) : []));
+    // El panel del "+N »" muestra solo las que no entraron a la vista (las que ya se ven no se repiten ahí)
+    panelTodasLasEtiquetas.replaceChildren(...etiquetas.slice(entran).map(etiqueta => etiqueta.cloneNode(true)));
     zonaActivos.replaceChildren(...etiquetas.slice(0, entran));
 }
 
 // Cuántas etiquetas de filtros activos se ven sin desplegar. En el celular son siempre 2 (van en su propia tira, que se desliza de costado). En
 // computadora se mide el lugar que hay: las etiquetas, el botón "+N »" y el conteo con su botón de limpiar (todo junto, en .f-final) tienen que entrar
 // en UN solo renglón, así la barra no crece de más. Primero se mira el lugar que queda en el renglón del último botón de los filtros: si ahí entran
-// el "+N »" y el conteo, el bloque se queda ahí y se ven tantas etiquetas como entren (aunque sea ninguna: queda el "+N »" que las despliega todas).
+// el "+N »" y el conteo, el bloque se queda ahí y se ven tantas etiquetas como entren (aunque sea ninguna: queda el "+N »" que despliega solo las que no entraron).
 // Solo si ni eso entra baja a su propio renglón, que es todo el ancho, y se ven las que entren en ese. Lo que no entra queda detrás del "+N »".
 // (Nunca más de MAXIMO_DE_ETIQUETAS: más sería ruido.)
 const ETIQUETAS_EN_CELULAR = 2;
@@ -1207,7 +1208,7 @@ function activarFiltros() {
         if (grupo in OPCIONES_QUE_LLEGAN) buscarEntreLasOpciones(grupo);
     };
     zonaActivos.addEventListener('click', quitarEtiqueta);
-    panelTodasLasEtiquetas.addEventListener('click', quitarEtiqueta); // (el panel de "+N »" tiene todas, y también se sacan con un toque)
+    panelTodasLasEtiquetas.addEventListener('click', quitarEtiqueta); // (el panel de "+N »" tiene las que no entraron a la vista, y también se sacan con un toque)
 
     // Estreno: al elegir un año inicial mayor que el final (o al revés) el otro límite se corre hasta ese año, así el período nunca queda al revés
     seccionFiltros.querySelectorAll('.f-grupo[data-g="estreno"] select').forEach(selector => {

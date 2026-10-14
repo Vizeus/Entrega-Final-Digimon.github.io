@@ -128,6 +128,7 @@
 // No frena los clics (pointer-events: none). Por defecto va debajo del botón (la flechita arriba); con "sobre-el-boton" va encima de él
 // (la flechita abajo): avisos.js lo usa para el botón de sonido flotante del celular, que está en la esquina de abajo.
 @mixin globo-de-aviso($capa) {
+    --cola: 0px;
     position: fixed;
     z-index: $capa;
     display: flex;
@@ -150,16 +151,29 @@
     pointer-events: none;
     opacity: 0;
     scale: 0.2;
-    transform-origin: var(--punta, 50%) -8px;
+    transform-origin: var(--punta, 50%) calc(-8px - var(--cola));
     transition:
         opacity 0.3s ease,
         scale 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.25);
 
     // La flechita que apunta al botón
+    // (--cola: cuánto bajó el globito respecto de su botón, si tuvo que dejarle el lugar a otro: la flechita sigue pegada al botón y un hilo la une
+    // al globito. Sin cola, el hilo no tiene alto y no se ve.)
+    &::after {
+        content: "";
+        position: absolute;
+        top: calc(var(--cola) * -1);
+        left: var(--punta, 50%);
+        width: 2px;
+        height: var(--cola);
+        margin-left: -1px;
+        background: rgba(0, 80, 140, 0.35);
+    }
+
     &::before {
         content: "";
         position: absolute;
-        top: -7px;
+        top: calc(-7px - var(--cola));
         left: var(--punta, 50%);
         width: 12px;
         height: 12px;

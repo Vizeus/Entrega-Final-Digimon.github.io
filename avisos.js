@@ -966,9 +966,13 @@ let vigiliaDeLlamadas = 0; // pedido de animationFrame pendiente
 // y sus globitos se taparían, 'izquierda' (el globito se extiende hacia la izquierda, con la flechita en su punta derecha) y 'derecha'
 // (al revés): así caben los dos uno al lado del otro, cada uno con la flechita sobre su botón.
 // (La caja del botón se mide por su centro y su tamaño de reposo: mientras llama se agranda y se mueve, y el globito no tiene que bailar con él.)
+// "anteriores" son los lugares de los globitos que ya se ubicaron (lo que devuelve esta función). Si cerca del borde de la pantalla no hay lugar para
+// que los dos queden uno al lado del otro (el de la derecha se corre hacia la izquierda y tapa al otro), este baja hasta quedar debajo y su flechita
+// se estira en un hilo hasta el botón (--cola, ver _avisos.scss).
 const GLOBO_PUNTA_AL_BORDE = 28; // px entre la flechita y el borde del globito cuando se acomoda a un costado
+const GLOBO_ENTRE_GLOBOS = 10; // px de aire entre dos globitos
 
-function ubicarGloboDelBoton(boton, globo, lado = 'centro') {
+function ubicarGloboDelBoton(boton, globo, lado = 'centro', anteriores = []) {
     const margen = 8;
     const caja = boton.getBoundingClientRect();
     const ancho = globo.offsetWidth;
@@ -982,12 +986,23 @@ function ubicarGloboDelBoton(boton, globo, lado = 'centro') {
     izquierda = Math.round(Math.max(margen, Math.min(izquierda, window.innerWidth - ancho - margen)));
     const debajo = centroVertical < window.innerHeight / 2;
     const separacion = PANTALLA_DE_CELULAR.matches ? 12 : 15;
-    const arriba = Math.round(debajo ? centroVertical + mitadDelAlto + separacion : centroVertical - mitadDelAlto - separacion - alto);
+    const arribaNormal = Math.round(debajo ? centroVertical + mitadDelAlto + separacion : centroVertical - mitadDelAlto - separacion - alto);
+    let arriba = arribaNormal;
+    if (debajo) {
+        for (const otro of anteriores) {
+            const seTapan = izquierda < otro.derecha + GLOBO_ENTRE_GLOBOS && otro.izquierda < izquierda + ancho + GLOBO_ENTRE_GLOBOS;
+            if (seTapan && arriba < otro.abajo + GLOBO_ENTRE_GLOBOS && otro.arriba < arriba + alto + GLOBO_ENTRE_GLOBOS)
+                arriba = otro.abajo + GLOBO_ENTRE_GLOBOS;
+        }
+    }
     const punta = `${Math.round(centro - izquierda)}px`;
+    const cola = `${arriba - arribaNormal}px`;
     if (globo.style.left !== `${izquierda}px`) globo.style.left = `${izquierda}px`;
     if (globo.style.top !== `${arriba}px`) globo.style.top = `${arriba}px`;
     if (globo.style.getPropertyValue('--punta') !== punta) globo.style.setProperty('--punta', punta);
+    if (globo.style.getPropertyValue('--cola') !== cola) globo.style.setProperty('--cola', cola);
     globo.classList.toggle('sobre-el-boton', !debajo);
+    return { izquierda, derecha: izquierda + ancho, arriba, abajo: arriba + alto };
 }
 
 export function revisarLlamadas() {
@@ -1016,8 +1031,10 @@ export function revisarLlamadas() {
     // hacia la derecha) para no taparse; si no, cada uno va centrado en su botón
     const llamadas = [...llamadasActivas];
     if (llamadas.length > 1) llamadas.sort(([a], [b]) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+    const ubicados = [];
     llamadas.forEach(([boton, llamada], i) => {
-        if (boton.isConnected) ubicarGloboDelBoton(boton, llamada.globo, llamadas.length < 2 ? 'centro' : i === 0 ? 'izquierda' : 'derecha');
+        if (!boton.isConnected) return;
+        ubicados.push(ubicarGloboDelBoton(boton, llamada.globo, llamadas.length < 2 ? 'centro' : i === 0 ? 'izquierda' : 'derecha', ubicados));
     });
 }
 

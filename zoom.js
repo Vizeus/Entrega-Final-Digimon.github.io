@@ -5,7 +5,7 @@
 // (zoom extra) y se puede arrastrar. Las flechas (o deslizar el dedo) pasan a la carta vecina.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { CON_MOUSE, emitir, ponerAyuda } from './util.js';
+import { CON_MOUSE, anchoVisible, emitir, ponerAyuda } from './util.js';
 import { t } from './i18n.js';
 import { listaDigimons } from './pagina.js';
 import { seleccionados, verificarSeleccion } from './combate.js';
@@ -95,7 +95,7 @@ function calcularZoom(carta) {
     const zoomCss = parseFloat(getComputedStyle(carta).zoom) || 1; // en celular las cartas se achican con "zoom"
     carta.classList.remove('zoom-midiendo');
 
-    const ancho = document.documentElement.clientWidth;
+    const ancho = anchoVisible();
     const alto = window.innerHeight;
     const anchoUtil = ancho * (ancho < 600 ? ZOOM_ANCHO_CELULAR : ZOOM_ANCHO);
     const escala = Math.max(ZOOM_MINIMO, Math.min(ZOOM_MAXIMO, anchoUtil / caja.width, (alto * ZOOM_ALTO) / caja.height));
@@ -253,7 +253,7 @@ export function ponerZoomExtra(carta, factor, anclaVieja, anclaNueva = anclaViej
     const extra = datos.extra;
     const nuevo = Math.max(1, Math.min(ZOOM_EXTRA_MAXIMO, factor));
     const razon = nuevo / extra.factor;
-    const ancho = document.documentElement.clientWidth;
+    const ancho = anchoVisible();
     const alto = window.innerHeight;
     const escala = datos.escala * nuevo;
     const sobraX = Math.max(0, (datos.anchoBase * escala - ancho) / 2); // cuánto sobra la carta de la pantalla en cada eje
@@ -346,7 +346,7 @@ function moverZoomExtra(carta, dx, dy) {
     const datos = carta.datosZoom;
     const extra = datos.extra;
     const escala = datos.escala * extra.factor;
-    const sobraX = Math.max(0, (datos.anchoBase * escala - document.documentElement.clientWidth) / 2);
+    const sobraX = Math.max(0, (datos.anchoBase * escala - anchoVisible()) / 2);
     const sobraY = Math.max(0, (datos.altoBase * escala - window.innerHeight) / 2);
     extra.x = extra.ix = Math.max(-sobraX, Math.min(sobraX, extra.x + dx));
     extra.y = extra.iy = Math.max(-sobraY, Math.min(sobraY, extra.y + dy));
@@ -424,7 +424,7 @@ export function volverAlZoomNormal(carta) {
             return;
         }
         zoomExtraTerminados.push(resolver);
-        pedirZoomExtra(carta, 1, { x: document.documentElement.clientWidth / 2, y: window.innerHeight / 2 });
+        pedirZoomExtra(carta, 1, { x: anchoVisible() / 2, y: window.innerHeight / 2 });
     });
 }
 
@@ -527,7 +527,7 @@ function crearFlechasZoom() {
 function actualizarFlechasZoom() {
     const flechas = document.getElementById('zoom-flechas');
     if (!flechas || !cartaEnZoom) return;
-    const ancho = document.documentElement.clientWidth;
+    const ancho = anchoVisible();
     const celular = ancho < 600;
     const lado = celular ? 34 : 48;
     const separacion = celular ? 3 : 10;
@@ -567,7 +567,7 @@ async function cambiarZoom(direccion, repetida = false) {
     sonidoZoom(true);
 
     const zoomCss = parseFloat(getComputedStyle(vieja).zoom) || 1;
-    const salto = (direccion * document.documentElement.clientWidth * 0.55) / zoomCss;
+    const salto = (direccion * anchoVisible() * 0.55) / zoomCss;
     const antes = zoomVigente(vieja.datosZoom); // (con el zoom extra que tenga)
     // La que se va, si no mostraba el reflejo (porque la carta recién había aparecido y el mouse no se movió, o porque estaba agrandada de más),
     // se va igual sin mostrarlo: el puntero sigue encima de ella y, sin esa marca, el "hover" se lo prendería justo cuando se está yendo
