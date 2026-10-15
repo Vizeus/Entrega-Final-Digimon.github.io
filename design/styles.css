@@ -471,6 +471,9 @@ body::before {
 }
 #navbar #iniciar-combate {
   --c: #34b35a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
   height: 48px;
   min-width: 204px;
@@ -6398,6 +6401,39 @@ rt::before {
 }
 :root[data-idioma=ja]:not([data-furigana=no]) #navbar .menu-desplegable {
   font-size: 12px;
+}
+
+#cartel-ayuda {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2200;
+  box-sizing: border-box;
+  max-width: 300px;
+  padding: 5px 9px;
+  font: 400 13px/1.5 var(--f-descripcion), sans-serif;
+  color: #24313f;
+  background: #fff;
+  border: 1px solid rgba(0, 40, 90, 0.3);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 30, 80, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+#cartel-ayuda.visible {
+  opacity: 1;
+}
+#cartel-ayuda rt {
+  display: ruby-text;
+  font-size: 0.6em;
+}
+
+:root[data-tema=oscuro] #cartel-ayuda {
+  color: #dce9ff;
+  background: #16223f;
+  border-color: rgba(120, 190, 255, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 :root[data-tema=oscuro] {

@@ -114,6 +114,12 @@ function terminar() {
     quitarTodo();
 }
 
+// Para el cartel de ayuda (cartelAyuda.js): el texto partido en pedazos, con o sin lectura (null si la lista todavía no bajó o si es un texto sin furigana)
+export function pedazosConLectura(texto) {
+    if (!indice || sinFurigana.has(texto.trim())) return null;
+    return segmentar(texto, indice);
+}
+
 // ---- Botón: con o sin furigana ----------------------------------------------------------------------------------------------------
 
 // El botón (en la barra, junto a los de sonido y tema) solo se ve en japonés. La elección se recuerda; sin elegir, el furigana está puesto. Quitarlo es ocultar las lecturas con CSS

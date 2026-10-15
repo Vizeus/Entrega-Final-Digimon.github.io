@@ -28,6 +28,7 @@ import { activarCierreDeVentanas, activarPaginaQuietaConVentanas } from './venta
 import { activarTema } from './tema.js';
 import { activarCierreDeMenus } from './menus.js';
 import { activarFurigana } from './furigana.js';
+import { activarCartelDeAyuda } from './cartelAyuda.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     mostrarSistemaDeNiveles();
@@ -102,4 +103,5 @@ activarBarraQueSeEsconde();
 activarLogo();
 activarEvolucion();
 activarBaileDeCartas();
+activarCartelDeAyuda(); // (solo en japonés: la ayuda que sale al dejar el mouse sobre algo, con furigana)
 activarFurigana(); // último: pone el furigana a todo lo que ya está escrito (si la página está en japonés) y desde ahí a lo que se vaya escribiendo

@@ -437,6 +437,10 @@
     // Botón principal: es el más grande y el único con color fuerte. Verde y con brillo cuando se puede pelear, gris apagado mientras no
     #iniciar-combate {
         --c: #34b35a;
+        // El emoji queda centrado en el botón aunque el texto lleve furigana (que agranda la línea hacia arriba y bajaba el emoji, alineado a la base)
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         flex: none;
         height: 48px;
         min-width: 204px;

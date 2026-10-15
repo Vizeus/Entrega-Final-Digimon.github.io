@@ -1,0 +1,44 @@
+@use "variables" as *;
+
+// -----------------------------------------------------------------------------------------------------------------
+// CARTEL DE AYUDA (solo en japonés; lo escribe cartelAyuda.js)
+// Un cartelito simple, casi como el del navegador, que lleva furigana. Con el furigana puesto el texto va en kana y los kanji arriba;
+// sin furigana, al revés. Por eso sus lecturas se muestran siempre, aunque el botón de furigana las esconda en el resto de la página.
+// -----------------------------------------------------------------------------------------------------------------
+
+#cartel-ayuda {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: capa(cartel-de-ayuda);
+    box-sizing: border-box;
+    max-width: 300px;
+    padding: 5px 9px;
+    font:
+        400 13px/1.5 var(--f-descripcion),
+        sans-serif;
+    color: #24313f;
+    background: #fff;
+    border: 1px solid rgba(0, 40, 90, 0.3);
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 30, 80, 0.25);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+
+    &.visible {
+        opacity: 1;
+    }
+
+    rt {
+        display: ruby-text;
+        font-size: 0.6em;
+    }
+}
+
+:root[data-tema="oscuro"] #cartel-ayuda {
+    color: #dce9ff;
+    background: #16223f;
+    border-color: rgba(120, 190, 255, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}

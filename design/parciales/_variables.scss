@@ -94,6 +94,8 @@ $capas: (
     // las flechas para pasar de carta con una ventana de ataques o de línea evolutiva abierta (paso.js)
     botones-sobre-las-ventanas: 2100,
     globo-sobre-las-ventanas: 2150,
+    // el cartelito que sale al dejar el mouse sobre algo (cartelAyuda.js): por encima de todo
+    cartel-de-ayuda: 2200,
 );
 
 @function capa($nombre) {
