@@ -43,7 +43,7 @@ import {
 } from './datos.js';
 import { idioma, nombreElemento, nombreAtributo, t } from './i18n.js';
 import { PANTALLA_DE_CELULAR } from './util.js';
-import { nombreDeEspecie, nombreDeFamilia, nombreDeGrupo } from './nombres.js';
+import { compararEspecies, compararFamilias, nombreDeEspecie, nombreDeFamilia, nombreDeGrupo } from './nombres.js';
 import { listaDigimons, nombreNivel } from './pagina.js';
 import { nombreApiCompleto, nombreCompleto, nombreJaponesCompleto, nombreOccidentalCompleto, separarXAntibody } from './cartas.js';
 
@@ -302,7 +302,7 @@ const lugarDelCampo = clave => {
 };
 const OPCIONES_QUE_LLEGAN = {
     campo: { orden: (a, b) => lugarDelCampo(a) - lugarDelCampo(b) || a.localeCompare(b, 'en'), vistas: new Set() },
-    especie: { orden: (a, b) => a.localeCompare(b, 'en'), vistas: new Set() },
+    especie: { orden: compararEspecies, vistas: new Set() },
 };
 
 // Suma al filtro las opciones que traiga una carta y todavía no estén (y deja todas en su orden)
@@ -323,6 +323,16 @@ function descubrirOpciones(grupo, valores) {
     if (grupo === 'especie') actualizarFamilias();
     etiquetarChips();
     buscarEntreLasOpciones(grupo); // si había algo escrito en la cajita de búsqueda, las nuevas también lo cumplen o se esconden
+}
+
+// Al cambiar de idioma, las especies (y con ellas las familias y el árbol) se ordenan de nuevo: en español el orden alfabético sigue a los nombres traducidos
+function reordenarEspecies() {
+    const claves = GRUPOS_FILTRO.especie.claves;
+    claves.sort(compararEspecies);
+    const lista = seccionFiltros.querySelector('.f-grupo[data-g="especie"] .f-especies');
+    const chips = new Map([...lista.querySelectorAll('.f-chip')].map(chip => [chip.dataset.k, chip]));
+    lista.append(...claves.map(clave => chips.get(clave)).filter(Boolean));
+    actualizarFamilias();
 }
 
 // ---- Familias de especies ------------------------------------------------------------------------------------------
@@ -352,16 +362,16 @@ function calcularFamilias(especies) {
     for (const [nombre, extra] of Object.entries(FAMILIAS_DE_ESPECIES_A_MANO)) {
         for (const especie of extra.filter(nombreExtra => especies.includes(nombreExtra))) sumar(normalizar(nombre), nombre, especie);
     }
-    const resultado = new Map();
-    const firmas = new Set(); // dos familias con exactamente las mismas especies serían lo mismo: se queda una
+    const sinRepetir = new Map();
+    const firmas = new Set(); // dos familias con exactamente las mismas especies serían lo mismo: se queda una (la primera según el nombre de la API, en cualquier idioma)
     const ordenadas = [...porClave.values()].filter(({ miembros }) => miembros.size >= 2).sort((a, b) => a.nombre.localeCompare(b.nombre, 'en'));
     for (const { nombre, miembros } of ordenadas) {
         const firma = [...miembros].sort().join('|');
         if (firmas.has(firma)) continue;
         firmas.add(firma);
-        resultado.set(nombre, miembros);
+        sinRepetir.set(nombre, miembros);
     }
-    return resultado;
+    return new Map([...sinRepetir].sort(([a], [b]) => compararFamilias(a, b))); // (y se ven en el orden alfabético del idioma)
 }
 
 // Cuántas especies de la familia están elegidas: 'false' (ninguna), 'mixed' (algunas) o 'true' (todas)
@@ -429,7 +439,7 @@ const listaDeEspecies = seccionFiltros.querySelector('.f-especies'); // (la de l
 // Las especies de un grupo del árbol, por orden alfabético
 function miembrosDelGrupo(nombre) {
     const lista = nombre === SIN_FAMILIA ? GRUPOS_FILTRO.especie.claves.filter(especie => !familiasDe.has(especie)) : [...(familias.get(nombre) ?? [])];
-    return lista.sort((a, b) => a.localeCompare(b, 'en'));
+    return lista.sort(compararEspecies);
 }
 
 function crearGrupoDelArbol(nombre) {
@@ -652,7 +662,7 @@ function escribirEtiquetas() {
             // grandes van primero, y una que ya está cubierta por otras no se muestra. Las especies que no entran en ninguna etiqueta de familia van sueltas.
             const completas = [...familias.keys()]
                 .filter(nombre => estadoDeFamilia(nombre) === 'true')
-                .sort((a, b) => familias.get(b).size - familias.get(a).size || a.localeCompare(b, 'en'));
+                .sort((a, b) => familias.get(b).size - familias.get(a).size || compararFamilias(a, b));
             const cubiertas = new Set();
             for (const nombre of completas) {
                 const miembros = familias.get(nombre);
@@ -1377,6 +1387,7 @@ function activarFiltros() {
         });
     }
     document.addEventListener('idioma-cambiado', escribirNombresDeTemporadas);
+    document.addEventListener('idioma-cambiado', reordenarEspecies);
     // Los nombres de las cartas cambian con el idioma: con el orden alfabético se vuelve a ordenar (cuando ya se escribieron los nuevos nombres)
     document.addEventListener('idioma-cambiado', () => {
         requestAnimationFrame(() => {

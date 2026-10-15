@@ -184,6 +184,22 @@ function gruposConEnlaces(campos) {
     });
 }
 
+// Las descripciones en español son un archivo grande (descripcionesEs.js): solo se baja cuando la página está en español. Mientras llega (o si
+// no llega), los dorsos muestran la descripción en inglés con su aviso; al llegar se rehacen los que ya estaban armados.
+let descripcionesEs = null;
+let bajandoDescripcionesEs = false;
+
+async function cargarDescripcionesEs() {
+    if (descripcionesEs || bajandoDescripcionesEs) return;
+    bajandoDescripcionesEs = true;
+    try {
+        ({ DESCRIPCIONES_ES: descripcionesEs } = await import('./descripcionesEs.js'));
+        listaDigimons.querySelectorAll(':scope > li').forEach(traducirCarta);
+    } catch {
+        bajandoDescripcionesEs = false; // sin conexión o archivo faltante: queda el inglés y se vuelve a intentar al cambiar de idioma
+    }
+}
+
 // Dorso de la carta: se arma la primera vez que se gira, con los datos que ya trajimos de la API
 function construirDorso(carta) {
     const datos = carta.datosDorso;
@@ -222,15 +238,16 @@ function construirDorso(carta) {
         cuerpo.append(linea);
     }
 
-    // En japonés se muestra la descripción japonesa de la API; si el digimon no la tiene, queda la inglesa con el aviso. En español la descripción
-    // siempre es la inglesa (con su aviso); en inglés, sin aviso.
+    // En japonés se muestra la descripción japonesa de la API; si el digimon no la tiene, queda la inglesa con el aviso. En español se muestra la
+    // traducción (descripcionesEs.js) y, si todavía no se tradujo o no terminó de bajar, la inglesa con el aviso; en inglés, sin aviso.
     const enJapones = idioma === 'ja' && Boolean(datos.descripcionJa);
+    const enEspanol = idioma === 'es' ? descripcionesEs?.[carta.dataset.id] : undefined;
     const descripcion = document.createElement('p');
     descripcion.className = 'c-desc';
-    descripcion.textContent = (enJapones ? datos.descripcionJa : datos.descripcion) || t('carta.sinDescripcion');
+    descripcion.textContent = (enJapones ? datos.descripcionJa : enEspanol || datos.descripcion) || t('carta.sinDescripcion');
     cuerpo.append(descripcion);
 
-    const aviso = enJapones || !datos.descripcion ? '' : t('carta.idiomaOriginal');
+    const aviso = enJapones || enEspanol || !datos.descripcion ? '' : t('carta.idiomaOriginal');
     if (aviso) {
         const nota = document.createElement('p');
         nota.className = 'c-idioma';
@@ -305,7 +322,9 @@ function traducirCarta(carta) {
 // Al cambiar de idioma se traducen todas las cartas que ya están en la página
 document.addEventListener('idioma-cambiado', () => {
     listaDigimons.querySelectorAll(':scope > li').forEach(traducirCarta);
+    if (idioma === 'es') cargarDescripcionesEs();
 });
+if (idioma === 'es') cargarDescripcionesEs();
 
 // Da vuelta la carta entera en 3D: gira hasta 90° (de canto), cambia de cara y termina de girar
 export const PERSPECTIVA = 'perspective(800px) ';

@@ -20,3 +20,7 @@ herramientas/ataques-descripciones.json
 
 # Informe de herramientas/furigana.mjs (furiganaJa.js y furigana-a-mano.json, en cambio, sí se suben)
 herramientas/furigana-revisar.txt
+
+# Archivos de trabajo de herramientas/descripciones-digimon.mjs (lo que se traduce queda en descripcionesEs.js)
+herramientas/descripciones-digimon.cache.json
+herramientas/descripciones-digimon.json

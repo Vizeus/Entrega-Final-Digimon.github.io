@@ -25,3 +25,8 @@ herramientas/especies-japonesas.cache.json
 herramientas/especies-japonesas.prueba.txt
 herramientas/especies-japonesas-revisar.txt
 furiganaJa.js
+
+# Las descripciones de los digimons en español, traducidas a mano a partir de herramientas/descripciones-digimon.mjs
+descripcionesEs.js
+herramientas/descripciones-digimon.json
+herramientas/descripciones-digimon.cache.json

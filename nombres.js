@@ -307,7 +307,11 @@ export function descripcionDeAtaque(descripcion) {
 
 // ---- Grupos (los "Fields" de la API) -------------------------------------------------------------------------------
 
-// Son nombres propios: en español y en inglés se ven como los trae la API. En japonés, con su nombre oficial en katakana (el de Wikimon y los libros de Digimon).
+// Son nombres propios: en inglés se ven como los trae la API. En japonés, con su nombre oficial en katakana (el de Wikimon y los libros de Digimon).
+// En español se dejan como se los conoce en el mundo hispano, que es el nombre en inglés (también en el juego de cartas en español: Nature Spirits,
+// Metal Empire…). Lo único que se traduce es "Unknown", que no es un nombre propio sino la palabra "desconocido".
+const GRUPOS_ES = { 'Unknown': 'Desconocido' };
+
 const GRUPOS_JA = {
     'Nature Spirits': 'ネイチャースピリッツ',
     'Deep Savers': 'ディープセイバーズ',
@@ -323,18 +327,225 @@ const GRUPOS_JA = {
 
 // El nombre de un grupo en el idioma actual (un grupo que traiga la API y no esté en la lista se ve como viene)
 export function nombreDeGrupo(campo) {
-    return idioma === 'ja' ? (GRUPOS_JA[campo] ?? campo) : campo;
+    if (idioma === 'ja') return GRUPOS_JA[campo] ?? campo;
+    return idioma === 'es' ? (GRUPOS_ES[campo] ?? campo) : campo;
 }
 
 // ---- Especies (los "types" de la API) y sus familias -----------------------------------------------------------------
 
-// Las especies son nombres propios: en español y en inglés se ven como los trae la API. En japonés, con el nombre que les pone Wikimon (爬虫類型, 竜人型…);
-// una que no esté en la lista (la API trae una nueva) se ve como viene.
+// En inglés las especies se ven como las trae la API. En japonés, con el nombre que les pone Wikimon (爬虫類型, 竜人型…). En español, traducidas
+// (Reptile → Reptil, Holy Knight → Caballero sagrado): no hay una traducción oficial de los "tipos" y se tradujeron del inglés, con un mismo
+// vocabulario para todas. Las que son nombres propios o palabras raras (Oni, Braun, Tathāgata, Avatar, Cyborg, LCD, Slime) quedan como son.
+// Una que no esté en la lista (la API trae una nueva) se ve como viene.
+const ESPECIES_ES = {
+    'Alien': 'Alienígena',
+    'Amphibian': 'Anfibio',
+    'Ancient': 'Antiguo',
+    'Ancient Aquatic Beast Man': 'Hombre bestia acuático antiguo',
+    'Ancient Beast': 'Bestia antigua',
+    'Ancient Bird': 'Ave antigua',
+    'Ancient Bird Man': 'Hombre ave antiguo',
+    'Ancient Crustacean': 'Crustáceo antiguo',
+    'Ancient Dragon': 'Dragón antiguo',
+    'Ancient Dragon Man': 'Hombre dragón antiguo',
+    'Ancient Fairy': 'Hada antigua',
+    'Ancient Fish': 'Pez antiguo',
+    'Ancient Holy Knight': 'Caballero sagrado antiguo',
+    'Ancient Insect': 'Insecto antiguo',
+    'Ancient Mineral': 'Mineral antiguo',
+    'Ancient Mutation': 'Mutación antigua',
+    'Ancient Mythical Beast': 'Bestia mítica antigua',
+    'Ancient Ore': 'Mena antigua',
+    'Ancient Plant': 'Planta antigua',
+    'Angel': 'Ángel',
+    'Ankylosaur': 'Anquilosaurio',
+    'Aquatic': 'Acuático',
+    'Aquatic Beast Man': 'Hombre bestia acuático',
+    'Aquatic Mammal': 'Mamífero acuático',
+    'Archangel': 'Arcángel',
+    'Armor': 'Armadura',
+    'Artificial Fallen Angel': 'Ángel caído artificial',
+    'Avatar': 'Avatar',
+    'Baby Dragon': 'Dragón bebé',
+    'Beast': 'Bestia',
+    'Beast Dragon': 'Dragón bestia',
+    'Beast Knight': 'Caballero bestia',
+    'Beast Man': 'Hombre bestia',
+    'Bewitching Beast': 'Bestia hechizante',
+    'Bewitching Bird': 'Ave hechizante',
+    'Bird': 'Ave',
+    'Bird Dragon': 'Dragón ave',
+    'Bird Man': 'Hombre ave',
+    'Braun': 'Braun',
+    'Bulb': 'Bulbo',
+    'Card': 'Carta',
+    'Ceratopsian': 'Ceratopsio',
+    'Cherub': 'Querubín',
+    'Chick': 'Pollito',
+    'Composite': 'Compuesto',
+    'Crustacean': 'Crustáceo',
+    'Cyborg': 'Cyborg',
+    'Dark Dragon': 'Dragón oscuro',
+    'Dark Knight': 'Caballero oscuro',
+    'Demon Beast': 'Bestia demoníaca',
+    'Demon Dragon': 'Dragón demonio',
+    'Demon God': 'Dios demonio',
+    'Demon Lord': 'Señor demonio',
+    'Demon Man': 'Hombre demonio',
+    'Devil': 'Diablo',
+    'Devil Dragon': 'Dragón diablo',
+    'Dinosaur': 'Dinosaurio',
+    'Dominion': 'Dominación',
+    'Dragon': 'Dragón',
+    'Dragon Man': 'Hombre dragón',
+    'Dragon Warrior': 'Dragón guerrero',
+    'Earth Dragon': 'Dragón de tierra',
+    'Enhancement': 'Mejora',
+    'Evil Dragon': 'Dragón maligno',
+    'Fairy': 'Hada',
+    'Fallen Angel': 'Ángel caído',
+    'Fish': 'Pez',
+    'Flame': 'Llama',
+    'Flame Dragon': 'Dragón de llamas',
+    'Food': 'Comida',
+    'Galaxy': 'Galaxia',
+    'Ghost': 'Fantasma',
+    'Giant Bird': 'Ave gigante',
+    'God Beast': 'Bestia divina',
+    'God Man': 'Hombre divino',
+    'Holy Beast': 'Bestia sagrada',
+    'Holy Bird': 'Ave sagrada',
+    'Holy Dragon': 'Dragón sagrado',
+    'Holy Knight': 'Caballero sagrado',
+    'Holy Mechanical Warrior': 'Guerrero mecánico sagrado',
+    'Holy Sword': 'Espada sagrada',
+    'Host Computer': 'Computadora central',
+    'Hybrid': 'Híbrido',
+    'Ice-Snow': 'Hielo y nieve',
+    'Insect': 'Insecto',
+    'Insectivorous Plant': 'Planta insectívora',
+    'Invade': 'Invasor',
+    'Larva': 'Larva',
+    'LCD': 'LCD',
+    'Lesser': 'Inferior',
+    'Light Dragon': 'Dragón de luz',
+    'Machine': 'Máquina',
+    'Machine Dragon': 'Dragón máquina',
+    'Magic Knight': 'Caballero mágico',
+    'Magic Warrior': 'Guerrero mágico',
+    'Major': 'Mayor',
+    'Mammal': 'Mamífero',
+    'Marine': 'Marino',
+    'Marine Beast': 'Bestia marina',
+    'Marine Man': 'Hombre marino',
+    'Mine': 'Mina',
+    'Mineral': 'Mineral',
+    'Minor': 'Menor',
+    'Mollusk': 'Molusco',
+    'Monk': 'Monje',
+    'Musical Instrument': 'Instrumento musical',
+    'Mutant': 'Mutante',
+    'Mutation': 'Mutación',
+    'Mythical Beast': 'Bestia mítica',
+    'Mythical Dragon': 'Dragón mítico',
+    'Navigation': 'Navegación',
+    'No Data': 'Sin datos',
+    'Ocean Dragon': 'Dragón oceánico',
+    'Oni': 'Oni',
+    'Ophan': 'Ofán',
+    'Ore': 'Mena',
+    'Parasite': 'Parásito',
+    'Perfect': 'Perfecto',
+    'Plant': 'Planta',
+    'Plesiosaur': 'Plesiosaurio',
+    'Power': 'Poder',
+    'Principality': 'Principado',
+    'Pterosaur': 'Pterosaurio',
+    'Puppet': 'Marioneta',
+    'Rare Beast': 'Bestia rara',
+    'Reptile': 'Reptil',
+    'Reptile Man': 'Hombre reptil',
+    'Rock': 'Roca',
+    'Rock Dragon': 'Dragón de roca',
+    'Security System': 'Sistema de seguridad',
+    'Seed': 'Semilla',
+    'Seraph': 'Serafín',
+    'Shellfish': 'Marisco',
+    'Skeleton': 'Esqueleto',
+    'Sky Dragon': 'Dragón del cielo',
+    'Slime': 'Slime',
+    'Small Angel': 'Ángel pequeño',
+    'Small Bird': 'Ave pequeña',
+    'Small Devil': 'Diablillo',
+    'Small Dragon': 'Dragón pequeño',
+    'Smoke': 'Humo',
+    'Space Alien': 'Alienígena espacial',
+    'Species Unknown': 'Especie desconocida',
+    'Spirit': 'Espíritu',
+    'Stegosaur': 'Estegosaurio',
+    'Super Major': 'Supermayor',
+    'Synthetic Beast': 'Bestia sintética',
+    'Tathāgata': 'Tathāgata',
+    'Toy': 'Juguete',
+    'Tropical Fish': 'Pez tropical',
+    'Unanalyzable': 'Inanalizable',
+    'Unbalanced': 'Desequilibrado',
+    'Undead': 'No muerto',
+    'Unique': 'Único',
+    'Unknown': 'Desconocido',
+    'Virtue': 'Virtud',
+    'Warrior': 'Guerrero',
+    'Weapon': 'Arma',
+    'Wicked God': 'Dios malvado',
+};
+
 export function nombreDeEspecie(especie) {
-    return idioma === 'ja' ? (ESPECIES_JA[especie] ?? especie) : especie;
+    if (idioma === 'ja') return ESPECIES_JA[especie] ?? especie;
+    return idioma === 'es' ? (ESPECIES_ES[especie] ?? especie) : especie;
 }
 
-// Las "familias" del filtro de especies se arman con las palabras que comparten los nombres (Dragon, Beast, Ancient…): en japonés, cada palabra con su "系".
+// Las "familias" del filtro de especies se arman con las palabras que comparten los nombres (Dragon, Beast, Ancient…): en español, cada palabra traducida;
+// en japonés, cada una con su "系".
+const FAMILIAS_ES = {
+    Alien: 'Alienígena',
+    Ancient: 'Antiguo',
+    Angel: 'Ángel',
+    Aquatic: 'Acuático',
+    Beast: 'Bestia',
+    Bewitching: 'Hechizante',
+    Bird: 'Ave',
+    Crustacean: 'Crustáceo',
+    Dark: 'Oscuro',
+    Demon: 'Demonio',
+    Devil: 'Diablo',
+    Dinosaur: 'Dinosaurio',
+    Dragon: 'Dragón',
+    Fairy: 'Hada',
+    Fallen: 'Caído',
+    Fish: 'Pez',
+    Flame: 'Llama',
+    God: 'Dios',
+    Holy: 'Sagrado',
+    Insect: 'Insecto',
+    Knight: 'Caballero',
+    Machine: 'Máquina',
+    Magic: 'Mágico',
+    Major: 'Mayor',
+    Mammal: 'Mamífero',
+    Man: 'Hombre',
+    Marine: 'Marino',
+    Mineral: 'Mineral',
+    Mutation: 'Mutación',
+    Mythical: 'Mítico',
+    Ore: 'Mena',
+    Plant: 'Planta',
+    Reptile: 'Reptil',
+    Rock: 'Roca',
+    Small: 'Pequeño',
+    Unknown: 'Desconocido',
+    Warrior: 'Guerrero',
+};
+
 const FAMILIAS_JA = {
     'Alien': 'エイリアン系',
     'Ancient': '古代系',
@@ -376,5 +587,11 @@ const FAMILIAS_JA = {
 };
 
 export function nombreDeFamilia(familia) {
-    return idioma === 'ja' ? (FAMILIAS_JA[familia] ?? familia) : familia;
+    if (idioma === 'ja') return FAMILIAS_JA[familia] ?? familia;
+    return idioma === 'es' ? (FAMILIAS_ES[familia] ?? familia) : familia;
 }
+
+// El orden alfabético de las especies y de las familias: en español, por como se ven (Antiguo, Ave, Bestia…); en los demás idiomas, por el nombre
+// de la API (en japonés tampoco se reordena)
+export const compararEspecies = (a, b) => (idioma === 'es' ? nombreDeEspecie(a).localeCompare(nombreDeEspecie(b), 'es') : a.localeCompare(b, 'en'));
+export const compararFamilias = (a, b) => (idioma === 'es' ? nombreDeFamilia(a).localeCompare(nombreDeFamilia(b), 'es') : a.localeCompare(b, 'en'));
