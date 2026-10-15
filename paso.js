@@ -18,7 +18,7 @@ const TAMANO_DE_FLECHA = 44; // px (en celular, un poco menos)
 const ICONO_FLECHA = puntos =>
     `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${puntos}" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-let paso = null; // { carta, sirve, abrir, flechas, observador }: la ventana que está abierta y desde dónde se puede pasar
+let paso = null; // { carta, sirve, abrir, flechas, observador, entrando }: la ventana que está abierta y desde dónde se puede pasar
 
 function vecina(carta, direccion, sirve) {
     let otra = direccion > 0 ? carta.nextElementSibling : carta.previousElementSibling;
@@ -30,54 +30,83 @@ function vecina(carta, direccion, sirve) {
 
 // El movimiento y el sonido son los mismos que al pasar de carta con el zoom (zoom.js, cambiarZoom): la ventana de ahora se va hacia el costado
 // contrario al que se va, achicándose y desvaneciéndose, y la de la otra carta entra por el opuesto, con el mismo "chiss" de cartulina.
-// (La entrada no espera los 50 ms del zoom: la ventana nueva recién se arma cuando la anterior ya terminó de irse, así que no hay nada que evitar.)
+// Y también como en el zoom, las dos cosas pasan AL MISMO TIEMPO: SweetAlert solo puede tener una ventana, así que la que se va queda como una copia
+// (un "fantasma" sin vida, solo para verse) que se desvanece mientras la ventana de la otra carta se arma y entra. Antes se esperaba a que la de ahora
+// terminara de irse para recién armar la otra (y había un cuadro en que la nueva aparecía sin su movimiento): era lento y titilaba.
 const SALIDA = { duration: 170, easing: 'cubic-bezier(0.5, 0, 0.9, 0.6)', fill: 'forwards' };
 const ENTRADA = { duration: 270, delay: 0, easing: 'cubic-bezier(0.2, 0.9, 0.25, 1)', fill: 'both' };
+const SALIDA_APURADA = { ...SALIDA, duration: 110 }; // si se pasa de nuevo mientras todavía entra la anterior (se sigue apretando la flecha)
+const ENTRADA_APURADA = { ...ENTRADA, duration: 170 };
 const ESCALA_FUERA = 0.92; // cuánto se achica la ventana mientras entra o sale
 let entradaLateral = 0; // 1 o -1: la ventana que se abre ahora es la de la carta vecina y entra por ese lado (0: una ventana común, con su animación de siempre)
-let pasando = false; // la ventana de ahora todavía se está yendo
+let entradaApurada = false; // la que entra ahora lo hace con la animación corta
+let pendiente = 0; // 1 o -1: se pidió otro paso mientras la ventana todavía entraba; se hace cuando termina de entrar
 
 // Cuánto se corre una ventana hacia un costado (como las cartas del zoom: un poco más de la mitad de la pantalla)
 function saltoLateral(popup, direccion) {
     return (direccion * anchoVisible() * 0.55) / (parseFloat(getComputedStyle(popup).zoom) || 1);
 }
 
-async function pasar(direccion) {
-    if (!paso || pasando) return;
+// Copia sin vida de la ventana de ahora, en una cortina propia igual a la de SweetAlert (así toma los mismos estilos y queda exactamente en el mismo
+// lugar), pero sin su oscurecido de fondo: ese ya lo tiene la cortina de la ventana nueva. Se arma antes de cerrar la ventana, pero se pone en la página
+// recién después de abrir la nueva: SweetAlert busca "la" cortina con el primer .swal2-container que encuentra, y tiene que ser la de la ventana nueva.
+function prepararFantasma(popup) {
+    const original = popup.closest('.swal2-container');
+    if (!original) return null;
+    const cortina = document.createElement('div');
+    cortina.className = original.className.replace(/swal2-backdrop-\S+/g, '').trim();
+    cortina.classList.add('paso-fantasma');
+    const copia = popup.cloneNode(true);
+    copia.classList.remove('swal2-show', 'swal2-hide'); // (si no, la copia repetiría la animación de apertura)
+    copia.removeAttribute('role');
+    copia.setAttribute('aria-hidden', 'true');
+    copia.inert = true;
+    for (const conId of [copia, ...copia.querySelectorAll('[id]')]) conId.removeAttribute('id'); // (los ids tienen que ser únicos)
+    cortina.append(copia);
+    return { cortina, copia, desplazamiento: original.scrollTop };
+}
+
+function pasar(direccion, apurado = false) {
+    if (!paso) return;
+    if (paso.entrando) {
+        pendiente = direccion; // todavía está entrando la ventana anterior: este paso se hace en cuanto termine
+        return;
+    }
     const { carta, sirve, abrir } = paso;
     const otra = vecina(carta, direccion, sirve);
     if (!otra) return;
     vibrar(8);
     sonidoZoom(true);
     const popup = Swal.getPopup();
-    let salida = null;
-    if (popup && !reducirMovimiento) {
-        pasando = true;
-        try {
-            salida = popup.animate(
-                [
-                    { translate: '0 0', scale: 1, opacity: 1 },
-                    { translate: `${-saltoLateral(popup, direccion)}px 0`, scale: ESCALA_FUERA, opacity: 0 },
-                ],
-                SALIDA,
-            );
-            await salida.finished;
-        } catch (error) {
-            // Si alguien cancela la animación, seguimos igual
-        }
-        pasando = false;
-        if (!paso || paso.carta !== carta) return; // (mientras tanto se cerró la ventana)
+    const fantasma = popup && !reducirMovimiento ? prepararFantasma(popup) : null;
+    const salto = fantasma ? saltoLateral(popup, direccion) : 0; // (se mide ahora, con la ventana todavía abierta)
+    if (fantasma) {
         entradaLateral = direccion;
+        entradaApurada = apurado;
+        document.body.classList.add('paso-entra'); // la ventana nueva no se ve hasta que empieza su movimiento (ver activarPasoEntreCartas y _ventanas.scss)
     }
     desactivarPasoEntreCartas();
-    // Mientras se cambia de ventana, la cortina de fondo no se anima (clase "paso-en-curso", ver _ventanas.scss): la ventana de ahora ya se fue con su
-    // propio movimiento, y con la animación de cierre y la de apertura de la cortina esta titilaba (quedaba un instante sin oscurecer) y había un retraso.
-    // La salida se cancela justo antes de cerrar: es el mismo cuadro, no se ve.
+    // Mientras se cambia de ventana, la cortina de fondo no se anima (clase "paso-en-curso", ver _ventanas.scss): con la animación de cierre y la de
+    // apertura de la cortina esta titilaba (quedaba un instante sin oscurecer) y había un retraso.
     document.body.classList.add('paso-en-curso');
-    salida?.cancel();
     Swal.close();
     abrir(otra); // abre la ventana de la otra carta, que vuelve a activar el paso
-    setTimeout(() => document.body.classList.remove('paso-en-curso'), 700); // (ya entró: la cortina vuelve a animarse como siempre)
+    if (fantasma) {
+        // La copia reemplaza a la ventana que se cerró en este mismo cuadro, y se va
+        document.body.append(fantasma.cortina);
+        fantasma.cortina.scrollTop = fantasma.desplazamiento; // (si la ventana estaba desplazada, la copia también)
+        const salida = fantasma.copia.animate(
+            [
+                { translate: '0 0', scale: 1, opacity: 1 },
+                { translate: `${-salto}px 0`, scale: ESCALA_FUERA, opacity: 0 },
+            ],
+            apurado ? SALIDA_APURADA : SALIDA,
+        );
+        salida.finished.catch(() => {}).then(() => fantasma.cortina.remove());
+    }
+    setTimeout(() => {
+        document.body.classList.remove('paso-en-curso', 'paso-entra'); // (ya entró: la cortina vuelve a animarse como siempre)
+    }, 700);
 }
 
 // Pone las flechas a los costados de la ventana (si no hay lugar al lado, quedan un poco encima) y apaga la que no tiene a dónde ir.
@@ -158,7 +187,9 @@ export function activarPasoEntreCartas(carta, { sirve = () => true, abrir }) {
     paso = { carta, sirve, abrir, flechas: crearFlechas(), observador: null };
     const popupNuevo = Swal.getPopup();
     const direccionDeEntrada = entradaLateral;
+    const duracionApurada = entradaApurada;
     entradaLateral = 0;
+    entradaApurada = false;
     if (direccionDeEntrada && popupNuevo && !reducirMovimiento) {
         // Entra por un costado en vez de con la animación de apertura de siempre. Las flechas se ubican con la ventana ya en su lugar (antes de moverla).
         popupNuevo.classList.remove('swal2-show'); // (la animación de apertura de siempre se corta: entra con la suya)
@@ -170,16 +201,24 @@ export function activarPasoEntreCartas(carta, { sirve = () => true, abrir }) {
                 { translate: `${saltoLateral(popupNuevo, direccionDeEntrada)}px 0`, scale: ESCALA_FUERA, opacity: 0 },
                 { translate: '0 0', scale: 1, opacity: 1 },
             ],
-            ENTRADA,
+            duracionApurada ? ENTRADA_APURADA : ENTRADA,
         );
+        document.body.classList.remove('paso-entra'); // (ya se mueve por su cuenta, en este mismo cuadro: desde ahora se puede ver)
         entrada.finished
             .catch(() => {}) // (si alguien la cancela, se sigue igual)
             .then(() => {
                 entrada.cancel(); // (ya está en su lugar: no hace falta que la animación se quede sujetando los valores)
                 marco.entrando = false;
-                if (paso === marco) ubicarFlechas();
+                if (paso !== marco) return;
+                ubicarFlechas();
+                if (pendiente) {
+                    const siguiente = pendiente;
+                    pendiente = 0;
+                    pasar(siguiente, true);
+                }
             });
     } else {
+        document.body.classList.remove('paso-entra');
         ubicarFlechas();
     }
     // La ventana cambia de ancho (por ejemplo, al desplegar una lista de la línea evolutiva) y la pantalla de tamaño: las flechas la siguen
@@ -203,6 +242,7 @@ export function desactivarPasoEntreCartas() {
     paso.observador?.disconnect();
     paso.flechas.remove();
     paso = null;
+    pendiente = 0;
     gesto = null;
     window.removeEventListener('resize', ubicarFlechas);
     document.removeEventListener('keydown', alTeclear);

@@ -27,6 +27,7 @@ import { activarBaileDeCartas } from './baile.js';
 import { activarCierreDeVentanas, activarPaginaQuietaConVentanas } from './ventanas.js';
 import { activarTema } from './tema.js';
 import { activarCierreDeMenus } from './menus.js';
+import { activarFurigana } from './furigana.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     mostrarSistemaDeNiveles();
@@ -100,3 +101,4 @@ activarBarraQueSeEsconde();
 activarLogo();
 activarEvolucion();
 activarBaileDeCartas();
+activarFurigana(); // último: pone el furigana a todo lo que ya está escrito (si la página está en japonés) y desde ahí a lo que se vaya escribiendo

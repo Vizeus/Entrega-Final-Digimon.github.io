@@ -22,7 +22,7 @@ import {
     SIN_DATO,
     numeracionNiveles,
 } from './datos.js';
-import { nombreElemento, nombreAtributo, t } from './i18n.js';
+import { idioma, nombreElemento, nombreAtributo, t } from './i18n.js';
 import { conCruzDeCierre, mantenerEnSuLugar } from './ventanas.js';
 import { clasificacionAlternativa, listaDigimons, nombreNivel, nombreNivelEnSistema } from './pagina.js';
 import { nombreParaMostrar, nombreDeAtaque, nombreDeGrupo, descripcionDeAtaque } from './nombres.js';
@@ -409,6 +409,7 @@ function crearListaDeAtaques(habilidades, cartaActual) {
             alias.className = 'ataque-alias';
             alias.title = t('ataques.traduccion'); // al dejar el puntero encima
             alias.textContent = `(${traduccion})`;
+            alias.hidden = idioma === 'ja'; // la traducción de la API es en inglés: en japonés el nombre ya se ve en japonés y el paréntesis sobra
             detalle.append(alias);
         }
 
@@ -508,7 +509,10 @@ const traducirVentanaDeAtaques = () => {
     if (titulo) titulo.textContent = t('ataques.titulo', { nombre: nombreCompleto(cartaDeAtaques) });
     const ayuda = document.querySelector('.popup-ataques .ataques-ayuda');
     if (ayuda) ayuda.textContent = t('ataques.ayuda');
-    document.querySelectorAll('.popup-ataques .ataque-alias').forEach(alias => (alias.title = t('ataques.traduccion')));
+    document.querySelectorAll('.popup-ataques .ataque-alias').forEach(alias => {
+        alias.title = t('ataques.traduccion');
+        alias.hidden = idioma === 'ja';
+    });
     document
         .querySelectorAll('.popup-ataques .ataque-nombre')
         .forEach(nombre => (nombre.textContent = nombreDeAtaque(nombre.dataset.ataque, cartaDeAtaques.dataset.nombreApi)));

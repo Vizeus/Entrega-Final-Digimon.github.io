@@ -30,6 +30,17 @@ body.paso-en-curso {
     }
 }
 
+// La ventana nueva (la que entra por un costado) se ve recién cuando empieza su movimiento: SweetAlert la muestra un instante antes de avisar que
+// se abrió, y sin esto se alcanzaba a ver un cuadro suelto, sin su animación (paso.js la saca en cuanto la mueve). Y la copia de la que se va (el
+// "fantasma") no recibe toques ni se ve por encima de nada: es solo la imagen de la ventana yéndose.
+body.paso-entra .swal2-container:not(.paso-fantasma) .swal2-popup {
+    opacity: 0;
+}
+
+.paso-fantasma {
+    pointer-events: none;
+}
+
 body:has(.swal2-container) #zoom-flechas,
 body:has(.swal2-container) #zoom-fondo .zoom-cerrar,
 body:has(.swal2-container) #zoom-fondo .zoom-ayuda {

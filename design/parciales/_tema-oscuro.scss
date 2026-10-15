@@ -68,6 +68,10 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
     }
 
     // El sol y la luna del botón de tema, más claros para que se luzcan sobre el vidrio oscuro
+    #navbar #cambiar-furigana .furi-kana {
+        color: #7fc1ff;
+    }
+
     #navbar #tema .tema-sol,
     body > #tema .tema-sol {
         stroke: #ffd25f;
@@ -167,10 +171,10 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
 
         // Los botones de vidrio (idioma, niveles, menús de información, sonido, inclinación, tema, ☰): vidrio azul oscuro con un reflejo tenue
         .menu-desplegable,
-        #cambiar-idioma,
         #cambiar-niveles,
         #silenciar,
         #inclinacion-invertida,
+        #cambiar-furigana,
         #tema,
         #abrir-menu {
             border-color: rgba(120, 190, 255, 0.38);

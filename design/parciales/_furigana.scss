@@ -1,0 +1,43 @@
+// -----------------------------------------------------------------------------------------------------------------
+// FURIGANA (la lectura en kana sobre los kanji, solo con la página en japonés)
+//
+// furigana.js envuelve los kanji en <ruby>kanji<rt data-l="lectura"></rt></ruby>. La lectura NO es texto: la escribe este CSS con ::before desde
+// data-l, así el texto de la página (textContent, copiar, lectores de pantalla) sigue siendo el de siempre.
+// El botón de la barra (#cambiar-furigana) pone data-furigana="no" en <html>: sin furigana las lecturas se esconden sin tocar la página.
+// -----------------------------------------------------------------------------------------------------------------
+
+ruby {
+    ruby-position: over;
+    ruby-align: center;
+}
+
+// La lectura va chiquita y de un color apenas distinto al del texto (el del texto mezclado con azul): se lee como otra capa, sin competir
+rt {
+    font-size: 0.5em;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: none;
+    text-shadow: none;
+    color: color-mix(in srgb, currentColor 62%, #2f86e6);
+
+    &::before {
+        content: attr(data-l);
+    }
+}
+
+:root[data-furigana="no"] rt {
+    display: none;
+}
+
+// Botones de color con el texto blanco (los chips de atributo y elemento, "Ataques", "Evolución", "Batalla"...): la lectura va blanca con una sombra
+// fina, como el texto, porque el celeste se perdía sobre colores claros (como el amarillo del rayo)
+:is(.chip, .c-ataques, .c-evo, #iniciar-combate, .swal2-styled) rt {
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+}
+
+// Los chips de las cartas son chiquitos (el furigana queda en 6 px, y se lee mejor con el zoom de la carta)
+.chip rt {
+    font-size: 0.56em;
+}

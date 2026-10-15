@@ -13,6 +13,8 @@
 //
 // Al terminar escribe:
 //   ataquesJa.js                                      → el diccionario (nombre del ataque → japonés), para que lo use la página
+//   (y lee herramientas/ataques-japoneses-a-mano.json: nombres cargados a mano de los ataques que Wikimon no tiene en japonés; solo se usan los que
+//    Wikimon no trae, así que si algún día aparece el oficial, gana ese)
 //   herramientas/ataques-japoneses-conflictos.txt     → ataques que en distintas páginas tienen distinto nombre japonés (para esos, la página usa el del digimon que corresponde)
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -21,6 +23,7 @@ import { ESPERA_MS, POR_PEDIDO, esperar, nombresDeLaApi, traerPaginas, variantes
 
 const archivoCache = new URL('./ataques-japoneses.cache.json', import.meta.url);
 const archivoConflictos = new URL('./ataques-japoneses-conflictos.txt', import.meta.url);
+const archivoAMano = new URL('./ataques-japoneses-a-mano.json', import.meta.url);
 const archivoPrueba = new URL('./ataques-japoneses.prueba.txt', import.meta.url);
 const archivoSalida = new URL('../ataquesJa.js', import.meta.url);
 
@@ -259,6 +262,12 @@ async function principal() {
     }
 
     const { global, porDigimon, conflictos, sinJapones, paginasLeidas } = armarDiccionarios(nombres, cache);
+    // Los cargados a mano (nombre del ataque → japonés) se suman solo si Wikimon no trae ese ataque
+    const aMano = existsSync(archivoAMano) ? JSON.parse(readFileSync(archivoAMano, 'utf8')) : {};
+    for (const [ataque, japones] of Object.entries(aMano)) {
+        if (!global.has(ataque)) global.set(ataque, japones);
+        sinJapones.delete(ataque);
+    }
     writeFileSync(archivoSalida, textoDelArchivo(global, porDigimon));
     writeFileSync(archivoConflictos, [...conflictos].map(([ataque, formas]) => `${ataque}: ${[...formas].join(' / ')}`).join('\n') + '\n');
 

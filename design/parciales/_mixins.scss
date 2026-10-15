@@ -135,7 +135,7 @@
     }
 }
 
-// La opción elegida de los selectores de dos posiciones (niveles Japón / EE.UU. e idioma ES / EN): gel azul con brillo
+// La opción elegida de los selectores de dos posiciones (niveles Japón / EE.UU.) y del idioma elegido en la lista de idiomas: gel azul con brillo
 @mixin opcion-activa {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%),

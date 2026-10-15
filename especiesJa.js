@@ -146,7 +146,7 @@ export const ESPECIES_JA = {
     "Species Unknown": "種族不明型",
     "Spirit": "精霊型",
     "Stegosaur": "剣竜型",
-    "Super Major": "スーパーメジャー型",
+    "Super Major": "超メジャー型",
     "Synthetic Beast": "人造獣型",
     "Tathāgata": "如来型",
     "Toy": "玩具型",

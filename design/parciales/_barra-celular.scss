@@ -209,6 +209,16 @@
             font-size: 14px;
         }
 
+        // El selector de idioma comparte la fila con el botón de tema: ocupa lo que le toca, y con la lista abierta, la fila entera
+        .ajustes .menu-idioma {
+            flex: 1 1 0;
+            min-width: 0;
+
+            &.abierto {
+                flex-basis: 100%;
+            }
+        }
+
         // Las listas de información se abren dentro del panel, debajo de su botón.
         // "visibility: inherit": si el panel está cerrado (oculto), las listas también, y no reciben toques.
         .menu-info ul {

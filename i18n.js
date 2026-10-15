@@ -2,7 +2,7 @@
 // IDIOMAS (español / inglés / japonés)
 //
 // Cómo funciona:
-//   1. Al abrir la página se elige el idioma: primero el que la persona eligió con el botón ES | EN | JA (se guarda en el
+//   1. Al abrir la página se elige el idioma: primero el que la persona eligió en el selector de idioma (se guarda en el
 //      navegador); si nunca eligió, el primer idioma de su navegador que sea español, inglés o japonés; si no hay ninguno, inglés.
 //      (Desde Japón la página arranca en japonés: ver detectarIdioma.)
 //   2. Los textos fijos del HTML llevan data-i18n="clave" (texto), data-i18n-html="clave" (texto con <br>)
@@ -18,6 +18,9 @@
 import { emitir, guardarTexto, leerTexto } from './util.js';
 
 const IDIOMAS = ['es', 'en', 'ja'];
+// Cada idioma con su nombre en ese mismo idioma (así se reconoce en la lista aunque no se entienda el resto de la página). Para sumar uno:
+// agregarlo acá y en IDIOMAS, y escribir su diccionario más abajo; el botón y la lista del selector salen solos de estas dos listas.
+const NOMBRES_DE_IDIOMAS = { es: 'Español', en: 'English', ja: '日本語' };
 
 export const DICCIONARIO = {
     es: {
@@ -41,7 +44,7 @@ export const DICCIONARIO = {
         'menu.grupos': 'Info. grupos',
         'menu.misc': 'Info. misceláneos',
         'menu.abrir': 'Más opciones',
-        'idioma.cambiar': 'Cambiar idioma (Español / English / 日本語)',
+        'idioma.cambiar': 'Cambiar idioma',
         'carga.rotulo': 'Progreso de la carga de <br>digimons:',
 
         // Nombres que se muestran
@@ -121,6 +124,8 @@ export const DICCIONARIO = {
         'tema.oscuro': 'Tema oscuro. Tocá para volver al automático (el de tu dispositivo)',
         'tema.actual.claro': 'claro',
         'tema.actual.oscuro': 'oscuro',
+        'furigana.quitar': 'Quitar el furigana (la lectura en kana sobre los kanji)',
+        'furigana.poner': 'Poner el furigana (la lectura en kana sobre los kanji)',
         'carta.sinDescripcion': 'Sin descripción disponible.',
         'carta.idiomaOriginal': 'Descripción original en inglés',
         'ataques.idiomaOriginal': 'Descripción original en inglés',
@@ -384,7 +389,7 @@ export const DICCIONARIO = {
         'menu.grupos': 'Groups info',
         'menu.misc': 'Misc. info',
         'menu.abrir': 'More options',
-        'idioma.cambiar': 'Change language (Español / English / 日本語)',
+        'idioma.cambiar': 'Change language',
         'carga.rotulo': 'Loading progress of <br>Digimon:',
 
         // Displayed names
@@ -464,6 +469,8 @@ export const DICCIONARIO = {
         'tema.oscuro': "Dark theme. Tap to go back to automatic (your device's)",
         'tema.actual.claro': 'light',
         'tema.actual.oscuro': 'dark',
+        'furigana.quitar': 'Hide furigana (the kana reading above the kanji)',
+        'furigana.poner': 'Show furigana (the kana reading above the kanji)',
         'carta.sinDescripcion': 'No description available.',
         'carta.idiomaOriginal': '',
         'ataques.idiomaOriginal': '',
@@ -727,7 +734,7 @@ export const DICCIONARIO = {
         'menu.grupos': 'フィールド情報',
         'menu.misc': 'その他の情報',
         'menu.abrir': 'その他のメニュー',
-        'idioma.cambiar': '言語を変更 （Español / English / 日本語）',
+        'idioma.cambiar': '言語を変更',
         'carga.rotulo': 'デジモンの<br>読み込み状況:',
 
         // 表示される名前
@@ -806,6 +813,8 @@ export const DICCIONARIO = {
         'tema.oscuro': 'ダークテーマです。タップで自動（端末の設定）に戻します',
         'tema.actual.claro': 'ライト',
         'tema.actual.oscuro': 'ダーク',
+        'furigana.quitar': 'ふりがなを消します',
+        'furigana.poner': 'ふりがなを付けます',
         'carta.sinDescripcion': '説明はありません。',
         'carta.idiomaOriginal': '日本語の説明がないため、英語の原文を表示しています',
         'ataques.idiomaOriginal': '', // las descripciones de los ataques ya están traducidas (ataquesDescJa.js)
@@ -1101,11 +1110,37 @@ function marcarIdioma(codigo, primeraVez = false) {
     marcarBoton(codigo);
 }
 
-// Botón de idioma: marca cuál está activo
+// Botón de idioma: muestra la sigla del idioma activo, y la lista lo marca
 function marcarBoton(codigo) {
-    document.querySelectorAll('#cambiar-idioma [data-idioma]').forEach(marca => {
-        marca.classList.toggle('activo', marca.dataset.idioma === codigo);
+    const sigla = document.querySelector('#cambiar-idioma .idioma-sigla');
+    if (sigla) sigla.textContent = codigo.toUpperCase();
+    document.querySelectorAll('#lista-idiomas [data-idioma]').forEach(opcion => {
+        if (opcion.dataset.idioma === codigo) opcion.setAttribute('aria-current', 'true');
+        else opcion.removeAttribute('aria-current');
     });
+}
+
+// Escribe la lista de idiomas del selector (una opción por cada idioma de IDIOMAS)
+function escribirListaDeIdiomas() {
+    const lista = document.getElementById('lista-idiomas');
+    if (!lista) return;
+    lista.replaceChildren(
+        ...IDIOMAS.map(codigo => {
+            const item = document.createElement('li');
+            const opcion = document.createElement('button');
+            opcion.type = 'button';
+            opcion.dataset.idioma = codigo;
+            opcion.lang = codigo; // para que cada nombre se lea con su tipografía (el japonés, con la de japonés)
+            const sigla = document.createElement('span');
+            sigla.className = 'idioma-opcion-sigla';
+            sigla.textContent = codigo.toUpperCase();
+            const nombre = document.createElement('span');
+            nombre.textContent = NOMBRES_DE_IDIOMAS[codigo] ?? codigo;
+            opcion.append(sigla, nombre);
+            item.append(opcion);
+            return item;
+        }),
+    );
 }
 
 // Escribe en el idioma actual todos los textos fijos del HTML marcados con data-i18n
@@ -1158,10 +1193,16 @@ function escribirIdiomaElegido() {
 export const nombreAtributo = atributo => t(`atributo.${atributo}`);
 export const nombreElemento = elemento => t(`elemento.${elemento}`);
 
+escribirListaDeIdiomas();
 aplicarTextos(document, true);
 
-// Un clic en una de las siglas (ES, EN, JA) elige ese idioma; un clic en el resto del botón pasa al siguiente (es → en → ja → es)
-document.getElementById('cambiar-idioma')?.addEventListener('click', evento => {
+// Elegir un idioma de la lista lo cambia y cierra la lista (la abre y la cierra el botón: ver activarMenusInfo, en info.js)
+document.getElementById('lista-idiomas')?.addEventListener('click', evento => {
     const elegido = evento.target.closest?.('[data-idioma]')?.dataset.idioma;
-    cambiarIdioma(IDIOMAS.includes(elegido) ? elegido : IDIOMAS[(IDIOMAS.indexOf(idiomaElegido) + 1) % IDIOMAS.length]);
+    if (!elegido) return;
+    cambiarIdioma(elegido);
+    const menu = document.querySelector('.menu-idioma');
+    menu?.classList.remove('abierto');
+    menu?.querySelector('.menu-desplegable')?.setAttribute('aria-expanded', 'false');
+    menu?.querySelector('.menu-desplegable')?.focus();
 });

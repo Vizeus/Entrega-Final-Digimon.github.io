@@ -17,3 +17,6 @@ herramientas/especies-japonesas-revisar.txt
 # Archivos de trabajo de herramientas/ataques-descripciones.mjs
 herramientas/ataques-descripciones.cache.json
 herramientas/ataques-descripciones.json
+
+# Informe de herramientas/furigana.mjs (furiganaJa.js y furigana-a-mano.json, en cambio, sí se suben)
+herramientas/furigana-revisar.txt

@@ -49,38 +49,41 @@
         <script type="importmap">
             {
                 "imports": {
-                    "./util.js": "./util.js?v=20261015-0123",
-                    "./datos.js": "./datos.js?v=20261015-0123",
-                    "./i18n.js": "./i18n.js?v=20261015-0123",
-                    "./nombres.js": "./nombres.js?v=20261015-0123",
-                    "./nombresJa.js": "./nombresJa.js?v=20261015-0123",
-                    "./ataquesJa.js": "./ataquesJa.js?v=20261015-0123",
-                    "./ataquesDescJa.js": "./ataquesDescJa.js?v=20261015-0123",
-                    "./especiesJa.js": "./especiesJa.js?v=20261015-0123",
-                    "./pagina.js": "./pagina.js?v=20261015-0123",
-                    "./api.js": "./api.js?v=20261015-0123",
-                    "./combate.js": "./combate.js?v=20261015-0123",
-                    "./avisos.js": "./avisos.js?v=20261015-0123",
-                    "./descartar.js": "./descartar.js?v=20261015-0123",
-                    "./cartas.js": "./cartas.js?v=20261015-0123",
-                    "./zoom.js": "./zoom.js?v=20261015-0123",
-                    "./gestos.js": "./gestos.js?v=20261015-0123",
-                    "./inclinacion.js": "./inclinacion.js?v=20261015-0123",
-                    "./audio.js": "./audio.js?v=20261015-0123",
-                    "./sonidos.js": "./sonidos.js?v=20261015-0123",
-                    "./filtros.js": "./filtros.js?v=20261015-0123",
-                    "./info.js": "./info.js?v=20261015-0123",
-                    "./barra.js": "./barra.js?v=20261015-0123",
-                    "./evolucion.js": "./evolucion.js?v=20261015-0123",
-                    "./ventanas.js": "./ventanas.js?v=20261015-0123",
-                    "./paso.js": "./paso.js?v=20261015-0123",
-                    "./baile.js": "./baile.js?v=20261015-0123",
-                    "./tema.js": "./tema.js?v=20261015-0123",
-                    "./menus.js": "./menus.js?v=20261015-0123"
+                    "./util.js": "./util.js?v=20261015-0245",
+                    "./datos.js": "./datos.js?v=20261015-0245",
+                    "./i18n.js": "./i18n.js?v=20261015-0245",
+                    "./nombres.js": "./nombres.js?v=20261015-0245",
+                    "./nombresJa.js": "./nombresJa.js?v=20261015-0245",
+                    "./ataquesJa.js": "./ataquesJa.js?v=20261015-0245",
+                    "./ataquesDescJa.js": "./ataquesDescJa.js?v=20261015-0245",
+                    "./especiesJa.js": "./especiesJa.js?v=20261015-0245",
+                    "./pagina.js": "./pagina.js?v=20261015-0245",
+                    "./api.js": "./api.js?v=20261015-0245",
+                    "./combate.js": "./combate.js?v=20261015-0245",
+                    "./avisos.js": "./avisos.js?v=20261015-0245",
+                    "./descartar.js": "./descartar.js?v=20261015-0245",
+                    "./cartas.js": "./cartas.js?v=20261015-0245",
+                    "./zoom.js": "./zoom.js?v=20261015-0245",
+                    "./gestos.js": "./gestos.js?v=20261015-0245",
+                    "./inclinacion.js": "./inclinacion.js?v=20261015-0245",
+                    "./audio.js": "./audio.js?v=20261015-0245",
+                    "./sonidos.js": "./sonidos.js?v=20261015-0245",
+                    "./filtros.js": "./filtros.js?v=20261015-0245",
+                    "./info.js": "./info.js?v=20261015-0245",
+                    "./barra.js": "./barra.js?v=20261015-0245",
+                    "./evolucion.js": "./evolucion.js?v=20261015-0245",
+                    "./ventanas.js": "./ventanas.js?v=20261015-0245",
+                    "./paso.js": "./paso.js?v=20261015-0245",
+                    "./baile.js": "./baile.js?v=20261015-0245",
+                    "./tema.js": "./tema.js?v=20261015-0245",
+                    "./menus.js": "./menus.js?v=20261015-0245",
+                    "./furigana.js": "./furigana.js?v=20261015-0245",
+                    "./furiganaMotor.js": "./furiganaMotor.js?v=20261015-0245",
+                    "./furiganaJa.js": "./furiganaJa.js?v=20261015-0245"
                 }
             }
         </script>
-        <script type="module" src="./main.js?v=20261015-0123"></script>
+        <script type="module" src="./main.js?v=20261015-0245"></script>
 
         <!-- Fuentes -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -91,7 +94,7 @@
             rel="stylesheet"
         />
 
-        <link rel="stylesheet" href="./design/styles.css?v=20261015-0123" />
+        <link rel="stylesheet" href="./design/styles.css?v=20261015-0245" />
     </head>
 
     <body>
@@ -169,34 +172,43 @@
                         <span class="sn-opcion" data-sistema="eeuu"><img src="./img/EEUU.png" alt="" width="27" height="14" /><small>Champion</small></span>
                     </button>
 
-                    <!-- Idioma: muestra los tres y resalta el que está activo. Al inicio se elige solo, según el idioma del navegador.
+                    <!-- Idioma: un solo botón que muestra el idioma actual y abre una lista con todos los que hay (la escribe i18n.js a partir de
+             su lista de idiomas: para sumar uno no hay que tocar este HTML ni el ancho de la barra). Es un menú desplegable como los de
+             información ("menu-info" / "menu-desplegable": se abre con clic o Enter, se cierra con Esc o al hacer clic afuera).
              El ícono de dos globos de diálogo (una "A" y un "文") es el símbolo universal de "idioma / traducir": se entiende
              sin leer. Es decorativo (aria-hidden): el botón ya tiene su nombre en el aria-label -->
-                    <button
-                        type="button"
-                        id="cambiar-idioma"
-                        title="Cambiar idioma (Español / English / 日本語)"
-                        aria-label="Cambiar idioma (Español / English / 日本語)"
-                        data-i18n-attr="title:idioma.cambiar;aria-label:idioma.cambiar"
-                    >
-                        <svg
-                            class="idioma-icono"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                            focusable="false"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.6"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                    <div class="menu-info menu-idioma">
+                        <button
+                            type="button"
+                            id="cambiar-idioma"
+                            class="menu-desplegable"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="lista-idiomas"
+                            title="Cambiar idioma"
+                            aria-label="Cambiar idioma"
+                            data-i18n-attr="title:idioma.cambiar;aria-label:idioma.cambiar"
                         >
-                            <path d="M4.5 1.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H7L3.5 13.5V10.4A3 3 0 0 1 1.5 7.5v-3a3 3 0 0 1 3-3z" />
-                            <path d="M5.2 8.8 7.5 3.2 9.8 8.8M6 7h3" />
-                            <path d="M13.5 11.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-2 2.83V23l-3.7-2.5H13.5a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3z" />
-                            <path d="M16.5 12.9v.9M13.6 14.4h5.8M15.9 14.5c-.3 1.9-1.1 3.4-2.4 4.4M15.2 16.1c.8 1.5 2 2.6 3.7 3.1" />
-                        </svg>
-                        <span data-idioma="es" class="activo">ES</span><span data-idioma="en">EN</span><span data-idioma="ja">JA</span>
-                    </button>
+                            <svg
+                                class="idioma-icono"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                                focusable="false"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M4.5 1.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H7L3.5 13.5V10.4A3 3 0 0 1 1.5 7.5v-3a3 3 0 0 1 3-3z" />
+                                <path d="M5.2 8.8 7.5 3.2 9.8 8.8M6 7h3" />
+                                <path d="M13.5 11.5h6a3 3 0 0 1 3 3v3a3 3 0 0 1-2 2.83V23l-3.7-2.5H13.5a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3z" />
+                                <path d="M16.5 12.9v.9M13.6 14.4h5.8M15.9 14.5c-.3 1.9-1.1 3.4-2.4 4.4M15.2 16.1c.8 1.5 2 2.6 3.7 3.1" />
+                            </svg>
+                            <span class="idioma-sigla">ES</span>
+                        </button>
+                        <ul id="lista-idiomas"></ul>
+                    </div>
 
                     <!-- Sonido: botón chiquito y redondo que apaga (o vuelve a prender) el sonido de la página. En computadora queda en la barra,
              junto al selector de idioma. En celular audio.js lo saca de acá y lo deja suelto en el <body>: flota siempre en la
@@ -263,6 +275,19 @@
                             </g>
                             <path class="inclinacion-shift" d="M19.6 11.4 16.3 15.6h2.1V20h2.4v-4.4h2.1z" fill="currentColor" stroke-width="1" />
                         </svg>
+                    </button>
+                    <!-- Furigana (solo en japonés): botón chiquito y redondo que pone o saca la lectura en kana sobre los kanji. Por defecto está puesto;
+             "hundido" (aria-pressed="true") es sin furigana. furigana.js lo muestra (hidden) solo con la página en japonés y escribe su ayuda -->
+                    <button
+                        type="button"
+                        id="cambiar-furigana"
+                        data-sin-furigana
+                        hidden
+                        aria-pressed="false"
+                        title="ふりがなを消します"
+                        aria-label="ふりがなを消します"
+                    >
+                        <span class="furi-icono" aria-hidden="true"><span class="furi-kana">かん</span><span class="furi-kanji">字</span></span>
                     </button>
                     <!-- Tema: botón chiquito y redondo, al lado del de inclinación (en celular no está ese: queda junto al de idioma, dentro del menú ☰).
              Tiene tres pasos que se recorren con cada toque: automático (el del dispositivo), claro y oscuro; la elección se guarda en el

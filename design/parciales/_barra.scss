@@ -427,9 +427,9 @@
     // Botones de gel: color base en --c, brillo arriba, biselado abajo y sombra que los despega de la barra (ver el mixin boton-de-gel)
     .botones,
     .menu-desplegable,
-    #cambiar-idioma,
     #silenciar,
     #inclinacion-invertida,
+    #cambiar-furigana,
     #tema {
         @include boton-de-gel;
     }
@@ -544,45 +544,60 @@
         }
     }
 
-    // Selector de idioma: los dos idiomas a la vista y el activo resaltado en azul, como una llave de dos posiciones
+    // Selector de idioma: un botón de siempre el mismo tamaño (ícono, sigla del idioma actual y flechita) que abre una lista con todos los idiomas,
+    // como los menús de información (usa su estilo: .menu-info / .menu-desplegable). Sirve con 3 idiomas o con 10: la barra no cambia de ancho.
     #cambiar-idioma {
-        --c: #{$vidrio-claro};
         display: inline-flex;
         align-items: center;
-        gap: 2px;
-        height: 34px;
-        padding: 0 4px;
-        border-color: rgba(0, 40, 90, 0.4);
-        border-radius: 11px;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 10px 0 8px;
 
-        // Ícono universal de idioma (dos globos de diálogo con "A" y "文"), a la izquierda de ES / EN
+        // Ícono universal de idioma (dos globos de diálogo con "A" y "文"), a la izquierda de la sigla
         .idioma-icono {
             flex: none;
             width: 19px;
             height: 19px;
-            margin: 0 3px 0 5px;
             color: $tinta;
             filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
         }
 
-        span {
-            display: grid;
-            place-items: center;
-            min-width: 28px;
-            height: 24px;
-            padding: 0 4px;
-            font-size: 13px;
-            color: $tinta;
-            text-shadow: $brillo-de-texto;
-            border-radius: 8px;
-            opacity: 0.7;
-            transition: opacity 0.15s ease;
+        .idioma-sigla {
+            min-width: 1.6em; // dos letras siempre ocupan lo mismo, sea cual sea el idioma
+            text-align: center;
+        }
 
-            &.activo {
+        // La flechita ▾ ya la pone .menu-desplegable; con el ícono y la sigla, un poco más pegada
+        &::after {
+            margin-left: 1px;
+        }
+    }
+
+    // La lista: el nombre de cada idioma en su propio idioma, con la sigla a la izquierda y el elegido resaltado en azul (como la opción activa de niveles)
+    #lista-idiomas {
+        min-width: 168px;
+
+        button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .idioma-opcion-sigla {
+            flex: none;
+            min-width: 2.2em;
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.65;
+        }
+
+        button[aria-current="true"] {
+            color: #fff;
+            text-shadow: 0 1px 1px rgba(0, 40, 110, 0.6);
+            @include opcion-activa;
+
+            .idioma-opcion-sigla {
                 opacity: 1;
-                color: #fff;
-                text-shadow: 0 1px 1px rgba(0, 40, 110, 0.6);
-                @include opcion-activa;
             }
         }
     }
@@ -610,6 +625,47 @@
 
         @include celular {
             display: none;
+        }
+    }
+
+    // Furigana (solo en japonés; furigana.js lo muestra o lo esconde): botón redondo con una kana chiquita sobre un kanji, como se ve el furigana.
+    // Con el furigana puesto es un botón común; sin él queda "hundido" y la kana apagada. Va antes que el de tema, que siempre es el último.
+    #cambiar-furigana {
+        @include boton-redondo;
+
+        &[hidden] {
+            display: none;
+        }
+
+        .furi-icono {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            white-space: nowrap;
+            font-family: var(--f-boton), sans-serif;
+            filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+        }
+
+        .furi-kana {
+            font-size: 8px;
+            font-weight: 700;
+            color: #2a7fd4;
+        }
+
+        .furi-kanji {
+            font-size: 15px;
+            font-weight: 700;
+            color: $tinta;
+        }
+
+        &[aria-pressed="true"] {
+            box-shadow: $sombra-hundida;
+
+            .furi-kana {
+                opacity: 0.3;
+                text-decoration: line-through;
+            }
         }
     }
 
@@ -819,54 +875,63 @@
     }
 }
 
-// En pantallas angostas el panel de combate baja a su propia fila (sigue siendo lo más grande de la barra):
-// ahí ocupa todo el ancho, la consigna va en una sola línea y los ajustes se van a la derecha, junto a los menús
-@media (max-width: 1439px) {
-    #navbar .combate {
-        order: 10;
-        flex: 1 1 100%;
-        max-width: none;
-    }
-
-    #navbar .consigna {
-        max-width: none;
-    }
-
-    #navbar .ajustes {
-        margin-left: auto;
-    }
-}
-
-// ---- Dónde queda cada bloque de la barra según el ancho (computadora) ---------------------------------------------------
-// Los menús de información (.herramientas) son lo más ancho de la barra y, cuando no entran en la fila de arriba, bajan a una fila propia. Antes
-// quedaban pegados a la izquierda con todo el lado derecho vacío (se veían "descentrados" respecto de los ajustes y del panel de combate): ahora,
-// cuando bajan, ocupan la fila entera y quedan centrados. Para saber cuándo bajan hacen falta los anchos de cada bloque, que dependen del idioma
-// (los rótulos del inglés son más cortos). Son los anchos con la página ya cargada: si se cambia un rótulo o se agrega un botón, hay que
-// actualizarlos (se miden en la consola con $0.getBoundingClientRect().width sobre .ajustes y .herramientas).
+// ---- Cómo se acomoda la barra de computadora según el ancho -------------------------------------------------------------
+// La regla es tener los menos renglones posibles y siempre los mismos:
+//   • Si entran juntos en una fila el logo, todos los botones (los ajustes y los cinco menús de información) y el panel de combate: una sola fila.
+//   • Si no, tres renglones: 1) el logo con todos los botones (ajustes y menús), 2) el panel de combate y 3) los filtros.
+//   • Si ni siquiera el logo y todos los botones entran juntos, se achican los menús "Info." por escalones (B, C, D y E, cada vez más compactos) hasta
+//     donde se pueda. Solo cuando ya no se puede más (pantallas de 701 a ~1000 px) los menús bajan a una fila propia, centrados: cuatro renglones.
+// Para saber en qué ancho pasa cada cosa hacen falta los anchos de cada bloque, que dependen del idioma (los rótulos del inglés son más cortos y en
+// japonés no está el selector de niveles). Son los anchos con la página ya cargada: si se cambia un rótulo o se agrega un botón, hay que actualizarlos
+// (se miden en la consola con $0.getBoundingClientRect().width sobre .ajustes y .herramientas; los de cada escalón, con el escalón puesto).
+$barra-idiomas: ("es", "en", "ja");
 $barra-bloques: (
     logo: (
         es: 121px,
         en: 121px,
+        ja: 121px,
     ),
-    // el mínimo del panel de combate (ver "min-width" más abajo)
+    // el mínimo del panel de combate: lo que miden sus partes (consigna, contador, cartas y botón); el "min-width" de más abajo es un poco menos
     panel: (
-            es: 734px,
-            en: 734px,
+            es: 752px,
+            en: 752px,
+            ja: 752px,
         ),
+    // (el selector de idioma ya no crece con la cantidad de idiomas: es un botón y una lista)
     ajustes: (
-        es: 396px,
-        en: 391px,
-    ),
+            es: 361px,
+            en: 356px,
+            ja: 204px,
+        ),
+    // Los cinco menús de información: a su tamaño de siempre (A) y en cada escalón compacto (ver barra-menus-compactos)
     menus: (
-        es: 709px,
-        en: 627px,
+            es: 709px,
+            en: 627px,
+            ja: 602px,
+        ),
+    menus-b: (
+        es: 622px,
+        en: 546px,
+        ja: 522px,
+    ),
+    menus-c: (
+        es: 550px,
+        en: 481px,
+        ja: 458px,
+    ),
+    menus-d: (
+        es: 535px,
+        en: 466px,
+        ja: 443px,
     ),
 );
 $barra-lados: 52px; // relleno de la izquierda y de la derecha (2 × 26 px)
+$barra-lados-compactos: 32px; // lo mismo en el último escalón (2 × 16 px)
+$barra-logo-compacto: 105px; // el logo en el último escalón (54 px de alto en vez de 62)
 $barra-hueco: 16px; // espacio entre bloques de una misma fila
 $barra-de-sobra: 20px; // la barra de desplazamiento de la página (hasta 17 px, según el navegador) y un poco más por si una tipografía mide distinto
 
-// Pantalla mínima para que entren juntos, en una misma fila, los bloques que se pidan ("logo", "panel", "ajustes" y "menus")
+// Pantalla mínima para que entren juntos, en una misma fila, los bloques que se pidan ("logo", "panel", "ajustes", "menus", "menus-b"…)
 @function barra-ancho-para($idioma, $bloques...) {
     $ancho: $barra-lados + $barra-de-sobra + $barra-hueco * (list.length($bloques) - 1);
     @each $bloque in $bloques {
@@ -875,29 +940,41 @@ $barra-de-sobra: 20px; // la barra de desplazamiento de la página (hasta 17 px,
     @return $ancho;
 }
 
-// Lo que va adentro vale solo en las pantallas de computadora donde "no entran" esos bloques en una fila (según el idioma de la página)
-@mixin barra-si-no-entran($bloques...) {
-    @each $idioma in ("es", "en") {
-        @media #{$consulta-computadora} and (max-width: barra-ancho-para($idioma, $bloques...) - 1) {
-            :root[data-idioma="#{$idioma}"] {
-                @content;
-            }
+// El último escalón: logo más chico y menos relleno a los lados, con los menús del escalón D
+@function barra-ancho-compacto($idioma) {
+    $fijos: $barra-lados-compactos + $barra-de-sobra + $barra-hueco * 2 + $barra-logo-compacto;
+    $botones: map.get($barra-bloques, ajustes, $idioma) + map.get($barra-bloques, menus-d, $idioma);
+    @return $fijos + $botones;
+}
+
+// Lo que va adentro vale solo en computadora, con la página en ese idioma, desde un ancho ($desde) hasta otro ($hasta, sin incluirlo); cualquiera puede faltar
+@mixin barra-tramo($idioma, $desde: null, $hasta: null) {
+    $consulta: $consulta-computadora;
+    @if $desde {
+        $consulta: "#{$consulta} and (min-width: #{$desde})";
+    }
+    @if $hasta {
+        $consulta: "#{$consulta} and (max-width: #{$hasta - 1})";
+    }
+    @media #{$consulta} {
+        :root[data-idioma="#{$idioma}"] {
+            @content;
         }
     }
 }
 
-// Con la barra de 1440 o más pasa lo mismo, pero con el panel de combate en la fila de arriba: logo, panel y ajustes (que siempre entran) y los
-// menús abajo si no entran los cuatro juntos. Abajo de 1440 el panel va en su propia fila y los que comparten la de arriba son logo, ajustes y menús.
-@mixin barra-con-los-menus-aparte {
-    @include barra-si-no-entran("logo", "ajustes", "menus") {
-        @content;
+// Menús de información más compactos: menos relleno, letra más chica, menos hueco entre ellos y la flechita más pegada
+@mixin barra-menus-compactos($relleno, $letra, $hueco, $flecha) {
+    #navbar .herramientas {
+        gap: $hueco;
     }
 
-    @each $idioma in ("es", "en") {
-        @media #{$consulta-computadora} and (min-width: 1440px) and (max-width: barra-ancho-para($idioma, "logo", "panel", "ajustes", "menus") - 1) {
-            :root[data-idioma="#{$idioma}"] {
-                @content;
-            }
+    #navbar .menu-desplegable {
+        padding: 0 $relleno;
+        font-size: $letra;
+
+        &::after {
+            margin-left: $flecha;
         }
     }
 }
@@ -908,49 +985,91 @@ $barra-de-sobra: 20px; // la barra de desplazamiento de la página (hasta 17 px,
     justify-content: center;
 }
 
-// Con margen automático a los dos lados los menús quedan en el medio de la fila que les toca (mientras carga, el bloque de carga se queda en el borde
-// derecho de esa misma fila y ellos en el medio de lo que sobra; al terminar la carga ese bloque se retira y quedan centrados en toda la fila)
-@include barra-con-los-menus-aparte {
-    #navbar .herramientas {
-        margin-inline: auto;
+@each $idioma in $barra-idiomas {
+    $a: barra-ancho-para($idioma, "logo", "ajustes", "menus"); // logo y botones, con los menús a su tamaño de siempre
+    $b: barra-ancho-para($idioma, "logo", "ajustes", "menus-b");
+    $c: barra-ancho-para($idioma, "logo", "ajustes", "menus-c");
+    $d: barra-ancho-para($idioma, "logo", "ajustes", "menus-d");
+    $e: barra-ancho-compacto($idioma);
+    $todo: barra-ancho-para($idioma, "logo", "panel", "ajustes", "menus"); // además, el panel de combate
+    $menus-solos: barra-ancho-para($idioma, "menus"); // los menús en una fila propia
+
+    // Escalones: a medida que se angosta la pantalla, los menús se achican para seguir en el mismo renglón que el logo y los ajustes
+    @include barra-tramo($idioma, $b, $a) {
+        @include barra-menus-compactos(8px, 12px, 6px, 4px);
     }
-}
 
-// En las pantallas más angostas que no son de celular los cinco menús, a su tamaño de siempre, no entran ni siquiera solos en una fila: se los achica
-// un poco (menos relleno y letra de 12 px) y así entran en una sola, en vez de partirse en dos renglones con un menú suelto abajo
-@include barra-si-no-entran("menus") {
-    #navbar .herramientas {
-        gap: 6px;
+    @include barra-tramo($idioma, $c, $b) {
+        @include barra-menus-compactos(6px, 11px, 4px, 3px);
     }
 
-    #navbar .menu-desplegable {
-        padding: 0 8px;
-        font-size: 12px;
+    @include barra-tramo($idioma, $d, $c) {
+        @include barra-menus-compactos(5px, 11px, 3px, 2px);
+    }
 
-        &::after {
-            margin-left: 4px;
+    @include barra-tramo($idioma, $e, $d) {
+        @include barra-menus-compactos(5px, 11px, 3px, 2px);
+
+        #navbar {
+            padding-inline: 16px;
+        }
+
+        #navbar > img {
+            height: 54px;
         }
     }
-}
 
-// En pantallas anchas (1440 o más) la barra va en una sola fila y "space-between" reparte el espacio que sobra entre TODOS los huecos,
-// también el que hay entre los ajustes y los menús de información. Ese hueco crecía cuando el bloque de carga se retiraba, y el botón
-// de sonido (que está al borde derecho de los ajustes) dejaba de quedar centrado entre el idioma y "Info. atributos". Con margen automático
-// a la izquierda del panel de combate y de los ajustes, lo que sobra se reparte solo ahí (el panel sigue en el medio) y los ajustes
-// quedan siempre a 16 px de los menús, igual que en las pantallas más angostas: el botón de sonido queda centrado con y sin la carga.
-@media #{$consulta-computadora} and (min-width: 1440px) {
-    #navbar .combate,
-    #navbar .ajustes {
-        margin-left: auto;
+    // Ni así entran el logo, los ajustes y los menús juntos: los menús bajan a su propia fila y ocupan la fila entera, centrados (antes quedaban
+    // pegados a la izquierda con todo el lado derecho vacío). Mientras carga, el bloque de carga se queda en el borde derecho de esa misma fila y ellos en el
+    // medio de lo que sobra; al terminar la carga ese bloque se retira y quedan centrados en toda la fila.
+    @include barra-tramo($idioma, null, $e) {
+        #navbar .herramientas {
+            margin-inline: auto;
+        }
     }
 
-    // El panel no se achica por debajo de lo que necesita para que entren la consigna, el contador, las cartas en miniatura y el botón (si no, con la barra
-    // llena, la consigna se partía en cuatro renglones). Si la barra no alcanza, los menús de información bajan a su propia fila, como ya pasa en 1600 px
-    #navbar .combate {
-        min-width: 734px;
-        // Con mucho ancho el panel crece en vez de quedar chico en el medio: ocupa el espacio que sobra hasta un tope (la consigna pasa a un solo renglón).
-        // (no cambia cuándo bajan los menús a otra fila: eso lo decide el ancho mínimo de arriba)
-        max-width: min(1100px, 52vw);
+    // En las pantallas más angostas que no son de celular los cinco menús, a su tamaño de siempre, no entran ni siquiera solos en una fila: se los
+    // achica un poco para que entren en una sola, en vez de partirse en dos renglones con un menú suelto abajo
+    @include barra-tramo($idioma, null, $menus-solos) {
+        @include barra-menus-compactos(8px, 12px, 6px, 4px);
+    }
+
+    // No entra todo junto en una fila: el panel de combate baja a su propia fila (sigue siendo lo más grande de la barra), centrado y con un tope de ancho
+    // (la consigna va en una sola línea), y los ajustes se van a la derecha, junto a los menús
+    @include barra-tramo($idioma, null, $todo) {
+        #navbar .combate {
+            order: 10;
+            flex: 1 1 100%;
+            max-width: min(100%, 1100px);
+            margin-inline: auto;
+        }
+
+        #navbar .consigna {
+            max-width: none;
+        }
+
+        #navbar .ajustes {
+            margin-left: auto;
+        }
+    }
+
+    // Todo en una sola fila: "space-between" reparte el espacio que sobra entre TODOS los huecos, también el que hay entre los ajustes y los menús de
+    // información. Ese hueco crecía cuando el bloque de carga se retiraba, y el botón de sonido (que está al borde derecho de los ajustes) dejaba de quedar
+    // centrado entre el idioma y "Info. atributos". Con margen automático a la izquierda del panel de combate y de los ajustes, lo que sobra se reparte
+    // solo ahí (el panel sigue en el medio) y los ajustes quedan siempre a 16 px de los menús: el botón de sonido queda centrado con y sin la carga.
+    @include barra-tramo($idioma, $todo) {
+        #navbar .combate,
+        #navbar .ajustes {
+            margin-left: auto;
+        }
+
+        // El panel no se achica por debajo de lo que necesita para que entren la consigna, el contador, las cartas en miniatura y el botón (si no, con la barra
+        // llena, la consigna se partía en cuatro renglones). Con mucho ancho el panel crece en vez de quedar chico en el medio: ocupa el espacio que sobra
+        // hasta un tope (la consigna pasa a un solo renglón).
+        #navbar .combate {
+            min-width: 734px;
+            max-width: min(1100px, 52vw);
+        }
     }
 }
 
