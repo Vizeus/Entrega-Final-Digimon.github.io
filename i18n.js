@@ -93,6 +93,7 @@ export const DICCIONARIO = {
         'aviso.audio': 'Con este botón podés silenciar el sonido de la página',
         'aviso.combate.musica': 'Encendé o apagá la música',
         'aviso.tema': 'Tocá acá para cambiar el tema',
+        'aviso.furigana': 'Con este botón podés sacar el furigana',
         'aviso.audio.vibracion': 'Con este botón podés apagar el sonido y la vibración de la página',
         'aviso.zoomExtra':
             'Girá la rueda hacia arriba con el mouse sobre la carta para acercarte todavía más, y hacia abajo para volver. Ya acercada, agarrala y arrastrala para moverla',
@@ -438,6 +439,7 @@ export const DICCIONARIO = {
         'aviso.audio': "Use this button to mute the page's sound",
         'aviso.combate.musica': 'Turn the music on or off',
         'aviso.tema': 'Tap here to change the theme',
+        'aviso.furigana': 'Use this button to hide the furigana',
         'aviso.audio.vibracion': "Use this button to turn off the page's sound and vibration",
         'aviso.zoomExtra':
             'With the mouse over the card, scroll up to zoom in even closer, and scroll down to go back. Once zoomed in, grab the card and drag it around',
@@ -783,6 +785,7 @@ export const DICCIONARIO = {
         'aviso.audio': 'このボタンでページの音を消せます',
         'aviso.combate.musica': '音楽のオン/オフ',
         'aviso.tema': 'ここをタップでテーマを変更',
+        'aviso.furigana': 'このボタンでふりがなを消せます',
         'aviso.audio.vibracion': 'このボタンでページの音とバイブを切れます',
         'aviso.zoomExtra': 'カードの上でマウスのホイールを上に回すとさらに拡大、下に回すと元に戻ります。拡大中はカードをつかんでドラッグできます',
         'carta.especie': '種族',

@@ -235,7 +235,8 @@
 
         // La lista de elementos tiene su propia regla con id (la grilla de dos columnas de escritorio), que le gana en
         // prioridad a ".menu-info ul": sin esta línea quedaba siempre desplegada en el celular.
-        #lista-elementos {
+        #lista-elementos,
+        #lista-niveles {
             display: none;
             min-width: 0;
         }
@@ -245,7 +246,8 @@
             visibility: inherit;
         }
 
-        .menu-info.abierto #lista-elementos {
+        .menu-info.abierto #lista-elementos,
+        .menu-info.abierto #lista-niveles {
             display: grid;
         }
 

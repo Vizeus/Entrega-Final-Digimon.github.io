@@ -68,7 +68,8 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
     }
 
     // El sol y la luna del botón de tema, más claros para que se luzcan sobre el vidrio oscuro
-    #navbar #cambiar-furigana .furi-kana {
+    #navbar #cambiar-furigana .furi-kana,
+    body > #cambiar-furigana .furi-kana {
         color: #7fc1ff;
     }
 
@@ -237,6 +238,7 @@ $brillo-del-vidrio: linear-gradient(180deg, rgba(165, 213, 255, 0.3) 0%, rgba(16
     // Botones que se sacan de la barra un momento (llamada de atención): ver _barra.scss. El aro blanco del claro se vuelve celeste suave
     body > #silenciar,
     body > #inclinacion-invertida,
+    body > #cambiar-furigana,
     body > #tema {
         border-color: rgba(120, 190, 255, 0.5);
         box-shadow:

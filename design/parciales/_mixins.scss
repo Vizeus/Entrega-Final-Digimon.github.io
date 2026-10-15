@@ -249,6 +249,49 @@
     }
 }
 
+// Botón de furigana (solo en japonés): chiquito y redondo, con una kana chiquita sobre un kanji, como se ve el furigana. Con el furigana puesto es un
+// botón común; sin él queda "hundido" y la kana apagada. (Cuando aparece el cartel que lo explica salta y lanza ondas: ver boton-que-llama.)
+@mixin boton-de-furigana {
+    @include boton-redondo;
+
+    &[hidden] {
+        display: none;
+    }
+
+    .furi-icono {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1;
+        white-space: nowrap;
+        font-family: var(--f-boton), sans-serif;
+        filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+    }
+
+    .furi-kana {
+        font-size: 8px;
+        font-weight: 700;
+        color: #2a7fd4;
+    }
+
+    .furi-kanji {
+        font-size: 15px;
+        font-weight: 700;
+        color: $tinta;
+    }
+
+    &[aria-pressed="true"] {
+        box-shadow: $sombra-hundida;
+
+        .furi-kana {
+            opacity: 0.3;
+            text-decoration: line-through;
+        }
+    }
+
+    @include boton-que-llama;
+}
+
 // Botón de tema (claro / oscuro / automático): chiquito y redondo, igual al de sonido y al de inclinación. Su ícono sigue el paso en que está
 // (data-modo, lo escribe tema.js): mitad sol y mitad luna (automático, el del dispositivo), sol (claro) o luna (oscuro). El sol es ámbar y la luna
 // azul índigo para que se distingan de un vistazo (con el tema oscuro, el CSS los aclara: ver _tema-oscuro.scss).

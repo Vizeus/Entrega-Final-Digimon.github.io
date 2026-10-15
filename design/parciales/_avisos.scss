@@ -229,6 +229,7 @@
 @include computadora {
     body:has(.swal2-container) > #silenciar,
     body:has(.swal2-container) > #inclinacion-invertida,
+    body:has(.swal2-container) > #cambiar-furigana,
     body:has(.swal2-container) > #tema {
         z-index: capa(botones-sobre-las-ventanas);
     }

@@ -12,7 +12,7 @@ import { nombreParaMostrar } from './nombres.js';
 import { botonCambiarNiveles, botonIniciarCombate, cambiarClasificacion, listaDigimons, mostrarSistemaDeNiveles } from './pagina.js';
 import { crearListaDeDigimons } from './api.js';
 import { iniciarCombate } from './combate.js';
-import { activarAvisoDeInclinacion, activarAvisoDeTema, activarAvisoDeZoomExtra, activarAvisosDeAyuda } from './avisos.js';
+import { activarAvisoDeInclinacion, activarAvisoDeFurigana, activarAvisoDeTema, activarAvisoDeZoomExtra, activarAvisosDeAyuda } from './avisos.js';
 import { activarCartelesDeInfoEnCartas, ajustarNombre, cartasEnEspera, escribirNivel, escribirNombre } from './cartas.js';
 import { activarArrastreDeZoomExtra, activarReflejoQuieto, activarZoom } from './zoom.js';
 import { activarVoltearConDedo, gestionarVisitasYFlechasMovil } from './gestos.js';
@@ -50,6 +50,7 @@ activarReflejoQuieto();
 activarAvisosDeAyuda();
 activarAvisoDeInclinacion(); // después de los avisos de ayuda: usa el contador de visitas que ellos cuentan
 activarAvisoDeZoomExtra(); // (este también)
+activarAvisoDeFurigana(); // (y este: solo en japonés; antes que el de tema, porque si coinciden en el menú del celular, sale primero)
 activarAvisoDeTema(); // (y este)
 gestionarVisitasYFlechasMovil();
 activarDesbloqueoAudio();

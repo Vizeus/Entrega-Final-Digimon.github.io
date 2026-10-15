@@ -540,7 +540,20 @@ function escribirOpciones(idLista, opciones) {
         const boton = document.createElement('button');
         boton.type = 'button';
         boton.dataset.k = clave;
-        boton.textContent = texto;
+        // Con un par [nombre, resto] el botón lleva los dos pedazos en spans propios (el texto del botón es el mismo): así la lista puede alinear
+        // el "resto" en una columna, aunque los nombres midan distinto (por ejemplo, con furigana). Ver "#lista-niveles" en _barra.scss
+        if (Array.isArray(texto)) {
+            const [nombre, resto] = texto;
+            const spanNombre = document.createElement('span');
+            spanNombre.className = 'op-nombre';
+            spanNombre.textContent = nombre;
+            const spanResto = document.createElement('span');
+            spanResto.className = 'op-resto';
+            spanResto.textContent = resto;
+            boton.append(spanNombre, spanResto);
+        } else {
+            boton.textContent = texto;
+        }
         item.append(boton);
         return item;
     });
@@ -562,7 +575,11 @@ function escribirMenus() {
         ORDEN_NIVELES.map(nivelApi => {
             const poder = numeracionNiveles[nivelApi];
             const nombre = nombreNivel(nivelApi);
-            return [nivelApi, poder === undefined ? nombre : t('info.nivelItem', { nombre, n: poder })];
+            if (poder === undefined) return [nivelApi, nombre];
+            // "Nombre · Lv3": se parte en el nombre y lo que sigue (" · Lv3"), para alinear el nivel en una columna
+            const completo = t('info.nivelItem', { nombre, n: poder });
+            const corte = completo.startsWith(nombre) ? nombre.length : completo.length;
+            return [nivelApi, [completo.slice(0, corte), completo.slice(corte)]];
         }),
     );
     escribirOpciones(

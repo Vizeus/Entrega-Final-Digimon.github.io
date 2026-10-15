@@ -11,6 +11,12 @@ ruby {
     ruby-align: center;
 }
 
+// En las listas y los textos corridos, que se leen alineados a la izquierda, los kanji arrancan pegados al borde aunque la lectura sea más ancha
+// que ellos (centrados, un kanji suelto con lectura larga —como 究極体— quedaba corrido hacia la derecha)
+:is(li:not(#listado-digimons > li), .menu-info ul button, .c-sub, .c-cuerpo) ruby {
+    ruby-align: start;
+}
+
 // La lectura va chiquita y de un color apenas distinto al del texto (el del texto mezclado con azul): se lee como otra capa, sin competir
 rt {
     font-size: 0.5em;
@@ -40,4 +46,25 @@ rt {
 // Los chips de las cartas son chiquitos (el furigana queda en 6 px, y se lee mejor con el zoom de la carta)
 .chip rt {
     font-size: 0.56em;
+}
+
+// En los botones, los menús desplegables y los filtros el furigana va más grande (62 % de la letra en vez de 50 %): son textos cortos y chicos
+// que se leen de un vistazo, y ahí no hay zoom. Para que entre, el texto de los menús de la barra baja un punto, pero solo mientras hay furigana:
+// sin él (botón apagado) las letras japonesas vuelven a su tamaño de siempre.
+:root[data-idioma="ja"] {
+    :is(
+            .menu-desplegable,
+            .menu-info ul button,
+            .menu-consigna,
+            .consigna,
+            #iniciar-combate,
+            #filtros :is(.f-titulo, .f-btn, .f-chip, .f-orden-op, .f-fam-abrir, .f-panel-titulo, .f-subtitulo, .f-panel-nota, .f-cuenta-larga, .f-cuenta-corta)
+        )
+        rt {
+        font-size: 0.62em;
+    }
+
+    &:not([data-furigana="no"]) #navbar .menu-desplegable {
+        font-size: 12px;
+    }
 }

@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 import { CON_DEDO, CON_MOUSE, PANTALLA_DE_CELULAR, emitir, guardarJSON, hayMarcaDeSesion, leerJSON, ponerMarcaDeSesion } from './util.js';
-import { t } from './i18n.js';
+import { idioma, t } from './i18n.js';
 import { botonIniciarCombate, contadorSeleccion, listaDigimons } from './pagina.js';
 import { combateEnCurso, seleccionados } from './combate.js';
 import { cartaEnZoom, zoomCerrando, zoomExtra } from './zoom.js';
@@ -663,7 +663,10 @@ export function activarAvisoDeTema() {
         // Solo espera si la pestaña está en segundo plano, si ya están llamando dos botones o, en computadora, si llama otro botón mientras hay
         // cartelitos de ayuda a la vista (los dos globitos se reparten a los costados y el del tema se metía debajo de los cartelitos de arriba
         // a la derecha)
-        const globosAmontonados = llamadasActivas.size >= 2 || (llamadasActivas.size === 1 && !enCelular && hayCartelitosAVista());
+        const globosAmontonados =
+            llamadasActivas.size >= 2 ||
+            llamadasActivas.has(document.getElementById('cambiar-furigana')) || // (el del furigana se lee primero: el de tema espera a que termine)
+            (llamadasActivas.size === 1 && !enCelular && hayCartelitosAVista());
         if (document.hidden || globosAmontonados) {
             reintento = setTimeout(intentar, 500);
             return;
@@ -688,6 +691,80 @@ export function activarAvisoDeTema() {
         clearTimeout(reintento);
         terminarLlamada(boton);
         marcarAvisoHecho('tema');
+    });
+    // Si se gira el celular (o se cambia el tamaño de la ventana) mientras llama, la llamada se corta: el botón cambia de lugar
+    PANTALLA_DE_CELULAR.addEventListener('change', () => terminarLlamada(boton, { deGolpe: true }));
+}
+
+// Cartel del botón de furigana (solo en japonés): a los 10 segundos de estar en la página sale del botón un globito (y el botón salta y lanza ondas,
+// como el de sonido y el de inclinación) que cuenta que con ese botón se saca el furigana (y se vuelve a poner). Solo en las primeras 2 sesiones del
+// navegador en que sale de verdad (cuenta como "veces", igual que el de tema), una vez por sesión, y si la persona toca el botón ya lo encontró y no
+// sale nunca más. Si la página no está en japonés no sale (el botón está escondido); si se pasa a japonés con la página ya abierta, sale al poco rato.
+//   - Computadora: igual que el de tema (si hay una carta ampliada o una ventana abierta, el botón sube un momento sobre la cortina).
+//   - Celular: el botón vive dentro del menú ☰, así que además de los 10 segundos hace falta el menú abierto (si ya estaba abierto cuando se
+//     cumplen, sale en ese momento); si se cierra el menú se corta de golpe. Si el aviso del tema tiene que salir al mismo tiempo, este va primero
+//     y el del tema espera a que termine (ver activarAvisoDeTema), para que los dos globitos no se pisen dentro del menú.
+const FURIGANA_AVISO_SESION = 'digimon-aviso-furigana'; // sessionStorage: en esta sesión ya salió
+const FURIGANA_AVISO_ESPERA = 10000; // ms desde que se abre la página
+const FURIGANA_AVISO_ESPERA_AL_CAMBIAR = 1500; // ms desde que se pasa a japonés con la página ya abierta
+const FURIGANA_AVISO_MAXIMO_DE_SESIONES = 2; // sesiones distintas en las que puede salir
+const FURIGANA_AVISO_DURACION = 9000; // ms a la vista
+
+export function activarAvisoDeFurigana() {
+    const boton = document.getElementById('cambiar-furigana');
+    const barra = document.getElementById('navbar');
+    if (!boton || !barra) return;
+    if (avisoHecho('furigana') || vecesQueSalio('furigana') >= FURIGANA_AVISO_MAXIMO_DE_SESIONES || hayMarcaDeSesion(FURIGANA_AVISO_SESION)) return;
+    const menuAbierto = () => barra.classList.contains('menu-abierto');
+    let terminado = false; // ya salió (o ya no tiene que salir) en esta sesión
+    let pasoLaEspera = false;
+    let reintento = 0;
+    const espera = setTimeout(() => {
+        pasoLaEspera = true;
+        intentar();
+    }, FURIGANA_AVISO_ESPERA);
+
+    function intentar() {
+        clearTimeout(reintento);
+        if (terminado || !pasoLaEspera || idioma !== 'ja' || boton.hidden) return;
+        if (PANTALLA_DE_CELULAR.matches && !menuAbierto()) return;
+        // Solo espera si la pestaña está en segundo plano, si el globito del tema está a la vista (no se pisan), si ya llaman dos botones o, en
+        // computadora, si hay cartelitos de ayuda a la vista (los globitos de arriba a la derecha se taparían con el suyo)
+        const hayLlamadasAmontonadas = llamadasActivas.size >= 2 || llamadasActivas.has(document.getElementById('tema'));
+        if (document.hidden || hayLlamadasAmontonadas || (!PANTALLA_DE_CELULAR.matches && hayCartelitosAVista())) {
+            reintento = setTimeout(intentar, 500);
+            return;
+        }
+        terminado = true;
+        ponerMarcaDeSesion(FURIGANA_AVISO_SESION);
+        sumarVezQueSalio('furigana');
+        llamarLaAtencion(boton, { icono: '🔤', texto: () => t('aviso.furigana'), duracion: FURIGANA_AVISO_DURACION });
+    }
+
+    // En celular: al abrir el menú ☰ puede salir; al cerrarlo, se corta de golpe (el botón se va con el menú)
+    document.addEventListener('menu-movil-cambio', evento => {
+        if (evento.detail.abierto) intentar();
+        else terminarLlamada(boton, { deGolpe: true });
+    });
+
+    // Idioma: si se pasa a japonés con la página abierta, sale al poco rato; si se deja el japonés, se corta (el botón se esconde)
+    document.addEventListener('idioma-cambiado', () => {
+        if (idioma === 'ja') {
+            clearTimeout(reintento);
+            reintento = setTimeout(intentar, FURIGANA_AVISO_ESPERA_AL_CAMBIAR);
+        } else {
+            clearTimeout(reintento);
+            terminarLlamada(boton, { deGolpe: true });
+        }
+    });
+
+    // Tocó el botón: ya lo encontró
+    boton.addEventListener('click', () => {
+        terminado = true;
+        clearTimeout(espera);
+        clearTimeout(reintento);
+        terminarLlamada(boton);
+        marcarAvisoHecho('furigana');
     });
     // Si se gira el celular (o se cambia el tamaño de la ventana) mientras llama, la llamada se corta: el botón cambia de lugar
     PANTALLA_DE_CELULAR.addEventListener('change', () => terminarLlamada(boton, { deGolpe: true }));
