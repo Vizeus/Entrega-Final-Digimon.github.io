@@ -1,1 +1,15 @@
 node_modules/
+
+# Archivos de trabajo de herramientas/nombres-japoneses.mjs (nombresJa.js, en cambio, sí se sube)
+herramientas/nombres-japoneses.cache.json
+herramientas/nombres-japoneses-faltan.txt
+
+# Archivos de trabajo de herramientas/ataques-japoneses.mjs (ataquesJa.js, en cambio, sí se sube)
+herramientas/ataques-japoneses.cache.json
+herramientas/ataques-japoneses.prueba.txt
+herramientas/ataques-japoneses-conflictos.txt
+
+# Archivos de trabajo de herramientas/especies-japonesas.mjs (especiesJa.js y especies-japonesas-a-mano.json, en cambio, sí se suben)
+herramientas/especies-japonesas.cache.json
+herramientas/especies-japonesas.prueba.txt
+herramientas/especies-japonesas-revisar.txt

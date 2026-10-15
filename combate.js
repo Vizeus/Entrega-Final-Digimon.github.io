@@ -8,6 +8,7 @@
 import { emitir, ponerAyuda } from './util.js';
 import { ELEMENTO_FUERTE_CONTRA, ATRIBUTO_FUERTE_CONTRA } from './datos.js';
 import { t } from './i18n.js';
+import { nombreDeAtaque } from './nombres.js';
 import { conCruzDeCierre } from './ventanas.js';
 import { botonIniciarCombate, contadorSeleccion } from './pagina.js';
 import {
@@ -340,7 +341,7 @@ function crearAtaqueEnPelea(carta, ataque, i) {
     const luchador = document.createElement('b');
     luchador.textContent = nombreCompleto(carta);
     const nombre = document.createElement('em');
-    nombre.textContent = ataque.nombre;
+    nombre.textContent = nombreDeAtaque(ataque.nombre, carta.dataset.nombreApi);
     linea.append('⚔️ ', luchador, ` ${t('combate.usa')} `, nombre);
     caja.append(linea);
 

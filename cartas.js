@@ -19,7 +19,7 @@ import {
     numeroDeCarta,
 } from './datos.js';
 import { idioma, nombreElemento, nombreAtributo, t } from './i18n.js';
-import { claveDeNombre, inicioDeLoAparte, nombreOccidental, nombreParaMostrar } from './nombres.js';
+import { claveDeNombre, inicioDeLoAparte, nombreDeEspecie, nombreDeGrupo, nombreJapones, nombreOccidental, nombreParaMostrar } from './nombres.js';
 import { cartasPorId, listaDigimons, nombreNivel } from './pagina.js';
 import { actualizarBarraProgreso, contadorDigimons } from './api.js';
 import { prepararVueloAlStage, seleccionados, verificarSeleccion } from './combate.js';
@@ -51,10 +51,12 @@ export function nombreCompleto(carta) {
     return conXAntibody(carta, carta.querySelector('h4').textContent.trim());
 }
 
-// Los dos nombres de un digimon, también con su "(X-Antibody)": el original (el que trae la API) y el occidental.
-// El buscador usa los dos, así se lo encuentra por cualquiera.
+// Los nombres de un digimon, también con su "(X-Antibody)": el original (el que trae la API), el occidental y el japonés.
+// El buscador usa todos, así se lo encuentra por cualquiera.
 export const nombreApiCompleto = carta => conXAntibody(carta, carta.dataset.nombreApi);
 export const nombreOccidentalCompleto = carta => conXAntibody(carta, nombreOccidental(carta.dataset.nombreApi));
+// ...y el japonés (katakana), que es el que se ve en la página en japonés. El buscador lo conoce siempre, sea cual sea el idioma de la página.
+export const nombreJaponesCompleto = carta => conXAntibody(carta, nombreJapones(carta.dataset.nombreApi));
 
 // El otro nombre del digimon, el que NO se ve en la carta, si tiene uno distinto. Se cuenta en el dorso. En español y en inglés la carta muestra
 // el occidental, así que el otro es el original japonés (el de la API); con el japonés sería al revés. Si los dos nombres son iguales (casi
@@ -170,14 +172,14 @@ function gruposConEnlaces(campos) {
     if (!campos?.length) return ['–'];
     return campos.flatMap((campo, lugar) => {
         const separador = lugar > 0 ? [', '] : [];
-        if (!INFO_DE_CAMPOS[campo]) return [...separador, campo];
+        if (!INFO_DE_CAMPOS[campo]) return [...separador, nombreDeGrupo(campo)];
         const enlace = document.createElement('span');
         enlace.className = 'c-campo';
         enlace.setAttribute('role', 'button');
         enlace.tabIndex = 0;
         enlace.dataset.campo = campo;
-        enlace.textContent = campo;
-        ponerAyuda(enlace, t('info.verInfoDe', { nombre: campo }));
+        enlace.textContent = nombreDeGrupo(campo);
+        ponerAyuda(enlace, t('info.verInfoDe', { nombre: nombreDeGrupo(campo) }));
         return [...separador, enlace];
     });
 }
@@ -192,7 +194,7 @@ function construirDorso(carta) {
 
     const cuerpo = dorso.querySelector('.c-cuerpo');
     for (const [etiqueta, valor] of [
-        ['carta.especie', datos.especies?.length ? datos.especies.join(', ') : '–'],
+        ['carta.especie', datos.especies?.length ? datos.especies.map(nombreDeEspecie).join(', ') : '–'],
         ['carta.campos', datos.campos],
         ['carta.estreno', datos.estreno],
     ]) {

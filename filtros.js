@@ -43,8 +43,9 @@ import {
 } from './datos.js';
 import { idioma, nombreElemento, nombreAtributo, t } from './i18n.js';
 import { PANTALLA_DE_CELULAR } from './util.js';
+import { nombreDeEspecie, nombreDeFamilia, nombreDeGrupo } from './nombres.js';
 import { listaDigimons, nombreNivel } from './pagina.js';
-import { nombreApiCompleto, nombreCompleto, nombreOccidentalCompleto, separarXAntibody } from './cartas.js';
+import { nombreApiCompleto, nombreCompleto, nombreJaponesCompleto, nombreOccidentalCompleto, separarXAntibody } from './cartas.js';
 
 // Cada filtro: qué opciones tiene (con el nombre interno), cómo se llama cada una y qué lleva de ícono (o null si no lleva)
 const GRUPOS_FILTRO = {
@@ -67,18 +68,18 @@ const GRUPOS_FILTRO = {
         icono: clave => ({ clase: 'f-e', texto: EMOJIS_ELEMENTO[clave] }),
     },
     // Grupos (los "Fields" de la API): las opciones se suman a medida que llegan los digimons (descubrirOpciones), así que "claves" empieza vacío.
-    // Cada carta trae una lista (puede estar vacía) y alcanza con que tenga uno de los elegidos. Son nombres propios: se ven como los trae la API.
+    // Cada carta trae una lista (puede estar vacía) y alcanza con que tenga uno de los elegidos. Son nombres propios: se ven como los trae la API (en japonés, en katakana).
     // Son muchas opciones: no llevan ícono (icono: null) y todas tienen el mismo color (un tono apagado).
     campo: {
         claves: [],
-        nombre: clave => clave,
+        nombre: nombreDeGrupo,
         color: () => COLOR_CAMPO,
         icono: () => null,
     },
     // Especies (los "types" de la API): igual que los grupos, las opciones se suman a medida que llegan los digimons, sin ícono y con un solo color (otro tono, para no confundir sus etiquetas con las de grupo).
     especie: {
         claves: [],
-        nombre: clave => clave,
+        nombre: nombreDeEspecie,
         color: () => COLOR_ESPECIE,
         icono: () => null,
     },
@@ -138,7 +139,15 @@ let busquedaEscrita = ''; // lo que se escribió, tal cual (para mostrar en la e
 
 // ---- Buscador ------------------------------------------------------------------------------------------------------
 // "Agúmon  X" -> "agumon x": sin acentos, en minúscula y con un solo espacio entre palabras
-const normalizar = texto => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+// (el hiragana se pasa a katakana: así "てい" encuentra a テイルモン, que es como se escriben los nombres)
+const normalizar = texto =>
+    texto
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[ぁ-ゖ]/g, letra => String.fromCharCode(letra.charCodeAt(0) + 0x60))
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
 const compactar = texto => texto.replace(/[^a-z0-9]/g, ''); // "v-mon (black)" -> "vmonblack"
 
 // De los grupos de una carta, el más específico (el de menos digimons): es el que cuenta al agrupar. Sin grupos, "Unknown" (ver SIN_DATO).
@@ -182,10 +191,11 @@ const REGLAS_DE_TEMPORADA = {
 // Lo que se necesita saber de cada carta para filtrarla (se calcula una sola vez)
 function datosDeFiltro(carta) {
     if (!carta.datosFiltro) {
-        // Se busca por los dos nombres del digimon (el original de la API y el occidental), sin el "(X-Antibody)": eso se filtra con su botón.
-        // El que se ve es siempre uno de los dos, así que no hace falta volver a calcularlo si cambia el idioma.
+        // Se busca por los tres nombres del digimon (el original de la API, el occidental y el japonés), sin el "(X-Antibody)": eso se filtra con su botón.
+        // El que se ve es siempre uno de los tres, así que no hace falta volver a calcularlo si cambia el idioma.
         const sinX = nombre => normalizar(separarXAntibody(nombre).nombre);
-        const nombres = [...new Set([nombreCompleto(carta), nombreApiCompleto(carta), nombreOccidentalCompleto(carta)].map(sinX))].map(nombre => ({
+        const todos = [nombreCompleto(carta), nombreApiCompleto(carta), nombreOccidentalCompleto(carta), nombreJaponesCompleto(carta)];
+        const nombres = [...new Set(todos.map(sinX))].map(nombre => ({
             nombre,
             compacto: compactar(nombre),
         }));
@@ -510,7 +520,10 @@ function etiquetarArbol() {
     for (const grupo of arbol.children) {
         const nombre = grupo.dataset.nombre;
         const abrir = grupo.querySelector('.f-fam-abrir');
-        const rotulo = nombre === SIN_FAMILIA ? t('filtros.sinFamilia') : t('filtros.familia.abrir', { nombre, n: familias.get(nombre)?.size ?? 0 });
+        const rotulo =
+            nombre === SIN_FAMILIA
+                ? t('filtros.sinFamilia')
+                : t('filtros.familia.abrir', { nombre: nombreDeFamilia(nombre), n: familias.get(nombre)?.size ?? 0 });
         cambiarAtributo(abrir, 'title', rotulo);
         cambiarAtributo(abrir, 'aria-label', rotulo);
         cambiarTexto(grupo.querySelector('.f-fam-nombre'), nombre === SIN_FAMILIA ? t('filtros.sinFamilia') : '');
@@ -542,7 +555,9 @@ function buscarEntreLasOpciones(grupo) {
     panel.querySelectorAll('.f-resultados .f-chip').forEach(chip => {
         const { k: clave, fam } = chip.dataset;
         const elegida = fam ? estadoDeFamilia(fam) !== 'false' : elegidos[grupo].has(clave);
-        const sirve = !consulta || normalizar(fam ?? clave).includes(consulta) || elegida;
+        // (se busca por el nombre de la API y por el que se ve en el idioma actual: en japonés se puede escribir "dragon" o "竜")
+        const nombres = fam ? [fam, nombreDeFamilia(fam)] : [clave, nombreDeEspecie(clave)];
+        const sirve = !consulta || nombres.some(nombre => normalizar(nombre).includes(consulta)) || elegida;
         if (chip.hidden === sirve) chip.hidden = !sirve;
     });
     // un título sin ninguna opción debajo no se muestra
@@ -564,8 +579,8 @@ function borrarBusquedaDeOpciones(grupo) {
 function etiquetarChip(chip) {
     const { g: grupo, k: clave, fam } = chip.dataset;
     if (fam) {
-        chip.querySelector('.f-k').textContent = fam; // las familias son nombres propios de la API: no se traducen
-        chip.title = t('filtros.familia', { nombre: fam, n: familias.get(fam)?.size ?? 0 });
+        chip.querySelector('.f-k').textContent = nombreDeFamilia(fam); // (las familias son palabras de la API; en japonés se escriben con "系")
+        chip.title = t('filtros.familia', { nombre: nombreDeFamilia(fam), n: familias.get(fam)?.size ?? 0 });
         return;
     }
     const nombre = GRUPOS_FILTRO[grupo].nombre(clave);
@@ -644,7 +659,14 @@ function escribirEtiquetas() {
                 if ([...miembros].every(especie => cubiertas.has(especie))) continue;
                 miembros.forEach(especie => cubiertas.add(especie));
                 etiquetas.push(
-                    crearEtiqueta(grupo, `${PREFIJO_FAMILIA}${nombre}`, COLOR_ESPECIE, null, t('filtros.familia.todas', { nombre }), t(`filtros.${grupo}`)),
+                    crearEtiqueta(
+                        grupo,
+                        `${PREFIJO_FAMILIA}${nombre}`,
+                        COLOR_ESPECIE,
+                        null,
+                        t('filtros.familia.todas', { nombre: nombreDeFamilia(nombre) }),
+                        t(`filtros.${grupo}`),
+                    ),
                 );
             }
             claves = claves.filter(especie => !cubiertas.has(especie));

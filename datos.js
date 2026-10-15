@@ -68,7 +68,8 @@ export const nivelesAlternativos = {
 };
 
 // Cómo se llaman los niveles del sistema de Japón cuando la página está en japonés: en Japón se leen con kanji (成長期, 成熟期...). Los niveles que no
-// están acá se muestran con el nombre de la API: 'Absolute' (nivel inventado para este simulador, sin lectura japonesa).
+// están acá se muestran con el nombre de la API. Super Ultimate y Absolute son niveles inventados para este simulador: no existen en Japón, así que
+// sus nombres siguen el patrón de los oficiales (超究極体 = "ultra-ultimate"; 絶対体 = "forma absoluta", la palabra 絶対 se entiende sola).
 export const nivelesEnJapones = {
     'Baby I': '幼年期I',
     'Baby II': '幼年期II',
@@ -77,6 +78,7 @@ export const nivelesEnJapones = {
     'Perfect': '完全体',
     'Ultimate': '究極体',
     'Super Ultimate': '超究極体',
+    'Absolute': '絶対体',
 };
 
 // Digimons que la API lista con dos niveles (el Perfect y el Ultimate): el simulador toma siempre el primero, que acá es el más

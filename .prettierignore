@@ -4,3 +4,20 @@ design/styles.css.map
 # Lo que genera npm
 package-lock.json
 node_modules/
+
+# Lo que arma herramientas/nombres-japoneses.mjs (la lista se genera con otro formato y no se revisa con Prettier)
+nombresJa.js
+herramientas/nombres-japoneses.cache.json
+herramientas/nombres-japoneses-faltan.txt
+
+# Lo que arma herramientas/ataques-japoneses.mjs
+ataquesJa.js
+herramientas/ataques-japoneses.cache.json
+herramientas/ataques-japoneses.prueba.txt
+herramientas/ataques-japoneses-conflictos.txt
+
+# Lo que arma herramientas/especies-japonesas.mjs
+especiesJa.js
+herramientas/especies-japonesas.cache.json
+herramientas/especies-japonesas.prueba.txt
+herramientas/especies-japonesas-revisar.txt

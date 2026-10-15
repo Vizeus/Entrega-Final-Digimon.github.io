@@ -25,7 +25,7 @@ import {
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { conCruzDeCierre, mantenerEnSuLugar } from './ventanas.js';
 import { clasificacionAlternativa, listaDigimons, nombreNivel, nombreNivelEnSistema } from './pagina.js';
-import { nombreParaMostrar } from './nombres.js';
+import { nombreParaMostrar, nombreDeAtaque, nombreDeGrupo } from './nombres.js';
 import { PESO_ELEMENTO, PESO_NIVEL, PESO_ATRIBUTO, PODER_EN_COMBATE } from './combate.js';
 import { nombreCompleto } from './cartas.js';
 import { activarBotonDelDorso } from './gestos.js';
@@ -218,7 +218,7 @@ export function infoCampo(campo) {
     const cuantos = cartas.filter(carta => carta.datosDorso?.campos.includes(campo)).length;
 
     mostrarInfo(
-        `${emoji} ${campo}`,
+        `${emoji} ${nombreDeGrupo(campo)}`,
         t(`campo.${clave}.desc`),
         [
             [t('campo.donde'), t(`campo.${clave}.donde`)],
@@ -386,7 +386,8 @@ function crearListaDeAtaques(habilidades, cartaActual) {
         // La traducción (la API la trae solo para algunos, los de nombre japonés de verdad) se muestra recién al abrir el ataque, entre paréntesis
         const nombre = document.createElement('span');
         nombre.className = 'ataque-nombre';
-        nombre.textContent = habilidad.nombre;
+        nombre.dataset.ataque = habilidad.nombre; // el nombre de la API: el que se ve cambia con el idioma (ver traducirVentanaDeAtaques)
+        nombre.textContent = nombreDeAtaque(habilidad.nombre, cartaActual?.dataset.nombreApi);
 
         const boton = document.createElement('button');
         boton.type = 'button';
@@ -507,6 +508,9 @@ const traducirVentanaDeAtaques = () => {
     const ayuda = document.querySelector('.popup-ataques .ataques-ayuda');
     if (ayuda) ayuda.textContent = t('ataques.ayuda');
     document.querySelectorAll('.popup-ataques .ataque-alias').forEach(alias => (alias.title = t('ataques.traduccion')));
+    document
+        .querySelectorAll('.popup-ataques .ataque-nombre')
+        .forEach(nombre => (nombre.textContent = nombreDeAtaque(nombre.dataset.ataque, cartaDeAtaques.dataset.nombreApi)));
     const pie = document.querySelector('.popup-ataques .ataques-pie');
     if (pie) {
         pie.textContent = t('ataques.idiomaOriginal');
@@ -557,7 +561,7 @@ function escribirMenus() {
     );
     escribirOpciones(
         'lista-grupos',
-        ORDEN_CAMPOS_MENU.map(campo => [campo, `${INFO_DE_CAMPOS[campo].emoji} ${campo}`]),
+        ORDEN_CAMPOS_MENU.map(campo => [campo, `${INFO_DE_CAMPOS[campo].emoji} ${nombreDeGrupo(campo)}`]),
     );
     escribirOpciones(
         'lista-misc',
