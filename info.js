@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------------------------------------------
-// MENÚS DE INFORMACIÓN (atributos, elementos, niveles, grupos y misceláneos) y sus ventanas emergentes
+// MENÚS DE INFORMACIÓN (atributos, niveles, elementos, grupos y misceláneos) y sus ventanas emergentes
 //
 // Los cinco menús de la barra tienen el mismo formato: al elegir una opción se abre una ventana con su descripción,
 // contra qué es fuerte o débil y cuánto pesa en el combate (los grupos explican qué reúne a cada uno, y los misceláneos, que son las marcas de la carta como la X-Antibody, qué son y cómo buscarlas). Los números salen de las mismas tablas que usa el combate
