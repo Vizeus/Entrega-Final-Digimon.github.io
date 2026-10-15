@@ -8,7 +8,7 @@
 import { emitir, ponerAyuda } from './util.js';
 import { ELEMENTO_FUERTE_CONTRA, ATRIBUTO_FUERTE_CONTRA } from './datos.js';
 import { t } from './i18n.js';
-import { nombreDeAtaque } from './nombres.js';
+import { nombreDeAtaque, descripcionDeAtaque } from './nombres.js';
 import { conCruzDeCierre } from './ventanas.js';
 import { botonIniciarCombate, contadorSeleccion } from './pagina.js';
 import {
@@ -348,8 +348,8 @@ function crearAtaqueEnPelea(carta, ataque, i) {
     if (ataque.descripcion) {
         const descripcion = document.createElement('p');
         descripcion.className = 'vs-ataque-desc';
-        descripcion.textContent = ataque.descripcion;
-        descripcion.title = ataque.descripcion; // por si es tan larga que se corta
+        descripcion.textContent = descripcionDeAtaque(ataque.descripcion);
+        descripcion.title = descripcion.textContent; // por si es tan larga que se corta
         caja.append(descripcion);
     }
     return caja;

@@ -5,6 +5,7 @@
 import { idioma } from './i18n.js';
 import { NOMBRES_JA } from './nombresJa.js';
 import { ATAQUES_JA, ATAQUES_JA_POR_DIGIMON } from './ataquesJa.js';
+import { DESCRIPCIONES_ATAQUES_JA } from './ataquesDescJa.js';
 import { ESPECIES_JA } from './especiesJa.js';
 // La API trae los nombres ORIGINALES (los japoneses, escritos en letras latinas): Omegamon, Herakle Kabuterimon, Vamdemon...
 // En español y en inglés la página muestra los nombres occidentales, que desde hace años son los mismos en todo el mundo
@@ -295,6 +296,13 @@ export function nombreDeAtaque(nombreAtaque, nombreApiDelDigimon) {
     if (idioma !== 'ja' || !nombreAtaque) return nombreAtaque;
     const propio = nombreApiDelDigimon ? ATAQUES_JA_POR_DIGIMON[nombreAtaque]?.[nombreApiDelDigimon] : null;
     return propio ?? ATAQUES_JA[nombreAtaque] ?? ATAQUES_JA_EN_MINUSCULAS.get(nombreAtaque.trim().toLowerCase()) ?? nombreAtaque;
+}
+
+// La descripción de un ataque en el idioma actual. La API la trae solo en inglés; en japonés se busca la traducción (ataquesDescJa.js) y, si esa
+// descripción no está, se deja la original. En español y en inglés no cambia.
+export function descripcionDeAtaque(descripcion) {
+    if (idioma !== 'ja' || !descripcion) return descripcion;
+    return DESCRIPCIONES_ATAQUES_JA[descripcion.trim()] ?? descripcion;
 }
 
 // ---- Grupos (los "Fields" de la API) -------------------------------------------------------------------------------

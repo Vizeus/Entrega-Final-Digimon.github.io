@@ -13,3 +13,7 @@ herramientas/ataques-japoneses-conflictos.txt
 herramientas/especies-japonesas.cache.json
 herramientas/especies-japonesas.prueba.txt
 herramientas/especies-japonesas-revisar.txt
+
+# Archivos de trabajo de herramientas/ataques-descripciones.mjs
+herramientas/ataques-descripciones.cache.json
+herramientas/ataques-descripciones.json

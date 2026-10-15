@@ -212,9 +212,12 @@
                 0 0 0 3px rgba(255, 201, 40, 0.5),
                 0 0 22px 6px rgba(255, 201, 40, 0.75);
             scale: 1.14;
+            margin-bottom: 8px; // el scale no mueve el layout: este margen deja lugar a lo que la imagen agranda hacia abajo
         }
 
         figcaption {
+            position: relative;
+            z-index: 2; // por encima de la imagen agrandada y de su brillo, para que no tapen las letras
             font-weight: 700;
             color: #a86500;
         }

@@ -808,7 +808,7 @@ export const DICCIONARIO = {
         'tema.actual.oscuro': 'ダーク',
         'carta.sinDescripcion': '説明はありません。',
         'carta.idiomaOriginal': '日本語の説明がないため、英語の原文を表示しています',
-        'ataques.idiomaOriginal': '技の説明は英語の原文です',
+        'ataques.idiomaOriginal': '', // las descripciones de los ataques ya están traducidas (ataquesDescJa.js)
 
         // バトル
         'combate.preparando': 'バトルを準備中...',

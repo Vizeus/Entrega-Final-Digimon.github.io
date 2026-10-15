@@ -2426,8 +2426,11 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   border-color: #ffc928;
   box-shadow: 0 0 0 3px rgba(255, 201, 40, 0.5), 0 0 22px 6px rgba(255, 201, 40, 0.75);
   scale: 1.14;
+  margin-bottom: 8px;
 }
 .combate-popup .vs-luchador.ganador figcaption {
+  position: relative;
+  z-index: 2;
   font-weight: 700;
   color: #a86500;
 }

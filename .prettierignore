@@ -12,6 +12,9 @@ herramientas/nombres-japoneses-faltan.txt
 
 # Lo que arma herramientas/ataques-japoneses.mjs
 ataquesJa.js
+
+# Las descripciones de los ataques, traducidas a mano a partir de herramientas/ataques-descripciones.mjs
+ataquesDescJa.js
 herramientas/ataques-japoneses.cache.json
 herramientas/ataques-japoneses.prueba.txt
 herramientas/ataques-japoneses-conflictos.txt

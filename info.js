@@ -25,7 +25,7 @@ import {
 import { nombreElemento, nombreAtributo, t } from './i18n.js';
 import { conCruzDeCierre, mantenerEnSuLugar } from './ventanas.js';
 import { clasificacionAlternativa, listaDigimons, nombreNivel, nombreNivelEnSistema } from './pagina.js';
-import { nombreParaMostrar, nombreDeAtaque, nombreDeGrupo } from './nombres.js';
+import { nombreParaMostrar, nombreDeAtaque, nombreDeGrupo, descripcionDeAtaque } from './nombres.js';
 import { PESO_ELEMENTO, PESO_NIVEL, PESO_ATRIBUTO, PODER_EN_COMBATE } from './combate.js';
 import { nombreCompleto } from './cartas.js';
 import { activarBotonDelDorso } from './gestos.js';
@@ -415,7 +415,8 @@ function crearListaDeAtaques(habilidades, cartaActual) {
         if (habilidad.descripcion) {
             const descripcion = document.createElement('p');
             descripcion.className = 'ataque-desc';
-            descripcion.textContent = habilidad.descripcion;
+            descripcion.dataset.original = habilidad.descripcion; // el texto de la API (en inglés), para volver a traducirlo si se cambia el idioma
+            descripcion.textContent = descripcionDeAtaque(habilidad.descripcion);
             detalle.append(descripcion);
         } else {
             const sinDesc = document.createElement('p');
@@ -511,6 +512,7 @@ const traducirVentanaDeAtaques = () => {
     document
         .querySelectorAll('.popup-ataques .ataque-nombre')
         .forEach(nombre => (nombre.textContent = nombreDeAtaque(nombre.dataset.ataque, cartaDeAtaques.dataset.nombreApi)));
+    document.querySelectorAll('.popup-ataques .ataque-desc[data-original]').forEach(texto => (texto.textContent = descripcionDeAtaque(texto.dataset.original)));
     const pie = document.querySelector('.popup-ataques .ataques-pie');
     if (pie) {
         pie.textContent = t('ataques.idiomaOriginal');
