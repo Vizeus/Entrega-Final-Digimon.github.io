@@ -31,3 +31,7 @@ descripcionesEs.js
 ataquesDescEs.js
 herramientas/descripciones-digimon.json
 herramientas/descripciones-digimon.cache.json
+herramientas/elementos-datos.json
+herramientas/elementos-datos.cache.json
+herramientas/elementos-auditoria.txt
+elementosPorId.js

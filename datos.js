@@ -283,6 +283,14 @@ export const REGLAS_ELEMENTO = {
 // Correcciones a mano (id del digimon → elemento) para los casos en que la deducción automática no acierta
 export const ELEMENTOS_MANUALES = {
     4: 'Rayo', // Betamon: sus habilidades empatan entre Rayo y Agua, pero es eléctrico
+    168: 'Hielo', // MetalGarurumon: por ser Cyborg el cálculo le daba Metal, pero toda la línea de Garurumon es de hielo (Cocytus Breath, Ice Wolf Claw)
+    205: 'Hielo', // WereGarurumon: sus ataques mezclan fuego y hielo, pero en su línea (Garurumon y MetalGarurumon) el elemento es el hielo
+    482: 'Fuego', // Impmon: es un diablillo (el cálculo lo ponía en Oscuridad), pero su ataque estrella es de fuego (Night of Fire)
+    441: 'Fuego', // Megidramon: dragón maligno, pero lo que lo define es el fuego (su especie lo llevaba a Oscuridad)
+    677: 'Fuego', // Megidramon (X-Antibody): igual que el original
+    491: 'Fuego', // Kyubimon (Silver): zorro de fuego; el cálculo lo llevaba a Oscuridad por su especie (Bewitching Beast)
+    456: 'Fuego', // Youkomon: igual que Kyubimon (Silver)
+    549: 'Fuego', // Fla Wizarmon: mago de fuego ("Fla" viene de flame); su especie (Demon Man) lo llevaba a Oscuridad
     457: 'Oscuridad', // Zeed Millenniumon: la deducción le daba Hielo por la palabra "freeze" de una habilidad, pero por lore es oscuridad y destrucción
 };
 

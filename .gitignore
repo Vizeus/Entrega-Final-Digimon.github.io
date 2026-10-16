@@ -24,3 +24,8 @@ herramientas/furigana-revisar.txt
 # Archivos de trabajo de herramientas/descripciones-digimon.mjs (lo que se traduce queda en descripcionesEs.js)
 herramientas/descripciones-digimon.cache.json
 herramientas/descripciones-digimon.json
+
+# Archivos de trabajo de herramientas/elementos-datos.mjs (revisión de los elementos)
+herramientas/elementos-datos.cache.json
+herramientas/elementos-datos.json
+herramientas/elementos-auditoria.txt

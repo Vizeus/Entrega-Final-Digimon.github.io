@@ -6,16 +6,9 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 import { PANTALLA_DE_CELULAR } from './util.js';
-import {
-    ASCENSOS,
-    CARTAS_PROPIAS,
-    ELEMENTOS_MANUALES,
-    NIVELES_CORREGIDOS,
-    NIVEL_DE_LOS_HYBRID,
-    NIVEL_HYBRID_SIN_DATO,
-    REGLAS_ELEMENTO,
-    atributoDeLaApi,
-} from './datos.js';
+import { ASCENSOS, CARTAS_PROPIAS, ELEMENTOS_MANUALES, NIVELES_CORREGIDOS, NIVEL_DE_LOS_HYBRID, NIVEL_HYBRID_SIN_DATO, atributoDeLaApi } from './datos.js';
+import { ELEMENTO_POR_ID } from './elementosPorId.js';
+import { deducirElementoPorPuntos } from './elementos.js';
 import { claveDeNombre } from './nombres.js';
 import { barraProgreso, listaDigimons } from './pagina.js';
 import { agregarCarta, colocarCartas, esperarTipografias, reducirMovimiento, separarXAntibody } from './cartas.js';
@@ -46,34 +39,21 @@ function resolverNivelDeLaApi(nombre, nivelApi) {
 // ni se usa en el combate (su descripción sí cuenta para deducir el elemento: es texto real sobre lo que hace el digimon)
 const NOTA_AL_PIE = /^\[N\s*\d+\]$/i;
 
-// Deduce el elemento de un digimon a partir de los detalles que devuelve la API
+// El elemento de un digimon. Primero las correcciones a mano (ELEMENTOS_MANUALES); después la tabla ya calculada (ELEMENTO_POR_ID, que arma
+// herramientas/elementos-auditoria.mjs mirando especie, ataques, descripción, grupos y línea evolutiva); y si el digimon es nuevo y todavía no está
+// en la tabla, se calcula en el momento con lo que trae la API (elementos.js, sin la línea evolutiva).
 function deducirElemento(id, detalles) {
-    if (ELEMENTOS_MANUALES[id]) {
-        return ELEMENTOS_MANUALES[id];
-    }
-
-    // Juntamos el nombre, la traducción y la descripción de todas sus habilidades
-    const texto = (detalles.skills || [])
-        .map(habilidad => [habilidad.skill, habilidad.translation, habilidad.description].filter(Boolean).join(' '))
-        .join(' ')
-        .toLowerCase();
-
-    let elementoGanador = 'Neutro';
-    let maximo = 0;
-    let empate = false;
-
-    for (const [elemento, regla] of Object.entries(REGLAS_ELEMENTO)) {
-        const coincidencias = (texto.match(regla) || []).length;
-        if (coincidencias > maximo) {
-            elementoGanador = elemento;
-            maximo = coincidencias;
-            empate = false;
-        } else if (coincidencias === maximo && coincidencias > 0) {
-            empate = true;
-        }
-    }
-
-    return empate ? 'Neutro' : elementoGanador;
+    const conocido = ELEMENTOS_MANUALES[id] ?? ELEMENTO_POR_ID[id];
+    if (conocido) return conocido;
+    return deducirElementoPorPuntos({
+        nombre: detalles.name,
+        especies: (detalles.types || []).map(especie => especie.type).filter(Boolean),
+        grupos: (detalles.fields || []).map(campo => campo.field).filter(Boolean),
+        descripcion: descripcionEnIdioma(detalles, 'en_us'),
+        habilidades: (detalles.skills || [])
+            .filter(habilidad => habilidad.skill && !NOTA_AL_PIE.test(habilidad.skill))
+            .map(habilidad => ({ nombre: habilidad.skill, traduccion: habilidad.translation, descripcion: habilidad.description })),
+    }).elemento;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
