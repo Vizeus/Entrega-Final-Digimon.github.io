@@ -37,3 +37,11 @@ herramientas/atributos-diferencias.txt
 # Archivos de trabajo de herramientas/descripciones-faltantes.mjs (revisión de las descripciones que faltan)
 herramientas/descripciones-faltantes.cache.json
 herramientas/descripciones-faltantes.json
+
+# Archivos de trabajo de herramientas/especies-wikimon.mjs (revisión de especies y grupos)
+herramientas/especies-wikimon.cache.json
+herramientas/especies-wikimon-diferencias.txt
+
+# Archivos de trabajo de herramientas/marcas-wikimon.mjs (revisión de las marcas A, H y XW)
+herramientas/marcas-wikimon.cache.json
+herramientas/marcas-wikimon-diferencias.txt

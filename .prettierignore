@@ -46,3 +46,12 @@ herramientas/atributos-diferencias.txt
 # Archivos de trabajo de herramientas/descripciones-faltantes.mjs
 herramientas/descripciones-faltantes.cache.json
 herramientas/descripciones-faltantes.json
+
+# Lo que arma herramientas/especies-wikimon.mjs
+especiesCorregidas.js
+herramientas/especies-wikimon.cache.json
+herramientas/especies-wikimon-diferencias.txt
+
+# Lo que arma herramientas/marcas-wikimon.mjs
+herramientas/marcas-wikimon.cache.json
+herramientas/marcas-wikimon-diferencias.txt

@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 import { CON_DEDO, PANTALLA_DE_CELULAR, emitir } from './util.js';
-import { reducirMovimiento } from './cartas.js';
+import { ponerTodasDeFrente, reducirMovimiento } from './cartas.js';
 import { limpiarSeleccionDeCombate, seleccionados } from './combate.js';
 import { limpiarTodo } from './filtros.js';
 
@@ -177,7 +177,8 @@ export function activarBarraQueSeEsconde() {
 }
 
 // El logo de Digimon (arriba a la izquierda) es un botón de "volver al inicio": salta, sube hasta arriba de todo de la página, borra
-// los filtros y el buscador y quita la selección de combate, todo junto (lo que ya está limpio o arriba, queda como está).
+// los filtros y el buscador, quita la selección de combate y deja de frente las cartas que estén dadas vuelta, todo junto (lo que ya está limpio, arriba o
+// de frente, queda como está).
 // También se activa con el teclado (Enter o espacio). El salto lo hace el CSS (la clase "salta"); si se toca de nuevo mientras salta,
 // vuelve a empezar. Con "reducir movimiento" no salta y sube de golpe.
 export function activarLogo() {
@@ -194,6 +195,7 @@ export function activarLogo() {
 
         limpiarTodo();
         limpiarSeleccionDeCombate();
+        ponerTodasDeFrente();
         window.scrollTo({ top: 0, behavior: reducirMovimiento ? 'instant' : 'smooth' });
     };
 

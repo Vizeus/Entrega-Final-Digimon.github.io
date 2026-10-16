@@ -290,6 +290,7 @@ export const ELEMENTOS_MANUALES = {
     955: 'Fuego', // Metal Greymon (versión del anime de 2010): igual que el original
     202: 'Fuego', // War Greymon: sus ataques mezclan viento, fuego y metal (Great Tornado, Dramon Killer), pero como Greymon y Metal Greymon es de fuego (Gaia Force)
     703: 'Fuego', // War Greymon (X-Antibody): igual que el original
+    751: 'Metal', // Kohagurumon: es un engranaje viviente, así que lo dejamos en Metal a mano
     482: 'Fuego', // Impmon: es un diablillo (el cálculo lo ponía en Oscuridad), pero su ataque estrella es de fuego (Night of Fire)
     441: 'Fuego', // Megidramon: dragón maligno, pero lo que lo define es el fuego (su especie lo llevaba a Oscuridad)
     677: 'Fuego', // Megidramon (X-Antibody): igual que el original

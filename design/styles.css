@@ -4865,6 +4865,11 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
   #listado-digimons > li img {
     -webkit-user-drag: none;
   }
+  #listado-digimons > li :is(.c-cab h4, .c-dorso .c-nombre, .c-dorso p) {
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    user-select: text;
+  }
   #listado-digimons > li:is(:hover, .tilt-activo):not(.seleccionado):not(.evo-resaltada) {
     --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
     translate: 0 0;
@@ -4887,6 +4892,11 @@ body:has(.swal2-container) #zoom-fondo .zoom-ayuda {
 }
 :where(:root.con-dedo) #listado-digimons > li img {
   -webkit-user-drag: none;
+}
+:where(:root.con-dedo) #listado-digimons > li :is(.c-cab h4, .c-dorso .c-nombre, .c-dorso p) {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
 }
 :where(:root.con-dedo) #listado-digimons > li:is(:hover, .tilt-activo):not(.seleccionado):not(.evo-resaltada) {
   --caida: 0 2px 4px rgba(0, 0, 0, 0.25);

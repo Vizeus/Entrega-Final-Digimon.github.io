@@ -1049,6 +1049,15 @@
         }
     }
 
+    // TEXTO SELECCIONABLE: el nombre del frente y los textos del dorso (nombre, datos y descripción) sí se pueden seleccionar manteniendo
+    // apretado con el dedo (y sobre ellos la carta no se inclina: ver inclinacion.js). Los botones y botoncitos de la carta siguen sin selección.
+    // Es la misma lista que TEXTO_DE_CARTA, en util.js.
+    #listado-digimons > li :is(.c-cab h4, .c-dorso .c-nombre, .c-dorso p) {
+        -webkit-touch-callout: default;
+        -webkit-user-select: text;
+        user-select: text;
+    }
+
     #listado-digimons > li:is(:hover, .tilt-activo):not(.seleccionado):not(.evo-resaltada) {
         --caida: 0 2px 4px rgba(0, 0, 0, 0.25);
         translate: 0 0;

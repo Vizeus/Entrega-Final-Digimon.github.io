@@ -10,13 +10,19 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { REGLAS_ELEMENTO, ELEMENTOS_MANUALES } from '../datos.js';
+import { ESPECIES_CORREGIDAS, GRUPOS_CORREGIDOS } from '../especiesCorregidas.js';
 import { deducirElementoPorPuntos, expresionDeNombres, MARGEN_DUDOSO, PUNTOS_MINIMOS } from '../elementos.js';
 
 const archivoDatos = new URL(process.argv[2] ?? './elementos-datos.json', import.meta.url);
 const archivoTabla = new URL('../elementosPorId.js', import.meta.url);
 const archivoInforme = new URL('./elementos-auditoria.txt', import.meta.url);
 const archivoControl = new URL('./elementos-control.json', import.meta.url);
-const digimons = JSON.parse(readFileSync(archivoDatos, 'utf8'));
+// (con las especies y los grupos corregidos con Wikimon, igual que la página: ver especiesCorregidas.js)
+const digimons = JSON.parse(readFileSync(archivoDatos, 'utf8')).map(digimon => ({
+    ...digimon,
+    especies: ESPECIES_CORREGIDAS[digimon.id] ?? digimon.especies,
+    grupos: GRUPOS_CORREGIDOS[digimon.id] ?? digimon.grupos,
+}));
 
 // El cálculo de ahora (api.js, deducirElemento): solo los ataques; gana el que más palabras clave tiene y un empate es Neutro
 function elementoDeAhora(digimon) {

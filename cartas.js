@@ -5,7 +5,7 @@
 // tandas) y las ventanas que se abren desde sus chips y botones (atributo, elemento, nivel, ataques y evolución).
 // -----------------------------------------------------------------------------------------------------------------
 
-import { PANTALLA_DE_CELULAR, emitir, ponerAyuda } from './util.js';
+import { PANTALLA_DE_CELULAR, emitir, enTextoDeCarta, ponerAyuda } from './util.js';
 import {
     ANIOS_XROS_WARS,
     EMOJIS_ELEMENTO,
@@ -402,6 +402,14 @@ export async function voltearCarta(carta, direccion = 1) {
     emitir('giro-terminado', carta); // la inclinación retoma si el mouse sigue encima
 }
 
+// Deja de frente todas las cartas que están dadas vuelta (mostrando la descripción), sin animación: lo usa el logo de la barra al "volver al inicio".
+// Una carta que justo está girando se deja terminar sola.
+export function ponerTodasDeFrente() {
+    listaDigimons.querySelectorAll(':scope > li.de-dorso').forEach(carta => {
+        if (!carta.girando) carta.classList.remove('de-dorso');
+    });
+}
+
 // Las ventanas que se abren desde los botones de una carta (info.js y evolucion.js). Los del frente (atributo, elemento y nivel)
 // necesitan un dato de la carta y avisan con "click-chip-carta"; los del dorso (ataques y evolución) reciben la carta entera.
 // (Los del frente, además de atributo, elemento y nivel, son las marcas de la esquina: X-Antibody, Armor, Hybrid y Xros Wars.)
@@ -479,6 +487,17 @@ const observadorDeMarcos =
               { rootMargin: '150px' },
           )
         : null;
+
+// Si el usuario acaba de seleccionar texto de una carta (arrastrando el mouse o con un doble clic), ese clic no la elige para el combate.
+// Se compara con lo que estaba seleccionado al apretar el botón: una selección vieja que quedó de antes no cuenta.
+let seleccionAlApretar = '';
+document.addEventListener('mousedown', () => (seleccionAlApretar = String(window.getSelection?.() ?? '')), true);
+function seSeleccionoTextoDe(carta) {
+    const seleccion = window.getSelection?.();
+    if (!seleccion || seleccion.isCollapsed || !carta.contains(seleccion.anchorNode)) return false;
+    const texto = String(seleccion);
+    return texto.trim() !== '' && texto !== seleccionAlApretar && enTextoDeCarta(seleccion.anchorNode, true); // (con el número del frente: el mouse sí lo puede seleccionar)
+}
 
 export let seleccionAntesDelClic = { carta: null, estado: [] }; // cómo estaba la selección antes del primer clic de un doble clic (zoom.js la usa)
 
@@ -574,6 +593,7 @@ export function agregarCarta({ id, despuesDelId, nombre, imagen, atributo, nivel
     elementoLista.addEventListener('click', evento => {
         if (cartaEnZoom) return; // con la carta en grande, un clic no la elige para el combate
         if (evento.target.closest('button, [role="button"]')) return; // botones y chips de la carta no la seleccionan para el combate
+        if (seSeleccionoTextoDe(elementoLista)) return; // arrastrar el mouse o hacer doble clic sobre un texto lo selecciona: no elige la carta
         // Si este clic es el primero de un doble clic, el zoom deshace lo que haga (ver activarZoom)
         if (evento.detail <= 1) seleccionAntesDelClic = { carta: elementoLista, estado: seleccionados.slice() };
         elementoLista.classList.toggle('seleccionado');

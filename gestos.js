@@ -7,7 +7,7 @@
 // también con el mouse.)
 // -----------------------------------------------------------------------------------------------------------------
 
-import { emitir, guardarTexto, hayMarcaDeSesion, HAY_PANTALLA_TACTIL, leerTexto, marcarSegundoDeUnDoble, ponerMarcaDeSesion } from './util.js';
+import { emitir, enTextoDeCarta, guardarTexto, hayMarcaDeSesion, HAY_PANTALLA_TACTIL, leerTexto, marcarSegundoDeUnDoble, ponerMarcaDeSesion } from './util.js';
 import { listaDigimons } from './pagina.js';
 import { seleccionados } from './combate.js';
 import { voltearCarta } from './cartas.js';
@@ -162,9 +162,12 @@ export function activarZoomConDobleToque() {
             const carta = evento.touches.length === 1 ? toque.target.closest?.('#listado-digimons > li') : null;
             const cerrar = !!cartaEnZoom; // con una carta ampliada el doble toque es para devolverla a su lugar; si no, para ampliarla
             // (un toque que solo cierra un menú abierto no cuenta como el primero de un doble toque: ver menus.js)
-            const sirve = cerrar
-                ? carta === cartaEnZoom && puedeCerrarseConDobleToque(toque.target)
-                : !!carta && !zoomOcupado && !toque.target.closest('button') && !toqueQueSoloCierraMenus();
+            // (un doble toque sobre un texto de la carta no la amplía ni la devuelve a su lugar: selecciona la palabra)
+            const sirve = enTextoDeCarta(toque.target)
+                ? false
+                : cerrar
+                  ? carta === cartaEnZoom && puedeCerrarseConDobleToque(toque.target)
+                  : !!carta && !zoomOcupado && !toque.target.closest('button') && !toqueQueSoloCierraMenus();
             if (!sirve) {
                 anterior = null;
                 soltarPendiente();

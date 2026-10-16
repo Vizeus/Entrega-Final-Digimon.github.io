@@ -7,6 +7,7 @@
 
 import { PANTALLA_DE_CELULAR } from './util.js';
 import { ATRIBUTOS_CORREGIDOS } from './atributosCorregidos.js';
+import { ESPECIES_CORREGIDAS, GRUPOS_CORREGIDOS } from './especiesCorregidas.js';
 import { ASCENSOS, CARTAS_PROPIAS, ELEMENTOS_MANUALES, NIVELES_CORREGIDOS, NIVEL_DE_LOS_HYBRID, NIVEL_HYBRID_SIN_DATO, atributoDeLaApi } from './datos.js';
 import { ELEMENTO_POR_ID } from './elementosPorId.js';
 import { deducirElementoPorPuntos } from './elementos.js';
@@ -40,6 +41,11 @@ function resolverNivelDeLaApi(nombre, nivelApi) {
 // ni se usa en el combate (su descripción sí cuenta para deducir el elemento: es texto real sobre lo que hace el digimon)
 const NOTA_AL_PIE = /^\[N\s*\d+\]$/i;
 
+// Las especies ("types") y los grupos ("fields") de un digimon. Donde la API los deja vacíos, con "Unknown" de más o incompletos y Wikimon sí los trae,
+// vale la corrección (ESPECIES_CORREGIDAS y GRUPOS_CORREGIDOS, que arma herramientas/especies-wikimon.mjs).
+const especiesDe = (id, detalles) => ESPECIES_CORREGIDAS[id] ?? (detalles.types || []).map(especie => especie.type).filter(Boolean);
+const gruposDe = (id, detalles) => GRUPOS_CORREGIDOS[id] ?? (detalles.fields || []).map(campo => campo.field).filter(Boolean);
+
 // El elemento de un digimon. Primero las correcciones a mano (ELEMENTOS_MANUALES); después la tabla ya calculada (ELEMENTO_POR_ID, que arma
 // herramientas/elementos-auditoria.mjs mirando especie, ataques, descripción, grupos y línea evolutiva); y si el digimon es nuevo y todavía no está
 // en la tabla, se calcula en el momento con lo que trae la API (elementos.js, sin la línea evolutiva).
@@ -48,8 +54,8 @@ function deducirElemento(id, detalles) {
     if (conocido) return conocido;
     return deducirElementoPorPuntos({
         nombre: detalles.name,
-        especies: (detalles.types || []).map(especie => especie.type).filter(Boolean),
-        grupos: (detalles.fields || []).map(campo => campo.field).filter(Boolean),
+        especies: especiesDe(id, detalles),
+        grupos: gruposDe(id, detalles),
         descripcion: descripcionEnIdioma(detalles, 'en_us'),
         habilidades: (detalles.skills || [])
             .filter(habilidad => habilidad.skill && !NOTA_AL_PIE.test(habilidad.skill))
@@ -295,8 +301,8 @@ export async function crearListaDeDigimons() {
                 marca,
                 elemento: deducirElemento(digimon.id, detalles),
                 datosDorso: {
-                    especies: (detalles.types || []).map(especie => especie.type).filter(Boolean), // los "types" de la API (Alien, Cyborg, Slime...): una lista, que el dorso junta con comas y el filtro de especies usa tal cual
-                    campos: (detalles.fields || []).map(campo => campo.field).filter(Boolean), // los "Fields" de la API: familias o temáticas (Deep Savers, Metal Empire...). Un digimon puede tener varios o ninguno (el filtro de grupos los usa tal cual; el dorso los junta con comas)
+                    especies: especiesDe(digimon.id, detalles), // los "types" de la API (Alien, Cyborg, Slime...): una lista, que el dorso junta con comas y el filtro de especies usa tal cual
+                    campos: gruposDe(digimon.id, detalles), // los "Fields" de la API: familias o temáticas (Deep Savers, Metal Empire...). Un digimon puede tener varios o ninguno (el filtro de grupos los usa tal cual; el dorso los junta con comas)
                     estreno: detalles.releaseDate || '–',
                     // Todos los ataques con su descripción (en inglés): para el botón "⚔️ Ataques" del dorso y para la pelea
                     habilidades: (detalles.skills || [])

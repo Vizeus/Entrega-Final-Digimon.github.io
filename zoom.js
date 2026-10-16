@@ -5,7 +5,7 @@
 // (zoom extra) y se puede arrastrar. Las flechas (o deslizar el dedo) pasan a la carta vecina.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { CON_MOUSE, anchoVisible, emitir, ponerAyuda } from './util.js';
+import { CON_MOUSE, anchoVisible, emitir, enTextoDeCarta, ponerAyuda } from './util.js';
 import { t } from './i18n.js';
 import { listaDigimons } from './pagina.js';
 import { seleccionados, verificarSeleccion } from './combate.js';
@@ -769,6 +769,12 @@ export function activarZoom() {
     listaDigimons.addEventListener('dblclick', evento => {
         if (evento.target.closest('button')) return;
         const carta = evento.target.closest('#listado-digimons > li');
+        // Un doble clic sobre un texto de la carta selecciona la palabra, como en cualquier página: no amplía la carta ni la devuelve a su lugar.
+        // (El primer clic sí pudo elegirla para el combate: se deshace.)
+        if (enTextoDeCarta(evento.target)) {
+            if (carta && !cartaEnZoom && seleccionAntesDelClic.carta === carta) restaurarSeleccion(seleccionAntesDelClic.estado);
+            return;
+        }
         if (cartaEnZoom) {
             // Un doble clic sobre la carta ampliada la devuelve a su lugar (no cuenta soltar después de arrastrarla con el zoom extra).
             // Si está agrandada de más (zoom extra), el doble clic solo le quita ese zoom extra: sigue ampliada, en el zoom de siempre
@@ -787,9 +793,10 @@ export function activarZoom() {
         abrirZoom(carta);
     });
 
-    // Un doble clic no selecciona el texto de la carta (tampoco con la carta ampliada: ahí el doble clic la cierra)
+    // Un doble clic no selecciona el texto de la carta (tampoco con la carta ampliada: ahí el doble clic la cierra), salvo sobre los textos
+    // (el nombre, los datos y la descripción: ver enTextoDeCarta), donde selecciona la palabra como siempre
     listaDigimons.addEventListener('mousedown', evento => {
-        if (evento.detail > 1 && !evento.target.closest('button') && evento.target.closest('#listado-digimons > li')) {
+        if (evento.detail > 1 && !evento.target.closest('button') && !enTextoDeCarta(evento.target) && evento.target.closest('#listado-digimons > li')) {
             evento.preventDefault();
         }
     });

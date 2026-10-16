@@ -5,7 +5,7 @@
 // (o al revés, con el botón de inclinación invertida), y con Shift la rueda del mouse sigue subiendo y bajando la página.
 // -----------------------------------------------------------------------------------------------------------------
 
-import { CON_MOUSE, emitir, guardarJSON, HAY_PANTALLA_TACTIL, leerJSON, ponerAyuda } from './util.js';
+import { CON_MOUSE, emitir, enTextoDeCarta, guardarJSON, HAY_PANTALLA_TACTIL, leerJSON, ponerAyuda } from './util.js';
 import { t } from './i18n.js';
 import { listaDigimons } from './pagina.js';
 import { PERSPECTIVA, reducirMovimiento } from './cartas.js';
@@ -434,6 +434,7 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
                 zoomOcupado ||
                 zoomExtra ||
                 evento.target.closest('button') ||
+                enTextoDeCarta(evento.target) || // mantener apretado sobre el nombre o un texto lo selecciona, no inclina la carta
                 toqueQueSoloCierraMenus()
             )
                 return;
@@ -495,9 +496,9 @@ function activarInclinacionConDedo({ tomar, seguir, soltar }) {
         true,
     );
 
-    // Mantener apretada una carta no abre el menú del sistema (guardar imagen, copiar...)
+    // Mantener apretada una carta no abre el menú del sistema (guardar imagen, copiar...), salvo sobre sus textos (para poder seleccionarlos)
     listaDigimons.addEventListener('contextmenu', evento => {
-        if (evento.target.closest('#listado-digimons > li')) evento.preventDefault();
+        if (evento.target.closest('#listado-digimons > li') && !enTextoDeCarta(evento.target)) evento.preventDefault();
     });
 }
 

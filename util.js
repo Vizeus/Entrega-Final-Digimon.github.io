@@ -89,6 +89,21 @@ export const anchoVisible = () => document.documentElement.getBoundingClientRect
 // botón que se aprieta y se suelta: suenan con un solo "tic" instantáneo y todavía más bajito, y vibran igual de suave que los botones suaves.
 export const OPCIONES_DE_FILTRO = '.f-chip, .f-orden-op, .f-temporada, .f-fam-abrir';
 export const BOTONES_SUAVES = `.f-tag, .swal2-confirm, .swal2-close, .combate-musica, ${OPCIONES_DE_FILTRO}`;
+
+// TEXTO DE LAS CARTAS: el nombre del frente, y el nombre y los textos del dorso (datos, descripción). Ahí el mouse y el dedo funcionan como en cualquier
+// página: arrastrar con el mouse (o mantener apretado con el dedo) y el doble clic seleccionan texto, sin elegir la carta para el combate ni ampliarla.
+// No cuentan los botones ni los botoncitos (atributo, elemento, nivel, marcas, grupos, ataques, evolución...), que siguen con lo suyo.
+// El número del frente (#001) no cuenta: mantener apretado con el dedo inclina la carta y el doble clic o doble toque la amplía, como en el resto de la
+// carta. Solo con el mouse se puede arrastrar para seleccionarlo, y ese arrastre tampoco elige la carta (conNumero).
+// Si se cambia esta lista, hay que cambiarla también en _cartas.scss (la regla "TEXTO SELECCIONABLE").
+export const TEXTO_DE_CARTA = '.c-cab h4, .c-dorso .c-nombre, .c-dorso p';
+const NUMERO_DE_CARTA = '.c-sub > span:not([role="button"])';
+export function enTextoDeCarta(destino, conNumero = false) {
+    const elemento = destino instanceof Element ? destino : destino?.parentElement;
+    if (!elemento || elemento.closest('button, [role="button"], a')) return false;
+    return Boolean(elemento.closest(`#listado-digimons > li :is(${TEXTO_DE_CARTA}${conNumero ? `, ${NUMERO_DE_CARTA}` : ''})`));
+}
+
 export const HAY_PANTALLA_TACTIL = navigator.maxTouchPoints > 0 || 'ontouchstart' in window; // aunque también tenga mouse
 
 // ---- Dedo o mouse ----------------------------------------------------------------------------------------------------
