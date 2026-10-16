@@ -117,6 +117,7 @@ export const DICCIONARIO = {
         'ataques.sinDescripcion': 'Este ataque no tiene descripción detallada.',
         'ataques.irACarta': 'Ir a la carta',
         'ataques.traduccion': 'Traducción del nombre',
+        'ataques.nombreOriginal': 'Nombre original en inglés',
         'combate.usa': 'usa',
         'audio.silenciar': 'Silenciar el sonido',
         'audio.activar': 'Activar el sonido',
@@ -134,7 +135,7 @@ export const DICCIONARIO = {
         'furigana.poner': 'Poner el furigana (la lectura en kana sobre los kanji)',
         'carta.sinDescripcion': 'Sin descripción disponible.',
         'carta.idiomaOriginal': 'Descripción original en inglés',
-        'ataques.idiomaOriginal': 'Descripción original en inglés',
+        'ataques.idiomaOriginal': '', // las descripciones de los ataques ya están traducidas (ataquesDescEs.js)
 
         // Combate
         'combate.preparando': 'Preparando combate...',
@@ -468,6 +469,7 @@ export const DICCIONARIO = {
         'ataques.sinDescripcion': 'This attack has no detailed description.',
         'ataques.irACarta': 'Go to card',
         'ataques.traduccion': 'Name translation',
+        'ataques.nombreOriginal': 'Original name',
         'combate.usa': 'uses',
         'audio.silenciar': 'Mute the sound',
         'audio.activar': 'Turn the sound on',
@@ -818,6 +820,7 @@ export const DICCIONARIO = {
         'ataques.sinDescripcion': 'この技には詳しい説明がありません。',
         'ataques.irACarta': 'カードへ移動',
         'ataques.traduccion': '名前の訳',
+        'ataques.nombreOriginal': '元の名前',
         'combate.usa': 'の技',
         'audio.silenciar': '音を消す',
         'audio.activar': '音をオンにする',

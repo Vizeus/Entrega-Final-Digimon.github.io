@@ -6,6 +6,7 @@ import { idioma } from './i18n.js';
 import { NOMBRES_JA } from './nombresJa.js';
 import { ATAQUES_JA, ATAQUES_JA_POR_DIGIMON } from './ataquesJa.js';
 import { DESCRIPCIONES_ATAQUES_JA } from './ataquesDescJa.js';
+import { ATAQUES_ES } from './ataquesEs.js';
 import { ESPECIES_JA } from './especiesJa.js';
 // La API trae los nombres ORIGINALES (los japoneses, escritos en letras latinas): Omegamon, Herakle Kabuterimon, Vamdemon...
 // En español y en inglés la página muestra los nombres occidentales, que desde hace años son los mismos en todo el mundo
@@ -288,21 +289,47 @@ export function nombreParaMostrar(nombreApi) {
 // ---- Ataques -------------------------------------------------------------------------------------------------------
 
 const ATAQUES_JA_EN_MINUSCULAS = new Map(Object.entries(ATAQUES_JA).map(([ataque, japones]) => [ataque.toLowerCase(), japones]));
+const ATAQUES_ES_EN_MINUSCULAS = new Map(Object.entries(ATAQUES_ES).map(([ataque, espanol]) => [ataque.toLowerCase(), espanol]));
 
 // El nombre de un ataque en el idioma actual. En japonés, el de Wikimon (ベビーフレイム, するどいツメ…) si lo tiene, y si no, el de la API como viene.
 // Algunos nombres de la API son genéricos ("Breath", "Kick") y en cada digimon son otro ataque: para esos hay un nombre propio por digimon
-// (ATAQUES_JA_POR_DIGIMON), por eso se pide también el nombre de la API del digimon que lo usa. En español y en inglés no cambia.
+// (ATAQUES_JA_POR_DIGIMON), por eso se pide también el nombre de la API del digimon que lo usa. En español, los ataques conocidos de las primeras
+// temporadas (ataquesEs.js) se ven con su nombre en español y el resto, como vienen. En inglés no cambia.
 export function nombreDeAtaque(nombreAtaque, nombreApiDelDigimon) {
-    if (idioma !== 'ja' || !nombreAtaque) return nombreAtaque;
+    if (!nombreAtaque) return nombreAtaque;
+    if (idioma === 'es') return ATAQUES_ES[nombreAtaque] ?? ATAQUES_ES_EN_MINUSCULAS.get(nombreAtaque.trim().toLowerCase()) ?? nombreAtaque;
+    if (idioma !== 'ja') return nombreAtaque;
     const propio = nombreApiDelDigimon ? ATAQUES_JA_POR_DIGIMON[nombreAtaque]?.[nombreApiDelDigimon] : null;
     return propio ?? ATAQUES_JA[nombreAtaque] ?? ATAQUES_JA_EN_MINUSCULAS.get(nombreAtaque.trim().toLowerCase()) ?? nombreAtaque;
 }
 
-// La descripción de un ataque en el idioma actual. La API la trae solo en inglés; en japonés se busca la traducción (ataquesDescJa.js) y, si esa
-// descripción no está, se deja la original. En español y en inglés no cambia.
+// Las descripciones de los ataques en español son un archivo grande (ataquesDescEs.js): solo se baja cuando la página está en español. Mientras llega
+// (o si no llega) se ve la descripción en inglés; al llegar se avisa con "descripciones-ataques-es" para que las ventanas abiertas se vuelvan a escribir.
+let descripcionesAtaquesEs = null;
+let bajandoDescripcionesAtaquesEs = false;
+
+async function cargarDescripcionesAtaquesEs() {
+    if (descripcionesAtaquesEs || bajandoDescripcionesAtaquesEs) return;
+    bajandoDescripcionesAtaquesEs = true;
+    try {
+        ({ DESCRIPCIONES_ATAQUES_ES: descripcionesAtaquesEs } = await import('./ataquesDescEs.js'));
+        document.dispatchEvent(new CustomEvent('descripciones-ataques-es'));
+    } catch {
+        bajandoDescripcionesAtaquesEs = false; // sin conexión o archivo faltante: queda el inglés y se vuelve a intentar al cambiar de idioma
+    }
+}
+if (idioma === 'es') cargarDescripcionesAtaquesEs();
+document.addEventListener('idioma-cambiado', () => {
+    if (idioma === 'es') cargarDescripcionesAtaquesEs();
+});
+
+// La descripción de un ataque en el idioma actual. La API la trae solo en inglés; en japonés se busca la traducción (ataquesDescJa.js) y en español
+// la suya (ataquesDescEs.js). Si esa descripción no está (o todavía no bajó el archivo), se deja la original. En inglés no cambia.
 export function descripcionDeAtaque(descripcion) {
-    if (idioma !== 'ja' || !descripcion) return descripcion;
-    return DESCRIPCIONES_ATAQUES_JA[descripcion.trim()] ?? descripcion;
+    if (!descripcion) return descripcion;
+    if (idioma === 'ja') return DESCRIPCIONES_ATAQUES_JA[descripcion.trim()] ?? descripcion;
+    if (idioma === 'es') return descripcionesAtaquesEs?.[descripcion.trim()] ?? descripcion;
+    return descripcion;
 }
 
 // ---- Grupos (los "Fields" de la API) -------------------------------------------------------------------------------

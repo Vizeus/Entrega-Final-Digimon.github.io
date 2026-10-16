@@ -28,5 +28,6 @@ furiganaJa.js
 
 # Las descripciones de los digimons en español, traducidas a mano a partir de herramientas/descripciones-digimon.mjs
 descripcionesEs.js
+ataquesDescEs.js
 herramientas/descripciones-digimon.json
 herramientas/descripciones-digimon.cache.json

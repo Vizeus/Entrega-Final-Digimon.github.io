@@ -374,6 +374,18 @@ function crearMiniNodoDigimon(carta) {
     return nodo;
 }
 
+// El paréntesis que acompaña al nombre de un ataque al abrirlo. En español, si el ataque tiene nombre en español, su nombre original (el de la API, en
+// inglés: "(Baby Flame)"); si no, la traducción que trae la API (solo algunos la tienen). En japonés no hace falta: el nombre ya se ve en japonés.
+function textoDelAlias(nombreApi, traduccionApi, nombreApiDelDigimon) {
+    if (idioma === 'ja') return '';
+    if (idioma === 'es' && nombreDeAtaque(nombreApi, nombreApiDelDigimon) !== nombreApi) return `(${nombreApi})`;
+    const traduccion = (traduccionApi || '').trim();
+    return traduccion && traduccion.toLowerCase() !== nombreApi.trim().toLowerCase() ? `(${traduccion})` : '';
+}
+
+// Lo que se ve al dejar el puntero sobre el paréntesis: de qué es el texto (el nombre original, o la traducción del nombre)
+const tituloDelAlias = (alias, nombreApi) => t(alias.textContent === `(${nombreApi})` && idioma === 'es' ? 'ataques.nombreOriginal' : 'ataques.traduccion');
+
 function crearListaDeAtaques(habilidades, cartaActual) {
     const lista = document.createElement('ul');
     lista.className = 'ataques-lista';
@@ -403,15 +415,14 @@ function crearListaDeAtaques(habilidades, cartaActual) {
         detalle.className = 'ataque-detalle';
         detalle.hidden = true;
 
-        const traduccion = (habilidad.traduccion || '').trim();
-        if (traduccion && traduccion.toLowerCase() !== habilidad.nombre.trim().toLowerCase()) {
-            const alias = document.createElement('p');
-            alias.className = 'ataque-alias';
-            alias.title = t('ataques.traduccion'); // al dejar el puntero encima
-            alias.textContent = `(${traduccion})`;
-            alias.hidden = idioma === 'ja'; // la traducción de la API es en inglés: en japonés el nombre ya se ve en japonés y el paréntesis sobra
-            detalle.append(alias);
-        }
+        // Debajo del nombre, entre paréntesis: el nombre original en inglés si el ataque se ve con nombre en español, o la traducción que trae la API
+        const alias = document.createElement('p');
+        alias.className = 'ataque-alias';
+        alias.dataset.traduccion = habilidad.traduccion || '';
+        alias.textContent = textoDelAlias(habilidad.nombre, habilidad.traduccion, cartaActual?.dataset.nombreApi);
+        alias.title = tituloDelAlias(alias, habilidad.nombre); // al dejar el puntero encima
+        alias.hidden = !alias.textContent; // en japonés el nombre ya se ve en japonés y el paréntesis sobra
+        detalle.append(alias);
 
         if (habilidad.descripcion) {
             const descripcion = document.createElement('p');
@@ -509,9 +520,12 @@ const traducirVentanaDeAtaques = () => {
     if (titulo) titulo.textContent = t('ataques.titulo', { nombre: nombreCompleto(cartaDeAtaques) });
     const ayuda = document.querySelector('.popup-ataques .ataques-ayuda');
     if (ayuda) ayuda.textContent = t('ataques.ayuda');
-    document.querySelectorAll('.popup-ataques .ataque-alias').forEach(alias => {
-        alias.title = t('ataques.traduccion');
-        alias.hidden = idioma === 'ja';
+    document.querySelectorAll('.popup-ataques .ataque-nombre').forEach(nombre => {
+        const alias = nombre.closest('.ataque-item')?.querySelector('.ataque-alias');
+        if (!alias) return;
+        alias.textContent = textoDelAlias(nombre.dataset.ataque, alias.dataset.traduccion, cartaDeAtaques.dataset.nombreApi);
+        alias.title = tituloDelAlias(alias, nombre.dataset.ataque);
+        alias.hidden = !alias.textContent;
     });
     document
         .querySelectorAll('.popup-ataques .ataque-nombre')
@@ -652,6 +666,7 @@ export function activarInfo() {
     document.addEventListener('idioma-cambiado', redibujarInfoAbierta);
     document.addEventListener('niveles-cambiados', redibujarInfoAbierta);
     document.addEventListener('idioma-cambiado', traducirVentanaDeAtaques);
+    document.addEventListener('descripciones-ataques-es', traducirVentanaDeAtaques); // (llegó el archivo de descripciones en español)
     escribirMenus();
     activarMenusInfo();
     document.addEventListener('idioma-cambiado', escribirMenus);
