@@ -285,6 +285,11 @@ export const ELEMENTOS_MANUALES = {
     4: 'Rayo', // Betamon: sus habilidades empatan entre Rayo y Agua, pero es eléctrico
     168: 'Hielo', // MetalGarurumon: por ser Cyborg el cálculo le daba Metal, pero toda la línea de Garurumon es de hielo (Cocytus Breath, Ice Wolf Claw)
     205: 'Hielo', // WereGarurumon: sus ataques mezclan fuego y hielo, pero en su línea (Garurumon y MetalGarurumon) el elemento es el hielo
+    169: 'Fuego', // Metal Greymon: es Cyborg (el cálculo lo llevaba a Metal), pero toda su línea es de fuego (Giga Destroyer, Garuru Missile)
+    680: 'Fuego', // Metal Greymon (X-Antibody): igual que el original
+    955: 'Fuego', // Metal Greymon (versión del anime de 2010): igual que el original
+    202: 'Fuego', // War Greymon: sus ataques mezclan viento, fuego y metal (Great Tornado, Dramon Killer), pero como Greymon y Metal Greymon es de fuego (Gaia Force)
+    703: 'Fuego', // War Greymon (X-Antibody): igual que el original
     482: 'Fuego', // Impmon: es un diablillo (el cálculo lo ponía en Oscuridad), pero su ataque estrella es de fuego (Night of Fire)
     441: 'Fuego', // Megidramon: dragón maligno, pero lo que lo define es el fuego (su especie lo llevaba a Oscuridad)
     677: 'Fuego', // Megidramon (X-Antibody): igual que el original
@@ -292,6 +297,14 @@ export const ELEMENTOS_MANUALES = {
     456: 'Fuego', // Youkomon: igual que Kyubimon (Silver)
     549: 'Fuego', // Fla Wizarmon: mago de fuego ("Fla" viene de flame); su especie (Demon Man) lo llevaba a Oscuridad
     457: 'Oscuridad', // Zeed Millenniumon: la deducción le daba Hielo por la palabra "freeze" de una habilidad, pero por lore es oscuridad y destrucción
+    // Digimon bebé: casi no tienen datos (sin especie útil, un solo ataque), así que el cálculo se quedaba con las "burbujas" y los ponía en Agua
+    97: 'Veneno', // Zurumon: su cuerpo es una toxina potente y escupe burbujas venenosas (Doku no Awa = burbujas de veneno)
+    412: 'Oscuridad', // Kuramon: nace de la malicia y el instinto de destrucción de quienes abusan de la red; se multiplica como un virus
+    346: 'Oscuridad', // Tsumemon: evolución de Kuramon, más feroz (sus "burbujas" son solo un ataque menor)
+    1303: 'Veneno', // Algomon (Baby I): su ataque San no Awa son burbujas ácidas
+    1304: 'Veneno', // Algomon (Baby II): igual que Baby I
+    261: 'Veneno', // Kodokugumon Baby: araña venenosa; sin datos propios, hereda el de su evolución (Dokugumon, Veneno)
+    270: 'Oscuridad', // Arkadimon Baby: sin datos propios; es el comienzo de la línea de Arkadimon (Oscuridad en todas sus formas)
 };
 
 // ---- Grupos (los "Fields" de la API) --------------------------------------------------------------------------

@@ -28,6 +28,8 @@ furiganaJa.js
 
 # Las descripciones de los digimons en español, traducidas a mano a partir de herramientas/descripciones-digimon.mjs
 descripcionesEs.js
+# Las descripciones propias (inglés y japonés) de los digimons que la API deja sin descripción
+descripcionesPropias.js
 ataquesDescEs.js
 herramientas/descripciones-digimon.json
 herramientas/descripciones-digimon.cache.json
@@ -35,3 +37,12 @@ herramientas/elementos-datos.json
 herramientas/elementos-datos.cache.json
 herramientas/elementos-auditoria.txt
 elementosPorId.js
+
+# Lo que arma herramientas/atributos-wikimon.mjs
+atributosCorregidos.js
+herramientas/atributos-wikimon.cache.json
+herramientas/atributos-diferencias.txt
+
+# Archivos de trabajo de herramientas/descripciones-faltantes.mjs
+herramientas/descripciones-faltantes.cache.json
+herramientas/descripciones-faltantes.json

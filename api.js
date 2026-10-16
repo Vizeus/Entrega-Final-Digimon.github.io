@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 import { PANTALLA_DE_CELULAR } from './util.js';
+import { ATRIBUTOS_CORREGIDOS } from './atributosCorregidos.js';
 import { ASCENSOS, CARTAS_PROPIAS, ELEMENTOS_MANUALES, NIVELES_CORREGIDOS, NIVEL_DE_LOS_HYBRID, NIVEL_HYBRID_SIN_DATO, atributoDeLaApi } from './datos.js';
 import { ELEMENTO_POR_ID } from './elementosPorId.js';
 import { deducirElementoPorPuntos } from './elementos.js';
@@ -276,8 +277,8 @@ export async function crearListaDeDigimons() {
                 continue;
             }
 
-            // Extraemos el atributo o, si no tiene, le ponemos "Desconocido"
-            const atributo = atributoDeLaApi[detalles.attributes?.[0]?.attribute] || 'Desconocido';
+            // Extraemos el atributo o, si no tiene, le ponemos "Desconocido". Si la API no coincide con Wikimon, vale la corrección (ATRIBUTOS_CORREGIDOS)
+            const atributo = ATRIBUTOS_CORREGIDOS[digimon.id] ?? (atributoDeLaApi[detalles.attributes?.[0]?.attribute] || 'Desconocido');
 
             // Extraemos el nivel original de la API (sin traducir) o, sino tiene, le ponemos "Desconocido".
             // Un nivel "Unknown" de la API también es desconocido. Los Armor y los Hybrid se pasan a uno de los 8 niveles

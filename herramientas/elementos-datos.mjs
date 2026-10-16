@@ -23,7 +23,7 @@ const archivoCache = new URL('./elementos-datos.cache.json', import.meta.url);
 const archivoSalida = new URL('./elementos-datos.json', import.meta.url);
 
 // Todos los digimons de la API: { id, name }
-async function listaDeDigimons(limite = Infinity) {
+export async function listaDeDigimons(limite = Infinity) {
     const lista = [];
     for (let pagina = 0; pagina < 30 && lista.length < limite; pagina++) {
         const datos = await pedirJson(`${URL_DE_LA_API}?pageSize=100&page=${pagina}`);
@@ -107,7 +107,7 @@ async function principal() {
     console.log('\nListo: herramientas/elementos-datos.json. Avisale a Claude para seguir con la revisión de los elementos.');
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
     principal().catch(error => {
         console.error('\nError:', error.message);
         process.exitCode = 1;

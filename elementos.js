@@ -1,11 +1,14 @@
 // -----------------------------------------------------------------------------------------------------------------
 // ELEMENTO DE UN DIGIMON: se deduce sumando puntos de cuatro fuentes (la API no trae el elemento)
 //   1. Su especie ("types" de la API: Plant, Cyborg, Angel…): la más fuerte, dice lo que el digimon ES.
-//   2. Sus ataques (nombre, traducción y descripción): palabras clave de cada elemento (ver REGLAS_ELEMENTO).
-//   3. Su descripción: las mismas palabras clave, pero con menos peso (en un texto largo aparecen palabras sueltas).
+//   2. Sus ataques (nombre, traducción y descripción): palabras clave de cada elemento (ver REGLAS_ELEMENTO). Cada palabra cuenta una sola vez por ataque
+//      (el nombre y la descripción de un mismo ataque suelen repetirla), las palabras ambiguas (air, wave, light, ground) cuentan la mitad, frases como
+//      "shock wave" no cuentan y las de armas (cannon, laser, missile, gatling) solo cuentan si el digimon tiene especie o grupo metálico.
+//   3. Su descripción: las mismas palabras clave, pero con menos peso (en un texto largo aparecen palabras sueltas) y sin repetir lo que ya contaron sus ataques.
 //   4. Sus grupos ("fields": Deep Savers, Metal Empire…): solo desempatan, y solo los que apuntan a un elemento claro.
 // Gana el elemento con más puntos. Si hay empate se desempata por especie, luego por ataques y luego por descripción; si sigue
-// el empate, o casi no hay puntos, es Neutro. Es un cálculo sin DOM, así que también lo usa la herramienta de auditoría.
+// el empate, o casi no hay puntos, es Neutro. Si gana por medio punto o menos (un empate práctico) y sin que lo respalden la especie ni los grupos (solo palabras sueltas),
+// tampoco se decide: queda Neutro y se marca "enRevision". Es un cálculo sin DOM, así que también lo usa la herramienta de auditoría.
 // -----------------------------------------------------------------------------------------------------------------
 
 import { REGLAS_ELEMENTO } from './datos.js';
@@ -20,6 +23,14 @@ export const PESO_DESCRIPCION = 1;
 export const TOPE_DESCRIPCION = 2;
 export const PESO_GRUPO = 1;
 export const PUNTOS_MINIMOS = 2; // con menos puntos que esto no hay elemento: es Neutro
+export const PESO_PALABRA_AMBIGUA = 0.5; // palabras que casi siempre son parte de otra cosa ("in the air", "light armor", "energy wave", "on the ground")
+export const MARGEN_DUDOSO = 0.5; // ganar por tan poco (o menos) sin especie ni grupo que lo respalde no alcanza para decidir (con 1 punto, un tercio de los digimons quedaba Neutro)
+
+const PALABRAS_AMBIGUAS = new Set(['air', 'wave', 'light', 'ground']);
+// Frases con una palabra clave que no dicen nada del elemento: una onda de choque o de sonido no es de agua ni de rayo
+const FRASES_SIN_ELEMENTO = /\b(?:shock|energy|sound|sonic|shock)\s?waves?\b/g;
+// Un cañón o un láser no hacen a un digimon de metal (Lillymon dispara un Flower Cannon): cuentan solo si ya es metálico por su especie o su grupo
+const PALABRAS_DE_ARMA = /\b(?:cannon|laser|missile|gatling)\b/g;
 
 // Especie (tal cual la trae la API) → elemento. Las que no están acá no suman nada (Baby, Armor, Unknown…).
 export const ELEMENTO_DE_LA_ESPECIE = {
@@ -189,6 +200,23 @@ export function contarPalabrasClave(texto) {
     return cuentas;
 }
 
+// Las palabras clave de cada elemento que hay en un texto: { Fuego: Map('fire' → 2, 'flame' → 1), … }. Aplica las frases sin elemento y, si no se permiten
+// (`conArmas` false), borra las palabras de armas.
+function palabrasClaveDelTexto(texto, conArmas) {
+    let minusculas = texto.toLowerCase().replace(FRASES_SIN_ELEMENTO, ' ');
+    if (!conArmas) minusculas = minusculas.replace(PALABRAS_DE_ARMA, ' ');
+    const porElemento = {};
+    for (const elemento of ELEMENTOS) {
+        for (const palabra of minusculas.match(REGLAS_ELEMENTO[elemento]) || []) {
+            porElemento[elemento] ??= new Map();
+            porElemento[elemento].set(palabra, (porElemento[elemento].get(palabra) ?? 0) + 1);
+        }
+    }
+    return porElemento;
+}
+
+const pesoDeLaPalabra = palabra => (PALABRAS_AMBIGUAS.has(palabra) ? PESO_PALABRA_AMBIGUA : 1);
+
 // Puntos de cada elemento: { Planta: { especie: 4, ataques: 1, descripcion: 2, grupo: 0, total: 7 }, … } (solo los que tienen algo)
 // `datos`: { nombre: 'Metal Garurumon', nombresDeDigimons: /…/ (opcional), especies: ['Plant'], grupos: ['Deep Savers'], descripcion: '…', habilidades: [{ nombre, traduccion, descripcion }] }
 export function puntosPorElemento({ nombre = '', nombresDeDigimons = null, especies = [], grupos = [], descripcion = '', habilidades = [] }) {
@@ -201,14 +229,28 @@ export function puntosPorElemento({ nombre = '', nombresDeDigimons = null, espec
     };
 
     for (const especie of new Set(especies)) sumar(ELEMENTO_DE_LA_ESPECIE[especie], 'especie', pesoDeLaEspecie(especie));
-    const textoDeAtaques = sinNombres(
-        habilidades.map(h => [h.nombre, h.traduccion, h.descripcion].filter(Boolean).join(' ')).join(' '),
-        nombre,
-        nombresDeDigimons,
-    );
-    for (const [elemento, n] of Object.entries(contarPalabrasClave(textoDeAtaques))) sumar(elemento, 'ataques', Math.min(n, TOPE_ATAQUES) * PESO_ATAQUES);
-    for (const [elemento, n] of Object.entries(contarPalabrasClave(sinNombres(descripcion, nombre, nombresDeDigimons))))
+    const conArmas = especies.some(especie => ELEMENTO_DE_LA_ESPECIE[especie] === 'Metal') || grupos.some(grupo => ELEMENTO_DEL_GRUPO[grupo] === 'Metal');
+
+    // Ataques: cada palabra cuenta una vez por ataque (el nombre y la descripción del mismo ataque suelen repetirla); lo de todos los ataques se suma
+    const deLosAtaques = {};
+    const palabrasDeLosAtaques = new Set(); // (elemento:palabra) para no volver a contarlas en la descripción
+    for (const habilidad of habilidades) {
+        const texto = sinNombres([habilidad.nombre, habilidad.traduccion, habilidad.descripcion].filter(Boolean).join(' '), nombre, nombresDeDigimons);
+        for (const [elemento, palabras] of Object.entries(palabrasClaveDelTexto(texto, conArmas))) {
+            for (const palabra of palabras.keys()) {
+                deLosAtaques[elemento] = (deLosAtaques[elemento] ?? 0) + pesoDeLaPalabra(palabra);
+                palabrasDeLosAtaques.add(`${elemento}:${palabra}`);
+            }
+        }
+    }
+    for (const [elemento, n] of Object.entries(deLosAtaques)) sumar(elemento, 'ataques', Math.min(n, TOPE_ATAQUES) * PESO_ATAQUES);
+
+    // Descripción: sin contar otra vez las palabras que ya contaron los ataques (la descripción suele repetir el ataque estrella)
+    for (const [elemento, palabras] of Object.entries(palabrasClaveDelTexto(sinNombres(descripcion, nombre, nombresDeDigimons), conArmas))) {
+        let n = 0;
+        for (const [palabra, veces] of palabras) if (!palabrasDeLosAtaques.has(`${elemento}:${palabra}`)) n += veces * pesoDeLaPalabra(palabra);
         sumar(elemento, 'descripcion', Math.min(n, TOPE_DESCRIPCION) * PESO_DESCRIPCION);
+    }
     if (new Set(grupos).size <= MAXIMO_DE_GRUPOS) for (const grupo of new Set(grupos)) sumar(ELEMENTO_DEL_GRUPO[grupo], 'grupo', PESO_GRUPO);
     return puntos;
 }
@@ -228,6 +270,8 @@ export function deducirElementoPorPuntos(datos) {
         const a = mejor[1];
         const b = segundo[1];
         if (a.total === b.total && a.especie === b.especie && a.ataques === b.ataques && a.descripcion === b.descripcion) return { elemento: 'Neutro', puntos };
+        // Ganó por muy poco y solo con palabras sueltas (sin especie ni grupo): no alcanza para decidir
+        if (a.total - b.total <= MARGEN_DUDOSO && !a.especie && !a.grupo) return { elemento: 'Neutro', puntos, enRevision: true };
     }
     return { elemento: mejor[0], puntos };
 }

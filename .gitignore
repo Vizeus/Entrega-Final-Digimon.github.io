@@ -29,3 +29,11 @@ herramientas/descripciones-digimon.json
 herramientas/elementos-datos.cache.json
 herramientas/elementos-datos.json
 herramientas/elementos-auditoria.txt
+
+# Archivos de trabajo de herramientas/atributos-wikimon.mjs (atributosCorregidos.js y atributos-a-mano.json, en cambio, sí se suben)
+herramientas/atributos-wikimon.cache.json
+herramientas/atributos-diferencias.txt
+
+# Archivos de trabajo de herramientas/descripciones-faltantes.mjs (revisión de las descripciones que faltan)
+herramientas/descripciones-faltantes.cache.json
+herramientas/descripciones-faltantes.json
